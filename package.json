@@ -1,0 +1,20 @@
+{
+  "name": "@repo/root",
+  "version": "0.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "nx run-many --target=dev --all",
+    "build": "nx run-many --target=build --all",
+    "lint": "nx run-many --target=lint --all",
+    "test": "nx run-many --target=test --all"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "nx": "^18.0.0",
+    "typescript": "^5.3.3"
+  }
+}
