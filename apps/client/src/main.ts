@@ -1,9 +1,45 @@
 // apps/client/src/main.ts
-import { createGame } from '@repo/engine';
+import * as Engine from "@repo/engine";
+import { System as collisionSystem } from './systems/collision';
+import { System as inputSystem } from './systems/input';
+import { System as movementSystem } from './systems/movement';
+import { System as physicsSystem } from './systems/physics';
+import { System as renderSystem } from './systems/render';
 
-function main() {
-  const game = createGame();
-  // Game loop wiring will go here later
+declare module "@repo/engine" {
+  interface Register {
+    Engine: ReturnType<typeof main>;
+  }
+}
+
+async function main() {
+  // Initialize the engine
+  const registerableEngine = Engine.registerEngine({
+    systems: [
+      // Update systems
+      Engine.registerSystem(inputSystem),
+      Engine.registerSystem(movementSystem),
+      Engine.registerSystem(physicsSystem),
+      Engine.registerSystem(collisionSystem),
+
+      // Render systems
+      Engine.registerSystem(renderSystem),
+    ],
+  });
+
+  // Start application
+  for await (const [update, frame] of Engine.startEngine({ fps: 60, ups: 30 })) {
+    if (update.shouldUpdate) {
+
+    }
+
+    if (frame.shouldUpdate) {
+
+    }
+  }
+  
+  // Purely returned 
+  return registerableEngine;
 }
 
 main();

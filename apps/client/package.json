@@ -10,7 +10,9 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@repo/engine": "*"
+    "@repo/engine": "*",
+    "@standard-schema/spec": "^1.1.0",
+    "zod": "^4.3.4"
   },
   "devDependencies": {
     "typescript": "^5.3.3",

@@ -1,3 +1,3 @@
-// packages/engine/src/serialization/index.ts
 
-export * from './schema';
+
+export { Serializable, serializable } from './serializable';
