@@ -1,6 +1,6 @@
 import type { EngineInitializationSystem, EngineSystem } from "@repo/engine/core/register/system";
 import { UserWorld, World } from "../../ecs/world";
-import { executeWithContext } from "../context";
+import { executeWithContext, setContext } from "../context";
 import type { EngineFrame, EngineUpdate, FrameStats, SystemFactoryTuple } from "../types";
 
 type StartEngineOpts = {
@@ -11,12 +11,22 @@ type StartEngineOpts = {
 
 type StartEngineGenerator = AsyncGenerator<readonly [EngineUpdate, EngineFrame], void, unknown>;
 
-export class EngineClass<TSystems extends SystemFactoryTuple = SystemFactoryTuple> {
-  systems: Record<string, any>;
-  private world: World;
+type SystemName<TFactory> = TFactory extends { 
+  ["~types"]: { name: infer N extends string } 
+} ? N : never;
+
+type SystemsTupleToRecord<T extends SystemFactoryTuple> = {
+  [Factory in T[number] as SystemName<Factory>]: ReturnType<Factory>
+}
+
+export class EngineClass<TSystems extends SystemFactoryTuple> {
+  #systems: Record<string, EngineSystem<any>>;
+  #world: World;
+
   private initializationSystem: EngineInitializationSystem | null = null;
   private initialized: boolean = false;
-  frame: FrameStats = {
+
+  public frame: FrameStats = {
     updateDelta: 0,
     frameDelta: 0,
     fps: 60,
@@ -25,51 +35,51 @@ export class EngineClass<TSystems extends SystemFactoryTuple = SystemFactoryTupl
     lastUpdateTime: 0,
   };
 
-  public constructor(systems: Record<string, any>) {
-    this.systems = systems;
-    this.world = new World();
+  public constructor(systems: Record<string, EngineSystem<any>>) {
+    this.#systems = systems;
+    this.#world = new World();
   }
 
-  /**
-   * Intended for internal use only. Use `useWorld()` in systems instead.
-   */
-  public getWorld(): UserWorld {
-    return new UserWorld(this.world);
+  /** Prefer `useSystem()` in systems instead. */
+  public get systems(): SystemsTupleToRecord<TSystems> {
+    return this.#systems as any;
   }
 
-  private async runInitializationSystem(): Promise<void> {
-    if (this.initialized || !this.initializationSystem) return;
+  /** Prefer `useWorld()` in systems instead. */
+  public get world(): UserWorld {
+    return new UserWorld(this.#world);
+  }
 
-    executeWithContext({ engine: this }, async () => {
+  public async initialize(): Promise<void> {
+    if (this.initialized) return;
+
+    await executeWithContext({ engine: this }, async () => {
+      setContext((ctx) => {
+        console.log(ctx);
+      });
+
       await this.initializationSystem!.system();
-    });
-  }
 
-  /**
-   * Execute the initialization system if it hasn't been run yet.
-   */
-  public async initializeEngine(): Promise<void> {
-    await this.runInitializationSystem();
-  }
+      setContext((ctx) => {
+        console.log(ctx);
+      });
 
-  private runSystems(phase: "update" | "render", shouldUpdate: boolean) {
-    if (!shouldUpdate) return;
-
-    executeWithContext({ engine: this }, () => {
-      for (const system of Object.values(this.systems)) {
-        if (system.enabled && system.phase === phase) {
-          system.system();
+      for (const system of Object.values(this.#systems)) {
+        if (system.initialize) {
+          system.initialize();
         }
       }
     });
+
+    this.initialized = true;
   }
 
   public async *startEngine(opts?: StartEngineOpts): StartEngineGenerator {
     const frameTime = 1000 / (opts?.fps || 60);
     const updateTime = 1000 / (opts?.ups || 60);
 
-    // Run initialization system if not already initialized
-    await this.runInitializationSystem();
+    // Run initialization system and system initializations if not already initialized
+    await this.initialize();
 
     // Store fps and ups on the engine for access in systems
     this.frame.fps = opts?.fps || 60;
@@ -136,6 +146,18 @@ export class EngineClass<TSystems extends SystemFactoryTuple = SystemFactoryTupl
         }
       }
     }
+  }
+
+  private runSystems(phase: "update" | "render", shouldUpdate: boolean) {
+    if (!shouldUpdate) return;
+
+    executeWithContext({ engine: this }, () => {
+      for (const system of Object.values(this.#systems)) {
+        if (system.enabled && system.phase === phase) {
+          system.system();
+        }
+      }
+    });
   }
 }
 

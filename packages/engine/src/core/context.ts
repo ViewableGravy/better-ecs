@@ -21,24 +21,27 @@ function resetContext() {
   });
 }
 
-export function executeWithContext<T>(context: Context, fn: () => T): T {
+export function executeWithContext<T>(context: Context, fn: () => T): void {
   setContext((ctx) => {
     for (const key in context) {
       (ctx as any)[key] = (context as any)[key];
     }
   });
 
+  let result: T | Promise<T>;
   try {
-    const result = fn();
-
-    if (result instanceof Promise) {
-      return result.finally(resetContext) as T;
-    }
-
-    return result;
-  } finally {
+    result = fn();
+  } catch (err) {
     resetContext();
+    throw err;
   }
+
+  if (result instanceof Promise) {
+    return void result.finally(resetContext);
+  }
+
+  resetContext();
+  return void result;
 }
 
 export function useEngine(): RegisteredEngine {
@@ -61,5 +64,5 @@ export function useSystem<TSystem extends keyof RegisteredEngine['systems']>(sys
 
 export function useWorld(): UserWorld {
   const engine = useEngine();
-  return engine.getWorld();
+  return engine.world;
 }

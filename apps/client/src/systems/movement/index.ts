@@ -1,5 +1,5 @@
 import { Vec3 } from "@repo/engine";
-import { createSystem, useDelta, useEngine, useWorld } from "@repo/engine/core";
+import { createSystem, useDelta, useSystem, useWorld } from "@repo/engine/core";
 import z from "zod";
 import { PlayerComponent } from "../../components/player";
 import { PreviousPosition } from "../../components/previousPosition";
@@ -14,8 +14,8 @@ export const System = createSystem("movement")({
 
 function Entrypoint() {
   /***** HOOKS *****/
-  const engine = useEngine();
   const world = useWorld();
+  const { data } = useSystem("input");
   const [updateDelta] = useDelta();
 
   /***** QUERIES *****/
@@ -31,7 +31,7 @@ function Entrypoint() {
   previousPosition.y = position.y;
   previousPosition.z = position.z;
 
-  for (const key of engine.systems.input.data.keysDown) {
+  for (const key of data.keysDown) {
     const speed = 50 * (updateDelta / 1000);
     if (key === "ArrowUp" || key === "w") {
       position.y -= speed;

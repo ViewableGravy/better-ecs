@@ -30,7 +30,7 @@ async function main() {
   });
 
   // Start application
-  for await (const [update, frame] of engine.startEngine({ fps: 60, ups: 20 })) {
+  for await (const [update, frame] of engine.startEngine({ fps: 60, ups: 1 })) {
     if (update.shouldUpdate) {
       // Update phase - run update logic
     }

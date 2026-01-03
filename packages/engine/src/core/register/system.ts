@@ -1,6 +1,6 @@
 import type {
-  InferStandardSchema,
-  StandardSchema
+    InferStandardSchema,
+    StandardSchema
 } from "../types";
 
 /***** TYPE DEFINITIONS *****/
@@ -12,6 +12,7 @@ export type SystemOpts<TSchema extends StandardSchema> = {
   phase?: "update" | "render";
   enabled?: boolean;
   system: () => void;
+  initialize?: () => void;
 }
 
 export type SystemFactory<TName extends string, TSchema extends StandardSchema> = {
@@ -28,6 +29,7 @@ export type EngineSystem<TSchema extends StandardSchema = StandardSchema> = {
   schema: TSchema;
   phase: "update" | "render";
   system: () => void;
+  initialize?: () => void;
   enabled: boolean;
 }
 
@@ -48,6 +50,7 @@ export const createSystem = <TName extends string>(name: TName) => {
         phase: opts.phase ?? "update",
         enabled: opts.enabled ?? true,
         system: opts.system,
+        initialize: opts.initialize,
       };
     };
 
