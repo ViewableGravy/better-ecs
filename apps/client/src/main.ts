@@ -1,45 +1,47 @@
 // apps/client/src/main.ts
 import * as Engine from "@repo/engine";
-import { System as collisionSystem } from './systems/collision';
-import { System as inputSystem } from './systems/input';
-import { System as movementSystem } from './systems/movement';
-import { System as physicsSystem } from './systems/physics';
-import { System as renderSystem } from './systems/render';
+import { System as Collision } from './systems/collision';
+import { System as Initialize } from "./systems/initialisation";
+import { System as Input } from './systems/input';
+import { System as Movement } from './systems/movement';
+import { System as Physics } from './systems/physics';
+import { System as Render } from './systems/render';
 
+// Register the engine type with the module for useEngine() typing
 declare module "@repo/engine" {
   interface Register {
-    Engine: ReturnType<typeof main>;
+    Engine: Awaited<ReturnType<typeof main>>;
   }
 }
 
 async function main() {
-  // Initialize the engine
-  const registerableEngine = Engine.registerEngine({
+  const engine = Engine.createEngine({
+    initialization: Initialize,
     systems: [
       // Update systems
-      Engine.registerSystem(inputSystem),
-      Engine.registerSystem(movementSystem),
-      Engine.registerSystem(physicsSystem),
-      Engine.registerSystem(collisionSystem),
+      Input,
+      Movement,
+      Physics,
+      Collision,
 
       // Render systems
-      Engine.registerSystem(renderSystem),
-    ],
+      Render,
+    ]
   });
 
   // Start application
-  for await (const [update, frame] of Engine.startEngine({ fps: 60, ups: 30 })) {
+  for await (const [update, frame] of engine.startEngine({ fps: 60, ups: 20 })) {
     if (update.shouldUpdate) {
-
+      // Update phase - run update logic
     }
 
     if (frame.shouldUpdate) {
-
+      // Render phase - run render logic
     }
   }
   
-  // Purely returned 
-  return registerableEngine;
+  // Return engine for type registration
+  return engine;
 }
 
 main();

@@ -1,4 +1,4 @@
-import { createSystem } from "@repo/engine/core/system";
+import { createSystem, useEngine } from "@repo/engine/core";
 import z from "zod";
 
 export const System = createSystem("physics")({
@@ -10,7 +10,6 @@ export const System = createSystem("physics")({
 });
 
 function Entrypoint() {
-  const { engine } = System;
-
+  const engine = useEngine();
   engine.systems;
 }

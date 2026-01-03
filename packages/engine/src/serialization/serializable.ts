@@ -105,11 +105,11 @@ export class Serializable {
 }
 
 export function serializable(type: Type) {
-  function decorator(target: Object, propertyKey: string) {
-    if (!Serializable.serializableFields.has(target.constructor)) {
-      Serializable.serializableFields.set(target.constructor, []);
+  function decorator(_: any, context: ClassFieldDecoratorContext) {
+    if (!Serializable.serializableFields.has(context.addInitializer)) {
+      Serializable.serializableFields.set(context.addInitializer, []);
     }
-    Serializable.serializableFields.get(target.constructor)!.push([propertyKey, type]);
+    Serializable.serializableFields.get(context.addInitializer)!.push([context.name as string, type]);
   }
   
   return decorator;
