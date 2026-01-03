@@ -31,7 +31,7 @@ function Entrypoint() {
   previousPosition.y = position.y;
   previousPosition.z = position.z;
 
-  for (const key of data.keysDown) {
+  for (const key of data.keysActive) {
     const speed = 50 * (updateDelta / 1000);
     if (key === "ArrowUp" || key === "w") {
       position.y -= speed;

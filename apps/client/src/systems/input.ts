@@ -6,6 +6,7 @@ const InputStateSchema = z.object({
   keysDown: z.set(z.string()),
   pressedThisTick: z.set(z.string()),
   releasedThisTick: z.set(z.string()),
+  keysActive: z.set(z.string()),
   eventBuffer: z.array(z.object({ type: z.enum(["keydown", "keyup"]), key: z.string() })),
 });
 
@@ -19,6 +20,7 @@ export const System = createSystem("input")({
       keysDown: new Set<string>(),
       pressedThisTick: new Set<string>(),
       releasedThisTick: new Set<string>(),
+      keysActive: new Set<string>(),
       eventBuffer: [],
     },
     schema: InputStateSchema,
@@ -33,6 +35,15 @@ function Entrypoint() {
   // Clear per-tick buffers at start of this update
   data.pressedThisTick.clear();
   data.releasedThisTick.clear();
+  data.keysActive.clear();
+
+  // Initialize keysActive with keys that were already down from the previous frame
+  for (const key of data.keysDown) {
+    data.keysActive.add(key);
+  }
+
+  // Track keys pressed during this specific update cycle to distinguish taps from releases
+  const pressedThisCycle = new Set<string>();
 
   // Process all buffered events
   for (const event of data.eventBuffer) {
@@ -41,12 +52,21 @@ function Entrypoint() {
       if (!data.keysDown.has(event.key)) {
         data.keysDown.add(event.key);
         data.pressedThisTick.add(event.key);
+        data.keysActive.add(event.key);
+        pressedThisCycle.add(event.key);
       }
     } else if (event.type === "keyup") {
       // Track releases
       if (data.keysDown.has(event.key)) {
         data.keysDown.delete(event.key);
         data.releasedThisTick.add(event.key);
+
+        // If the key was held from a previous frame (not pressed this cycle),
+        // ensure it's removed from keysActive to "cancel" any pending update.
+        // If it WAS pressed this cycle, we keep it in keysActive to allow the tap.
+        if (!pressedThisCycle.has(event.key)) {
+          data.keysActive.delete(event.key);
+        }
       }
     }
   }
