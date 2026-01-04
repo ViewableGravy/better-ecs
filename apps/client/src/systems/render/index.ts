@@ -1,7 +1,6 @@
-import { Vec3 } from "@repo/engine";
-import { createSystem, useEngine, useWorld } from "@repo/engine/core";
+import { createSystem, useEngine, useWorld } from "@repo/engine";
+import { Transform } from "@repo/engine/components";
 import z from "zod";
-import { PreviousPosition } from "../../components/previousPosition";
 
 export const System = createSystem("render")({
   system: Entrypoint,
@@ -37,15 +36,14 @@ function Entrypoint() {
   // Clear the canvas
   context.clearRect(0, 0, canvas.width, canvas.height);
 
-  for (const entityId of world.query(Vec3, PreviousPosition)) {
-    const position = world.get(entityId, Vec3);
-    const previousPosition = world.get(entityId, PreviousPosition);
+  for (const entityId of world.query(Transform)) {
+    const transform = world.get(entityId, Transform);
 
-    if (!position || !previousPosition) continue;
+    if (!transform) continue;
 
     // Interpolate between previous and current position
-    const interpolatedX = lerp(previousPosition.x, position.x, alpha);
-    const interpolatedY = lerp(previousPosition.y, position.y, alpha);
+    const interpolatedX = lerp(transform.prev.x, transform.curr.x, alpha);
+    const interpolatedY = lerp(transform.prev.y, transform.curr.y, alpha);
 
     // Draw the entity as a rectangle at the interpolated position
     context.fillRect(interpolatedX, interpolatedY, 10, 10);

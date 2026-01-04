@@ -1,5 +1,6 @@
 import type { EngineInitializationSystem, EngineSystem } from "@repo/engine/core/register/system";
 import { UserWorld, World } from "../../ecs/world";
+import { transformSnapshotSystem } from "../../systems/transformSnapshot";
 import { executeWithContext, setContext } from "../context";
 import type { EngineFrame, EngineUpdate, FrameStats, SystemFactoryTuple } from "../types";
 
@@ -167,6 +168,13 @@ export function createEngine<const TSystems extends SystemFactoryTuple>(opts: {
 }): EngineClass<TSystems> {
   // Create the engine instance
   const systemsRecord: Record<string, EngineSystem<any>> = {};
+
+  // Add built-in systems
+  const builtInSystems = [transformSnapshotSystem];
+  for (const factory of builtInSystems) {
+    const system = factory();
+    systemsRecord[system.name] = system;
+  }
 
   // Initialize each system by calling its factory (no engine parameter needed)
   for (const factory of opts.systems) {

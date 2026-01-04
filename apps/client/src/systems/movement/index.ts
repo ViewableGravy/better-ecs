@@ -1,8 +1,7 @@
-import { Vec3 } from "@repo/engine";
-import { createSystem, useDelta, useSystem, useWorld } from "@repo/engine/core";
+import { createSystem, useDelta, useSystem, useWorld } from "@repo/engine";
+import { Transform } from "@repo/engine/components";
 import z from "zod";
 import { PlayerComponent } from "../../components/player";
-import { PreviousPosition } from "../../components/previousPosition";
 
 export const System = createSystem("movement")({
   system: Entrypoint,
@@ -21,29 +20,23 @@ function Entrypoint() {
   /***** QUERIES *****/
   const [playerId] = world.query(PlayerComponent)
  
-  const position = world.get(playerId, Vec3);
-  const previousPosition = world.get(playerId, PreviousPosition);
+  const transform = world.get(playerId, Transform);
 
-  if (!position || !previousPosition) return;
-
-  // Store previous position before updating
-  previousPosition.x = position.x;
-  previousPosition.y = position.y;
-  previousPosition.z = position.z;
+  if (!transform) return;
 
   for (const key of data.keysActive) {
     const speed = 50 * (updateDelta / 1000);
     if (key === "ArrowUp" || key === "w") {
-      position.y -= speed;
+      transform.curr.y -= speed;
     }
     if (key === "ArrowDown" || key === "s") {
-      position.y += speed;
+      transform.curr.y += speed;
     }
     if (key === "ArrowLeft" || key === "a") {
-      position.x -= speed;
+      transform.curr.x -= speed;
     }
     if (key === "ArrowRight" || key === "d") {
-      position.x += speed;
+      transform.curr.x += speed;
     }
   }
 }

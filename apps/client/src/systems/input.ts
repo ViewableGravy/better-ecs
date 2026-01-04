@@ -3,10 +3,25 @@ import z from "zod";
 
 /***** SYSTEM SCHEMA START *****/
 const InputStateSchema = z.object({
+  /** @public Set of keys currently held across frames. */
   keysDown: z.set(z.string()),
+
+  /** @public Keys that were newly pressed during this update (cleared at start of update). */
   pressedThisTick: z.set(z.string()),
+
+  /** @public Keys that were newly released during this update (cleared at start of update). */
   releasedThisTick: z.set(z.string()),
+
+  /** @public Keys considered "active" for this update (what movement/other systems should iterate). */
   keysActive: z.set(z.string()),
+
+  /**
+   * @private Reused set to record keys pressed while processing events for this update.
+   * Avoids allocating a new Set each frame; treated as internal implementation detail.
+   */
+  pressedBetweenUpdate: z.set(z.string()),
+
+  /** @private Buffer of raw keyboard events to process during update. */
   eventBuffer: z.array(z.object({ type: z.enum(["keydown", "keyup"]), key: z.string() })),
 });
 
@@ -21,6 +36,7 @@ export const System = createSystem("input")({
       pressedThisTick: new Set<string>(),
       releasedThisTick: new Set<string>(),
       keysActive: new Set<string>(),
+      pressedBetweenUpdate: new Set<string>(),
       eventBuffer: [],
     },
     schema: InputStateSchema,
@@ -35,6 +51,7 @@ function Entrypoint() {
   // Clear per-tick buffers at start of this update
   data.pressedThisTick.clear();
   data.releasedThisTick.clear();
+  data.pressedBetweenUpdate.clear();
   data.keysActive.clear();
 
   // Initialize keysActive with keys that were already down from the previous frame
@@ -42,31 +59,34 @@ function Entrypoint() {
     data.keysActive.add(key);
   }
 
-  // Track keys pressed during this specific update cycle to distinguish taps from releases
-  const pressedThisCycle = new Set<string>();
-
   // Process all buffered events
   for (const event of data.eventBuffer) {
-    if (event.type === "keydown") {
-      // Only track new presses (ignore repeated keydown from held keys)
-      if (!data.keysDown.has(event.key)) {
+    switch (event.type) {
+      case "keydown": {
+        // Only track new presses (ignore repeated keydown from held keys)
+        if (data.keysDown.has(event.key)) break;
+
         data.keysDown.add(event.key);
         data.pressedThisTick.add(event.key);
         data.keysActive.add(event.key);
-        pressedThisCycle.add(event.key);
+        data.pressedBetweenUpdate.add(event.key);
+        break;
       }
-    } else if (event.type === "keyup") {
-      // Track releases
-      if (data.keysDown.has(event.key)) {
+      case "keyup": {
+        // Track releases
+        if (!data.keysDown.has(event.key)) break;
+
         data.keysDown.delete(event.key);
         data.releasedThisTick.add(event.key);
 
-        // If the key was held from a previous frame (not pressed this cycle),
+        // If the key was held from a previous frame (not pressed during event processing),
         // ensure it's removed from keysActive to "cancel" any pending update.
-        // If it WAS pressed this cycle, we keep it in keysActive to allow the tap.
-        if (!pressedThisCycle.has(event.key)) {
+        // If it WAS pressed during event processing, we keep it in keysActive to allow the tap.
+        if (!data.pressedBetweenUpdate.has(event.key)) {
           data.keysActive.delete(event.key);
         }
+        
+        break;
       }
     }
   }
