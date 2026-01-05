@@ -1,5 +1,6 @@
 import { createSystem, useSystem } from "@repo/engine/core";
 import z from "zod";
+import { EventPool } from "./eventPool";
 
 /***** SYSTEM SCHEMA START *****/
 const InputStateSchema = z.object({
@@ -22,11 +23,16 @@ const InputStateSchema = z.object({
   pressedBetweenUpdate: z.set(z.string()),
 
   /** @private Buffer of raw keyboard events to process during update. */
-  eventBuffer: z.array(z.object({ type: z.enum(["keydown", "keyup"]), key: z.string() })),
+  eventBuffer: z.array(z.object({ 
+    type: z.enum(["keydown", "keyup"]), 
+    key: z.string(), 
+    release: z.function() 
+  }).readonly()),
 });
 
 /***** SYSTEM START *****/
 export const System = createSystem("input")({
+  initialize: InitializeEventListeners,
   system: Entrypoint,
   enabled: true,
   phase: "update",
@@ -40,8 +46,7 @@ export const System = createSystem("input")({
       eventBuffer: [],
     },
     schema: InputStateSchema,
-  },
-  initialize: InitializeEventListeners,
+  }
 });
 
 /***** ENTRYPOINT START *****/
@@ -80,8 +85,9 @@ function Entrypoint() {
         data.releasedThisTick.add(event.key);
 
         // If the key was held from a previous frame (not pressed during event processing),
-        // ensure it's removed from keysActive to "cancel" any pending update.
-        // If it WAS pressed during event processing, we keep it in keysActive to allow the tap.
+        // ensure it's removed from keysActive to "cancel" any pending update on key release.
+        // If it WAS pressed during event processing and is not pressed now, then it was a tap,
+        // and we still expect the tap to be registered.
         if (!data.pressedBetweenUpdate.has(event.key)) {
           data.keysActive.delete(event.key);
         }
@@ -89,21 +95,27 @@ function Entrypoint() {
         break;
       }
     }
+
+    // release event back to pool
+    event.release();
   }
 
-  // Clear the event buffer for next update
+  
+  // Clear the event buffer for next update  
   data.eventBuffer.length = 0;
 }
 
 function InitializeEventListeners() {
-  const { data } = useSystem("input")
+  const { data } = useSystem("input");
+
+  const eventPool = new EventPool();
 
   // Browser event listeners: buffer events without processing immediately
   window.addEventListener("keydown", (event) => {
-    data.eventBuffer.push({ type: "keydown", key: event.key });
+    data.eventBuffer.push(eventPool.press("keydown", event.key));
   });
 
   window.addEventListener("keyup", (event) => {
-    data.eventBuffer.push({ type: "keyup", key: event.key });
+    data.eventBuffer.push(eventPool.press("keyup", event.key));
   });
 }

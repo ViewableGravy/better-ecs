@@ -26,16 +26,16 @@ function Entrypoint() {
 
   for (const key of data.keysActive) {
     const speed = 50 * (updateDelta / 1000);
-    if (key === "ArrowUp" || key === "w") {
+    if (key === "ArrowUp" || key === "w" || key === "W") {
       transform.curr.y -= speed;
     }
-    if (key === "ArrowDown" || key === "s") {
+    if (key === "ArrowDown" || key === "s" || key === "S") {
       transform.curr.y += speed;
     }
-    if (key === "ArrowLeft" || key === "a") {
+    if (key === "ArrowLeft" || key === "a" || key === "A") {
       transform.curr.x -= speed;
     }
-    if (key === "ArrowRight" || key === "d") {
+    if (key === "ArrowRight" || key === "d" || key === "D") {
       transform.curr.x += speed;
     }
   }
