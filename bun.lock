@@ -17,6 +17,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@repo/engine": "*",
+        "@repo/plugins": "*",
         "@standard-schema/spec": "^1.1.0",
         "zod": "^4.3.4",
       },
@@ -50,6 +51,14 @@
     "packages/plugins": {
       "name": "@repo/plugins",
       "version": "0.0.1",
+      "dependencies": {
+        "@repo/engine": "*",
+        "zod": "^3.22.4",
+      },
+      "devDependencies": {
+        "@standard-schema/spec": "^1.1.0",
+        "typescript": "^5.3.3",
+      },
     },
   },
   "packages": {
@@ -784,6 +793,8 @@
     "@babel/preset-env/semver": ["semver@6.3.1", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA=="],
 
     "@nx/js/ignore": ["ignore@5.3.2", "", {}, "sha512-hsBTNUqQTDwkWtcdYI2i06Y/nUBEsNEDJKjWdigLvegy8kDuJAS8uRlpkkcQpyEXL0Z/pjDy5HBmMjRCJ2gq+g=="],
+
+    "@repo/plugins/zod": ["zod@3.25.76", "", {}, "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="],
 
     "babel-plugin-polyfill-corejs2/semver": ["semver@6.3.1", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA=="],
 

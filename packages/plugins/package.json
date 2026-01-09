@@ -3,7 +3,21 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
-  "main": "./index.js",
-  "types": "./index.d.ts",
-  "dependencies": {}
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@repo/engine": "*",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@standard-schema/spec": "^1.1.0",
+    "typescript": "^5.3.3"
+  }
 }

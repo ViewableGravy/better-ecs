@@ -1,5 +1,6 @@
 // apps/client/src/main.ts
 import * as Engine from "@repo/engine";
+import { System as FPSCounter } from '@repo/plugins';
 import { System as Collision } from './systems/collision';
 import { System as Initialize } from "./systems/initialisation";
 import { System as Input } from './systems/input';
@@ -18,6 +19,11 @@ async function main() {
   const engine = Engine.createEngine({
     initialization: Initialize,
     systems: [
+      // Plugins
+      FPSCounter({ 
+        element: document.getElementById('fps-counter')! 
+      }),
+
       // Update systems
       Input,
       Movement,

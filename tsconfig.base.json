@@ -18,7 +18,8 @@
     "paths": {
       "@repo/engine": ["./packages/engine/src/index.ts"],
       "@repo/engine/*": ["./packages/engine/src/*"],
-      "@repo/plugins": ["./packages/plugins/src/index.ts"]
+      "@repo/plugins": ["./packages/plugins/src/index.ts"],
+      "@repo/plugins/*": ["./packages/plugins/src/*"]
     }
   },
   "exclude": ["node_modules", "dist"]

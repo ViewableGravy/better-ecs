@@ -1,6 +1,6 @@
 import type {
-    InferStandardSchema,
-    StandardSchema
+  InferStandardSchema,
+  StandardSchema
 } from "../types";
 
 /***** TYPE DEFINITIONS *****/
@@ -25,7 +25,7 @@ export type SystemFactory<TName extends string, TSchema extends StandardSchema> 
 
 export type EngineSystem<TSchema extends StandardSchema = StandardSchema> = {
   name: string;
-  data: InferStandardSchema<TSchema>['input'];
+  data: InferStandardSchema<TSchema>['output'];
   schema: TSchema;
   phase: "update" | "render";
   system: () => void;
