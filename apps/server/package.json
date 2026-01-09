@@ -10,8 +10,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@repo/engine": "*",
-    "@repo/shared": "*"
+    "@repo/engine": "*"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
