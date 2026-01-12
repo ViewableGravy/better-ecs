@@ -4,12 +4,15 @@ import type {
 } from "../types";
 
 /***** TYPE DEFINITIONS *****/
+export type SystemPriority = number | { update?: number; render?: number };
+
 export type SystemOpts<TSchema extends StandardSchema> = {
   schema: {
     default: InferStandardSchema<NoInfer<TSchema>>['input'];
     schema: TSchema;
   },
-  phase?: "update" | "render";
+  phase?: "update" | "render" | "all";
+  priority?: SystemPriority;
   enabled?: boolean;
   system: () => void;
   initialize?: () => void;
@@ -27,7 +30,8 @@ export type EngineSystem<TSchema extends StandardSchema = StandardSchema> = {
   name: string;
   data: InferStandardSchema<TSchema>['output'];
   schema: TSchema;
-  phase: "update" | "render";
+  phase: "update" | "render" | "all";
+  priority: SystemPriority;
   system: () => void;
   initialize?: () => void;
   enabled: boolean;
@@ -48,6 +52,7 @@ export const createSystem = <TName extends string>(name: TName) => {
         data: opts.schema.default,
         schema: opts.schema.schema,
         phase: opts.phase ?? "update",
+        priority: opts.priority ?? 0,
         enabled: opts.enabled ?? true,
         system: opts.system,
         initialize: opts.initialize,

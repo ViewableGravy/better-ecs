@@ -1,6 +1,6 @@
 import type { EngineClass } from "@repo/engine/core/register/engine";
 import type { SystemFactory } from "@repo/engine/core/register/system";
-import type { StandardJSONSchemaV1 } from "@standard-schema/spec";
+import type { StandardSchemaV1 } from "@standard-schema/spec";
 
 // --- Engine Lifecycle Types ---
 export type EngineUpdate = {
@@ -19,6 +19,8 @@ export type FrameStats = {
   updateDelta: number;
   /** Delta time since last frame in milliseconds */
   frameDelta: number;
+  /** Checks which phase we are currently in */
+  phase: (phase: "update" | "render") => boolean;
   /** Target frames per second */
   fps: number;
   /** Target updates per second */
@@ -31,7 +33,7 @@ export type FrameStats = {
 
 // --- Schema Types ---
 export type StandardSchema = { '~standard': unknown };
-export type InferStandardSchema<TSchema> = TSchema extends StandardJSONSchemaV1<infer TInput, infer TOutput> ? {
+export type InferStandardSchema<TSchema> = TSchema extends StandardSchemaV1<infer TInput, infer TOutput> ? {
   input: TInput;
   output: TOutput;
 } : never;

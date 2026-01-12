@@ -1,4 +1,5 @@
 import type { UserWorld } from "@repo/engine/ecs/world";
+import type { EngineSystem } from "./register/system";
 import type { RegisteredEngine } from "./types";
 
 /***** TYPE DEFINITIONS *****/
@@ -21,7 +22,7 @@ function resetContext() {
   });
 }
 
-export function executeWithContext<T>(context: Context, fn: () => T): void {
+export function executeWithContext<T>(context: Context, fn: () => T): T extends Promise<any> ? T : T {
   setContext((ctx) => {
     for (const key in context) {
       (ctx as any)[key] = (context as any)[key];
@@ -37,11 +38,11 @@ export function executeWithContext<T>(context: Context, fn: () => T): void {
   }
 
   if (result instanceof Promise) {
-    return void result.finally(resetContext);
+    return result.finally(resetContext) as any;
   }
 
   resetContext();
-  return void result;
+  return result as any;
 }
 
 export function useEngine(): RegisteredEngine {
@@ -57,7 +58,9 @@ export function useDelta(): [updateDelta: number, frameDelta: number] {
   return [engine.frame.updateDelta, engine.frame.frameDelta];
 }
 
-export function useSystem<TSystem extends keyof RegisteredEngine['systems']>(system: TSystem): RegisteredEngine['systems'][TSystem] {
+export function useSystem<TOverride extends EngineSystem>(system: string): TOverride;
+export function useSystem<TSystem extends keyof RegisteredEngine['systems']>(system: TSystem): RegisteredEngine['systems'][TSystem];
+export function useSystem(system: string): any {
   const engine = useEngine();
   return engine.systems[system];
 }

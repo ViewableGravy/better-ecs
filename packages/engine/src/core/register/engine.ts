@@ -24,12 +24,17 @@ export class EngineClass<TSystems extends SystemFactoryTuple> {
   #systems: Record<string, EngineSystem<any>>;
   #world: World;
 
+  // Cached sorted lists for each phase
+  #updateSystems: EngineSystem<any>[] = [];
+  #renderSystems: EngineSystem<any>[] = [];
+
   private initializationSystem: EngineInitializationSystem | null = null;
   private initialized: boolean = false;
 
   public frame: FrameStats = {
     updateDelta: 0,
     frameDelta: 0,
+    phase: (_) => false,
     fps: 60,
     ups: 60,
     updateProgress: 0,
@@ -39,6 +44,26 @@ export class EngineClass<TSystems extends SystemFactoryTuple> {
   public constructor(systems: Record<string, EngineSystem<any>>) {
     this.#systems = systems;
     this.#world = new World();
+    this.precomputeSystemOrder();
+  }
+
+  private precomputeSystemOrder() {
+    const allSystems = Object.values(this.#systems);
+
+    const getPriority = (system: EngineSystem<any>, phase: "update" | "render"): number => {
+        if (typeof system.priority === "number") {
+          return system.priority;
+        }
+        return system.priority[phase] ?? 0;
+    };
+
+    this.#updateSystems = allSystems
+      .filter((s) => ['update', 'all'].includes(s.phase))
+      .sort((a, b) => getPriority(b, "update") - getPriority(a, "update"));
+
+    this.#renderSystems = allSystems
+      .filter((s) => ['render', 'all'].includes(s.phase))
+      .sort((a, b) => getPriority(b, "render") - getPriority(a, "render"));
   }
 
   /** Prefer `useSystem()` in systems instead. */
@@ -112,8 +137,12 @@ export class EngineClass<TSystems extends SystemFactoryTuple> {
       const updateDelta = now - lastUpdateTime;
       const frameDelta = now - lastFrameTime;
 
+      // Allow 15% tolerance for frame timing to catch frames slightly faster than target
+      // This is common when VSync is active and the calculated sleep matches the refresh rate
+      const frameTolerance = frameTime * 0.15;
+      
       const updateShouldRun = updateDelta >= updateTime;
-      const frameShouldRun = frameDelta >= frameTime;
+      const frameShouldRun = frameDelta >= (frameTime - frameTolerance);
 
       if (updateShouldRun || frameShouldRun) {
         (updateState as any).delta = updateDelta;
@@ -152,13 +181,19 @@ export class EngineClass<TSystems extends SystemFactoryTuple> {
   private runSystems(phase: "update" | "render", shouldUpdate: boolean) {
     if (!shouldUpdate) return;
 
+    this.frame.phase = (p) => p === phase;
+    const systemsToRun = phase === "update"
+      ? this.#updateSystems 
+      : this.#renderSystems;
+
     executeWithContext({ engine: this }, () => {
-      for (const system of Object.values(this.#systems)) {
-        if (system.enabled && system.phase === phase) {
-          system.system();
-        }
+      for (const system of systemsToRun) {
+        if (!system.enabled) continue;
+        system.system();
       }
     });
+
+    this.frame.phase = (_) => false;
   }
 }
 
@@ -182,17 +217,8 @@ export function createEngine<const TSystems extends SystemFactoryTuple>(opts: {
     systemsRecord[system.name] = system;
   }
 
-  // Sort systems by phase (update before render)
-  const sortedSystems = Object.entries(systemsRecord)
-    .sort(([, a], [, b]) => {
-      const phaseOrder = { update: 0, render: 1 };
-      return phaseOrder[a.phase] - phaseOrder[b.phase];
-    });
-  
-  const sortedSystemsRecord = Object.fromEntries(sortedSystems);
-
   // Create and return engine instance
-  const engine = new EngineClass<TSystems>(sortedSystemsRecord);
+  const engine = new EngineClass<TSystems>(systemsRecord);
   
   // Set initialization system if provided
   if (opts.initialization) {

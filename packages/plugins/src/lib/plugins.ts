@@ -1,10 +1,16 @@
 import { createSystem, useEngine, useSystem } from '@repo/engine';
+import type { EngineSystem } from '@repo/engine/core/register/system';
 import { z } from 'zod';
 
 /***** SCHEMA *****/
 const schema = z.object({
-  frames: z.array(z.number()).default([]),
-  updates: z.array(z.number()).default([]),
+  fps: z.array(z.number()),
+  ups: z.array(z.number()),
+  buffer: z.object({
+    start: z.number(),
+    frames: z.number(),
+    updates: z.number(),
+  }),
 });
 
 type FPSCounterData = z.infer<typeof schema>;
@@ -12,53 +18,68 @@ type FPSCounterData = z.infer<typeof schema>;
 /***** TYPE DEFINITIONS *****/
 type Opts = {
   element: HTMLElement;
-  maxSamples?: number;
+  barCount?: number;
 };
 
-// declare module '@repo/engine' {
-//   interface Register {
-//     Engine: EngineClass<[ReturnType<typeof System>]>;
-//   }
-// }
-
 export const System = (opts: Opts) => {
-  const maxSamples = opts.maxSamples ?? 300; // ~10 seconds at 30 fps
+  const barCount = opts.barCount ?? 60; // Fixed number of bars to display
 
   return createSystem("engine:fps-counter")({
     system: EntryPoint,
     initialize: Initialize,
+    priority: 1,
+    phase: "all",
     schema: {
-      default: { frames: [], updates: [] },
-      schema: schema
+      schema: schema,
+      default: { 
+        buffer: { start: performance.now(), frames: 0, updates: 0 }, 
+        fps: [],
+        ups: []
+      }
     }
   });
 
   function EntryPoint() {
     const engine = useEngine();
-    const { data } = useSystem("engine:fps-counter")
+    const { data } = useSystem<EngineSystem<typeof schema>>("engine:fps-counter");
+    const now = performance.now();
+
+    if (engine.frame.phase("update")) {
+      data.buffer.updates++;
+    }
     
-    // Record current frame stats
-    data.frames.push(engine.frame.fps);
-    data.updates.push(engine.frame.ups);
+    if (engine.frame.phase("render")) {
+      data.buffer.frames++;
 
-    // Keep only the last maxSamples entries
-    if (data.frames.length > maxSamples) {
-      data.frames.shift();
-    }
-    if (data.updates.length > maxSamples) {
-      data.updates.shift();
-    }
+      // Check if 1 second has passed
+      if (now - data.buffer.start >= 1000) {
+        const elapsedSec = (now - data.buffer.start) / 1000;
+        
+        data.fps.push(data.buffer.frames / elapsedSec);
+        data.ups.push(data.buffer.updates / elapsedSec);
 
-    // Update UI
-    updateDisplay(data);
+        // Reset buffer
+        data.buffer.start = now;
+        data.buffer.frames = 0;
+        data.buffer.updates = 0;
+
+        // Keep only the last barCount entries
+        if (data.fps.length > barCount) data.fps.shift();
+        if (data.ups.length > barCount) data.ups.shift();
+
+        // Update UI
+        updateDisplay(data);
+      }
+    }
   }
 
   function Initialize() {
-    const { data } = useSystem("engine:fps-counter")
+    const { data } = useSystem<EngineSystem<typeof schema>>("engine:fps-counter")
     
     // Clear any existing data
-    data.frames = [];
-    data.updates = [];
+    data.fps = [];
+    data.ups = [];
+    data.buffer = { start: performance.now(), frames: 0, updates: 0 };
 
     // Setup initial display
     setupDisplay();
@@ -78,14 +99,14 @@ export const System = (opts: Opts) => {
 
   function updateDisplay(data: FPSCounterData) {
     // Update text values
-    const fpsValue = data.frames.length > 0 ? data.frames[data.frames.length - 1] : 0;
-    const upsValue = data.updates.length > 0 ? data.updates[data.updates.length - 1] : 0;
+    const fpsValue = data.fps.length > 0 ? data.fps[data.fps.length - 1] : 0;
+    const upsValue = data.ups.length > 0 ? data.ups[data.ups.length - 1] : 0;
     
-    const fpsAvg = data.frames.length > 0 
-      ? (data.frames.reduce((a, b) => a + b, 0) / data.frames.length).toFixed(1)
+    const fpsAvg = data.fps.length > 0 
+      ? (data.fps.reduce((a, b) => a + b, 0) / data.fps.length).toFixed(1)
       : '--';
-    const upsAvg = data.updates.length > 0
-      ? (data.updates.reduce((a, b) => a + b, 0) / data.updates.length).toFixed(1)
+    const upsAvg = data.ups.length > 0
+      ? (data.ups.reduce((a, b) => a + b, 0) / data.ups.length).toFixed(1)
       : '--';
 
     const fpsValueEl = opts.element.querySelector('#fps-value');
@@ -124,19 +145,31 @@ export const System = (opts: Opts) => {
       ctx.stroke();
     }
 
-    // Draw bars for FPS
-    if (data.frames.length > 0) {
-      const barWidth = Math.max(1, canvas.width / data.frames.length);
-      const maxValue = 120; // Reasonable max for scaling
+    // Draw bars
+    const barWidth = canvas.width / barCount;
+    const maxValue = 120; // Reasonable max for scaling
 
-      ctx.fillStyle = '#0f0';
-      data.frames.forEach((value, index) => {
-        const x = index * barWidth;
-        const height = (value / maxValue) * canvas.height;
-        const y = canvas.height - height;
-        ctx.fillRect(x, y, Math.max(1, barWidth - 1), height);
-      });
-    }
+    // Draw FPS (Green)
+    ctx.fillStyle = 'rgba(0, 255, 0, 0.7)';
+    data.fps.forEach((value, index) => {
+      const x = index * barWidth;
+      const height = (value / maxValue) * canvas.height;
+      const y = canvas.height - height;
+      ctx.fillRect(x, y, Math.max(1, barWidth - 1), height);
+    });
+
+    // Draw UPS (Cyan, slightly offset or overlaid)
+    // To make them visible, we'll draw UPS as a thin line or another bar? 
+    // Let's draw UPS as a blue bar with some transparency, maybe slightly thinner or just overlaid
+    ctx.fillStyle = 'rgba(0, 255, 255, 0.5)';
+    data.ups.forEach((value, index) => {
+      const x = index * barWidth;
+      const height = (value / maxValue) * canvas.height;
+      const y = canvas.height - height;
+      // Draw UPS slightly thinner to distinguish? or just normal. 
+      // Overlaid is fine.
+      ctx.fillRect(x, y, Math.max(1, barWidth - 1), height);
+    });
   }
 }
 
