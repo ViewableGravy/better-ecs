@@ -1,5 +1,6 @@
 node_modules
 dist
+out-tsc
 .nx
 *.log
 .DS_Store
@@ -9,3 +10,4 @@ dist
 
 vite.config.*.timestamp*
 vitest.config.*.timestamp*
+*.tsbuildinfo
