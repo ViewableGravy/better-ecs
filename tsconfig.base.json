@@ -4,7 +4,6 @@
     "module": "ESNext",
     "lib": ["ESNext"],
     "moduleResolution": "bundler",
-    "baseUrl": ".",
     "resolveJsonModule": true,
     "allowJs": true,
     "strict": true,
@@ -21,7 +20,7 @@
       "@repo/engine/*": ["./packages/engine/src/*"],
       "@repo/plugins": ["./packages/plugins/src/index.ts"],
       "@repo/plugins/*": ["./packages/plugins/src/*"],
-      "@repo/test-package": ["packages/test-package/src/index.ts"]
+      "@repo/test-package": ["./packages/test-package/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "dist"]
