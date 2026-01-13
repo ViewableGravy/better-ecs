@@ -9,7 +9,7 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc --build",
     "lint": "tsc --noEmit"
   },
   "dependencies": {

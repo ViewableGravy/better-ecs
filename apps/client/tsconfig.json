@@ -10,5 +10,10 @@
     "skipLibCheck": true,
     "composite": false
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "references": [
+    {
+      "path": "../../packages/engine"
+    }
+  ]
 }

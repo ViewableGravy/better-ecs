@@ -3,7 +3,8 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
-    "composite": false,
+    "composite": true,
+    "noEmit": false,
     "lib": ["DOM", "ES2022"],
   },
   "include": ["src/**/*"],

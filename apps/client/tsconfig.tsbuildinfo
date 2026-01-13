@@ -1,1 +1,0 @@
-{"root":["./src/main.ts","./src/components/player.ts","./src/systems/collision/index.ts","./src/systems/initialisation/index.ts","./src/systems/input/eventPool.ts","./src/systems/input/index.ts","./src/systems/movement/index.ts","./src/systems/physics/index.ts","./src/systems/render/index.ts","./src/utilities/pool/index.ts"],"version":"5.9.3"}

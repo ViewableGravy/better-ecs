@@ -4,12 +4,19 @@ import { z } from 'zod';
 
 /***** SCHEMA *****/
 const schema = z.object({
-  fps: z.array(z.number()),
-  ups: z.array(z.number()),
-  buffer: z.object({
-    start: z.number(),
-    frames: z.number(),
-    updates: z.number(),
+  fps: z.object({
+    bars: z.array(z.number()),
+    buffer: z.object({
+      start: z.number(),
+      count: z.number(),
+    }),
+  }),
+  ups: z.object({
+    bars: z.array(z.number()),
+    buffer: z.object({
+      start: z.number(),
+      count: z.number(),
+    }),
   }),
 });
 
@@ -32,9 +39,8 @@ export const System = (opts: Opts) => {
     schema: {
       schema: schema,
       default: { 
-        buffer: { start: performance.now(), frames: 0, updates: 0 }, 
-        fps: [],
-        ups: []
+        fps: { bars: [], buffer: { start: performance.now(), count: 0 } },
+        ups: { bars: [], buffer: { start: performance.now(), count: 0 } },
       }
     }
   });
@@ -42,44 +48,51 @@ export const System = (opts: Opts) => {
   function EntryPoint() {
     const engine = useEngine();
     const { data } = useSystem<EngineSystem<typeof schema>>("engine:fps-counter");
-    const now = performance.now();
+
+    let needsUpdate = false;
 
     if (engine.frame.phase("update")) {
-      data.buffer.updates++;
+      if (handle(data.ups)) needsUpdate = true;
     }
     
     if (engine.frame.phase("render")) {
-      data.buffer.frames++;
+      if (handle(data.fps)) needsUpdate = true;
 
-      // Check if 1 second has passed
-      if (now - data.buffer.start >= 1000) {
-        const elapsedSec = (now - data.buffer.start) / 1000;
-        
-        data.fps.push(data.buffer.frames / elapsedSec);
-        data.ups.push(data.buffer.updates / elapsedSec);
-
-        // Reset buffer
-        data.buffer.start = now;
-        data.buffer.frames = 0;
-        data.buffer.updates = 0;
-
-        // Keep only the last barCount entries
-        if (data.fps.length > barCount) data.fps.shift();
-        if (data.ups.length > barCount) data.ups.shift();
-
-        // Update UI
+      // Update UI if either segment rolled over
+      if (needsUpdate) {
         updateDisplay(data);
       }
     }
+  }
+
+  function handle(segment: { bars: number[], buffer: { start: number, count: number } }) {
+    segment.buffer.count++;
+    const now = performance.now();
+
+    // Check if 1 second has passed
+    if (now - segment.buffer.start >= 1000) {
+      const elapsedSec = (now - segment.buffer.start) / 1000;
+      
+      segment.bars.push(segment.buffer.count / elapsedSec);
+
+      // Reset buffer
+      segment.buffer.start = now;
+      segment.buffer.count = 0;
+
+      // Keep only the last barCount entries
+      if (segment.bars.length > barCount) segment.bars.shift();
+      
+      return true;
+    }
+    return false;
   }
 
   function Initialize() {
     const { data } = useSystem<EngineSystem<typeof schema>>("engine:fps-counter")
     
     // Clear any existing data
-    data.fps = [];
-    data.ups = [];
-    data.buffer = { start: performance.now(), frames: 0, updates: 0 };
+    data.fps = { bars: [], buffer: { start: performance.now(), count: 0 } };
+    data.ups = { bars: [], buffer: { start: performance.now(), count: 0 } };
 
     // Setup initial display
     setupDisplay();
@@ -99,14 +112,14 @@ export const System = (opts: Opts) => {
 
   function updateDisplay(data: FPSCounterData) {
     // Update text values
-    const fpsValue = data.fps.length > 0 ? data.fps[data.fps.length - 1] : 0;
-    const upsValue = data.ups.length > 0 ? data.ups[data.ups.length - 1] : 0;
+    const fpsValue = data.fps.bars.length > 0 ? data.fps.bars[data.fps.bars.length - 1] : 0;
+    const upsValue = data.ups.bars.length > 0 ? data.ups.bars[data.ups.bars.length - 1] : 0;
     
-    const fpsAvg = data.fps.length > 0 
-      ? (data.fps.reduce((a, b) => a + b, 0) / data.fps.length).toFixed(1)
+    const fpsAvg = data.fps.bars.length > 0 
+      ? (data.fps.bars.reduce((a, b) => a + b, 0) / data.fps.bars.length).toFixed(1)
       : '--';
-    const upsAvg = data.ups.length > 0
-      ? (data.ups.reduce((a, b) => a + b, 0) / data.ups.length).toFixed(1)
+    const upsAvg = data.ups.bars.length > 0
+      ? (data.ups.bars.reduce((a, b) => a + b, 0) / data.ups.bars.length).toFixed(1)
       : '--';
 
     const fpsValueEl = opts.element.querySelector('#fps-value');
@@ -151,7 +164,7 @@ export const System = (opts: Opts) => {
 
     // Draw FPS (Green)
     ctx.fillStyle = 'rgba(0, 255, 0, 0.7)';
-    data.fps.forEach((value, index) => {
+    data.fps.bars.forEach((value, index) => {
       const x = index * barWidth;
       const height = (value / maxValue) * canvas.height;
       const y = canvas.height - height;
@@ -159,15 +172,11 @@ export const System = (opts: Opts) => {
     });
 
     // Draw UPS (Cyan, slightly offset or overlaid)
-    // To make them visible, we'll draw UPS as a thin line or another bar? 
-    // Let's draw UPS as a blue bar with some transparency, maybe slightly thinner or just overlaid
     ctx.fillStyle = 'rgba(0, 255, 255, 0.5)';
-    data.ups.forEach((value, index) => {
+    data.ups.bars.forEach((value, index) => {
       const x = index * barWidth;
       const height = (value / maxValue) * canvas.height;
       const y = canvas.height - height;
-      // Draw UPS slightly thinner to distinguish? or just normal. 
-      // Overlaid is fine.
       ctx.fillRect(x, y, Math.max(1, barWidth - 1), height);
     });
   }

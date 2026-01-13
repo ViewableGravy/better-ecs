@@ -1,7 +1,9 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
+    "outDir": "../../dist/out-tsc/packages/plugins-spec",
+    "composite": true,
+    "noEmit": false,
     "types": [
       "vitest/globals",
       "vitest/importMeta",
@@ -10,6 +12,14 @@
       "vitest"
     ]
   },
+  "references": [
+    {
+      "path": "./tsconfig.lib.json"
+    },
+    {
+      "path": "../engine"
+    }
+  ],
   "include": [
     "vite.config.ts",
     "vite.config.mts",
