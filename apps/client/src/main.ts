@@ -21,7 +21,9 @@ async function main() {
     systems: [
       // Plugins
       FPSCounter({ 
-        element: document.getElementById('fps-counter')! 
+        element: document.getElementById('fps-counter')!,
+        round: true,
+        rate: 1000
       }),
 
       // Update systems
