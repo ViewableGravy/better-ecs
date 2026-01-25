@@ -1,4 +1,7 @@
 import './fps-counter.css';
+import { useOverloadedSystem } from "@repo/engine";
+import type { EngineSystem } from "@repo/engine";
+import { schema } from "./types";
 
 // Inject CSS if not already injected
 if (!document.getElementById('fps-counter-styles')) {
@@ -9,8 +12,22 @@ if (!document.getElementById('fps-counter-styles')) {
 
 export function initialize(element: HTMLElement) {
   element.innerHTML = /* html */`
-    <aside class="FPS__container">
-      <!-- Top Section -->
+    <aside class="FPS__container" data-mode="default">
+      
+      <!-- Simple Mode View -->
+      <div class="FPS__simple-view">
+        <div class="FPS__simple-metric">
+          <div class="FPS__simple-current" id="fps-simple">60</div>
+          <div class="FPS__simple-target" id="fps-target-simple">/60</div>
+        </div>
+        <div class="FPS__simple-separator">|</div>
+        <div class="FPS__simple-metric">
+          <div class="FPS__simple-current" id="ups-simple">60</div>
+          <div class="FPS__simple-target" id="ups-target-simple">/60</div>
+        </div>
+      </div>
+
+      <!-- Default & Advanced Mode Header -->
       <div class="FPS__header">
         <div class="FPS__display">
           <p id="fps-current" class="FPS__current">0</p>
@@ -50,45 +67,40 @@ export function initialize(element: HTMLElement) {
         </div>
       </div>
 
-      <!-- RAM Section -->
-      <div class="FPS__ram">
-        <div id="ram-bar" class="FPS__ram-bg-bar"></div>
-        <span class="FPS__ram-text">RAM 64GB</span>
-        <span id="ram-value" class="FPS__ram-text">27.6GB</span>
+      <!-- Advanced Mode Controls -->
+      <div class="FPS__advanced-controls">
+        <div class="FPS__control-section">
+          <div class="FPS__control-header">
+            <span class="FPS__control-label">FPS</span>
+            <span id="fps-target-value" class="FPS__control-value">60</span>
+            <button class="FPS__control-reset" data-target="fps" title="Reset to default">⟲</button>
+          </div>
+          <div class="FPS__slider-container">
+            <input type="range" id="fps-slider" class="FPS__slider" min="0" max="120" value="60" step="1" />
+            <div class="FPS__slider-fill" id="fps-slider-fill"></div>
+          </div>
+        </div>
+        
+        <div class="FPS__control-section">
+          <div class="FPS__control-header">
+            <span class="FPS__control-label">UPS</span>
+            <span id="ups-target-value" class="FPS__control-value">60</span>
+            <button class="FPS__control-reset" data-target="ups" title="Reset to default">⟲</button>
+          </div>
+          <div class="FPS__slider-container">
+            <input type="range" id="ups-slider" class="FPS__slider" min="0" max="120" value="60" step="1" />
+            <div class="FPS__slider-fill" id="ups-slider-fill"></div>
+          </div>
+        </div>
       </div>
 
-      <!-- Hardware Section -->
-      <div class="FPS__hw">
-         <div class="FPS__hw-row">
-           <!-- Column 1: Temps -->
-           <div class="FPS__hw-col FPS__hw-col--temps">
-              <div>
-                 <div class="FPS__hw-label FPS__hw-label--red">AMD RYZEN</div>
-                 <div class="FPS__hw-value">69°C</div>
-                 <div class="FPS__hw-bar FPS__hw-bar--red" style="--temp-percent: 40%"></div>
-              </div>
-              
-              <div>
-                 <div class="FPS__hw-label FPS__hw-label--green">AMD</div>
-                 <div class="FPS__hw-value FPS__hw-value--white" style="font-size: 24px;">55°C</div>
-              </div>
-           </div>
-
-           <!-- Column 2: Loads -->
-           <div class="FPS__hw-col FPS__hw-col--loads">
-              <div style="text-align: right;">
-                  <span class="FPS__hw-label FPS__hw-label--white">GPU LOAD</span> <span class="FPS__hw-value FPS__hw-value--white">15%</span>
-              </div>
-              
-              <div style="text-align: right;">
-                   <div style="display: flex; justify-content: space-between; align-items: flex-end;">
-                      <span class="FPS__hw-label FPS__hw-label--white">GPU LOAD</span> <span class="FPS__hw-value FPS__hw-value--white">98%</span>
-                   </div>
-                   <div class="FPS__hw-bar FPS__hw-bar--green" style="--load-percent: 98%"></div>
-              </div>
-           </div>
-         </div>
-      </div>
     </aside>
   `;
+
+  // Set initial mode from system data
+  const { data } = useOverloadedSystem<EngineSystem<typeof schema>>("plugin:fps-counter");
+  const container = element.querySelector('.FPS__container');
+  if (container) {
+    container.setAttribute('data-mode', data.mode);
+  }
 }

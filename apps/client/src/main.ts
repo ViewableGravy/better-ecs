@@ -48,7 +48,7 @@ async function main() {
         element: document.getElementById('fps-counter')!,
         round: true,
         rate: 1000,
-        simpleModeToggleKey: { 
+        modeToggleKey: { 
           code: "KeyF", 
           modifiers: { 
             ctrl: true, 

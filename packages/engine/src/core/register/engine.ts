@@ -85,15 +85,7 @@ export class EngineClass<TSystems extends SystemFactoryTuple> {
     if (this.initialized) return;
 
     await executeWithContext({ engine: this } as any, async () => {
-      setContext((ctx) => {
-        console.log(ctx);
-      });
-
       await this.initializationSystem!.system();
-
-      setContext((ctx) => {
-        console.log(ctx);
-      });
 
       for (const system of Object.values(this.#systems)) {
         if (system.initialize) {
@@ -106,9 +98,6 @@ export class EngineClass<TSystems extends SystemFactoryTuple> {
   }
 
   public async *startEngine(opts?: StartEngineOpts): StartEngineGenerator {
-    const frameTime = 1000 / (opts?.fps || 60);
-    const updateTime = 1000 / (opts?.ups || 60);
-
     // Run initialization system and system initializations if not already initialized
     await this.initialize();
 
@@ -133,10 +122,13 @@ export class EngineClass<TSystems extends SystemFactoryTuple> {
       if (typeof window !== 'undefined' && window.requestAnimationFrame) {
         return window.requestAnimationFrame(cb);
       }
-      return setTimeout(() => cb(performance.now()), frameTime);
+      return setTimeout(() => cb(performance.now()), 1000 / this.frame.fps);
     };
 
     while (!opts?.signal?.aborted) {
+      const frameTime = 1000 / this.frame.fps;
+      const updateTime = 1000 / this.frame.ups;
+
       const now = await new Promise<number>(requestAnimationFrame);
 
       const updateDelta = now - lastUpdateTime;

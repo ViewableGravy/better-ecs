@@ -17,7 +17,10 @@ export const System = (opts: Opts) => {
         fpsBuffer: { start: null, frames: 0 }, 
         upsBuffer: { start: null, updates: 0 }, 
         fps: [],
-        ups: []
+        ups: [],
+        mode: opts.defaultMode ?? "default",
+        customFps: null,
+        customUps: null
       }
     }
   });

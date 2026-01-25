@@ -7,11 +7,9 @@
   --bar-min-color: #3498db;
   --bar-1low-color: #ecf0f1;
   --bar-01low-color: #7f8c8d;
-  --ram-bg-color: #d35400;
-  --ram-bar-color: #e67e22;
-  --label-red: #e74c3c;
   --label-green: #2ecc71;
-  --label-gold: #f1c40f;
+  --label-orange: #e67e22;
+  --label-grey: #7f8c8d;
 }
 
 .FPS__container {
@@ -33,24 +31,167 @@
   z-index: 9999;
 }
 
-.FPS__container--simple {
+/* Simple Mode */
+.FPS__container[data-mode="simple"] {
   width: auto;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 16px;
 }
 
-.FPS__container--simple .FPS__header {
-  height: auto;
-}
-
-.FPS__container--simple .FPS__stats,
-.FPS__container--simple .FPS__separator-v,
-.FPS__container--simple .FPS__frametime,
-.FPS__container--simple .FPS__ram,
-.FPS__container--simple .FPS__hw {
+.FPS__container[data-mode="simple"] .FPS__header,
+.FPS__container[data-mode="simple"] .FPS__advanced-controls {
   display: none;
 }
 
-.FPS__container--simple #fps-current {
-  font-size: 24px;
+.FPS__simple-view {
+  display: none;
+}
+
+.FPS__container[data-mode="simple"] .FPS__simple-view {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.FPS__simple-metric {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.FPS__simple-current {
+  font-size: 36px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.FPS__simple-target {
+  font-size: 14px;
+  color: #aaa;
+  line-height: 1;
+}
+
+.FPS__simple-separator {
+  font-size: 28px;
+  color: #666;
+}
+
+/* Default Mode */
+.FPS__container[data-mode="default"] .FPS__simple-view,
+.FPS__container[data-mode="default"] .FPS__advanced-controls {
+  display: none;
+}
+
+/* Advanced Mode */
+.FPS__container[data-mode="advanced"] .FPS__simple-view {
+  display: none;
+}
+
+.FPS__advanced-controls {
+  display: none;
+}
+
+.FPS__container[data-mode="advanced"] .FPS__advanced-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.FPS__control-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.FPS__control-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.FPS__control-label {
+  font-size: 11px;
+  font-weight: bold;
+  color: #aaa;
+  width: 30px;
+}
+
+.FPS__control-value {
+  font-size: 14px;
+  font-weight: bold;
+  flex-grow: 1;
+}
+
+.FPS__control-reset {
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  transition: color 0.2s;
+}
+
+.FPS__control-reset:hover {
+  color: white;
+}
+
+.FPS__slider-container {
+  position: relative;
+  height: 14px;
+}
+
+.FPS__slider {
+  width: 100%;
+  height: 14px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #333;
+  border-radius: 4px;
+  outline: none;
+  pointer-events: auto;
+  cursor: pointer;
+  position: relative;
+  z-index: 2;
+}
+
+.FPS__slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 8px;
+  height: 14px;
+  background: white;
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.FPS__slider::-moz-range-thumb {
+  width: 8px;
+  height: 14px;
+  background: white;
+  cursor: pointer;
+  border-radius: 2px;
+  border: none;
+}
+
+.FPS__slider-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 14px;
+  border-radius: 4px 0 0 4px;
+  pointer-events: none;
+  z-index: 1;
+  transition: width 0.1s, background-color 0.2s;
 }
 
 .FPS__header {
@@ -160,106 +301,5 @@
   font-weight: bold;
 }
 
-.FPS__ram {
-  background-color: var(--ram-bg-color);
-  color: white;
-  padding: 4px 8px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-weight: bold;
-  font-size: 14px;
-  position: relative;
-}
-
-.FPS__ram-bg-bar {
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  background-color: var(--ram-bar-color);
-  width: var(--ram-percent, 43%);
-  z-index: 0;
-}
-
-.FPS__ram-text {
-  z-index: 1;
-}
-
-.FPS__hw {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.FPS__hw-row {
-  display: flex;
-  gap: 10px;
-}
-
-.FPS__hw-col {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.FPS__hw-col--temps {
-  gap: 5px;
-}
-
-.FPS__hw-col--loads {
-  justify-content: space-between;
-}
-
-.FPS__hw-label {
-  font-size: 10px;
-  font-weight: bold;
-}
-
-.FPS__hw-label--red {
-  color: var(--label-red);
-}
-
-.FPS__hw-label--green {
-  color: var(--label-green);
-}
-
-.FPS__hw-label--white {
-  color: white;
-}
-
-.FPS__hw-value {
-  font-size: 24px;
-  font-weight: bold;
-  color: var(--label-gold);
-  margin: 0;
-  line-height: 1;
-}
-
-.FPS__hw-value--white {
-  color: white;
-  font-size: 14px;
-}
-
-.FPS__hw-value--small {
-  font-size: 12px;
-  color: white;
-}
-
-.FPS__hw-bar {
-  height: 4px;
-  margin-top: 2px;
-}
-
-.FPS__hw-bar--red {
-  background-color: var(--label-red);
-  width: var(--temp-percent, 0%);
-}
-
-.FPS__hw-bar--green {
-  background-color: var(--label-green);
-  height: 14px;
-  width: var(--load-percent, 0%);
-}
-
 p { margin: 0; }
+
