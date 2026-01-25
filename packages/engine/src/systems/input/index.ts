@@ -1,3 +1,4 @@
 
 export * from './keybind'
-export { inputSystem, InputStateSchema, type InputState } from './system'
+export { inputSystem } from './system'
+export { InputStateSchema, type InputState } from './input.types'

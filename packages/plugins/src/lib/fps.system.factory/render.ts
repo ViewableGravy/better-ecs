@@ -1,4 +1,4 @@
-import { schema, type Opts, type FPSCounterData } from ".";
+import { schema, type Opts, type FPSCounterData } from "./types";
 import { useOverloadedSystem, useEngine, type EngineSystem } from "@repo/engine";
 
 export function render(opts: Opts) {

@@ -1,6 +1,6 @@
 import type { UserWorld } from "@repo/engine/ecs/world";
 import type { EngineSystem } from "./register/system";
-import type { RegisteredEngine } from "./types";
+import type { RegisteredEngine } from "./engine-types";
 
 /***** TYPE DEFINITIONS *****/
 type Context = {

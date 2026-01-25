@@ -1,5 +1,5 @@
 import { assertType } from 'vitest';
-import type { InputState } from '../system';
+import type { InputState } from '../input.types';
 import { createMatchKeybind } from './keybind';
 import type { KeyBind, KeyBindGroup, Match, MatchList } from './keybind.types';
 

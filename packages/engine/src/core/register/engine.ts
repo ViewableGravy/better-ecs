@@ -1,7 +1,8 @@
-import type { EngineInitializationSystem, EngineSystem } from "@repo/engine/core/register/system";
+import type { EngineInitializationSystem, EngineSystem, SystemFactoryTuple } from "@repo/engine/core/register/system";
 import { UserWorld, World } from "../../ecs/world";
 import { executeWithContext, setContext } from "../context";
-import type { EngineFrame, EngineSystemTypes, EngineUpdate, FrameStats, SystemFactoryTuple } from "../types";
+import type { EngineFrame, EngineUpdate, FrameStats } from "../types";
+import type { EngineSystemTypes } from "../../systems/engine-system-types";
 import { inputSystem } from "../../systems/input";
 import { transformSnapshotSystem } from "../../systems/transformSnapshot";
 
@@ -160,7 +161,10 @@ export class EngineClass<TSystems extends SystemFactoryTuple> {
         // Calculate how far we are into the current update interval (0.0 to 1.0)
         this.frame.updateProgress = Math.min(updateDelta / updateTime, 1.0);
 
-        // Run systems based on phase
+        // Run systems based on phase - render ALWAYS runs before update
+        if (frameState.shouldUpdate) {
+          this.runSystems("render", frameState.shouldUpdate);
+        }
         if (updateState.shouldUpdate) {
           this.runSystems("update", updateState.shouldUpdate);
           // Update lastUpdateTime immediately to prevent double-running updates
@@ -168,9 +172,6 @@ export class EngineClass<TSystems extends SystemFactoryTuple> {
           this.frame.lastUpdateTime = now;
           // Only allow one update per frame to ensure proper interpolation
           (updateState as any).shouldUpdate = false;
-        }
-        if (frameState.shouldUpdate) {
-          this.runSystems("render", frameState.shouldUpdate);
         }
 
         yield [updateState, frameState] as const;

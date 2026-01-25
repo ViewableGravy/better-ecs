@@ -1,11 +1,7 @@
-import type {
-  InferStandardSchema,
-  StandardSchema
-} from "../types";
+import type { InferStandardSchema, StandardSchema } from "../types";
 
 /***** TYPE DEFINITIONS *****/
 export type SystemPriority = number | { update?: number; render?: number };
-
 export type SystemOpts<TSchema extends StandardSchema, TMethods extends Record<string, any>> = {
   schema: {
     default: InferStandardSchema<NoInfer<TSchema>>['input'];
@@ -18,7 +14,6 @@ export type SystemOpts<TSchema extends StandardSchema, TMethods extends Record<s
   initialize?: () => void;
   methods?: (system: EngineSystem<TSchema>) => TMethods;
 }
-
 export type SystemFactory<TName extends string, TSchema extends StandardSchema, TMethods extends Record<string, any>> = {
   (): EngineSystem<TSchema> & TMethods;
   ["~types"]: {
@@ -26,6 +21,9 @@ export type SystemFactory<TName extends string, TSchema extends StandardSchema, 
     schema: TSchema;
   };
 }
+
+// Tuple of SystemFactory types
+export type SystemFactoryTuple = Array<SystemFactory<string, StandardSchema, Record<string, any>>>;
 
 export type EngineSystem<TSchema extends StandardSchema = StandardSchema> = {
   name: string;

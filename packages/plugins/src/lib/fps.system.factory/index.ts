@@ -1,34 +1,9 @@
 import { createSystem, useEngine, useOverloadedSystem } from '@repo/engine';
-import type { EngineSystem, KeyBind } from '@repo/engine';
-import { z } from 'zod';
-import { initialize } from './index.initialize';
-import { render } from './index.render';
-import { update } from './index.update';
-
-/***** SCHEMA *****/
-export const schema = z.object({
-  fps: z.array(z.number()),
-  ups: z.array(z.number()),
-  fpsBuffer: z.object({
-    start: z.number().nullable(),
-    frames: z.number(),
-  }),
-  upsBuffer: z.object({
-    start: z.number().nullable(),
-    updates: z.number(),
-  }),
-});
-
-export type FPSCounterData = z.infer<typeof schema>;
-
-/***** TYPE DEFINITIONS *****/
-export type Opts = {
-  element: HTMLElement;
-  barCount?: number;
-  rate?: number;
-  round?: boolean;
-  simpleModeToggleKey?: KeyBind;
-};
+import type { EngineSystem } from '@repo/engine';
+import { initialize } from './initialize';
+import { render } from './render';
+import { update } from './update';
+import { schema, type Opts } from './types';
 
 export const System = (opts: Opts) => {
   return createSystem("plugin:fps-counter")({

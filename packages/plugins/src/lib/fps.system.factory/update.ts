@@ -1,5 +1,5 @@
-import type { Opts } from ".";
-import { schema } from "."
+import type { Opts } from "./types";
+import { schema } from "./types"
 import { useOverloadedSystem, useSystem } from "@repo/engine";
 import type { EngineSystem } from "@repo/engine";
 

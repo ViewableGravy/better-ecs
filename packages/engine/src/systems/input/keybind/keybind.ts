@@ -1,4 +1,4 @@
-import type { InputState } from "../system";
+import type { InputState } from "../input.types";
 import type { KeyBind, KeyBindGroup, KeyCode, Match, MatchList } from "./keybind.types";
 import { parseKeybindString } from "./keybind.types";
 
