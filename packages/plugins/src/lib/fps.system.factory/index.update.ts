@@ -9,14 +9,10 @@ export function update(opts: Opts) {
 
   // Toggle simple mode via engine input if a keybind was provided
   if (opts.simpleModeToggleKey) {
-    try {
-      const input = useSystem("engine:input") as any;
-      if (input?.data && matchKeybind(opts.simpleModeToggleKey, input.data, 'pressed')) {
-        const container = opts.element.querySelector('.FPS__container');
-        if (container) container.classList.toggle('FPS__container--simple');
-      }
-    } catch (e) {
-      // swallow if input system not available in this context
+    const { data } = useSystem("engine:input");
+    if (matchKeybind(opts.simpleModeToggleKey, data, 'pressed')) {
+      opts.element.querySelector('.FPS__container')
+        ?.classList.toggle('FPS__container--simple');
     }
   }
 
