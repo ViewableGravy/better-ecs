@@ -7,4 +7,5 @@ export * from './ecs/world';
 export * from './math';
 export * from './serialization';
 export * from './systems/transformSnapshot';
+export * from './systems/input';
 

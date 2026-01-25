@@ -1,9 +1,11 @@
-import { createSystem, useSystem } from "@repo/engine/core";
-import z from "zod";
+import { z } from "zod";
+import { createSystem } from "../../core/register/system";
+import { useOverloadedSystem } from "../../core/context";
 import { EventPool } from "./eventPool";
+import type { EngineSystem } from "../../core/register/system";
 
 /***** SYSTEM SCHEMA START *****/
-const InputStateSchema = z.object({
+export const InputStateSchema = z.object({
   /** @public Set of keys currently held across frames. */
   keysDown: z.set(z.string()),
 
@@ -30,8 +32,10 @@ const InputStateSchema = z.object({
   }).readonly()),
 });
 
+export type InputState = z.infer<typeof InputStateSchema>;
+
 /***** SYSTEM START *****/
-export const System = createSystem("input")({
+export const inputSystem = createSystem("engine:input")({
   initialize: InitializeEventListeners,
   system: Entrypoint,
   enabled: true,
@@ -51,7 +55,7 @@ export const System = createSystem("input")({
 
 /***** ENTRYPOINT START *****/
 function Entrypoint() {
-  const { data } = useSystem("input")
+  const { data } = useOverloadedSystem<EngineSystem<typeof InputStateSchema>>("engine:input");
 
   // Clear per-tick buffers at start of this update
   data.pressedThisTick.clear();
@@ -106,7 +110,10 @@ function Entrypoint() {
 }
 
 function InitializeEventListeners() {
-  const { data } = useSystem("input");
+  // Only initialize in browser environment
+  if (typeof window === 'undefined') return;
+
+  const { data } = useOverloadedSystem<EngineSystem<typeof InputStateSchema>>("engine:input");
 
   const eventPool = new EventPool();
 
@@ -119,3 +126,6 @@ function InitializeEventListeners() {
     data.eventBuffer.push(eventPool.press("keyup", event.key));
   });
 }
+
+// Helpers
+export { matchKeybind, keybindState } from './keybind';

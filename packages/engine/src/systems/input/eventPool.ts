@@ -1,4 +1,4 @@
-import { Pool } from "../../utilities/pool";
+import { Pool } from "./pool";
 
 type KeyboardEvent = {
   type: "keydown" | "keyup";

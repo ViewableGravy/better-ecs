@@ -3,7 +3,6 @@ import * as Engine from "@repo/engine";
 import { System as FPSCounter } from '@repo/plugins';
 import { System as Collision } from './systems/collision';
 import { System as Initialize } from "./systems/initialisation";
-import { System as Input } from './systems/input';
 import { System as Movement } from './systems/movement';
 import { System as Physics } from './systems/physics';
 import { System as Render } from './systems/render';
@@ -23,11 +22,11 @@ async function main() {
       FPSCounter({ 
         element: document.getElementById('fps-counter')!,
         round: true,
-        rate: 1000
+        rate: 1000,
+        simpleModeToggleKey: 'ctrl+shift+f'
       }),
 
-      // Update systems
-      Input,
+      // Update systems (input is now built-in as "engine:input")
       Movement,
       Physics,
       Collision,

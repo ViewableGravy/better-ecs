@@ -1,8 +1,9 @@
 import type { EngineInitializationSystem, EngineSystem } from "@repo/engine/core/register/system";
 import { UserWorld, World } from "../../ecs/world";
+import { inputSystem } from "../../systems/input";
 import { transformSnapshotSystem } from "../../systems/transformSnapshot";
 import { executeWithContext, setContext } from "../context";
-import type { EngineFrame, EngineUpdate, FrameStats, SystemFactoryTuple } from "../types";
+import type { EngineFrame, EngineSystemTypes, EngineUpdate, FrameStats, SystemFactoryTuple } from "../types";
 
 type StartEngineOpts = {
   fps?: number;
@@ -19,6 +20,9 @@ type SystemName<TFactory> = TFactory extends {
 type SystemsTupleToRecord<T extends SystemFactoryTuple> = {
   [Factory in T[number] as SystemName<Factory>]: ReturnType<Factory>
 }
+
+/** Combines user-defined systems with built-in engine systems */
+type AllSystems<T extends SystemFactoryTuple> = SystemsTupleToRecord<T> & EngineSystemTypes;
 
 export class EngineClass<TSystems extends SystemFactoryTuple> {
   #systems: Record<string, EngineSystem<any>>;
@@ -67,7 +71,7 @@ export class EngineClass<TSystems extends SystemFactoryTuple> {
   }
 
   /** Prefer `useSystem()` in systems instead. */
-  public get systems(): SystemsTupleToRecord<TSystems> {
+  public get systems(): AllSystems<TSystems> {
     return this.#systems as any;
   }
 
@@ -205,7 +209,7 @@ export function createEngine<const TSystems extends SystemFactoryTuple>(opts: {
   const systemsRecord: Record<string, EngineSystem<any>> = {};
 
   // Add built-in systems
-  const builtInSystems = [transformSnapshotSystem];
+  const builtInSystems = [transformSnapshotSystem, inputSystem];
   for (const factory of builtInSystems) {
     const system = factory();
     systemsRecord[system.name] = system;

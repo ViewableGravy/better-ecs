@@ -43,6 +43,28 @@ export type InferStandardSchema<TSchema> = TSchema extends StandardSchemaV1<infe
 // Tuple of SystemFactory types
 export type SystemFactoryTuple = Array<SystemFactory<string, StandardSchema>>;
 
+// --- Built-in Engine System Names ---
+/**
+ * Names of internal engine systems that are always available.
+ * These are added automatically by createEngine and can be accessed via useSystem.
+ */
+export type EngineSystemNames = 
+  | "engine:transformSnapshot"
+  | "engine:input";
+
+// --- Built-in Engine System Types ---
+import type { inputSystem, InputStateSchema } from "../systems/input";
+import type { transformSnapshotSystem } from "../systems/transformSnapshot";
+
+/**
+ * Type mapping for built-in engine systems.
+ * Maps engine system names to their EngineSystem types.
+ */
+export type EngineSystemTypes = {
+  "engine:input": ReturnType<typeof inputSystem>;
+  "engine:transformSnapshot": ReturnType<typeof transformSnapshotSystem>;
+};
+
 // --- Type Registration (via module augmentation) ---
 export interface Register {
   // Engine: EngineTypeInfo<...>
@@ -56,3 +78,9 @@ export type RegisteredEngine<TRegister = Register> =
   } 
     ? TEngine
     : AnyEngine;
+
+/** 
+ * Helper type to get all available system names including both user-defined 
+ * and built-in engine systems.
+ */
+export type AllSystemNames<TRegister = Register> = keyof RegisteredEngine<TRegister>['systems'];

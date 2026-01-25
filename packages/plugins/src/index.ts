@@ -1,1 +1,1 @@
-export * from './lib/plugins';
+export * from './lib/fps.system.factory';

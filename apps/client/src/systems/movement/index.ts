@@ -14,7 +14,7 @@ export const System = createSystem("movement")({
 function Entrypoint() {
   /***** HOOKS *****/
   const world = useWorld();
-  const { data } = useSystem("input");
+  const { data } = useSystem("engine:input");
   const [updateDelta] = useDelta();
 
   /***** QUERIES *****/

@@ -58,11 +58,31 @@ export function useDelta(): [updateDelta: number, frameDelta: number] {
   return [engine.frame.updateDelta, engine.frame.frameDelta];
 }
 
-export function useSystem<TOverride extends EngineSystem>(system: string): TOverride;
-export function useSystem<TSystem extends keyof RegisteredEngine['systems']>(system: TSystem): RegisteredEngine['systems'][TSystem];
-export function useSystem(system: string): any {
+/**
+ * Use a system by name with automatic type inference from the registered engine.
+ * This hook uses the global Register interface to infer the system type.
+ * 
+ * For plugins that need to manually specify types (because they don't have access
+ * to the global Register), use `useOverloadedSystem` instead.
+ */
+export function useSystem<TSystem extends keyof RegisteredEngine['systems']>(
+  system: TSystem
+): RegisteredEngine['systems'][TSystem] {
   const engine = useEngine();
-  return engine.systems[system];
+  return engine.systems[system as string];
+}
+
+/**
+ * Use a system by name with an explicit type override.
+ * This hook is designed for plugins that don't have access to the global Register
+ * interface and need to manually specify the system type.
+ * 
+ * @example
+ * const { data } = useOverloadedSystem<EngineSystem<typeof schema>>("engine:fps-counter");
+ */
+export function useOverloadedSystem<TOverride extends EngineSystem>(system: string): TOverride {
+  const engine = useEngine();
+  return engine.systems[system] as TOverride;
 }
 
 export function useWorld(): UserWorld {
