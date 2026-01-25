@@ -1,16 +1,17 @@
 import type { Opts } from ".";
 import { schema } from "."
-import { useOverloadedSystem,type EngineSystem, useSystem, matchKeybind } from "@repo/engine";
+import { useOverloadedSystem, useSystem } from "@repo/engine";
+import type { EngineSystem } from "@repo/engine";
 
 
 export function update(opts: Opts) {
-  const { data } = useOverloadedSystem<EngineSystem<typeof schema>>("engine:fps-counter");
+  const { data } = useOverloadedSystem<EngineSystem<typeof schema>>("plugin:fps-counter");
   const now = performance.now();
 
   // Toggle simple mode via engine input if a keybind was provided
   if (opts.simpleModeToggleKey) {
-    const { data } = useSystem("engine:input");
-    if (matchKeybind(opts.simpleModeToggleKey, data, 'pressed')) {
+    const input = useSystem("engine:input") as any;
+    if (input.matchKeybind({ state: 'pressed' })(opts.simpleModeToggleKey)) {
       opts.element.querySelector('.FPS__container')
         ?.classList.toggle('FPS__container--simple');
     }

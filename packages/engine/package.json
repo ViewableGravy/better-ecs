@@ -11,9 +11,11 @@
   },
   "scripts": {
     "build": "tsc",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "test": "vitest --run --typecheck"
   },
   "dependencies": {
+    "@repo/utils": "workspace:*",
     "type-fest": "^4.9.0"
   },
   "devDependencies": {

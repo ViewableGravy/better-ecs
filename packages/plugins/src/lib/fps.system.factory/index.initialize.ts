@@ -7,7 +7,7 @@ if (!document.getElementById('fps-counter-styles')) {
   document.head.appendChild(style);
 }
 
-export function initialize(element: HTMLElement, toggleKey?: string) {
+export function initialize(element: HTMLElement) {
   element.innerHTML = /* html */`
     <aside class="FPS__container">
       <!-- Top Section -->

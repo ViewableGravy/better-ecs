@@ -1,9 +1,9 @@
 import type { EngineInitializationSystem, EngineSystem } from "@repo/engine/core/register/system";
 import { UserWorld, World } from "../../ecs/world";
-import { inputSystem } from "../../systems/input";
-import { transformSnapshotSystem } from "../../systems/transformSnapshot";
 import { executeWithContext, setContext } from "../context";
 import type { EngineFrame, EngineSystemTypes, EngineUpdate, FrameStats, SystemFactoryTuple } from "../types";
+import { inputSystem } from "../../systems/input";
+import { transformSnapshotSystem } from "../../systems/transformSnapshot";
 
 type StartEngineOpts = {
   fps?: number;
@@ -83,7 +83,7 @@ export class EngineClass<TSystems extends SystemFactoryTuple> {
   public async initialize(): Promise<void> {
     if (this.initialized) return;
 
-    await executeWithContext({ engine: this }, async () => {
+    await executeWithContext({ engine: this } as any, async () => {
       setContext((ctx) => {
         console.log(ctx);
       });
@@ -190,7 +190,7 @@ export class EngineClass<TSystems extends SystemFactoryTuple> {
       ? this.#updateSystems 
       : this.#renderSystems;
 
-    executeWithContext({ engine: this }, () => {
+    executeWithContext({ engine: this } as any, () => {
       for (const system of systemsToRun) {
         if (!system.enabled) continue;
         system.system();
@@ -209,7 +209,7 @@ export function createEngine<const TSystems extends SystemFactoryTuple>(opts: {
   const systemsRecord: Record<string, EngineSystem<any>> = {};
 
   // Add built-in systems
-  const builtInSystems = [transformSnapshotSystem, inputSystem];
+  const builtInSystems = [inputSystem, transformSnapshotSystem];
   for (const factory of builtInSystems) {
     const system = factory();
     systemsRecord[system.name] = system;

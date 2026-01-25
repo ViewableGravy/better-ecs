@@ -69,7 +69,7 @@ export function useSystem<TSystem extends keyof RegisteredEngine['systems']>(
   system: TSystem
 ): RegisteredEngine['systems'][TSystem] {
   const engine = useEngine();
-  return engine.systems[system as string];
+  return (engine.systems as any)[system];
 }
 
 /**
@@ -78,11 +78,11 @@ export function useSystem<TSystem extends keyof RegisteredEngine['systems']>(
  * interface and need to manually specify the system type.
  * 
  * @example
- * const { data } = useOverloadedSystem<EngineSystem<typeof schema>>("engine:fps-counter");
+ * const { data } = useOverloadedSystem<EngineSystem<typeof schema>>("plugin:fps-counter");
  */
 export function useOverloadedSystem<TOverride extends EngineSystem>(system: string): TOverride {
   const engine = useEngine();
-  return engine.systems[system] as TOverride;
+  return (engine.systems as any)[system] as TOverride;
 }
 
 export function useWorld(): UserWorld {

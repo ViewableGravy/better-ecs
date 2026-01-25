@@ -24,19 +24,26 @@ function Entrypoint() {
 
   if (!transform) return;
 
-  for (const key of data.keysActive) {
+  // Handle movement using physical key codes (layout-independent)
+  // Maps physical keys to movement directions
+  for (const code of data.keysActive) {
     const speed = 50 * (updateDelta / 1000);
-    if (key === "ArrowUp" || key === "w" || key === "W") {
+    
+    // Vertical movement: Arrow keys or W/S
+    if (code === "ArrowUp" || code === "KeyW") {
       transform.curr.y -= speed;
     }
-    if (key === "ArrowDown" || key === "s" || key === "S") {
+    if (code === "ArrowDown" || code === "KeyS") {
       transform.curr.y += speed;
     }
-    if (key === "ArrowLeft" || key === "a" || key === "A") {
+    
+    // Horizontal movement: Arrow keys or A/D
+    if (code === "ArrowLeft" || code === "KeyA") {
       transform.curr.x -= speed;
     }
-    if (key === "ArrowRight" || key === "d" || key === "D") {
+    if (code === "ArrowRight" || code === "KeyD") {
       transform.curr.x += speed;
     }
   }
 }
+

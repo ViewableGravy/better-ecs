@@ -4,7 +4,7 @@ import { useOverloadedSystem, useEngine, type EngineSystem } from "@repo/engine"
 export function render(opts: Opts) {
   const now = performance.now();
   const engine = useEngine();
-  const { data } = useOverloadedSystem<EngineSystem<typeof schema>>("engine:fps-counter");
+  const { data } = useOverloadedSystem<EngineSystem<typeof schema>>("plugin:fps-counter");
 
   data.fpsBuffer.frames++;
 

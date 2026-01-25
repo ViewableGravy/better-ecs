@@ -3,9 +3,18 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
-    "composite": true,
-    "noEmit": false,
     "lib": ["DOM", "ES2022"],
+    "skipLibCheck": true,
+    "declaration": true,
+    "emitDeclarationOnly": false,
+    "noEmit": false,
+    "composite": true,
+    "typeRoots": ["../../node_modules/@types"]
   },
   "include": ["src/**/*"],
+  "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts"],
+  "references": [
+    { "path": "../utils/tsconfig.lib.json" }
+  ],
+  "compileOnSave": false
 }

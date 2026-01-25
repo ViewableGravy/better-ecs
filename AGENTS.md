@@ -19,6 +19,7 @@ Better ECS is a type safe ecs game engine with built in features for handling ga
 - TypeScript strict mode with extensive type safety
 - Framework-agnostic core logic separated from bindings and plugins
 - Use workspace protocol for internal dependencies (`workspace:*`)
+- do not write to /tmp or similar root level directories, ensure all files that are created are created inside the repository unless otherwise stated or confirmed.
 
 ## Dev environment tips
 

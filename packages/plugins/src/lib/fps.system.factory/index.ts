@@ -1,5 +1,5 @@
 import { createSystem, useEngine, useOverloadedSystem } from '@repo/engine';
-import type { EngineSystem } from '@repo/engine/core/register/system';
+import type { EngineSystem, KeyBind } from '@repo/engine';
 import { z } from 'zod';
 import { initialize } from './index.initialize';
 import { render } from './index.render';
@@ -27,13 +27,13 @@ export type Opts = {
   barCount?: number;
   rate?: number;
   round?: boolean;
-  simpleModeToggleKey?: string;
+  simpleModeToggleKey?: KeyBind;
 };
 
 export const System = (opts: Opts) => {
-  return createSystem("engine:fps-counter")({
+  return createSystem("plugin:fps-counter")({
     system: EntryPoint,
-    initialize: () => initialize(opts.element, opts.simpleModeToggleKey),
+    initialize: () => initialize(opts.element),
     priority: 1,
     phase: "all",
     schema: {
@@ -49,7 +49,7 @@ export const System = (opts: Opts) => {
 
   function EntryPoint() {
     const engine = useEngine();
-    const { data } = useOverloadedSystem<EngineSystem<typeof schema>>("engine:fps-counter");
+    const { data } = useOverloadedSystem<EngineSystem<typeof schema>>("plugin:fps-counter");
     const now = performance.now();
 
     if (!data.upsBuffer.start) {

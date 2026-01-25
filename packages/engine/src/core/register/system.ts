@@ -6,7 +6,7 @@ import type {
 /***** TYPE DEFINITIONS *****/
 export type SystemPriority = number | { update?: number; render?: number };
 
-export type SystemOpts<TSchema extends StandardSchema> = {
+export type SystemOpts<TSchema extends StandardSchema, TMethods extends Record<string, any>> = {
   schema: {
     default: InferStandardSchema<NoInfer<TSchema>>['input'];
     schema: TSchema;
@@ -16,10 +16,11 @@ export type SystemOpts<TSchema extends StandardSchema> = {
   enabled?: boolean;
   system: () => void;
   initialize?: () => void;
+  methods?: (system: EngineSystem<TSchema>) => TMethods;
 }
 
-export type SystemFactory<TName extends string, TSchema extends StandardSchema> = {
-  (): EngineSystem<TSchema>;
+export type SystemFactory<TName extends string, TSchema extends StandardSchema, TMethods extends Record<string, any>> = {
+  (): EngineSystem<TSchema> & TMethods;
   ["~types"]: {
     name: TName;
     schema: TSchema;
@@ -43,11 +44,12 @@ export type EngineInitializationSystem = {
 
 /***** COMPONENT START *****/
 export const createSystem = <TName extends string>(name: TName) => {
-  return <TSchema extends StandardSchema = StandardSchema>(
-    opts: SystemOpts<TSchema>
-  ): SystemFactory<TName, TSchema> => {
-    const factory = (): EngineSystem<TSchema> => {
-      return {
+  return <
+    TSchema extends StandardSchema = StandardSchema, 
+    TMethods extends Record<string, any> = {}
+  >(opts: SystemOpts<TSchema, TMethods>): SystemFactory<TName, TSchema, TMethods> => {
+    const factory = (): EngineSystem<TSchema> & TMethods => {
+      const system: EngineSystem<TSchema> = {
         name: name,
         data: opts.schema.default,
         schema: opts.schema.schema,
@@ -57,9 +59,13 @@ export const createSystem = <TName extends string>(name: TName) => {
         system: opts.system,
         initialize: opts.initialize,
       };
+
+      const methods = opts.methods ? opts.methods(system) : {} as TMethods;
+
+      return Object.assign(system, methods);
     };
 
-    const result: SystemFactory<TName, TSchema> =  Object.assign(factory, {
+    const result: SystemFactory<TName, TSchema, TMethods> =  Object.assign(factory, {
       ["~types"]: {
         name: name,
         schema: opts.schema.schema,

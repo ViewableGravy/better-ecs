@@ -17,6 +17,13 @@
         "command": "tsc --noEmit",
         "cwd": "packages/engine"
       }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest --run --typecheck",
+        "cwd": "packages/engine"
+      }
     }
   }
 }

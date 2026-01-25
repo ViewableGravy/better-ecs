@@ -5,24 +5,22 @@
   "projectType": "application",
   "targets": {
     "dev": {
-      "executor": "nx:run-commands",
+      "executor": "@nx/vite:dev-server",
       "options": {
-        "command": "vite",
-        "cwd": "apps/client"
+        "buildTarget": "client:build"
       }
     },
     "build": {
-      "executor": "nx:run-commands",
+      "executor": "@nx/vite:build",
+      "outputs": ["{options.outputPath}"],
       "options": {
-        "command": "vite build",
-        "cwd": "apps/client"
+        "outputPath": "dist"
       }
     },
     "preview": {
-      "executor": "nx:run-commands",
+      "executor": "@nx/vite:preview-server",
       "options": {
-        "command": "vite preview",
-        "cwd": "apps/client"
+        "buildTarget": "client:build"
       }
     },
     "lint": {

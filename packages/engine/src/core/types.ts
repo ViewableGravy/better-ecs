@@ -1,6 +1,8 @@
 import type { EngineClass } from "@repo/engine/core/register/engine";
 import type { SystemFactory } from "@repo/engine/core/register/system";
 import type { StandardSchemaV1 } from "@standard-schema/spec";
+import type { inputSystem, InputStateSchema } from "../systems/input";
+import type { transformSnapshotSystem } from "../systems/transformSnapshot";
 
 // --- Engine Lifecycle Types ---
 export type EngineUpdate = {
@@ -41,7 +43,7 @@ export type InferStandardSchema<TSchema> = TSchema extends StandardSchemaV1<infe
 // --- Engine Types ---
 
 // Tuple of SystemFactory types
-export type SystemFactoryTuple = Array<SystemFactory<string, StandardSchema>>;
+export type SystemFactoryTuple = Array<SystemFactory<string, StandardSchema, Record<string, any>>>;
 
 // --- Built-in Engine System Names ---
 /**
@@ -52,10 +54,7 @@ export type EngineSystemNames =
   | "engine:transformSnapshot"
   | "engine:input";
 
-// --- Built-in Engine System Types ---
-import type { inputSystem, InputStateSchema } from "../systems/input";
-import type { transformSnapshotSystem } from "../systems/transformSnapshot";
-
+// --- Built-in Engine System Types --
 /**
  * Type mapping for built-in engine systems.
  * Maps engine system names to their EngineSystem types.
