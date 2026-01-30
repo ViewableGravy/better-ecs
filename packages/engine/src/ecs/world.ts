@@ -21,6 +21,11 @@ export interface UserWorld {
 export class UserWorld implements UserWorld {
   constructor(private world: World) {}
 
+  /** @internal Update the wrapped world without reallocating the wrapper. */
+  setWorld(world: World): void {
+    this.world = world;
+  }
+
   create(): EntityId {
     return this.world.createEntity();
   }

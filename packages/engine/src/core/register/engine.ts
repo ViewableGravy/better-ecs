@@ -42,6 +42,9 @@ export class EngineClass<
   #updateSystems: EngineSystem<any>[] = [];
   #renderSystems: EngineSystem<any>[] = [];
 
+  #currentPhase: "update" | "render" | null = null;
+  #phaseFn = (phase: "update" | "render") => phase === this.#currentPhase;
+
   private initializationSystem: EngineInitializationSystem | null = null;
   private initialized: boolean = false;
 
@@ -70,6 +73,8 @@ export class EngineClass<
     this.#systems = systems;
     this.scene = new SceneManager<TScenes>(scenes);
     this.scene.setEngineRef(this);
+
+    this.frame.phase = this.#phaseFn;
     
     this.precomputeSystemOrder();
   }
@@ -151,6 +156,8 @@ export class EngineClass<
       shouldUpdate: false,
     };
 
+    const yieldState = [updateState, frameState] as const;
+
     const requestAnimationFrame = (cb: (time: number) => void) => {
       if (typeof window !== 'undefined' && window.requestAnimationFrame) {
         return window.requestAnimationFrame(cb);
@@ -202,7 +209,7 @@ export class EngineClass<
           }
         }
 
-        yield [updateState, frameState] as const;
+        yield yieldState;
 
         if (frameShouldRun) {
           lastFrameTime = now;
@@ -214,7 +221,7 @@ export class EngineClass<
   private runSystems(phase: "update" | "render", shouldUpdate: boolean) {
     if (!shouldUpdate) return;
 
-    this.frame.phase = (p) => p === phase;
+    this.#currentPhase = phase;
     const systemsToRun = phase === "update"
       ? this.#updateSystems 
       : this.#renderSystems;
@@ -226,7 +233,7 @@ export class EngineClass<
       }
     });
 
-    this.frame.phase = (_) => false;
+    this.#currentPhase = null;
   }
 }
 

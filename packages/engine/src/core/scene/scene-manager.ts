@@ -16,6 +16,7 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
   #sceneWorlds: Map<string, World> = new Map();
   #activeScene: SceneDefinition<string> | null = null;
   #activeWorld: World;
+  #userWorld: UserWorld;
   #isTransitioning: boolean = false;
   
   // Reference to engine for context execution
@@ -23,6 +24,7 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
 
   constructor(scenes: SceneDefinitionTuple = []) {
     this.#activeWorld = new World("__default__");
+    this.#userWorld = new UserWorld(this.#activeWorld);
     
     // Register all scenes and create their worlds
     for (const scene of scenes) {
@@ -43,7 +45,7 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
    * Get the currently active scene's world.
    */
   get world(): UserWorld {
-    return new UserWorld(this.#activeWorld);
+    return this.#userWorld;
   }
 
   /**
@@ -125,8 +127,8 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
     try {
       // 1. Teardown current scene (if any)
       if (this.#activeScene) {
-        const currentWorld = new UserWorld(this.#activeWorld);
-        await this.#activeScene.teardown(currentWorld);
+        this.#userWorld.setWorld(this.#activeWorld);
+        await this.#activeScene.teardown(this.#userWorld);
       }
 
       // 2. Clear the old world (flush all entities)
@@ -138,9 +140,9 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
       this.#activeScene = newScene;
 
       // 4. Setup new scene
-      const userWorld = new UserWorld(newWorld);
+      this.#userWorld.setWorld(newWorld);
       await executeWithContext({ engine: this.#engineRef } as any, async () => {
-        await newScene.setup(userWorld);
+        await newScene.setup(this.#userWorld);
       });
 
     } finally {
