@@ -271,14 +271,19 @@ export function createEngine<
   }
 
   // Set initial scene if provided (will be activated during initialize())
-  if (opts.initialScene && opts.scenes) {
-    // We need to set the initial scene after the engine is created
-    // This is done asynchronously during engine.initialize() 
-    const originalInitialize = engine.initialize.bind(engine);
-    (engine as any).initialize = async function() {
-      await originalInitialize();
-      await engine.scene.set(opts.initialScene!);
-    };
+  if (opts.scenes) {
+    const firstScene = opts.scenes[0].name as unknown as SceneName<TScenes[number]> | undefined;
+    const initialScene = opts.initialScene ?? firstScene;
+
+    if (initialScene) {
+      // We need to set the initial scene after the engine is created
+      // This is done asynchronously during engine.initialize() 
+      const originalInitialize = engine.initialize.bind(engine);
+      (engine as any).initialize = async function() {
+        await originalInitialize();
+        await engine.scene.set(initialScene);
+      };
+    }
   }
   
   // Return engine with type info for module augmentation

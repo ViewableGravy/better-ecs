@@ -1,16 +1,15 @@
 // apps/client/src/main.ts
 import './styles.css';
 import * as Engine from "@repo/engine";
-import z from "zod";
 import { System as FPSCounter } from '@repo/plugins';
 import { System as Collision } from './systems/collision';
 import { System as Initialize } from "./systems/initialisation";
 import { System as Movement } from './systems/movement';
 import { System as Physics } from './systems/physics';
 import { System as Render } from './systems/render';
-import { initialize } from '@repo/plugins/lib/fps.system.factory/initialize';
+import { Scene as TestScene } from './scenes/test';
 
-// Register the engine type with the module for useEngine() typing
+// Declare engine types
 declare module "@repo/engine" {
   interface Register {
     Engine: Awaited<ReturnType<typeof main>>;
@@ -44,7 +43,7 @@ async function main() {
       Render,
     ],
     scenes: [
-      
+      TestScene
     ]
   });
 

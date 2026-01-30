@@ -35,35 +35,21 @@ export function render(opts: Opts) {
   const targetFps = data.customFps ?? engine.frame.fps ?? 60;
   const targetUps = data.customUps ?? engine.frame.ups ?? 60;
 
-  // Helper functions
-  const setVal = (id: string, val: number | string) => {
-      const el = opts.element.querySelector<HTMLElement>(id);
-      if (!el) return;
-      el.textContent = typeof val === 'number' ? Math.round(val).toString() : val;
-  };
-
-  const setBar = (id: string, val: number, maxVal: number) => {
-      const el = opts.element.querySelector<HTMLElement>(id);
-      if (!el) return;
-      const pct = Math.min(100, Math.max(0, (val / maxVal) * 100));
-      el.style.setProperty('--bar-width', `${pct}%`);
-  };
-
   // Update based on mode
   if (data.mode === "simple") {
-    setVal('#fps-simple', currentFps);
-    setVal('#fps-target-simple', `/${targetFps}`);
-    setVal('#ups-simple', currentUps);
-    setVal('#ups-target-simple', `/${targetUps}`);
+    setVal('#fps-simple', opts.element, currentFps);
+    setVal('#fps-target-simple', opts.element, `/${targetFps}`);
+    setVal('#ups-simple', opts.element, currentUps);
+    setVal('#ups-target-simple', opts.element, `/${targetUps}`);
     return;
   }
 
   // Default and Advanced modes show the same header stats
-  setVal('#fps-current', currentFps);
+  setVal('#fps-current', opts.element, currentFps);
 
   // Frame Time calculation (from current FPS)
   const frameTime = 1000 / (currentFps || 60);
-  setVal('#frametime-value', frameTime.toFixed(1));
+  setVal('#frametime-value', opts.element, frameTime.toFixed(1));
 
   // Sort for percentiles
   const sortedFps = [...fps].sort((a, b) => a - b);
@@ -80,24 +66,23 @@ export function render(opts: Opts) {
   const index01Low = Math.floor(sortedFps.length * 0.001);
   const low01 = sortedFps[Math.max(0, index01Low)];
 
-  setVal('#val-avg', avg);
-  setVal('#val-max', max);
-  setVal('#val-min', min);
-  setVal('#val-1low', low1);
-  setVal('#val-01low', low01);
-
+  setVal('#val-avg', opts.element, avg);
+  setVal('#val-max', opts.element, max);
+  setVal('#val-min', opts.element, min);
+  setVal('#val-1low', opts.element, low1);
+  setVal('#val-01low', opts.element, low01);
   const barScale = targetFps;
   
-  setBar('#bar-avg', avg, barScale);
-  setBar('#bar-max', max, barScale);
-  setBar('#bar-min', min, barScale);
-  setBar('#bar-1low', low1, barScale);
-  setBar('#bar-01low', low01, barScale);
-
+  setBar('#bar-avg', opts.element, avg, barScale);
+  setBar('#bar-max', opts.element, max, barScale);
+  setBar('#bar-min', opts.element, min, barScale);
+  setBar('#bar-1low', opts.element, low1, barScale);
+  setBar('#bar-01low', opts.element, low01, barScale);
+  
   // Advanced mode: Update target displays and sync sliders only if needed
   if (data.mode === "advanced") {
-    setVal('#fps-target-value', targetFps);
-    setVal('#ups-target-value', targetUps);
+    setVal('#fps-target-value', opts.element, targetFps);
+    setVal('#ups-target-value', opts.element, targetUps);
     
     // Only update sliders if the stored value changed (not on every render)
     // This prevents resetting user input while they're dragging
@@ -137,4 +122,17 @@ function updateSliderFill(slider: HTMLInputElement, container: HTMLElement) {
       fill.style.backgroundColor = 'var(--label-orange)';
     }
   }
+}
+
+function setVal(id: string, element: HTMLElement, val: number | string) {
+  const el = element.querySelector<HTMLElement>(id);
+  if (!el) return;
+  el.textContent = typeof val === 'number' ? Math.round(val).toString() : val;
+};
+
+function setBar(id: string, element: HTMLElement, val: number, maxVal: number) {
+  const el = element.querySelector<HTMLElement>(id);
+  if (!el) return;
+  const pct = Math.min(100, Math.max(0, (val / maxVal) * 100));
+  el.style.setProperty('--bar-width', `${pct}%`);
 }
