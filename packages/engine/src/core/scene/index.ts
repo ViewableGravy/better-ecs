@@ -8,5 +8,5 @@ export type {
   SceneDefinition, 
   SceneDefinitionTuple, 
   SceneName, 
-  ScenesTupleToNames 
+  ScenesTupleToNames
 } from "./scene.types";

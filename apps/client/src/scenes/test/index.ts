@@ -1,4 +1,4 @@
-import { createScene,useWorld } from "@repo/engine";
+import { createScene, useWorld } from "@repo/engine";
 import { Transform } from "@repo/engine/components";
 import { PlayerComponent } from "../../components/player";
 
