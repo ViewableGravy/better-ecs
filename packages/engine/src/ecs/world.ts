@@ -151,7 +151,7 @@ export class World {
    */
   query(...componentTypes: Function[]): EntityId[] {
     if (componentTypes.length === 0) {
-      return Array.from(this.entities);
+      return this.getEntities();
     }
 
     // Use the smallest store as the base to iterate
@@ -160,8 +160,12 @@ export class World {
 
     for (const componentType of componentTypes) {
       const store = this.componentStores.get(componentType);
+
       if (!store) return []; // No entities have all required components
 
+      // Since we will short circuit if any store is missing, 
+      // we know all entities for this store are in other stores, 
+      // but we only keep the smallest one to iterate over
       if (store.count() < smallestCount) {
         smallestStore = store;
         smallestCount = store.count();
@@ -173,11 +177,16 @@ export class World {
     const result: EntityId[] = [];
 
     for (const [entityId] of smallestStore) {
-      const missingSome = componentTypes.some((componentType) => {
-        return !this.hasComponent(entityId, componentType)
-      });
-      
-      if (!missingSome) {
+      let matchesAll = true;
+
+      for (const componentType of componentTypes) {
+        if (!this.hasComponent(entityId, componentType)) {
+          matchesAll = false;
+          break;
+        }
+      }
+
+      if (matchesAll) {
         result.push(entityId);
       }
     }
