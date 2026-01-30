@@ -3,6 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/client/src",
   "projectType": "application",
+  "tags": ["type:client"],
   "targets": {
     "dev": {
       "executor": "@nx/vite:dev-server",

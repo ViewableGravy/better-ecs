@@ -22,8 +22,34 @@ export default [
           allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$'],
           depConstraints: [
             {
-              sourceTag: '*',
-              onlyDependOnLibsWithTags: ['*'],
+              sourceTag: 'type:utils',
+              onlyDependOnLibsWithTags: ['type:utils'],
+            },
+            {
+              sourceTag: 'type:engine',
+              onlyDependOnLibsWithTags: ['type:engine', 'type:utils'],
+            },
+            {
+              sourceTag: 'type:plugins',
+              onlyDependOnLibsWithTags: ['type:plugins', 'type:engine', 'type:utils'],
+            },
+            {
+              sourceTag: 'type:client',
+              onlyDependOnLibsWithTags: [
+                'type:client',
+                'type:engine',
+                'type:plugins',
+                'type:utils',
+              ],
+            },
+            {
+              sourceTag: 'type:server',
+              onlyDependOnLibsWithTags: [
+                'type:server',
+                'type:engine',
+                'type:plugins',
+                'type:utils',
+              ],
             },
           ],
         },

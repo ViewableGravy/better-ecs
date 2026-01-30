@@ -1,4 +1,4 @@
-import type { EngineInitializationSystem, EngineSystem, SystemFactoryTuple } from "@repo/engine/core/register/system";
+import type { EngineInitializationSystem, EngineSystem, SystemFactoryTuple } from "./system";
 import { UserWorld } from "../../ecs/world";
 import { executeWithContext } from "../context";
 import type { EngineFrame, EngineUpdate, FrameStats } from "../types";

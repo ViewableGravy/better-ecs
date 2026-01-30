@@ -1,4 +1,4 @@
-import type { UserWorld } from "@repo/engine/ecs/world";
+import type { UserWorld } from "../ecs/world";
 import type { EngineSystem } from "./register/system";
 import type { RegisteredEngine, AllSceneNames } from "./engine-types";
 

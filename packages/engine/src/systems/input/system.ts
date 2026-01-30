@@ -98,10 +98,31 @@ function Initialize() {
 
   // Browser event listeners: buffer events using physical key (code) instead of character (key)
   window.addEventListener("keydown", (event) => {
-    data.eventBuffer.push(eventPool.press("keydown", event.code, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey));
+    // Ignore auto-repeat keydown events to prevent unbounded buffering on long key holds.
+    if (event.repeat) return;
+
+    data.eventBuffer.push(
+      eventPool.press(
+        "keydown", 
+        event.code, 
+        event.ctrlKey, 
+        event.shiftKey, 
+        event.altKey, 
+        event.metaKey
+      )
+    );
   });
 
   window.addEventListener("keyup", (event) => {
-    data.eventBuffer.push(eventPool.press("keyup", event.code, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey));
+    data.eventBuffer.push(
+      eventPool.press(
+        "keyup", 
+        event.code, 
+        event.ctrlKey, 
+        event.shiftKey, 
+        event.altKey, 
+        event.metaKey
+      )
+    );
   });
 }

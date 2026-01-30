@@ -5,6 +5,7 @@
     "moduleResolution": "NodeNext",
     "outDir": "./dist",
     "rootDir": "./src",
+    "noEmit": true,
     "skipLibCheck": true,
     "composite": false
   },
