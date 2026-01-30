@@ -1,4 +1,4 @@
-import './fps-counter.css';
+import './fps-counter.scss';
 import { useOverloadedSystem } from "@repo/engine";
 import type { EngineSystem } from "@repo/engine";
 import { schema } from "./types";

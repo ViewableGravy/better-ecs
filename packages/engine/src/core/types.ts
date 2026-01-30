@@ -23,6 +23,10 @@ export type FrameStats = {
   fps: number;
   /** Target updates per second */
   ups: number;
+  /** Initial target frames per second (set by startEngine) */
+  initialFPS: number;
+  /** Initial target updates per second (set by startEngine) */
+  initialUPS: number;
   /** Progress through current update interval (0.0 to 1.0) */
   updateProgress: number;
   /** Timestamp of the last update in milliseconds */

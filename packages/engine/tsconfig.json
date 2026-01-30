@@ -13,8 +13,6 @@
   },
   "include": ["src/**/*"],
   "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts"],
-  "references": [
-    { "path": "../utils/tsconfig.lib.json" }
-  ],
+  "references": [],
   "compileOnSave": false
 }

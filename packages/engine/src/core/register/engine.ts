@@ -42,6 +42,8 @@ export class EngineClass<TSystems extends SystemFactoryTuple> {
     phase: (_) => false,
     fps: 60,
     ups: 60,
+    initialFPS: 60,
+    initialUPS: 60,
     updateProgress: 0,
     lastUpdateTime: 0,
   };
@@ -104,6 +106,8 @@ export class EngineClass<TSystems extends SystemFactoryTuple> {
     // Store fps and ups on the engine for access in systems
     this.frame.fps = opts?.fps || 60;
     this.frame.ups = opts?.ups || 60;
+    this.frame.initialFPS = opts?.fps || 60;
+    this.frame.initialUPS = opts?.ups || 60;
 
     let lastUpdateTime = performance.now();
     let lastFrameTime = performance.now();

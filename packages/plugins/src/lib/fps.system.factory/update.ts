@@ -57,37 +57,49 @@ function initializeSliders(container: HTMLElement, systemData: any, engine: AnyE
   const upsReset = container.querySelector('[data-target="ups"]') as HTMLButtonElement;
 
   if (fpsSlider) {
+    // Initialize value from engine
+    fpsSlider.value = engine.frame.fps.toString();
+    const valueEl = container.querySelector('#fps-target-value');
+    if (valueEl) valueEl.textContent = engine.frame.fps.toString();
+    updateSliderFill(fpsSlider, container, engine.frame.initialFPS);
+
     fpsSlider.addEventListener('input', (e) => {
       const value = parseInt((e.target as HTMLInputElement).value);
       systemData.customFps = value;
       engine.frame.fps = value;
       const valueEl = container.querySelector('#fps-target-value');
       if (valueEl) valueEl.textContent = value.toString();
-      updateSliderFill(fpsSlider, container);
+      updateSliderFill(fpsSlider, container, engine.frame.initialFPS);
     });
   }
 
   if (upsSlider) {
+    // Initialize value from engine
+    upsSlider.value = engine.frame.ups.toString();
+    const valueEl = container.querySelector('#ups-target-value');
+    if (valueEl) valueEl.textContent = engine.frame.ups.toString();
+    updateSliderFill(upsSlider, container, engine.frame.initialUPS);
+
     upsSlider.addEventListener('input', (e) => {
       const value = parseInt((e.target as HTMLInputElement).value);
       systemData.customUps = value;
       engine.frame.ups = value;
       const valueEl = container.querySelector('#ups-target-value');
       if (valueEl) valueEl.textContent = value.toString();
-      updateSliderFill(upsSlider, container);
+      updateSliderFill(upsSlider, container, engine.frame.initialUPS);
     });
   }
 
   if (fpsReset) {
     fpsReset.addEventListener('click', () => {
       systemData.customFps = null; // Reset to use engine default
-      engine.frame.fps = 60; // Reset engine to default
+      engine.frame.fps = engine.frame.initialFPS; // Reset engine to default
       if (fpsSlider) {
-        const defaultValue = 60; // Will be overridden by engine value on next render
+        const defaultValue = engine.frame.initialFPS;
         fpsSlider.value = defaultValue.toString();
         const valueEl = container.querySelector('#fps-target-value');
         if (valueEl) valueEl.textContent = defaultValue.toString();
-        updateSliderFill(fpsSlider, container);
+        updateSliderFill(fpsSlider, container, defaultValue);
       }
     });
   }
@@ -95,22 +107,21 @@ function initializeSliders(container: HTMLElement, systemData: any, engine: AnyE
   if (upsReset) {
     upsReset.addEventListener('click', () => {
       systemData.customUps = null; // Reset to use engine default
-      engine.frame.ups = 60; // Reset engine to default
+      engine.frame.ups = engine.frame.initialUPS; // Reset engine to default
       if (upsSlider) {
-        const defaultValue = 60; // Will be overridden by engine value on next render
+        const defaultValue = engine.frame.initialUPS;
         upsSlider.value = defaultValue.toString();
         const valueEl = container.querySelector('#ups-target-value');
         if (valueEl) valueEl.textContent = defaultValue.toString();
-        updateSliderFill(upsSlider, container);
+        updateSliderFill(upsSlider, container, defaultValue);
       }
     });
   }
 }
 
 
-function updateSliderFill(slider: HTMLInputElement, container: HTMLElement) {
+function updateSliderFill(slider: HTMLInputElement, container: HTMLElement, defaultValue: number) {
   const value = parseInt(slider.value);
-  const defaultValue = 60; // Default FPS/UPS
   const max = parseInt(slider.max);
   const percentage = (value / max) * 100;
   
