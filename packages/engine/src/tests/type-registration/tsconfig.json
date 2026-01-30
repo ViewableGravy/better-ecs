@@ -1,0 +1,14 @@
+{
+  "extends": "../../../../../tsconfig.base.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "rootDir": "../../../../../",
+    "lib": ["ESNext", "DOM"]
+  },
+  "include": [
+    "./**/*.ts",
+    "./**/*.test-d.ts",
+    "../../../**/*.ts"
+  ]
+}

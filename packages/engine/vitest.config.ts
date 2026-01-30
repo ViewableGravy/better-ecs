@@ -4,7 +4,9 @@ export default defineConfig({
   test: {
     include: ['src/**/*.spec.ts'],
     typecheck: {
-      include: ['src/**/*.spec-d.ts'],
+      enabled: false,
+      include: ['src/**/*.spec-d.ts', 'src/**/*.test-d.ts'],
+      tsconfig: './src/tests/type-registration/tsconfig.json',
     },
   },
 });

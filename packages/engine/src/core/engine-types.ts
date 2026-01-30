@@ -7,6 +7,13 @@ export type AnyEngine = {
   systems: Record<string, any>;
   world: any;
   frame: any;
+  scenes: Record<string, any>;
+  scene: {
+    set: (name: string) => Promise<void>;
+    current: string | null;
+    world: any;
+    all: Record<string, any>;
+  };
 };
 
 export type RegisteredEngine<TRegister = Register> = 
@@ -21,3 +28,8 @@ export type RegisteredEngine<TRegister = Register> =
  * and built-in engine systems.
  */
 export type AllSystemNames<TRegister = Register> = keyof RegisteredEngine<TRegister>["systems"];
+
+/**
+ * Helper type to get all available scene names from the registered engine.
+ */
+export type AllSceneNames<TRegister = Register> = keyof RegisteredEngine<TRegister>["scenes"];

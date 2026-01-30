@@ -21,6 +21,18 @@ Better ECS is a type safe ecs game engine with built in features for handling ga
 - Use workspace protocol for internal dependencies (`workspace:*`)
 - do not write to /tmp or similar root level directories, ensure all files that are created are created inside the repository unless otherwise stated or confirmed.
 
+## No Legacy Code Policy
+
+**Critical**: This project does not maintain legacy code or deprecated APIs.
+
+- **Remove, don't deprecate**: When refactoring, completely remove old implementations rather than marking them as deprecated.
+- **No backward compatibility layers**: Do not add compatibility shims for old APIs.
+- **Clean codebase**: Actively remove unused code, dead imports, and obsolete patterns.
+- **Modern only**: Use the latest patterns and APIs. This is a personal project building foundational architecture.
+- **Refactors are full replacements**: When implementing new architecture, update all consuming code to use it immediately.
+
+This ensures the codebase stays clean, maintainable, and doesn't accumulate technical debt.
+
 ## Dev environment tips
 
 - This is a bun workspace monorepo with packages organized by functionality.

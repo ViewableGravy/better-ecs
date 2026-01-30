@@ -1,10 +1,12 @@
 import type { EngineInitializationSystem, EngineSystem, SystemFactoryTuple } from "@repo/engine/core/register/system";
-import { UserWorld, World } from "../../ecs/world";
-import { executeWithContext, setContext } from "../context";
+import { UserWorld } from "../../ecs/world";
+import { executeWithContext } from "../context";
 import type { EngineFrame, EngineUpdate, FrameStats } from "../types";
 import type { EngineSystemTypes } from "../../systems/engine-system-types";
 import { inputSystem } from "../../systems/input";
 import { transformSnapshotSystem } from "../../systems/transformSnapshot";
+import type { SceneDefinitionTuple, SceneName } from "../scene/scene.types";
+import { SceneManager } from "../scene/scene-manager";
 
 type StartEngineOpts = {
   fps?: number;
@@ -25,9 +27,16 @@ type SystemsTupleToRecord<T extends SystemFactoryTuple> = {
 /** Combines user-defined systems with built-in engine systems */
 type AllSystems<T extends SystemFactoryTuple> = SystemsTupleToRecord<T> & EngineSystemTypes;
 
-export class EngineClass<TSystems extends SystemFactoryTuple> {
+/** Converts scene tuple to a record of scene names to scene definitions */
+type ScenesTupleToRecord<T extends SceneDefinitionTuple> = {
+  [Scene in T[number] as SceneName<Scene>]: Scene
+}
+
+export class EngineClass<
+  TSystems extends SystemFactoryTuple,
+  TScenes extends SceneDefinitionTuple = []
+> {
   #systems: Record<string, EngineSystem<any>>;
-  #world: World;
 
   // Cached sorted lists for each phase
   #updateSystems: EngineSystem<any>[] = [];
@@ -35,6 +44,12 @@ export class EngineClass<TSystems extends SystemFactoryTuple> {
 
   private initializationSystem: EngineInitializationSystem | null = null;
   private initialized: boolean = false;
+
+  /**
+   * Scene manager for handling scene lifecycle and transitions.
+   * Use `engine.scene.set("name")` to transition between scenes.
+   */
+  public readonly scene: SceneManager<TScenes>;
 
   public frame: FrameStats = {
     updateDelta: 0,
@@ -48,9 +63,14 @@ export class EngineClass<TSystems extends SystemFactoryTuple> {
     lastUpdateTime: 0,
   };
 
-  public constructor(systems: Record<string, EngineSystem<any>>) {
+  public constructor(
+    systems: Record<string, EngineSystem<any>>,
+    scenes: SceneDefinitionTuple = []
+  ) {
     this.#systems = systems;
-    this.#world = new World();
+    this.scene = new SceneManager<TScenes>(scenes);
+    this.scene.setEngineRef(this);
+    
     this.precomputeSystemOrder();
   }
 
@@ -78,17 +98,26 @@ export class EngineClass<TSystems extends SystemFactoryTuple> {
     return this.#systems as any;
   }
 
-  /** Prefer `useWorld()` in systems instead. */
+  /** Get registered scenes */
+  public get scenes(): ScenesTupleToRecord<TScenes> {
+    return this.scene.all as any;
+  }
+
+  /** Prefer `useWorld()` in systems instead. Returns the active scene's world. */
   public get world(): UserWorld {
-    return new UserWorld(this.#world);
+    return this.scene.world;
   }
 
   public async initialize(): Promise<void> {
     if (this.initialized) return;
 
     await executeWithContext({ engine: this } as any, async () => {
-      await this.initializationSystem!.system();
+      // Run initialization system if provided
+      if (this.initializationSystem) {
+        await this.initializationSystem.system();
+      }
 
+      // Initialize all systems
       for (const system of Object.values(this.#systems)) {
         if (system.initialize) {
           system.initialize();
@@ -157,17 +186,20 @@ export class EngineClass<TSystems extends SystemFactoryTuple> {
         // Calculate how far we are into the current update interval (0.0 to 1.0)
         this.frame.updateProgress = Math.min(updateDelta / updateTime, 1.0);
 
-        // Run systems based on phase - render ALWAYS runs before update
-        if (frameState.shouldUpdate) {
-          this.runSystems("render", frameState.shouldUpdate);
-        }
-        if (updateState.shouldUpdate) {
-          this.runSystems("update", updateState.shouldUpdate);
-          // Update lastUpdateTime immediately to prevent double-running updates
-          lastUpdateTime = now;
-          this.frame.lastUpdateTime = now;
-          // Only allow one update per frame to ensure proper interpolation
-          (updateState as any).shouldUpdate = false;
+        // Skip system execution during scene transitions
+        if (!this.scene.isTransitioning) {
+          // Run systems based on phase - render ALWAYS runs before update
+          if (frameState.shouldUpdate) {
+            this.runSystems("render", frameState.shouldUpdate);
+          }
+          if (updateState.shouldUpdate) {
+            this.runSystems("update", updateState.shouldUpdate);
+            // Update lastUpdateTime immediately to prevent double-running updates
+            lastUpdateTime = now;
+            this.frame.lastUpdateTime = now;
+            // Only allow one update per frame to ensure proper interpolation
+            (updateState as any).shouldUpdate = false;
+          }
         }
 
         yield [updateState, frameState] as const;
@@ -198,10 +230,21 @@ export class EngineClass<TSystems extends SystemFactoryTuple> {
   }
 }
 
-export function createEngine<const TSystems extends SystemFactoryTuple>(opts: { 
+/** Options for createEngine */
+type CreateEngineOptions<
+  TSystems extends SystemFactoryTuple,
+  TScenes extends SceneDefinitionTuple
+> = {
   systems: TSystems;
+  scenes?: TScenes;
+  initialScene?: SceneName<TScenes[number]>;
   initialization?: EngineInitializationSystem;
-}): EngineClass<TSystems> {
+}
+
+export function createEngine<
+  const TSystems extends SystemFactoryTuple,
+  const TScenes extends SceneDefinitionTuple = []
+>(opts: CreateEngineOptions<TSystems, TScenes>): EngineClass<TSystems, TScenes> {
   // Create the engine instance
   const systemsRecord: Record<string, EngineSystem<any>> = {};
 
@@ -218,12 +261,24 @@ export function createEngine<const TSystems extends SystemFactoryTuple>(opts: {
     systemsRecord[system.name] = system;
   }
 
-  // Create and return engine instance
-  const engine = new EngineClass<TSystems>(systemsRecord);
+  // Create and return engine instance with scenes
+  const scenes = opts.scenes ?? [] as unknown as TScenes;
+  const engine = new EngineClass<TSystems, TScenes>(systemsRecord, scenes);
   
   // Set initialization system if provided
   if (opts.initialization) {
     (engine as any).initializationSystem = opts.initialization;
+  }
+
+  // Set initial scene if provided (will be activated during initialize())
+  if (opts.initialScene && opts.scenes) {
+    // We need to set the initial scene after the engine is created
+    // This is done asynchronously during engine.initialize() 
+    const originalInitialize = engine.initialize.bind(engine);
+    (engine as any).initialize = async function() {
+      await originalInitialize();
+      await engine.scene.set(opts.initialScene!);
+    };
   }
   
   // Return engine with type info for module augmentation

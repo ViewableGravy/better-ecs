@@ -8,6 +8,7 @@ import { System as Initialize } from "./systems/initialisation";
 import { System as Movement } from './systems/movement';
 import { System as Physics } from './systems/physics';
 import { System as Render } from './systems/render';
+import { initialize } from '@repo/plugins/lib/fps.system.factory/initialize';
 
 // Register the engine type with the module for useEngine() typing
 declare module "@repo/engine" {
@@ -41,6 +42,9 @@ async function main() {
 
       // Render systems
       Render,
+    ],
+    scenes: [
+      
     ]
   });
 

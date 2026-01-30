@@ -1,6 +1,6 @@
 import type { UserWorld } from "@repo/engine/ecs/world";
 import type { EngineSystem } from "./register/system";
-import type { RegisteredEngine } from "./engine-types";
+import type { RegisteredEngine, AllSceneNames } from "./engine-types";
 
 /***** TYPE DEFINITIONS *****/
 type Context = {
@@ -88,4 +88,21 @@ export function useOverloadedSystem<TOverride extends EngineSystem>(system: stri
 export function useWorld(): UserWorld {
   const engine = useEngine();
   return engine.world;
+}
+
+/**
+ * Returns a function to transition to a scene by name.
+ * This hook captures the engine context and returns a type-safe setter function.
+ * 
+ * @example
+ * ```ts
+ * const setScene = useSetScene();
+ * 
+ * // Later in the system:
+ * await setScene("game");
+ * ```
+ */
+export function useSetScene(): <TName extends AllSceneNames>(sceneName: TName) => Promise<void> {
+  const engine = useEngine();
+  return (sceneName) => (engine as any).scene.set(sceneName);
 }

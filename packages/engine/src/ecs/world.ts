@@ -59,6 +59,13 @@ export class UserWorld implements UserWorld {
 export class World {
   private entities = new Set<EntityId>();
   private componentStores = new Map<Function, ComponentStore<any>>();
+  
+  /** Optional scene identifier for debugging */
+  public sceneId?: string;
+
+  constructor(sceneId?: string) {
+    this.sceneId = sceneId;
+  }
 
   /**
    * Creates a new entity
