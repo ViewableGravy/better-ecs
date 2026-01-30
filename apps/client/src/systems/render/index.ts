@@ -1,8 +1,9 @@
-import { createSystem, useEngine, useWorld } from "@repo/engine";
+import { createSystem, useEngine, useSystem, useWorld } from "@repo/engine";
 import { Transform } from "@repo/engine/components";
 import z from "zod";
 
 export const System = createSystem("render")({
+  initialize: Initialize,
   system: Entrypoint,
   phase: "render",
   schema: {
@@ -48,4 +49,17 @@ function Entrypoint() {
     // Draw the entity as a rectangle at the interpolated position
     context.fillRect(interpolatedX, interpolatedY, 10, 10);
   }
+}
+
+function Initialize() {
+  function resizeCanvas(): void {
+    const canvas = document.getElementById("game") as HTMLCanvasElement;
+    if (!canvas) return;
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+
+  resizeCanvas();
+  window.addEventListener("resize", resizeCanvas);
 }

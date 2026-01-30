@@ -37,16 +37,16 @@ export function render(opts: Opts) {
 
   // Helper functions
   const setVal = (id: string, val: number | string) => {
-      const el = opts.element.querySelector(id);
-      if (el) el.textContent = typeof val === 'number' ? Math.round(val).toString() : val;
+      const el = opts.element.querySelector<HTMLElement>(id);
+      if (!el) return;
+      el.textContent = typeof val === 'number' ? Math.round(val).toString() : val;
   };
 
   const setBar = (id: string, val: number, maxVal: number) => {
-      const el = opts.element.querySelector(id) as HTMLElement;
-      if (el) {
-          const pct = Math.min(100, Math.max(0, (val / maxVal) * 100));
-          el.style.setProperty('--bar-width', `${pct}%`);
-      }
+      const el = opts.element.querySelector<HTMLElement>(id);
+      if (!el) return;
+      const pct = Math.min(100, Math.max(0, (val / maxVal) * 100));
+      el.style.setProperty('--bar-width', `${pct}%`);
   };
 
   // Update based on mode
