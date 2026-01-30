@@ -10,7 +10,7 @@
     "./components": "./src/components/index.ts"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc --build tsconfig.lib.json",
     "lint": "tsc --noEmit",
     "test": "vitest --run --typecheck"
   },

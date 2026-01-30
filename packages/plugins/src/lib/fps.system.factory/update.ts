@@ -2,6 +2,7 @@ import type { Opts } from "./types";
 import { schema } from "./types"
 import { useOverloadedSystem, useSystem, useEngine } from "@repo/engine";
 import type { EngineSystem, AnyEngine } from "@repo/engine";
+import { updateModeVisibility } from "./initialize";
 
 let slidersInitialized = false;
 
@@ -21,9 +22,10 @@ export function update(opts: Opts) {
       data.mode = modes[nextIndex];
       
       // Update the container data attribute
-      const container = opts.element.querySelector('.FPS__container');
+      const container = opts.element.querySelector('aside');
       if (container) {
         container.setAttribute('data-mode', data.mode);
+        updateModeVisibility(container, data.mode);
       }
     }
   }

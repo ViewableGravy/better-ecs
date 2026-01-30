@@ -1,4 +1,5 @@
 // apps/client/src/main.ts
+import './styles.css';
 import * as Engine from "@repo/engine";
 import z from "zod";
 import { System as FPSCounter } from '@repo/plugins';

@@ -7,7 +7,14 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "tsc",
+        "command": "tsc --build tsconfig.lib.json",
+        "cwd": "packages/engine"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --build tsconfig.lib.json --emitDeclarationOnly",
         "cwd": "packages/engine"
       }
     },
