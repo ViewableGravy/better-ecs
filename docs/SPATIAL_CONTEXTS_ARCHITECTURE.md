@@ -488,6 +488,120 @@ export const GameScene = createContextScene("game")({
 });
 ```
 
+### Decision 7: Dynamic Context Creation (Entity-Driven Contexts)
+
+**Question**: Should contexts be declared upfront at scene setup, or created dynamically?
+
+**Decision**: **Support both static and dynamic context creation**
+
+**Rationale**:
+- **Practical Reality**: A house is both an **entity** (visible, has position) and a **context** (interior space)
+- **Streaming Requirements**: Not all contexts should be loaded at once
+- **Dynamic World**: Contexts should be created/destroyed based on player proximity
+- **Flexible Architecture**: Plugin should support both approaches
+
+**Static Context Creation** (existing approach):
+```typescript
+// Declared at scene setup - always loaded
+createContextScene("game")({
+  contexts: [
+    { id: "overworld" },  // Static, always loaded
+  ],
+  setup(world, ctx) {
+    // ...
+  }
+});
+```
+
+**Dynamic Context Creation** (new approach):
+```typescript
+// Contexts created on-demand by systems
+export const WorldPartitioningSystem = createSystem("world:partitioning")({
+  system() {
+    const world = useWorld();
+    const contextManager = useContextManager();
+    const player = getPlayer(world);
+    
+    // Find nearby buildings
+    const buildings = world.query(BuildingComponent, Transform);
+    
+    for (const buildingId of buildings) {
+      const building = world.get(buildingId, BuildingComponent)!;
+      const transform = world.get(buildingId, Transform)!;
+      
+      const distance = distanceTo(player, transform);
+      
+      // Create context when player gets close
+      if (distance < 50 && !contextManager.hasContext(building.contextId)) {
+        contextManager.registerContext({
+          id: building.contextId,
+          parent: "overworld",
+          rendering: { renderParent: true, parentOpacity: 0.3 }
+        });
+        
+        // Load building interior entities
+        await loadBuildingInterior(building.contextId);
+      }
+      
+      // Unload context when player moves away
+      if (distance > 100 && contextManager.hasContext(building.contextId)) {
+        contextManager.unregisterContext(building.contextId);
+      }
+    }
+  }
+});
+```
+
+**Entity-Context Relationship**:
+
+A building entity can reference its interior context:
+
+```typescript
+// Building entity in overworld
+export class BuildingComponent {
+  constructor(
+    public contextId: string,        // Links to interior context
+    public entrancePosition: Vec2,   // Where the door is
+    public interiorSpawnPoint: Vec2  // Where player spawns inside
+  ) {}
+}
+
+// In world setup
+const house = overworldWorld.create();
+overworldWorld.add(house, Transform, new Transform(200, 100));
+overworldWorld.add(house, Sprite, new Sprite("house.png"));
+overworldWorld.add(house, BuildingComponent, new BuildingComponent(
+  "house_1_interior",      // Context ID for interior
+  { x: 200, y: 100 },      // Door position
+  { x: 200, y: 90 }        // Spawn point inside
+));
+
+// Context created dynamically when player approaches
+```
+
+**ContextManager API Enhancement**:
+```typescript
+export class ContextManager {
+  // Existing
+  registerContext(def: ContextDefinition): World;
+  getWorld(contextId: string): World | undefined;
+  
+  // NEW: Dynamic context management
+  hasContext(contextId: string): boolean;
+  unregisterContext(contextId: string): void;
+  createContextFromEntity(entityId: EntityId, def: ContextDefinition): World;
+}
+```
+
+**Benefits**:
+- ✅ **Memory efficient**: Only load nearby contexts
+- ✅ **Scalable**: Support huge worlds with hundreds of buildings
+- ✅ **Entity-driven**: Contexts tied to world entities (houses, caves)
+- ✅ **Streaming-friendly**: Create/destroy contexts dynamically
+- ✅ **Flexible**: Works with both static and dynamic patterns
+
+**Key Insight**: The plugin provides **infrastructure for context management**, while **game systems decide when contexts are created**.
+
 ---
 
 ## API Design
@@ -527,7 +641,8 @@ export function createContextScene<TName extends string>(
 ): (config: ContextSceneConfig) => SceneDefinition<TName>;
 
 export interface ContextSceneConfig {
-  contexts: ContextDefinition[];
+  // Optional: Static contexts (loaded at scene setup)
+  contexts?: ContextDefinition[];
   systems?: SystemFactoryTuple;
   setup: (world: UserWorld, contextManager: ContextManager) => void | Promise<void>;
   teardown?: (world: UserWorld) => void | Promise<void>;
@@ -541,6 +656,33 @@ export interface ContextDefinition {
     parentOpacity?: number;
   };
   setup?: (world: UserWorld) => void | Promise<void>;
+}
+```
+
+#### Context Manager
+
+```typescript
+// packages/plugins/context-scene/context-manager.ts
+export class ContextManager {
+  // Static context registration (at scene setup)
+  registerContext(def: ContextDefinition): World;
+  
+  // Dynamic context management (at runtime)
+  hasContext(contextId: string): boolean;
+  unregisterContext(contextId: string): void;
+  createContext(contextId: string, def?: Partial<ContextDefinition>): World;
+  
+  // Context access
+  getWorld(contextId: string): World | undefined;
+  getDefinition(contextId: string): ContextDefinition | undefined;
+  getAllContextIds(): string[];
+  
+  // Active context
+  getActiveContext(): string;
+  setActiveContext(contextId: string): void;
+  
+  // Query helpers
+  queryInContext(contextId: string, ...components: Function[]): EntityId[];
 }
 ```
 
@@ -753,55 +895,156 @@ export function runSystemsForAllActiveContexts(
 ```
 
 **Key Insight**: Plugin orchestrates system execution across contexts transparently!
-  id: createContextId('overworld'),
-  parent: undefined, // root context
-  rendering: { renderParent: false, renderChildren: false },
-  physics: { isolatedFromParent: false, isolatedFromSiblings: true }
-};
 
-const buildingInterior: ContextDefinition = {
-  id: createContextId('building_a_interior'),
-  parent: createContextId('overworld'),
-  rendering: { 
-    renderParent: true,  // Show overworld through windows
-    parentOpacity: 0.3,
-    renderChildren: false 
-  },
-  physics: { 
-    isolatedFromParent: true,  // No collision with overworld entities
-    isolatedFromSiblings: true // No collision with other buildings
+### Pattern 5: Dynamic Context Creation (Entity-Driven)
+
+**Use Case**: Large open world with many buildings that should be loaded/unloaded based on player position.
+
+```typescript
+// components/building.ts
+export class BuildingComponent {
+  constructor(
+    public contextId: string,        // Unique ID for this building's interior
+    public entrancePos: { x: number; y: number },
+    public interiorSpawn: { x: number; y: number },
+    public isInteriorLoaded: boolean = false
+  ) {}
+}
+
+// systems/world-partitioning.ts
+import { createSystem, useWorld } from '@repo/engine';
+import { useContextManager } from '@repo/plugins/context-scene';
+import { BuildingComponent, Transform, PlayerComponent } from '../components';
+
+export const WorldPartitioningSystem = createSystem("world:partitioning")({
+  phase: "update",
+  priority: -100, // Run early
+  schema: { default: {}, schema: z.object({}) },
+  
+  async system() {
+    const world = useWorld();
+    const contextManager = useContextManager();
+    
+    // Get player position
+    const players = world.query(PlayerComponent, Transform);
+    if (players.length === 0) return;
+    
+    const playerTransform = world.get(players[0], Transform)!;
+    const playerPos = playerTransform.curr;
+    
+    // Check all buildings
+    const buildings = world.query(BuildingComponent, Transform);
+    
+    for (const buildingId of buildings) {
+      const building = world.get(buildingId, BuildingComponent)!;
+      const buildingTransform = world.get(buildingId, Transform)!;
+      
+      const distance = Math.hypot(
+        playerPos.x - buildingTransform.curr.x,
+        playerPos.y - buildingTransform.curr.y
+      );
+      
+      // Load interior context when player gets close
+      if (distance < 50 && !building.isInteriorLoaded) {
+        console.log(`Loading context: ${building.contextId}`);
+        
+        // Create context dynamically
+        contextManager.createContext(building.contextId, {
+          parent: "overworld",
+          rendering: { renderParent: true, parentOpacity: 0.3 }
+        });
+        
+        // Load interior entities
+        const interiorWorld = contextManager.getWorld(building.contextId)!;
+        await loadBuildingInterior(interiorWorld, building.contextId);
+        
+        building.isInteriorLoaded = true;
+      }
+      
+      // Unload interior context when player moves far away
+      if (distance > 100 && building.isInteriorLoaded) {
+        console.log(`Unloading context: ${building.contextId}`);
+        
+        contextManager.unregisterContext(building.contextId);
+        building.isInteriorLoaded = false;
+      }
+    }
   }
-};
+});
+
+// Helper function to load building interior
+async function loadBuildingInterior(world: World, buildingId: string) {
+  // Load building-specific data (could be from file, procedural, etc.)
+  const interiorData = await fetchBuildingData(buildingId);
+  
+  // Create interior entities
+  for (const furniture of interiorData.furniture) {
+    const entity = world.create();
+    world.add(entity, Transform, new Transform(furniture.x, furniture.y));
+    world.add(entity, Sprite, new Sprite(furniture.texture));
+  }
+}
 ```
 
----
+**Scene Setup** (minimal - just overworld):
+```typescript
+// scenes/game.ts
+export const GameScene = createContextScene("game")({
+  // Only declare the persistent overworld context
+  contexts: [
+    { id: "overworld" }
+  ],
+  
+  async setup(world, contextManager) {
+    const overworldWorld = contextManager.getWorld("overworld")!;
+    
+    // Create buildings as entities (not contexts yet)
+    const house1 = overworldWorld.create();
+    overworldWorld.add(house1, Transform, new Transform(200, 100));
+    overworldWorld.add(house1, Sprite, new Sprite("house.png"));
+    overworldWorld.add(house1, BuildingComponent, new BuildingComponent(
+      "house_1_interior",  // Context will be created dynamically
+      { x: 200, y: 100 },
+      { x: 200, y: 90 }
+    ));
+    
+    const house2 = overworldWorld.create();
+    overworldWorld.add(house2, Transform, new Transform(400, 200));
+    overworldWorld.add(house2, Sprite, new Sprite("house.png"));
+    overworldWorld.add(house2, BuildingComponent, new BuildingComponent(
+      "house_2_interior",
+      { x: 400, y: 200 },
+      { x: 400, y: 190 }
+    ));
+    
+    // Cave entrance entity
+    const cave = overworldWorld.create();
+    overworldWorld.add(cave, Transform, new Transform(600, 300));
+    overworldWorld.add(cave, Sprite, new Sprite("cave_entrance.png"));
+    overworldWorld.add(cave, BuildingComponent, new BuildingComponent(
+      "cave_level_1",
+      { x: 600, y: 300 },
+      { x: 600, y: 310 }
+    ));
+    
+    // Create player
+    const player = overworldWorld.create();
+    overworldWorld.add(player, Transform, new Transform(50, 50));
+    overworldWorld.add(player, PlayerComponent, new PlayerComponent("Player1"));
+    
+    contextManager.setActiveContext("overworld");
+  }
+});
+```
 
-### Decision 4: Visibility Model Implementation
+**Key Benefits**:
+- ✅ **Scalable**: Support hundreds of buildings without loading them all
+- ✅ **Entity-driven**: Buildings are entities that *reference* contexts
+- ✅ **Memory efficient**: Only load nearby interiors
+- ✅ **Flexible**: Systems control when contexts are created
+- ✅ **No scene pollution**: Scene config stays simple
 
-**Question**: How should rendering respect context boundaries?
-
-**Decision**: **Render systems filter entities by active contexts + visibility policies.**
-
-**Rationale**:
-- Rendering already happens in dedicated systems (e.g., `apps/client/src/systems/render`)
-- Context visibility is a query-time concern, not an entity concern
-- The engine's interpolation system (`transformSnapshot`) remains unchanged
-
-
----
-
-## Performance Considerations
-
-### Overhead Analysis
-
-| Feature | Cost When Unused | Cost When Used |
-|---------|------------------|----------------|
-| Plugin not imported | Zero bytes | N/A |
-| Multiple worlds | Zero (one world as before) | ~8KB per additional world |
-| World switching | Zero | ~O(1) pointer swap per context |
-| Context queries | Zero | Standard World.query() cost |
-| Entity transitions | N/A | ~O(components) to copy between worlds |
-
+**Key Insight**: **Entities and contexts are separate but linked** - a building entity exists in the overworld and references an interior context ID that gets created on-demand.
 ### Key Performance Benefits
 
 1. **No Query Filtering Overhead**: Each world contains only its context's entities
@@ -1151,7 +1394,7 @@ The plugin approach achieves all desired functionality while keeping the engine 
 
 ---
 
-**Document Version**: 2.0 (Plugin-Based Revision)  
+**Document Version**: 2.1 (Plugin-Based + Dynamic Context Creation)  
 **Date**: 2026-01-31  
 **Author**: Architecture Team  
-**Status**: Revised Proposal - Addresses Architectural Feedback
+**Status**: Revised Proposal - Addresses Dynamic Context Creation Feedback
