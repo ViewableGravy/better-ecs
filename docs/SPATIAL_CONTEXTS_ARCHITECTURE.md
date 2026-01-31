@@ -114,9 +114,21 @@ export const createContextScene = <TName extends string>(name: TName) => {
     const wrappedSetup = async (world: UserWorld) => {
       const contextManager = initializeContextManager();
       
-      // Create worlds for each context
-      for (const contextDef of config.contexts) {
-        contextManager.registerContext(contextDef);
+      // ALWAYS create default context with scene name as ID
+      // This represents the base world of the scene
+      contextManager.registerContext({
+        id: name,  // Context ID = Scene name
+        parent: undefined
+      });
+      
+      // Set default context as active
+      contextManager.setActiveContext(name);
+      
+      // Create additional contexts if provided
+      if (config.contexts) {
+        for (const contextDef of config.contexts) {
+          contextManager.registerContext(contextDef);
+        }
       }
       
       // Run user setup
@@ -132,7 +144,10 @@ export const createContextScene = <TName extends string>(name: TName) => {
 };
 ```
 
-**Key Feature**: Automatic context world management without user intervention.
+**Key Features**: 
+- **Default context**: Every scene automatically gets a context with `id = sceneName`
+- **Base world**: The default context represents the scene's base world
+- **Auto-active**: Default context is set as active on scene load
 
 ### 2. Context Configuration
 
@@ -153,14 +168,17 @@ export interface ContextDefinition {
 }
 
 export interface ContextSceneConfig {
-  contexts: ContextDefinition[];
+  // Optional: Additional contexts beyond the default scene context
+  contexts?: ContextDefinition[];
   systems?: SystemFactoryTuple; // Context-specific systems
   setup: (world: UserWorld, contextManager: ContextManager) => void | Promise<void>;
   teardown?: (world: UserWorld) => void | Promise<void>;
 }
 ```
 
-**Key Feature**: Minimal configuration, no excessive nested objects.
+**Key Feature**: 
+- `contexts` array is optional - default scene context always created
+- Additional contexts can be declared or created dynamically
 
 ### 3. Context Manager (Plugin Internal)
 
@@ -169,16 +187,26 @@ export interface ContextSceneConfig {
 export class ContextManager {
   private contextWorlds = new Map<string, World>();
   private activeContext: string;
+  private currentExecutionContext: string | null = null; // Tracks context during system execution
   
   registerContext(def: ContextDefinition): World;
   getWorld(contextId: string): World | undefined;
   getActiveContext(): string;
   setActiveContext(contextId: string): void;
+  
+  // NEW: Get current context during system execution
+  getCurrentContext(): string | null;
+  
+  // Internal: Set execution context (used by plugin)
+  setExecutionContext(contextId: string | null): void;
+  
   queryInContext(contextId: string, ...components: Function[]): EntityId[];
 }
 ```
 
-**Key Feature**: Hidden from users; managed by plugin scene factory.
+**Key Features**: 
+- **Execution context tracking**: Plugin tracks which context is currently executing
+- **Current context access**: Systems can query `getCurrentContext()` during execution
 
 ---
 
@@ -258,6 +286,43 @@ export class World {
 ---
 
 ## Implementation Decisions
+
+### Decision 0: Default Scene Context
+
+**Question**: Should every scene automatically have a context?
+
+**Decision**: **Yes. Every scene gets a default context with ID = scene name**
+
+**Rationale**:
+- **Consistency**: All scenes technically have a "top level world" already
+- **No boilerplate**: Users don't need to declare a base context manually
+- **Intuitive**: Scene name = default context name is easy to understand
+- **Parent detection**: Enables automatic parent detection for child contexts
+
+**Implementation**:
+```typescript
+// Scene "game" automatically gets context "game"
+export const GameScene = createContextScene("game")({
+  // No contexts array needed!
+  
+  setup(world, contextManager) {
+    // Default context with ID "game" already exists
+    const gameWorld = contextManager.getWorld("game")!;
+    
+    // Create entities in default context
+    const player = gameWorld.create();
+    // ...
+  }
+});
+```
+
+**Benefits**:
+- ✅ **Zero configuration**: Works out of the box
+- ✅ **Auto-parent**: Child contexts automatically parent to scene context
+- ✅ **Consistent**: Every scene is a context
+- ✅ **Simple mental model**: Scene = default context
+
+---
 
 ### Decision 1: Multiple Worlds vs. Component Filtering
 
@@ -677,14 +742,24 @@ export class ContextManager {
   getDefinition(contextId: string): ContextDefinition | undefined;
   getAllContextIds(): string[];
   
-  // Active context
+  // Active context (player's current context)
   getActiveContext(): string;
   setActiveContext(contextId: string): void;
+  
+  // NEW: Current execution context (context running during system execution)
+  getCurrentContext(): string | null;
   
   // Query helpers
   queryInContext(contextId: string, ...components: Function[]): EntityId[];
 }
 ```
+
+**Context Tracking Notes**:
+- **Active Context**: The context where the player currently is (e.g., "house_1_interior")
+- **Execution Context**: The context whose systems are currently running (tracked by plugin)
+- During system execution, `getCurrentContext()` returns the execution context
+- This enables auto-parent detection in `useRegisterContext()`
+
 
 #### Components
 
@@ -720,6 +795,55 @@ export function useActiveContext(): string;
 export function useContextWorld(contextId: string): UserWorld | undefined;
 
 export function useContextManager(): ContextManager;
+
+// NEW: Returns callback to register context with auto-detected parent
+export function useRegisterContext(): (
+  contextId: string,
+  config?: Partial<ContextDefinition>
+) => World;
+
+// NEW: Get current context during system execution
+export function useCurrentContext(): string | null;
+```
+
+**Implementation Notes**:
+
+```typescript
+// useRegisterContext automatically detects parent from current execution context
+export function useRegisterContext() {
+  const contextManager = useContextManager();
+  
+  return (contextId: string, config?: Partial<ContextDefinition>): World => {
+    // Auto-detect parent from current execution context
+    const currentContext = contextManager.getCurrentContext();
+    
+    const contextDef: ContextDefinition = {
+      id: contextId,
+      parent: config?.parent ?? currentContext ?? undefined,
+      rendering: config?.rendering,
+      setup: config?.setup
+    };
+    
+    return contextManager.createContext(contextDef.id, contextDef);
+  };
+}
+
+// useCurrentContext returns the context currently executing
+export function useCurrentContext(): string | null {
+  const contextManager = useContextManager();
+  return contextManager.getCurrentContext();
+}
+```
+
+**Usage Pattern**:
+```typescript
+// Inside a system running in "overworld" context
+const registerContext = useRegisterContext();
+
+// Automatically sets parent = "overworld"
+const interiorWorld = registerContext("house_1_interior", {
+  rendering: { renderParent: true, parentOpacity: 0.3 }
+});
 ```
 
 #### Systems (Plugin-Provided)
@@ -881,6 +1005,9 @@ export function runSystemsForAllActiveContexts(
     // Temporarily set active world in engine context
     setActiveWorld(world);
     
+    // NEW: Track current execution context
+    contextManager.setExecutionContext(contextId);
+    
     // Run all user systems (they see only this context's world)
     for (const system of systems) {
       if (system.enabled && system.phase === currentPhase) {
@@ -888,13 +1015,20 @@ export function runSystemsForAllActiveContexts(
       }
     }
     
+    // Reset execution context
+    contextManager.setExecutionContext(null);
+    
     // Reset active world
     resetActiveWorld();
   }
 }
 ```
 
-**Key Insight**: Plugin orchestrates system execution across contexts transparently!
+**Key Insights**: 
+- Plugin orchestrates system execution across contexts transparently
+- **Execution context** is tracked during system runs
+- Systems can call `useCurrentContext()` or `useRegisterContext()` which use the execution context
+- After system execution, context is reset to null
 
 ### Pattern 5: Dynamic Context Creation (Entity-Driven)
 
@@ -913,7 +1047,7 @@ export class BuildingComponent {
 
 // systems/world-partitioning.ts
 import { createSystem, useWorld } from '@repo/engine';
-import { useContextManager } from '@repo/plugins/context-scene';
+import { useRegisterContext, useCurrentContext } from '@repo/plugins/context-scene';
 import { BuildingComponent, Transform, PlayerComponent } from '../components';
 
 export const WorldPartitioningSystem = createSystem("world:partitioning")({
@@ -923,7 +1057,10 @@ export const WorldPartitioningSystem = createSystem("world:partitioning")({
   
   async system() {
     const world = useWorld();
-    const contextManager = useContextManager();
+    const registerContext = useRegisterContext(); // Returns callback
+    const currentContext = useCurrentContext();   // Get current execution context
+    
+    console.log(`Running in context: ${currentContext}`); // e.g., "game" (scene name)
     
     // Get player position
     const players = world.query(PlayerComponent, Transform);
@@ -948,14 +1085,13 @@ export const WorldPartitioningSystem = createSystem("world:partitioning")({
       if (distance < 50 && !building.isInteriorLoaded) {
         console.log(`Loading context: ${building.contextId}`);
         
-        // Create context dynamically
-        contextManager.createContext(building.contextId, {
-          parent: "overworld",
+        // Create context with auto-detected parent
+        // Parent automatically set to currentContext (e.g., "game")
+        const interiorWorld = registerContext(building.contextId, {
           rendering: { renderParent: true, parentOpacity: 0.3 }
         });
         
         // Load interior entities
-        const interiorWorld = contextManager.getWorld(building.contextId)!;
         await loadBuildingInterior(interiorWorld, building.contextId);
         
         building.isInteriorLoaded = true;
@@ -965,6 +1101,7 @@ export const WorldPartitioningSystem = createSystem("world:partitioning")({
       if (distance > 100 && building.isInteriorLoaded) {
         console.log(`Unloading context: ${building.contextId}`);
         
+        const contextManager = useContextManager();
         contextManager.unregisterContext(building.contextId);
         building.isInteriorLoaded = false;
       }
@@ -986,53 +1123,51 @@ async function loadBuildingInterior(world: World, buildingId: string) {
 }
 ```
 
-**Scene Setup** (minimal - just overworld):
+**Scene Setup** (minimal - no contexts array needed):
 ```typescript
 // scenes/game.ts
 export const GameScene = createContextScene("game")({
-  // Only declare the persistent overworld context
-  contexts: [
-    { id: "overworld" }
-  ],
+  // No contexts array needed - default "game" context auto-created
   
   async setup(world, contextManager) {
-    const overworldWorld = contextManager.getWorld("overworld")!;
+    // Default context ID = "game" (scene name)
+    const gameWorld = contextManager.getWorld("game")!;
     
     // Create buildings as entities (not contexts yet)
-    const house1 = overworldWorld.create();
-    overworldWorld.add(house1, Transform, new Transform(200, 100));
-    overworldWorld.add(house1, Sprite, new Sprite("house.png"));
-    overworldWorld.add(house1, BuildingComponent, new BuildingComponent(
+    const house1 = gameWorld.create();
+    gameWorld.add(house1, Transform, new Transform(200, 100));
+    gameWorld.add(house1, Sprite, new Sprite("house.png"));
+    gameWorld.add(house1, BuildingComponent, new BuildingComponent(
       "house_1_interior",  // Context will be created dynamically
       { x: 200, y: 100 },
       { x: 200, y: 90 }
     ));
     
-    const house2 = overworldWorld.create();
-    overworldWorld.add(house2, Transform, new Transform(400, 200));
-    overworldWorld.add(house2, Sprite, new Sprite("house.png"));
-    overworldWorld.add(house2, BuildingComponent, new BuildingComponent(
+    const house2 = gameWorld.create();
+    gameWorld.add(house2, Transform, new Transform(400, 200));
+    gameWorld.add(house2, Sprite, new Sprite("house.png"));
+    gameWorld.add(house2, BuildingComponent, new BuildingComponent(
       "house_2_interior",
       { x: 400, y: 200 },
       { x: 400, y: 190 }
     ));
     
     // Cave entrance entity
-    const cave = overworldWorld.create();
-    overworldWorld.add(cave, Transform, new Transform(600, 300));
-    overworldWorld.add(cave, Sprite, new Sprite("cave_entrance.png"));
-    overworldWorld.add(cave, BuildingComponent, new BuildingComponent(
+    const cave = gameWorld.create();
+    gameWorld.add(cave, Transform, new Transform(600, 300));
+    gameWorld.add(cave, Sprite, new Sprite("cave_entrance.png"));
+    gameWorld.add(cave, BuildingComponent, new BuildingComponent(
       "cave_level_1",
       { x: 600, y: 300 },
       { x: 600, y: 310 }
     ));
     
     // Create player
-    const player = overworldWorld.create();
-    overworldWorld.add(player, Transform, new Transform(50, 50));
-    overworldWorld.add(player, PlayerComponent, new PlayerComponent("Player1"));
+    const player = gameWorld.create();
+    gameWorld.add(player, Transform, new Transform(50, 50));
+    gameWorld.add(player, PlayerComponent, new PlayerComponent("Player1"));
     
-    contextManager.setActiveContext("overworld");
+    // Default context ("game") is already set as active
   }
 });
 ```
@@ -1042,9 +1177,14 @@ export const GameScene = createContextScene("game")({
 - ✅ **Entity-driven**: Buildings are entities that *reference* contexts
 - ✅ **Memory efficient**: Only load nearby interiors
 - ✅ **Flexible**: Systems control when contexts are created
-- ✅ **No scene pollution**: Scene config stays simple
+- ✅ **No config needed**: Default context auto-created with scene name
+- ✅ **Auto-parent detection**: `useRegisterContext()` automatically uses current context as parent
 
-**Key Insight**: **Entities and contexts are separate but linked** - a building entity exists in the overworld and references an interior context ID that gets created on-demand.
+**Key Insights**: 
+- **Default context**: Scene "game" gets context ID "game" automatically
+- **Auto-parent**: `registerContext()` uses current execution context as parent
+- **Execution tracking**: Plugin tracks which context is running during system execution
+- **Simple API**: Just call `registerContext(id, config)` - parent is automatic
 ### Key Performance Benefits
 
 1. **No Query Filtering Overhead**: Each world contains only its context's entities
@@ -1394,7 +1534,7 @@ The plugin approach achieves all desired functionality while keeping the engine 
 
 ---
 
-**Document Version**: 2.1 (Plugin-Based + Dynamic Context Creation)  
+**Document Version**: 2.2 (Plugin-Based + Default Context + Auto-Parent Detection)  
 **Date**: 2026-01-31  
 **Author**: Architecture Team  
-**Status**: Revised Proposal - Addresses Dynamic Context Creation Feedback
+**Status**: Revised Proposal - Addresses Default Context and Execution Tracking Feedback
