@@ -2,10 +2,5 @@
   "extends": "./tsconfig.base.json",
   "files": [],
   "include": [],
-  "references": [
-    {
-      "path": "./packages/engine"
-    }
-  ],
   "exclude": ["**/dist", "**/apps/**/dist", "**/packages/**/dist"]
 }

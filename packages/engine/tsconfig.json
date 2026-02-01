@@ -1,17 +1,15 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "./dist",
     "lib": ["DOM", "ES2022"],
     "skipLibCheck": true,
-    "declaration": true,
-    "emitDeclarationOnly": false,
-    "noEmit": false,
-    "composite": true,
-    "typeRoots": ["../../node_modules/@types"]
+    "noEmit": true,
+    "typeRoots": ["../../node_modules/@types"],
+    "paths": {
+      "@repo/utils": ["./packages/utils/src/index.ts"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts", "dist"],
-  "references": [],
   "compileOnSave": false
 }

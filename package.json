@@ -39,6 +39,7 @@
     "jsdom": "^27.1.0",
     "jsonc-eslint-parser": "^2.1.0",
     "nx": "^22.3.3",
+    "playwright": "^1.58.1",
     "prettier": "~3.6.2",
     "skott": "^0.35.7",
     "tailwindcss": "^4.1.18",

@@ -8,13 +8,14 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "noPropertyAccessFromIndexSignature": true,
-    "lib": ["DOM", "ESNext"]
-  },
-  "files": [],
-  "include": [],
-  "references": [
-    {
-      "path": "./tsconfig.lib.json"
+    "lib": ["DOM", "ESNext"],
+    "noEmit": true,
+    "paths": {
+      "@repo/engine": ["../../packages/engine/src/index.ts"],
+      "@repo/engine/*": ["../../packages/engine/src/*/index.ts"],
+      "@repo/utils": ["../../packages/utils/src/index.ts"]
     }
-  ]
+  },
+  "include": ["src/**/*"],
+  "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts", "dist"]
 }

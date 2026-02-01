@@ -12,7 +12,13 @@
     "forceConsistentCasingInFileNames": true,
     "declaration": true,
     "declarationMap": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "paths": {
+      "@repo/engine": ["./packages/engine/src/index.ts"],
+      "@repo/engine/*": ["./packages/engine/src/*/index.ts"],
+      "@repo/plugins": ["./packages/plugins/src/index.ts"],
+      "@repo/utils": ["./packages/utils/src/index.ts"]
+    }
   },
   "exclude": ["node_modules", "dist"]
 }

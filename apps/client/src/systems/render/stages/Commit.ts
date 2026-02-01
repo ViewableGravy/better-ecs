@@ -1,0 +1,63 @@
+import { useSystem, useWorld } from "@repo/engine";
+import { Color, Shape, Transform2D } from "@repo/engine/components";
+import type { ShapeRenderData } from "@repo/engine/render";
+import { lerp } from "../render/utils";
+
+const CLEAR_COLOR = new Color(0.1, 0.1, 0.15, 1);
+
+const SHARED_SHAPE_DATA: ShapeRenderData = {
+  type: "rectangle",
+  x: 0,
+  y: 0,
+  width: 0,
+  height: 0,
+  rotation: 0,
+  scaleX: 1,
+  scaleY: 1,
+  fill: new Color(),
+  stroke: null,
+  strokeWidth: 0,
+};
+
+export function CommitStage(): void {
+  const world = useWorld();
+  const { data } = useSystem("render");
+  const renderer = data.renderer;
+  const commands = data.commands;
+  const alpha = data.custom.alpha ?? 0;
+
+  renderer.beginFrame();
+  renderer.clear(CLEAR_COLOR);
+
+  for (const cmd of commands) {
+    switch (cmd.kind) {
+      case "setView":
+        renderer.setCamera(cmd.view.x, cmd.view.y, cmd.view.zoom);
+        break;
+
+      case "shape": {
+        const shape = world.get(cmd.entity, Shape);
+        const transform = world.get(cmd.entity, Transform2D);
+
+        if (!shape || !transform) continue;
+
+        SHARED_SHAPE_DATA.type = shape.type;
+        SHARED_SHAPE_DATA.x = lerp(transform.prev.pos.x, transform.curr.pos.x, alpha);
+        SHARED_SHAPE_DATA.y = lerp(transform.prev.pos.y, transform.curr.pos.y, alpha);
+        SHARED_SHAPE_DATA.width = shape.width;
+        SHARED_SHAPE_DATA.height = shape.height;
+        SHARED_SHAPE_DATA.rotation = transform.curr.rotation;
+        SHARED_SHAPE_DATA.scaleX = transform.curr.scale.x;
+        SHARED_SHAPE_DATA.scaleY = transform.curr.scale.y;
+        SHARED_SHAPE_DATA.fill = shape.fill;
+        SHARED_SHAPE_DATA.stroke = shape.stroke;
+        SHARED_SHAPE_DATA.strokeWidth = shape.strokeWidth;
+
+        renderer.drawShape(SHARED_SHAPE_DATA);
+        break;
+      }
+    }
+  }
+
+  renderer.endFrame();
+}

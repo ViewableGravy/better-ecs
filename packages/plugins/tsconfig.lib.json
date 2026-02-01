@@ -1,12 +1,16 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": "./src",
     "outDir": "./dist",
+    "lib": ["DOM", "ESNext"],
     "declaration": true,
-    "composite": true,
     "noEmit": false,
-    "types": ["node", "vite/client"]
+    "types": ["node", "vite/client"],
+    "paths": {
+      "@repo/engine": ["../../packages/engine/src/index.ts"],
+      "@repo/engine/*": ["../../packages/engine/src/*/index.ts"],
+      "@repo/utils": ["../../packages/utils/src/index.ts"]
+    }
   },
   "include": ["src/**/*.ts"],
   "exclude": [
@@ -22,10 +26,5 @@
     "src/**/*.spec.js",
     "src/**/*.test.jsx",
     "src/**/*.spec.jsx"
-  ],
-  "references": [
-    {
-      "path": "../engine/tsconfig.lib.json"
-    }
   ]
 }
