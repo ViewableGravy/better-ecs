@@ -12,21 +12,39 @@ This feature provides the foundational rendering primitives for Better ECS, enab
 
 #### Components (Engine-Provided)
 
-**Transform Component:**
-```typescript
-import { Transform } from "@repo/engine/components";
+**Transform Components:**
 
-// Create entity with transform
+The engine provides optimized transform components for 2D and 3D contexts.
+
+*Transform2D (Optimized for 2D)*
+```typescript
+import { Transform2D } from "@repo/engine/components";
+
+// Create entity with 2D transform
 const entity = world.create();
-world.add(entity, Transform, {
+world.add(entity, Transform2D, {
   x: 100,
   y: 50,
-  z: 0,
+  rotation: Math.PI / 4, // Z-axis rotation only
+  scaleX: 2,
+  scaleY: 2
+});
+```
+
+*Transform3D (Full 3D)*
+```typescript
+import { Transform3D } from "@repo/engine/components";
+
+const entity3d = world.create();
+world.add(entity3d, Transform3D, {
+  x: 100,
+  y: 50,
+  z: 10,
   rotationX: 0,
   rotationY: 0,
-  rotationZ: Math.PI / 4, // 45 degrees
-  scaleX: 2,
-  scaleY: 2,
+  rotationZ: 0,
+  scaleX: 1,
+  scaleY: 1,
   scaleZ: 1
 });
 ```
@@ -37,7 +55,7 @@ import { Camera } from "@repo/engine/components";
 
 // Create orthographic camera
 const camera = world.create();
-world.add(camera, Transform, { x: 0, y: 0, z: 10 });
+world.add(camera, Transform2D, { x: 0, y: 0 }); // Use appropriate transform
 world.add(camera, Camera, {
   projection: "orthographic",
   orthoSize: 10, // Half-height of visible area
@@ -53,7 +71,7 @@ import { Sprite } from "@repo/engine/components";
 
 // Create sprite
 const sprite = world.create();
-world.add(sprite, Transform, { x: 0, y: 0 });
+world.add(sprite, Transform2D, { x: 0, y: 0 });
 world.add(sprite, Sprite, {
   texture: "hero.png", // Texture asset ID
   tintR: 1, tintG: 1, tintB: 1, tintA: 1,
@@ -61,6 +79,7 @@ world.add(sprite, Sprite, {
   layer: 0
 });
 ```
+
 
 ---
 
@@ -120,7 +139,7 @@ const projectionMatrix = calculateProjectionMatrix(camera);
 // In scene setup
 setup(world) {
   const camera = world.create();
-  world.add(camera, Transform, { x: 0, y: 0, z: 10 });
+  world.add(camera, Transform2D, { x: 0, y: 0 });
   world.add(camera, Camera, {
     projection: "orthographic",
     orthoSize: 10
@@ -133,7 +152,7 @@ setup(world) {
 ```typescript
 // Create a player sprite
 const player = world.create();
-world.add(player, Transform, { x: 0, y: 0 });
+world.add(player, Transform2D, { x: 0, y: 0 });
 world.add(player, Sprite, {
   texture: "player.png",
   zOrder: 10 // Render in front
@@ -141,7 +160,7 @@ world.add(player, Sprite, {
 
 // Create background
 const bg = world.create();
-world.add(bg, Transform, { x: 0, y: 0 });
+world.add(bg, Transform2D, { x: 0, y: 0 });
 world.add(bg, Sprite, {
   texture: "background.png",
   zOrder: 0 // Render behind
@@ -166,7 +185,8 @@ const spriteRenderer = createSystem("spriteRenderer")({
     );
     
     // Get all sprites
-    const sprites = world.query(Transform, Sprite);
+    // Note: Can query for Transform2D or Union if supporting both
+    const sprites = world.query(Transform2D, Sprite);
     
     // Sort by z-order
     sprites.sort((a, b) => {
@@ -178,7 +198,7 @@ const spriteRenderer = createSystem("spriteRenderer")({
     // Render
     renderer.beginSpriteBatch();
     for (const id of sprites) {
-      const transform = world.get(id, Transform)!;
+      const transform = world.get(id, Transform2D)!;
       const sprite = world.get(id, Sprite)!;
       
       // Load texture (cached)

@@ -1,5 +1,5 @@
 import { createScene, EntityId, useWorld } from "@repo/engine";
-import { Transform } from "@repo/engine/components";
+import { Transform2D } from "@repo/engine/components";
 import { PlayerComponent } from "../../components/player";
 
 
@@ -26,7 +26,7 @@ function useCreatePlayer() {
   const world = useWorld();
 
   const player = world.create();
-  const transform = new Transform(100, 100, 0);
+  const transform = new Transform2D(100, 100);
   const playerComponent = new PlayerComponent("NewPlayer");
 
   world.add(player, transform);

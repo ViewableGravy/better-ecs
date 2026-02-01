@@ -11,14 +11,14 @@ We move the "source of truth" for versioning into the Component class itself, en
 ### The Pattern
 
 ```typescript
-// src/components/transform.ts
+// src/components/transform3d.ts
 @Serializable({
   version: 2,
   migrations: {
     1: (data: any) => ({ x: data.x, y: data.y, z: 0 }) // v1 -> v2 (added z)
   }
 })
-export class Transform {  
+export class Transform3D {  
   @serializable("number") public x: number;
   @serializable("number") public y: number;
   @serializable("number") public z: number;
@@ -30,15 +30,15 @@ export class Transform {
 ### Workflow
 
 1.  **Serialization (Save)**:
-    - `PartitionManager` reads `Transform.schemaVersion` (e.g., 2).
-    - Writes header: `{ "Transform": 2 }`.
+    - `PartitionManager` reads `Transform3D.schemaVersion` (e.g., 2).
+    - Writes header: `{ "Transform3D": 2 }`.
     - Writes data using current shape.
 
 2.  **Deserialization (Load)**:
-    - `PartitionManager` reads header from disk: `{ "Transform": 1 }` (Old file).
-    - Checks `Transform.schemaVersion` (Current: 2).
+    - `PartitionManager` reads header from disk: `{ "Transform3D": 1 }` (Old file).
+    - Checks `Transform3D.schemaVersion` (Current: 2).
     - Detected mismatch: `1 < 2`.
-    - Looks up `Transform.migrations[1]`.
+    - Looks up `Transform3D.migrations[1]`.
     - Runs migration function on raw data.
     - Hydrates component.
 

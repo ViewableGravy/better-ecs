@@ -1,5 +1,5 @@
 import { createSystem, useEngine, useSystem, useWorld } from "@repo/engine";
-import { Transform } from "@repo/engine/components";
+import { Transform2D } from "@repo/engine/components";
 import z from "zod";
 
 export const System = createSystem("render")({
@@ -37,14 +37,14 @@ function Entrypoint() {
   // Clear the canvas
   context.clearRect(0, 0, canvas.width, canvas.height);
 
-  for (const entityId of world.query(Transform)) {
-    const transform = world.get(entityId, Transform);
+  for (const entityId of world.query(Transform2D)) {
+    const transform = world.get(entityId, Transform2D);
 
     if (!transform) continue;
 
     // Interpolate between previous and current position
-    const interpolatedX = lerp(transform.prev.x, transform.curr.x, alpha);
-    const interpolatedY = lerp(transform.prev.y, transform.curr.y, alpha);
+    const interpolatedX = lerp(transform.prev.pos.x, transform.curr.pos.x, alpha);
+    const interpolatedY = lerp(transform.prev.pos.y, transform.curr.pos.y, alpha);
 
     // Draw the entity as a rectangle at the interpolated position
     context.fillRect(interpolatedX, interpolatedY, 10, 10);

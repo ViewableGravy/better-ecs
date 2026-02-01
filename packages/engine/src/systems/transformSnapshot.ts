@@ -1,5 +1,5 @@
 import z from "zod";
-import { Transform } from "../components/transform";
+import { Transform2D, Transform3D } from "../components/transform";
 import { useWorld } from "../core/context";
 import { createSystem } from "../core/register/system";
 
@@ -11,12 +11,20 @@ export const transformSnapshotSystem = createSystem("engine:transformSnapshot")(
   },
   system: () => {
     const world = useWorld();
-    for (const entityId of world.query(Transform)) {
-      const transform = world.get(entityId, Transform);
+    
+    // Snapshot Transform2D
+    for (const entityId of world.query(Transform2D)) {
+      const transform = world.get(entityId, Transform2D);
       if (transform) {
-        transform.prev.x = transform.curr.x;
-        transform.prev.y = transform.curr.y;
-        transform.prev.z = transform.curr.z;
+        transform.prev.copyFrom(transform.curr);
+      }
+    }
+
+    // Snapshot Transform3D
+    for (const entityId of world.query(Transform3D)) {
+      const transform = world.get(entityId, Transform3D);
+      if (transform) {
+        transform.prev.copyFrom(transform.curr);
       }
     }
   },

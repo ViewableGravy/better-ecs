@@ -1,5 +1,5 @@
 import { createSystem, useDelta, useSystem, useWorld } from "@repo/engine";
-import { Transform } from "@repo/engine/components";
+import { Transform2D } from "@repo/engine/components";
 import z from "zod";
 import { PlayerComponent } from "../../components/player";
 
@@ -20,7 +20,7 @@ function Entrypoint() {
   /***** QUERIES *****/
   const [playerId] = world.query(PlayerComponent)
  
-  const transform = world.get(playerId, Transform);
+  const transform = world.get(playerId, Transform2D);
 
   if (!transform) return;
 
@@ -31,18 +31,18 @@ function Entrypoint() {
     
     // Vertical movement: Arrow keys or W/S
     if (code === "ArrowUp" || code === "KeyW") {
-      transform.curr.y -= speed;
+      transform.curr.pos.y -= speed;
     }
     if (code === "ArrowDown" || code === "KeyS") {
-      transform.curr.y += speed;
+      transform.curr.pos.y += speed;
     }
     
     // Horizontal movement: Arrow keys or A/D
     if (code === "ArrowLeft" || code === "KeyA") {
-      transform.curr.x -= speed;
+      transform.curr.pos.x -= speed;
     }
     if (code === "ArrowRight" || code === "KeyD") {
-      transform.curr.x += speed;
+      transform.curr.pos.x += speed;
     }
   }
 }
