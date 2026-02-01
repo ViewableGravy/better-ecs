@@ -160,7 +160,7 @@ High-level rendering concepts:
 ### Phase 3: Multi-World Engine Support (1 week)
 - SceneManager multi-world support
 - World lifecycle management
-- Backward compatibility
+- Migrate implicit default-world usage; provide tooling to remove legacy implicit behaviors
 
 ### Phase 4: Context Scene Plugin Core (2 weeks)
 - Plugin package structure

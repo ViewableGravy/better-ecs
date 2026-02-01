@@ -89,7 +89,7 @@ Spatial contexts will be implemented as:
 1. **Multiple World Support** (NEW)
    - `SceneManager` maintains map of `contextId -> World`
    - `scene.getWorld(contextId?: string)` accessor
-   - Default world behavior unchanged (backward compatible)
+  - Default world behavior initially preserved; provide migration tooling to remove implicit defaults
 
 2. **World Query Helpers** (Enhancement)
    - Existing `world.query()` unchanged
@@ -228,7 +228,7 @@ export class SceneManager {
   // NEW: Support multiple worlds per scene
   #sceneWorlds: Map<string, Map<string, World>>; // sceneName -> contextId -> World
   
-  // NEW: Get world by context ID (backward compatible)
+  // NEW: Get world by context ID (provide migration guidance for callers)
   getWorld(contextId?: string): World {
     if (!contextId) {
       return this.#activeWorld; // Default world
@@ -248,7 +248,7 @@ export class SceneManager {
 ```
 
 **Impact**: 
-- ✅ Backward compatible - default behavior unchanged
+- ✅ Migration path available - default implicit behavior will be removed
 - ✅ Minimal - ~20 lines of code
 - ✅ Generic - no context-specific logic
 
@@ -1210,7 +1210,7 @@ Expected performance with contexts enabled:
 
 1. Add `SceneManager.registerWorld(contextId, world)`
 2. Add `SceneManager.getWorld(contextId?)`  
-3. Ensure backward compatibility (default world behavior unchanged)
+3. Ensure migration path (provide codemods and update callers to explicit world IDs)
 4. Write unit tests for multiple world management
 
 **Deliverable**: Engine supports multiple worlds per scene
@@ -1513,7 +1513,7 @@ This revised architecture positions **spatial contexts as a plugin** built on mi
 
 **Engine Changes** (`packages/engine/`):
 - ~30 lines: Multiple world support in SceneManager
-- Backward compatible, no breaking changes
+- Migration tools provided; plan to remove implicit defaults
 
 **Plugin Package** (`packages/plugins/context-scene/`):
 - Scene factory: `createContextScene()`

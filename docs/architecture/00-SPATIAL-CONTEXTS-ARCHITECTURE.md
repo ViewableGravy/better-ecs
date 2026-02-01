@@ -91,7 +91,7 @@ Each context is a complete, independent World instance with:
 - Editor integration APIs
 
 **Provides:**
-- `useActiveContext()` - Current player context
+- `useActiveContext()` - ID of the currently focused context (e.g. for input/rendering policy)
 - `useContextWorld(id)` - Access specific world
 - `useContextManager()` - Plugin orchestration API
 
@@ -158,6 +158,7 @@ No physics system needs to know about contexts. Portals are gameplay features im
 - Camera transforms
 - Batching helpers
 - Shader compilation
+ - Rendering primitives and higher-level draw helpers (exported from `@repo/engine/render`, not directly from `@repo/engine`)
 
 **No Rendering Policy in Engine:**
 The engine does NOT decide:
@@ -250,6 +251,17 @@ const world = useContextWorld("house_1");
 // Access the context manager for advanced operations
 const contextManager = useContextManager();
 ```
+
+### Context Resolution
+
+Because `Context === World`, context resolution is implicit:
+
+1.  **By Entity Reference:** If you hold an entity ID and its World (e.g. within a system), the World *is* the context.
+2.  **By Transform (Single World):** Within a world, spatial queries (Triggers/Portals) determine if an entity should *transition* to another context.
+3.  **By Transform (Cross World):** Because worlds are disjoint simulation boundaries (Coordinate `0,0` exists in both Overworld and House), you cannot resolve a generic Transform to a Context without knowing which world that transform belongs to.
+
+**Recommendation:**
+Avoid global utility functions like `getContext(transform)`. Instead, logical transitions (like entering a house) should be handled by gameplay systems detecting triggers in the *current* world and commanding the `ContextManager` to switch the active context ID.
 
 ### Standard World Access (Context-Agnostic)
 

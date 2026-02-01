@@ -51,7 +51,7 @@ const sceneTransitionSystem = createSystem("sceneTransition")({
     // Access scene metadata
     console.log(scene.name); // "menu" | "game" | etc.
     
-    // Access default world (backward compatible)
+    // Access default world (legacy implicit API; migrate to explicit world IDs)
     const defaultWorld = scene.getDefaultWorld();
     
     // Access multiple worlds (for contexts)
@@ -151,27 +151,14 @@ const physicsCoordinatorSystem = createSystem("physicsCoordinator")({
 
 ---
 
-### Backward Compatibility
+### No Legacy Code Policy
 
-**Existing world-level systems continue to work unchanged:**
+This project follows a strict No Legacy Code Policy: legacy implicit behaviors and compatibility shims are removed rather than preserved. New APIs must be adopted by userland code and migration tooling (codemods, guides) should be provided to update existing code.
 
-```typescript
-// This still works exactly as before
-const playerMovementSystem = createSystem("playerMovement")({
-  system() {
-    const world = useWorld(); // Returns active world
-    
-    for (const id of world.query(Player, Transform, Velocity)) {
-      // Update player in active world
-    }
-  }
-});
-```
-
-**Default behavior:**
-- Systems without `scope` default to `"world"`
-- `useWorld()` returns the active world
-- Single-world games unaffected
+Guidance:
+- Require systems to declare `scope` where meaningful; do not rely on implicit global semantics.
+- Provide automated migration tools to update existing systems to the new API surface.
+- Remove legacy implicit behaviors (such as implicit default-world assumptions) as part of the rollout.
 
 ---
 
@@ -185,13 +172,13 @@ const playerMovementSystem = createSystem("playerMovement")({
 **Steps:**
 1. Add `scope?: "world" | "scene"` to `SystemOpts`
 2. Update `EngineSystem` type to include scope
-3. Default scope to `"world"` for backward compatibility
+3. Default scope to `"world"` initially to ease migration; provide codemods and require explicit `scope` in consumer code. Legacy implicit behavior will be removed.
 4. Update type inference
 
 **Acceptance:**
 - [ ] Systems can declare scope
 - [ ] Type inference works correctly
-- [ ] Backward compatible (no breaking changes)
+- [ ] Migration tooling available; legacy implicit defaults removed in follow-up
 
 ---
 
@@ -391,7 +378,7 @@ const MyScene = createScene("myScene")({
 
 **Acceptance:**
 - [ ] Scene hooks called at correct times
-- [ ] Backward compatible (hooks optional)
+- [ ] Migration tooling available for hooks; remove implicit hook behavior
 - [ ] Clear distinction from world hooks
 
 ---
@@ -515,7 +502,7 @@ const MyScene = createScene("myScene")({
 - [ ] Scene-level systems can be defined
 - [ ] `useScene()` hook works correctly
 - [ ] Scene context provides world access
-- [ ] World systems still work (backward compatible)
+- [ ] World systems updated and migrated; no implicit assumptions remain
 - [ ] System execution order is correct
 - [ ] Documentation is clear
 - [ ] Tests pass with good coverage

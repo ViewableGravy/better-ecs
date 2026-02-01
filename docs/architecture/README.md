@@ -140,7 +140,7 @@ Each feature document has **two parts:**
 **Note:** Multi-world engine support is documented inline in Phase 2 and Phase 4 documents. It involves:
 - Extending SceneManager to track multiple worlds
 - Adding `scene.getWorld(id)` accessor
-- Maintaining backward compatibility
+- Migrate implicit default-world usage and provide tooling to remove legacy implicit behaviors
 
 **Estimated time:** 1 week
 **Prerequisites:** Phase 2
