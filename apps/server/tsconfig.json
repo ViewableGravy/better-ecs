@@ -12,7 +12,7 @@
   "include": ["src/**/*"],
   "references": [
     {
-      "path": "../../packages/engine/tsconfig.lib.json"
+      "path": "../../packages/engine"
     }
   ]
 }

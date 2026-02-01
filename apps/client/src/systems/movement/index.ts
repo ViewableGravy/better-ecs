@@ -19,6 +19,8 @@ function Entrypoint() {
 
   /***** QUERIES *****/
   const [playerId] = world.query(PlayerComponent)
+
+  if (!playerId) return;
  
   const transform = world.get(playerId, Transform2D);
 

@@ -8,9 +8,8 @@ import { System as Movement } from './systems/movement';
 import { System as Physics } from './systems/physics';
 import { System as Render } from './systems/render';
 import { Scene as TestScene } from './scenes/test';
-import { useSetScene } from '../../../packages/engine/src';
+import { Scene as RenderingDemoScene } from './scenes/rendering-demo';
 
-// Declare engine types
 declare module "@repo/engine" {
   interface Register {
     Engine: Awaited<ReturnType<typeof main>>;
@@ -34,17 +33,18 @@ async function main() {
           }
         }
       }),
-
-      // Update systems (input is now built-in as "engine:input")
+      
+      // Update systems
       Movement,
       Physics,
       Collision,
 
-      // Render systems
+      // Render system
       Render,
     ],
     scenes: [
-      TestScene
+      TestScene,
+      RenderingDemoScene
     ]
   });
 

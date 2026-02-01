@@ -278,7 +278,7 @@ export function createEngine<
   }
 
   // Set initial scene if provided (will be activated during initialize())
-  if (opts.scenes) {
+  if (opts.scenes?.length) {
     const firstScene = opts.scenes[0].name as unknown as SceneName<TScenes[number]> | undefined;
     const initialScene = opts.initialScene ?? firstScene;
 

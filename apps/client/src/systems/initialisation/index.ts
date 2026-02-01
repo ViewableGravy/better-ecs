@@ -1,14 +1,21 @@
-import { createInitializationSystem, useWorld } from "@repo/engine";
-import { Transform } from "@repo/engine/components";
-import { PlayerComponent } from "../../components/player";
+import { createInitializationSystem, useSetScene } from "@repo/engine";
 
 export const System = createInitializationSystem(() => {
-  const world = useWorld();
+  const setScene = useSetScene();
 
-  const player = world.create();
-  const transform = new Transform(100, 100, 0);
-  const playerComponent = new PlayerComponent("Player1");
+  // Setup simple scene switcher UI
+  document.getElementById("scene-switcher")!.innerHTML = `
+    <div style="position: fixed; top: 10px; left: 10px; z-index: 1000; display: flex; gap: 10px; flex-direction: column; align-items: flex-start;">
+      <button id="to-movement" style="padding: 4px 8px; font-size: 14px; background: white; border-radius: 5px;">Go to Test Scene</button>
+      <button id="to-rendering" style="padding: 4px 8px; font-size: 14px; background: white; border-radius: 5px;">Go to Rendering Demo</button>
+    </div>
+  `;
 
-  world.add(player, transform);
-  world.add(player, playerComponent);
+  document.getElementById("to-movement")!.onclick = () => {
+    setScene("TestScene");
+  };
+
+  document.getElementById("to-rendering")!.onclick = () => {
+    setScene("RenderingDemo");
+  };
 })
