@@ -45,24 +45,16 @@ function Initialize() {
   window.addEventListener("resize", resizeCanvas);
 }
 
-function RenderFrame() {
-  if (!renderer) return;
-  
-  const engine = useEngine();
+function useCamera(renderer: Renderer) {
   const world = useWorld();
-  
+  const engine = useEngine();
+
   // Calculate interpolation factor based on time since last update
   // This prevents teleporting by resetting to 0 after each update
   const updateTimeMs = 1000 / engine.frame.ups;
   const timeSinceLastUpdate = performance.now() - engine.frame.lastUpdateTime;
   const alpha = Math.min(timeSinceLastUpdate / updateTimeMs, 1.0);
-  
-  // Begin frame
-  renderer.beginFrame();
-  
-  // Clear with dark background
-  renderer.clear(new Color(0.1, 0.1, 0.15, 1));
-  
+
   // Find and apply camera
   let cameraX = 0;
   let cameraY = 0;
@@ -82,8 +74,29 @@ function RenderFrame() {
       break; // Use first enabled camera
     }
   }
+
+  renderer.setCamera(cameraX, cameraY, cameraZoom)
+}
+
+function RenderFrame() {
+  if (!renderer) return;
   
-  renderer.setCamera(cameraX, cameraY, cameraZoom);
+  const engine = useEngine();
+  const world = useWorld();
+  
+  // Calculate interpolation factor based on time since last update
+  // This prevents teleporting by resetting to 0 after each update
+  const updateTimeMs = 1000 / engine.frame.ups;
+  const timeSinceLastUpdate = performance.now() - engine.frame.lastUpdateTime;
+  const alpha = Math.min(timeSinceLastUpdate / updateTimeMs, 1.0);
+  
+  // Begin frame
+  renderer.beginFrame();
+  
+  // Clear with dark background
+  renderer.clear(new Color(0.1, 0.1, 0.15, 1));
+
+  useCamera(renderer);
   
   // Collect and sort shapes by layer, then zOrder
   const shapeEntities: Array<{ id: EntityId; layer: number; zOrder: number }> = [];
