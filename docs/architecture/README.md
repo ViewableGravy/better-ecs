@@ -57,6 +57,19 @@ Comprehensive discussion of rendering primitives:
 
 ---
 
+#### [10-FEATURE-RENDER-THREADING.md](./10-FEATURE-RENDER-THREADING.md)
+**OffscreenCanvas + render worker architecture.**
+
+Documents a render-thread approach for Better ECS, including:
+- Extract/commit split aligned with systems
+- Backpressure (“latest-wins”) to avoid stutter
+- Transport options (postMessage vs SharedArrayBuffer triple-buffer)
+- Instrumentation requirements and a 1–2 hour step plan
+
+**Read this** before attempting multi-threaded rendering in the web client.
+
+---
+
 #### [08-PLUGIN-BASED-IMPLEMENTATION.md](./08-PLUGIN-BASED-IMPLEMENTATION.md)
 **Detailed plugin implementation specification.**
 
