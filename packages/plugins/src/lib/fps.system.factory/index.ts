@@ -3,7 +3,17 @@ import type { EngineSystem } from '@repo/engine';
 import { initialize } from './initialize';
 import { render } from './render';
 import { update } from './update';
-import { schema, type Opts } from './types';
+import { schema, type Opts, type FPSCounterData } from './types';
+
+const defaultState: FPSCounterData = {
+  fpsBuffer: { start: null, frames: 0 },
+  upsBuffer: { start: null, updates: 0 },
+  fps: [],
+  ups: [],
+  mode: "default",
+  customFps: null,
+  customUps: null
+};
 
 export const System = (opts: Opts) => {
   return createSystem("plugin:fps-counter")({
@@ -13,15 +23,7 @@ export const System = (opts: Opts) => {
     phase: "all",
     schema: {
       schema: schema,
-      default: {
-        fpsBuffer: { start: null, frames: 0 }, 
-        upsBuffer: { start: null, updates: 0 }, 
-        fps: [],
-        ups: [],
-        mode: opts.defaultMode ?? "default",
-        customFps: null,
-        customUps: null
-      }
+      default: { ...defaultState, mode: opts.defaultMode ?? defaultState.mode }
     }
   });
 
@@ -29,6 +31,14 @@ export const System = (opts: Opts) => {
     const engine = useEngine();
     const { data } = useOverloadedSystem<EngineSystem<typeof schema>>("plugin:fps-counter");
     const now = performance.now();
+
+    if (data.customFps !== null && engine.frame.fps !== data.customFps) {
+      engine.frame.fps = data.customFps;
+    }
+
+    if (data.customUps !== null && engine.frame.ups !== data.customUps) {
+      engine.frame.ups = data.customUps;
+    }
 
     if (!data.upsBuffer.start) {
       data.upsBuffer.start = now;
@@ -40,10 +50,12 @@ export const System = (opts: Opts) => {
     if (engine.frame.phase("update")) {
       return update(opts);
     }
-    
+
     if (engine.frame.phase("render")) {
       return render(opts);
     }
   }
 }
+
+export type { FPSCounterData };
 

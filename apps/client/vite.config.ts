@@ -1,10 +1,11 @@
 import { defineConfig } from 'vite';
 import tailwindcss from '@tailwindcss/vite';
+import { engineHmr } from '../../packages/hmr/src';
 import path from 'path';
 
 export default defineConfig({
   root: __dirname,
-  plugins: [tailwindcss()],
+  plugins: [tailwindcss(), engineHmr()],
   server: {
     port: 3000,
     headers: {
