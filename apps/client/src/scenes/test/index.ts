@@ -1,10 +1,15 @@
 import { createScene, EntityId, useWorld } from "@repo/engine";
-import { Camera, Color, Shape, Transform2D } from "@repo/engine/components";
+import { Camera, Color, Sprite, Transform2D } from "@repo/engine/components";
+import { Assets, loadImage } from "@repo/engine/asset";
+import { Texture } from "@repo/engine/texture";
 import { PlayerComponent } from "../../components/player";
 
 
 export const Scene = createScene("TestScene")({
-  setup() {
+  async setup() {
+    // Load the player sprite asset (cached after first load)
+    await Assets.load("player-sprite", () => loadImage("/sprites/player.png"));
+
     useCamera();
     usePlayer();
   }
@@ -37,19 +42,15 @@ function useCreatePlayer() {
   const player = world.create();
   const transform = new Transform2D(0, 0);
   const playerComponent = new PlayerComponent("NewPlayer");
-  const shape = new Shape(
-    "rectangle",
-    40,
-    40,
-    new Color(0.2, 0.8, 0.9, 1), // Cyan fill
-    new Color(0.1, 0.5, 0.6, 1), // Darker cyan stroke
-    2,
-    0
-  );
+
+  // Create a Texture from the cached image asset
+  const image = Assets.get<HTMLImageElement>("player-sprite")!;
+  const texture = new Texture(image);
+  const sprite = new Sprite(texture, 40, 40);
 
   world.add(player, transform);
   world.add(player, playerComponent);
-  world.add(player, shape);
+  world.add(player, sprite);
 
   return player;
 }

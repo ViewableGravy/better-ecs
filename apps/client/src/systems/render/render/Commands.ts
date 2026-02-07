@@ -16,4 +16,5 @@ export type View2D = {
 
 export type RenderCommand =
   | { kind: "setView"; view: View2D }
-  | { kind: "shape"; entity: EntityId };
+  | { kind: "shape"; entity: EntityId }
+  | { kind: "sprite"; entity: EntityId };

@@ -2,6 +2,7 @@ import { createRenderPipeline, RenderPipelineContext, CommandBuffer } from "@rep
 import { Canvas2DRenderer } from "@repo/engine/render";
 import type { RenderCommand, View2D } from "./render/Commands";
 import { CollectShapesStage } from "./stages/CollectShapes";
+import { CollectSpritesStage } from "./stages/CollectSprites";
 import { CommitStage } from "./stages/Commit";
 import { ExtractViewStage } from "./stages/ExtractView";
 import { SortStage } from "./stages/Sort";
@@ -38,7 +39,8 @@ export const System = createRenderPipeline("render")({
   },
   stages: [
     ExtractViewStage, 
-    CollectShapesStage, 
+    CollectShapesStage,
+    CollectSpritesStage,
     SortStage, 
     CommitStage
   ],

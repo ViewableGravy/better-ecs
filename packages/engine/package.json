@@ -20,6 +20,14 @@
     "./render": {
       "types": "./src/render/index.ts",
       "default": "./src/render/index.ts"
+    },
+    "./asset": {
+      "types": "./src/asset/index.ts",
+      "default": "./src/asset/index.ts"
+    },
+    "./texture": {
+      "types": "./src/texture/index.ts",
+      "default": "./src/texture/index.ts"
     }
   },
   "scripts": {

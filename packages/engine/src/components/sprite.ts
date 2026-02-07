@@ -1,3 +1,5 @@
+import { Texture } from "../texture";
+
 export class Color {
   constructor(
     public r: number = 1,
@@ -50,64 +52,61 @@ export class Color {
   }
 }
 
+/**
+ * Sprite component — a textured quad attached to an entity.
+ *
+ * Holds a reference to a `Texture` (which itself points at a TextureSource).
+ * The render system reads this component together with Transform2D to draw
+ * the entity on screen.
+ */
 export class Sprite {
-  /** Texture reference (asset ID or path) */
-  public texture: string;
-  
-  /** Source rectangle X in texture (for atlases) */
-  public sourceX: number;
-  
-  /** Source rectangle Y in texture (for atlases) */
-  public sourceY: number;
-  
-  /** Source width (0 = use texture width) */
-  public sourceWidth: number;
-  
-  /** Source height (0 = use texture height) */
-  public sourceHeight: number;
-  
-  /** Pivot X (0-1, origin for rotation/scaling) */
-  public pivotX: number;
-  
-  /** Pivot Y (0-1, origin for rotation/scaling) */
-  public pivotY: number;
-  
-  /** Horizontal flip */
+  /** The Texture to display. */
+  public texture: Texture;
+
+  /** Display width in world units (0 = derive from texture). */
+  public width: number;
+
+  /** Display height in world units (0 = derive from texture). */
+  public height: number;
+
+  /** Anchor / pivot X (0-1, origin for rotation/scaling). */
+  public anchorX: number;
+
+  /** Anchor / pivot Y (0-1, origin for rotation/scaling). */
+  public anchorY: number;
+
+  /** Horizontal flip. */
   public flipX: boolean;
-  
-  /** Vertical flip */
+
+  /** Vertical flip. */
   public flipY: boolean;
-  
-  /** Color tint */
+
+  /** Multiplicative color tint. */
   public tint: Color;
-  
-  /** Z-order for sorting within a layer */
+
+  /** Z-order for sorting within a layer. */
   public zOrder: number;
-  
-  /** Render layer for multi-pass rendering */
+
+  /** Render layer for multi-pass rendering. */
   public layer: number;
 
   constructor(
-    texture: string = "",
-    sourceX: number = 0,
-    sourceY: number = 0,
-    sourceWidth: number = 0,
-    sourceHeight: number = 0,
-    pivotX: number = 0.5,
-    pivotY: number = 0.5,
+    texture: Texture,
+    width: number = 0,
+    height: number = 0,
+    anchorX: number = 0.5,
+    anchorY: number = 0.5,
     flipX: boolean = false,
     flipY: boolean = false,
     tint: Color = new Color(),
     zOrder: number = 0,
-    layer: number = 0
+    layer: number = 0,
   ) {
     this.texture = texture;
-    this.sourceX = sourceX;
-    this.sourceY = sourceY;
-    this.sourceWidth = sourceWidth;
-    this.sourceHeight = sourceHeight;
-    this.pivotX = pivotX;
-    this.pivotY = pivotY;
+    this.width = width;
+    this.height = height;
+    this.anchorX = anchorX;
+    this.anchorY = anchorY;
     this.flipX = flipX;
     this.flipY = flipY;
     this.tint = tint;

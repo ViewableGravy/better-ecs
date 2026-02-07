@@ -1,5 +1,15 @@
 import { useSystem, useWorld } from "@repo/engine";
-import { Shape } from "@repo/engine/components";
+import { Shape, Sprite } from "@repo/engine/components";
+
+function getLayerAndZ(world: ReturnType<typeof useWorld>, entity: any): [number, number] {
+  const shape = world.get(entity, Shape);
+  if (shape) return [shape.layer, shape.zOrder];
+
+  const sprite = world.get(entity, Sprite);
+  if (sprite) return [sprite.layer, sprite.zOrder];
+
+  return [0, 0];
+}
 
 export function SortStage(): void {
   const world = useWorld();
@@ -7,25 +17,14 @@ export function SortStage(): void {
   const commands = data.commands;
 
   commands.sort((a, b) => {
-    if (a.kind !== b.kind) {
-      return a.kind === "setView" ? -1 : 1;
-    }
+    // setView always comes first
+    if (a.kind === "setView") return -1;
+    if (b.kind === "setView") return 1;
 
-    if (a.kind === "setView" && b.kind === "setView") return 0;
+    const [layerA, zA] = getLayerAndZ(world, (a as any).entity);
+    const [layerB, zB] = getLayerAndZ(world, (b as any).entity);
 
-    if (a.kind === "shape" && b.kind === "shape") {
-      const shapeA = world.get(a.entity, Shape);
-      const shapeB = world.get(b.entity, Shape);
-
-      const layerA = shapeA?.layer ?? 0;
-      const layerB = shapeB?.layer ?? 0;
-      if (layerA !== layerB) return layerA - layerB;
-
-      const zOrderA = shapeA?.zOrder ?? 0;
-      const zOrderB = shapeB?.zOrder ?? 0;
-      return zOrderA - zOrderB;
-    }
-
-    return 0;
+    if (layerA !== layerB) return layerA - layerB;
+    return zA - zB;
   });
 }

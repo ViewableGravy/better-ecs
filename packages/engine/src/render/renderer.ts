@@ -1,4 +1,5 @@
 import { Color } from "../components/sprite";
+import type { Texture } from "../texture";
 
 /**
  * Opaque handle for loaded textures.
@@ -18,8 +19,8 @@ export interface SpriteRenderData {
   rotation: number;
   scaleX: number;
   scaleY: number;
-  pivotX: number;
-  pivotY: number;
+  anchorX: number;
+  anchorY: number;
   sourceX: number;
   sourceY: number;
   sourceWidth: number;
@@ -66,11 +67,11 @@ export interface Renderer {
   /** Set the camera transform (position and zoom) */
   setCamera(x: number, y: number, zoom: number): void;
   
-  /** Load a texture from an image source, returns a handle */
-  loadTexture(id: string, image: HTMLImageElement | ImageBitmap): TextureHandle;
+  /** Load a texture from an engine Texture object, returns a handle */
+  loadTexture(texture: Texture): TextureHandle;
   
-  /** Get a previously loaded texture by ID */
-  getTexture(id: string): TextureHandle | null;
+  /** Get a previously loaded texture handle by its source uid */
+  getTextureHandle(sourceUid: number): TextureHandle | null;
   
   /** Delete a loaded texture */
   deleteTexture(handle: TextureHandle): void;

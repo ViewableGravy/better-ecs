@@ -1,9 +1,10 @@
 import { Color } from "../components/sprite";
+import type { Texture } from "../texture";
 import { Renderer, ShapeRenderData, SpriteRenderData, TextureHandle } from "./renderer";
 
 interface TextureEntry {
   handle: TextureHandle;
-  image: HTMLImageElement | ImageBitmap;
+  image: HTMLImageElement | ImageBitmap | HTMLCanvasElement;
 }
 
 /**
@@ -21,7 +22,7 @@ export class Canvas2DRenderer implements Renderer {
   
   // Texture management
   private nextTextureHandle: TextureHandle = 1;
-  private texturesById: Map<string, TextureEntry> = new Map();
+  private texturesBySourceUid: Map<number, TextureEntry> = new Map();
   private texturesByHandle: Map<TextureHandle, TextureEntry> = new Map();
 
   initialize(canvas: HTMLCanvasElement): void {
@@ -56,24 +57,26 @@ export class Canvas2DRenderer implements Renderer {
     this.cameraZoom = zoom;
   }
 
-  loadTexture(id: string, image: HTMLImageElement | ImageBitmap): TextureHandle {
-    // Check if already loaded
-    const existing = this.texturesById.get(id);
+  loadTexture(texture: Texture): TextureHandle {
+    const sourceUid = texture.source.uid;
+
+    // Check if source already uploaded
+    const existing = this.texturesBySourceUid.get(sourceUid);
     if (existing) {
       return existing.handle;
     }
     
     const handle = this.nextTextureHandle++;
-    const entry: TextureEntry = { handle, image };
+    const entry: TextureEntry = { handle, image: texture.source.resource };
     
-    this.texturesById.set(id, entry);
+    this.texturesBySourceUid.set(sourceUid, entry);
     this.texturesByHandle.set(handle, entry);
     
     return handle;
   }
 
-  getTexture(id: string): TextureHandle | null {
-    const entry = this.texturesById.get(id);
+  getTextureHandle(sourceUid: number): TextureHandle | null {
+    const entry = this.texturesBySourceUid.get(sourceUid);
     return entry ? entry.handle : null;
   }
 
@@ -81,10 +84,10 @@ export class Canvas2DRenderer implements Renderer {
     const entry = this.texturesByHandle.get(handle);
     if (!entry) return;
     
-    // Find and remove from ID map
-    for (const [id, e] of this.texturesById.entries()) {
+    // Find and remove from source uid map
+    for (const [uid, e] of this.texturesBySourceUid.entries()) {
       if (e.handle === handle) {
-        this.texturesById.delete(id);
+        this.texturesBySourceUid.delete(uid);
         break;
       }
     }
@@ -132,9 +135,9 @@ export class Canvas2DRenderer implements Renderer {
     // Apply tint via globalAlpha (simple approach - full tinting requires extra work)
     this.ctx.globalAlpha = data.tint.a;
     
-    // Draw from pivot point
-    const pivotOffsetX = -scaledW * data.pivotX;
-    const pivotOffsetY = -scaledH * data.pivotY;
+    // Draw from anchor point
+    const pivotOffsetX = -scaledW * data.anchorX;
+    const pivotOffsetY = -scaledH * data.anchorY;
     
     this.ctx.drawImage(
       image,
