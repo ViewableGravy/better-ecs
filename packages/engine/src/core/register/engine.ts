@@ -177,8 +177,9 @@ export class EngineClass<
       // Allow 15% tolerance for frame timing to catch frames slightly faster than target
       // This is common when VSync is active and the calculated sleep matches the refresh rate
       const frameTolerance = frameTime * 0.15;
+      const updateTolerance = updateTime * 0.15;
       
-      const updateShouldRun = updateDelta >= updateTime;
+      const updateShouldRun = updateDelta >= (updateTime - updateTolerance);
       const frameShouldRun = frameDelta >= (frameTime - frameTolerance);
 
       if (updateShouldRun || frameShouldRun) {
