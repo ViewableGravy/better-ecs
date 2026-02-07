@@ -17,5 +17,16 @@
       "@repo/utils": ["../../packages/utils/src/index.ts"]
     }
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "references": [
+    {
+      "path": "../../packages/hmr"
+    },
+    {
+      "path": "../../packages/plugins"
+    },
+    {
+      "path": "../../packages/engine"
+    }
+  ]
 }

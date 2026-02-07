@@ -8,14 +8,14 @@
     "dev": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "node scripts/vite.mjs dev",
+        "command": "bun run dev",
         "cwd": "apps/client"
       }
     },
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "node scripts/vite.mjs build",
+        "command": "bun run build",
         "cwd": "apps/client"
       },
       "inputs": ["default", "^default"],
@@ -31,7 +31,7 @@
     "preview": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "node scripts/vite.mjs preview",
+        "command": "bun run preview",
         "cwd": "apps/client"
       }
     },

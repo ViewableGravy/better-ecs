@@ -3,12 +3,15 @@
   "compilerOptions": {
     "lib": ["DOM", "ES2022"],
     "skipLibCheck": true,
-    "noEmit": true,
     "typeRoots": ["../../node_modules/@types"],
     "paths": {
       "@repo/utils": ["../../packages/utils/src/index.ts"]
     }
   },
-  "include": ["src/**/*"],
-  "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts", "dist"]
+  "files": [],
+  "references": [
+    {
+      "path": "./tsconfig.lib.json"
+    }
+  ]
 }

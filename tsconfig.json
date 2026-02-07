@@ -2,5 +2,26 @@
   "extends": "./tsconfig.base.json",
   "files": [],
   "include": [],
+  "references": [
+    // UPDATED BY NX SYNC
+    {
+      "path": "./packages/utils"
+    },
+    {
+      "path": "./packages/engine"
+    },
+    {
+      "path": "./packages/plugins"
+    },
+    {
+      "path": "./packages/hmr"
+    },
+    {
+      "path": "./apps/client"
+    },
+    {
+      "path": "./apps/server"
+    }
+  ],
   "exclude": ["**/dist", "**/apps/**/dist", "**/packages/**/dist"]
 }

@@ -21,6 +21,18 @@
   },
   "plugins": [
     {
+      "plugin": "@nx/js/typescript",
+      "options": {
+        "typecheck": {
+          "targetName": "typecheck"
+        },
+        "build": {
+          "targetName": "build",
+          "configName": "tsconfig.lib.json"
+        }
+      }
+    },
+    {
       "plugin": "@nx/vite/plugin",
       "include": ["apps/client/**"],
       "options": {
@@ -42,5 +54,8 @@
       }
     }
   ],
+  "sync": {
+    "applyChanges": true
+  },
   "defaultProject": "client"
 }
