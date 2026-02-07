@@ -21,6 +21,15 @@ export default defineConfig({
         __dirname,
       ],
     },
+    watch: {
+      // Exclude heavy directories from file watching to reduce inotify pressure
+      ignored: [
+        '**/node_modules/**',
+        '**/dist/**',
+        '**/.git/**',
+        '**/performance-testing/**',
+      ],
+    },
   },
   resolve: {
     alias: [

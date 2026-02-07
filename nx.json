@@ -1,11 +1,14 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "cli": {
-    "packageManager": "npm"
+    "packageManager": "bun"
   },
   "targetDefaults": {
     "build": {
       "dependsOn": ["^build"],
+      "cache": true
+    },
+    "typecheck": {
       "cache": true
     },
     "lint": {
@@ -14,68 +17,28 @@
     "test": {
       "cache": true,
       "dependsOn": ["^build"]
-    },
-    "@nx/js:tsc": {
-      "cache": true,
-      "dependsOn": ["^build"],
-      "inputs": ["default", "^default"]
     }
   },
   "plugins": [
     {
-      "plugin": "@nx/js/typescript",
-      "options": {
-        "typecheck": {
-          "targetName": "typecheck"
-        },
-        "build": {
-          "targetName": "build",
-          "configName": "tsconfig.lib.json",
-          "buildDepsName": "build-deps",
-          "watchDepsName": "watch-deps"
-        }
-      }
-    },
-    {
       "plugin": "@nx/vite/plugin",
+      "include": ["apps/client/**"],
       "options": {
         "buildTargetName": "vite:build",
-        "testTargetName": "test",
-        "serveTargetName": "serve",
+        "testTargetName": "vite:test",
+        "serveTargetName": "vite:serve",
         "devTargetName": "vite:dev",
         "previewTargetName": "vite:preview",
-        "serveStaticTargetName": "serve-static",
-        "typecheckTargetName": "vite:typecheck",
-        "buildDepsTargetName": "build-deps",
-        "watchDepsTargetName": "watch-deps"
+        "serveStaticTargetName": "vite:serve-static",
+        "typecheckTargetName": "vite:typecheck"
       }
     },
     {
       "plugin": "@nx/vitest",
+      "include": ["packages/engine/**"],
       "options": {
         "testTargetName": "test",
-        "ciTargetName": "test-ci",
-        "testMode": "watch"
-      }
-    },
-    {
-      "plugin": "@nx/eslint/plugin",
-      "options": {
-        "targetName": "lint"
-      }
-    },
-    {
-      "plugin": "@nx/rollup/plugin",
-      "options": {
-        "buildTargetName": "build",
-        "buildDepsTargetName": "build-deps",
-        "watchDepsTargetName": "watch-deps"
-      }
-    },
-    {
-      "plugin": "@nx/jest/plugin",
-      "options": {
-        "targetName": "test"
+        "ciTargetName": "test-ci"
       }
     }
   ],

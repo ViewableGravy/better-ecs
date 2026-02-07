@@ -7,10 +7,14 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "nx run-many --target=dev --all",
-    "build": "nx run-many --target=build --all",
-    "lint": "nx run-many --target=lint --all",
-    "test": "nx run-many --target=test --all"
+    "dev": "nx run client:dev",
+    "build": "nx run-many --target=build",
+    "build:all": "nx run-many --target=build --skip-nx-cache",
+    "lint": "nx run-many --target=lint",
+    "typecheck": "nx run-many --target=typecheck",
+    "test": "nx run-many --target=test",
+    "clean": "nx run-many --target=clean",
+    "clean:all": "rm -rf dist .nx/cache && nx run-many --target=clean"
   },
   "devDependencies": {
     "@eslint/js": "^9.8.0",

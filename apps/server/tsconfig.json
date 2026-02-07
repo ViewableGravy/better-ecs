@@ -6,13 +6,7 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "noEmit": true,
-    "skipLibCheck": true,
-    "composite": false
+    "skipLibCheck": true
   },
-  "include": ["src/**/*"],
-  "references": [
-    {
-      "path": "../../packages/engine"
-    }
-  ]
+  "include": ["src/**/*"]
 }

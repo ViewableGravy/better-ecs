@@ -12,8 +12,10 @@
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.lib.json",
-    "lint": "tsc --noEmit"
+    "build": "npx tsc -p tsconfig.lib.json",
+    "clean": "rm -rf dist tsconfig.lib.tsbuildinfo",
+    "lint": "npx tsc --noEmit",
+    "typecheck": "npx tsc --noEmit"
   },
   "dependencies": {
     "@repo/engine": "*",
