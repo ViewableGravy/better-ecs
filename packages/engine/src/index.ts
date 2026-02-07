@@ -8,4 +8,9 @@ export * from './math';
 export * from './serialization';
 export * from './systems/transformSnapshot';
 export * from './systems/input';
+export * from './texture';
+export * from './material';
+export * from './geometry';
+export * from './mesh';
+
 
