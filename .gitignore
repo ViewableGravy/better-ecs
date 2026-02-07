@@ -5,7 +5,9 @@ out-tsc
 *.log
 *.tsbuildinfo
 .DS_Store
-.vscode
+.vscode/*
+!.vscode/settings.json
+!.vscode/copilot-instructions.md
 .idea
 .env
 
