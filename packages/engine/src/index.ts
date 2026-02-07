@@ -11,12 +11,13 @@ export * from './serialization';
 export * from './systems/transformSnapshot';
 export * from './systems/input';
 
-type OnSystemCreatedOpts = Omit<SystemOpts<any, any>, "schema"> & { name: string };
+type AnySystemOpts = Omit<SystemOpts<any, any>, "schema"> & { name: string };
+type AnySystems = Record<string, any>;
 
 declare global {
   var __ENGINE_HMR__: {
-    register?: (systems: Record<string, EngineSystem<any>>) => void;
-    onSystemCreated?: (systemInfo: OnSystemCreatedOpts) => void;
+    register?: (systems: AnySystems) => void;
+    onSystemCreated?: (systemInfo: AnySystemOpts) => void;
   }
 }
 
