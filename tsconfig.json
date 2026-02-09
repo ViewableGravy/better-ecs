@@ -23,5 +23,5 @@
       "path": "./apps/server"
     }
   ],
-  "exclude": ["**/dist", "**/apps/**/dist", "**/packages/**/dist"]
+  "exclude": ["**/dist", "**/apps/**/dist", "**/packages/**/dist", "**/node_modules/*"]
 }

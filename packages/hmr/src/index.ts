@@ -1,2 +1,2 @@
-export { engineHmr } from './plugin';
-export { getRuntime } from './runtime';
+export { engineHmr } from './plugin.ts';
+export { getRuntime } from './runtime.ts';

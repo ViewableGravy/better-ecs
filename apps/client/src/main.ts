@@ -1,14 +1,15 @@
 // apps/client/src/main.ts
-import './styles.css';
 import * as Engine from "@repo/engine";
 import { System as FPSCounter } from '@repo/plugins';
+import { Scene as RenderingDemoScene } from './scenes/rendering-demo';
+import { Scene as TestScene } from './scenes/test';
+import './styles.css';
 import { System as Collision } from './systems/collision';
 import { System as Initialize } from "./systems/initialisation";
 import { System as Movement } from './systems/movement';
 import { System as Physics } from './systems/physics';
 import { System as Render } from './systems/render';
-import { Scene as TestScene } from './scenes/test';
-import { Scene as RenderingDemoScene } from './scenes/rendering-demo';
+import { invariantById } from './utilities/selectors';
 
 declare module "@repo/engine" {
   interface Register {
@@ -22,7 +23,7 @@ async function main() {
     systems: [
       // Plugins
       FPSCounter({ 
-        element: document.getElementById('fps-counter')!,
+        element: invariantById('fps-counter'),
         round: true,
         rate: 1000,
         modeToggleKey: { 

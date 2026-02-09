@@ -1,10 +1,10 @@
-import type { EngineInitializationSystem, EngineSystem, SystemFactoryTuple } from "./system";
 import { UserWorld } from "../../ecs/world";
-import { executeWithContext } from "../context";
-import type { EngineFrame, EngineUpdate, FrameStats } from "../types";
 import type { EngineSystemTypes } from "../../systems/engine-system-types";
-import type { SceneDefinitionTuple, SceneName } from "../scene/scene.types";
+import { executeWithContext } from "../context";
 import { SceneManager } from "../scene/scene-manager";
+import type { SceneDefinitionTuple, SceneName } from "../scene/scene.types";
+import type { EngineFrame, EngineUpdate, FrameStats } from "../types";
+import type { EngineInitializationSystem, EngineSystem, SystemFactoryTuple } from "./system";
 
 /***** TYPE DEFINITIONS *****/
 type StartEngineOpts = {
@@ -46,7 +46,7 @@ export class EngineClass<
   #phaseFn = (phase: "update" | "render") => phase === this.#currentPhase;
 
   private initializationSystem: EngineInitializationSystem | null = null;
-  private initialized: boolean = false;
+  private initialized = false;
 
   /**
    * Scene manager for handling scene lifecycle and transitions.
@@ -57,7 +57,7 @@ export class EngineClass<
   public frame: FrameStats = {
     updateDelta: 0,
     frameDelta: 0,
-    phase: (_) => false,
+    phase: () => false,
     fps: 60,
     ups: 60,
     initialFPS: 60,

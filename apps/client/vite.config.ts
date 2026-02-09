@@ -11,6 +11,7 @@ export default defineConfig({
   ],
   server: {
     port: 3000,
+    host: '127.0.0.1',
     headers: {
       "Cross-Origin-Opener-Policy": "same-origin",
       "Cross-Origin-Embedder-Policy": "require-corp",
@@ -33,6 +34,7 @@ export default defineConfig({
         '**/performance-testing/**',
       ],
     },
+    allowedHosts: true
   },
   resolve: {
     alias: [
@@ -44,6 +46,7 @@ export default defineConfig({
       { find: '@repo/engine/asset', replacement: path.resolve(__dirname, '../../packages/engine/src/asset/index.ts') },
       { find: '@repo/engine/texture', replacement: path.resolve(__dirname, '../../packages/engine/src/texture/index.ts') },
       { find: '@repo/engine', replacement: path.resolve(__dirname, '../../packages/engine/src/index.ts') },
+      { find: '@repo/hmr', replacement: path.resolve(__dirname, '../../packages/hmr/src/index.ts') },
       { find: '@repo/plugins', replacement: path.resolve(__dirname, '../../packages/plugins/src/index.ts') },
       { find: '@repo/utils', replacement: path.resolve(__dirname, '../../packages/utils/src/index.ts') },
     ],

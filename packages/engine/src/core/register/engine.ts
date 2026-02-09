@@ -1,8 +1,9 @@
-import type { EngineInitializationSystem, EngineSystem, SystemFactoryTuple } from "./system";
 import { inputSystem } from "../../systems/input";
 import { transformSnapshotSystem } from "../../systems/transformSnapshot";
 import type { SceneDefinitionTuple, SceneName } from "../scene/scene.types";
 import { EngineClass } from "./internal";
+import type { EngineInitializationSystem, EngineSystem, SystemFactoryTuple } from "./system";
+export { EngineClass };
 
 /***** TYPE DEFINITIONS *****/
 /** Options for createEngine */
