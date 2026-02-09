@@ -40,6 +40,7 @@ export default [
                 'type:engine',
                 'type:plugins',
                 'type:utils',
+                'type:hmr',
               ],
             },
             {
