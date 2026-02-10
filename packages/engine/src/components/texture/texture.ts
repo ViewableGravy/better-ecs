@@ -21,30 +21,6 @@ export class Texture {
   /** The underlying source that owns the pixel data. */
   public readonly source: TextureSource;
 
-  // --- Frame (region of interest inside the source) ---
-
-  /** X offset into the source (pixels). */
-  public frameX: number;
-
-  /** Y offset into the source (pixels). */
-  public frameY: number;
-
-  /** Width of the region (pixels). 0 = full source width. */
-  public frameWidth: number;
-
-  /** Height of the region (pixels). 0 = full source height. */
-  public frameHeight: number;
-
-  /** Logical width of the texture (after frame is resolved). */
-  get width(): number {
-    return this.frameWidth || this.source.width;
-  }
-
-  /** Logical height of the texture (after frame is resolved). */
-  get height(): number {
-    return this.frameHeight || this.source.height;
-  }
-
   /**
    * @param source  A TextureSource, or raw image data that will be wrapped
    *                in a new TextureSource automatically.
@@ -55,17 +31,24 @@ export class Texture {
    */
   constructor(
     source: TextureSource | TextureSourceData,
-    frameX: number = 0,
-    frameY: number = 0,
-    frameW: number = 0,
-    frameH: number = 0,
+    public  frameX = 0,
+    public frameY = 0,
+    public frameWidth = 0,
+    public frameHeight = 0,
   ) {
     this.uid = Texture.nextId++;
-    this.source =
-      source instanceof TextureSource ? source : new TextureSource(source);
-    this.frameX = frameX;
-    this.frameY = frameY;
-    this.frameWidth = frameW;
-    this.frameHeight = frameH;
+    this.source = source instanceof TextureSource 
+      ? source 
+      : new TextureSource(source);
+  }
+
+  /** Logical width of the texture (after frame is resolved). */
+  public get width(): number {
+    return this.frameWidth || this.source.width;
+  }
+
+  /** Logical height of the texture (after frame is resolved). */
+  public get height(): number {
+    return this.frameHeight || this.source.height;
   }
 }

@@ -55,7 +55,11 @@ export class AssetCache {
     return this.#cache.get(key) as T | undefined;
   }
 
-  ensure<T>(key: string): T {
+  /**
+   * Synchronously retrieve a previously-loaded asset, throwing an error if not found.
+   * Useful for cases where the asset is expected to be loaded by this point, e.g. in a scene's `setup()`.
+   */
+  getStrict<T>(key: string): T {
     const value = this.get<T>(key);
     if (value === undefined) {
       throw new Error(`Asset with key "${key}" not found in cache`);

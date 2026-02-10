@@ -1,9 +1,7 @@
+import { PlayerComponent } from "@/components/player";
 import type { EntityId, UserWorld } from "@repo/engine";
 import { Assets } from "@repo/engine/asset";
-import { Sprite } from "@repo/engine/src/components/sprite";
-import { Transform2D } from "../../../../../packages/engine/src/components/transform/transform2d";
-import { Texture } from "../../../../../packages/engine/src/texture/texture";
-import { PlayerComponent } from "../../components/player";
+import { Sprite, Texture, Transform2D } from "@repo/engine/components";
 
 export function ensurePlayer(world: UserWorld) {
     let [player] = world.query(PlayerComponent);
@@ -21,7 +19,7 @@ export function spawnPlayer(world: UserWorld): EntityId {
     const playerComponent = new PlayerComponent("NewPlayer");
 
     // Create a Texture from the cached image asset
-    const image = Assets.ensure<HTMLImageElement>("player-sprite");
+    const image = Assets.getStrict<HTMLImageElement>("player-sprite");
     const texture = new Texture(image);
     const sprite = new Sprite(texture, 40, 40);
 

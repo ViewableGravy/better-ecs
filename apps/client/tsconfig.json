@@ -14,7 +14,8 @@
       "@repo/engine": ["../../packages/engine/src/index.ts"],
       "@repo/engine/*": ["../../packages/engine/src/*/index.ts"],
       "@repo/plugins": ["../../packages/plugins/src/index.ts"],
-      "@repo/utils": ["../../packages/utils/src/index.ts"]
+      "@repo/utils": ["../../packages/utils/src/index.ts"],
+      "@/*": ["./src/*"]
     }
   },
   "include": ["src/**/*"],

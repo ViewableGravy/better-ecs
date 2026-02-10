@@ -1,5 +1,5 @@
 import { Color } from "../components/sprite";
-import type { Texture } from "../texture";
+import type { Texture } from "../components/texture";
 
 /**
  * Opaque handle for loaded textures.

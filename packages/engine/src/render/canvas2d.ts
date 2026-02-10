@@ -1,5 +1,5 @@
 import { Color } from "../components/sprite";
-import type { Texture } from "../texture";
+import type { Texture } from "../components/texture";
 import { Renderer, ShapeRenderData, SpriteRenderData, TextureHandle } from "./renderer";
 
 interface TextureEntry {
