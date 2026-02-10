@@ -49,7 +49,12 @@ export default defineConfig({
       { find: '@repo/hmr', replacement: path.resolve(__dirname, '../../packages/hmr/src/index.ts') },
       { find: '@repo/plugins', replacement: path.resolve(__dirname, '../../packages/plugins/src/index.ts') },
       { find: '@repo/utils', replacement: path.resolve(__dirname, '../../packages/utils/src/index.ts') },
-      { find: "@/*", replacement: path.resolve(__dirname, './src/*') },
+      { find: "@/components", replacement: path.resolve(__dirname, './src/components') },
+      { find: "@/assets", replacement: path.resolve(__dirname, './src/assets') },
+      { find: "@/entities", replacement: path.resolve(__dirname, './src/entities') },
+      { find: "@/scenes", replacement: path.resolve(__dirname, './src/scenes') },
+      { find: "@/systems", replacement: path.resolve(__dirname, './src/systems') },
+      { find: "@/utilities", replacement: path.resolve(__dirname, './src/utilities') },
     ],
   },
   build: {

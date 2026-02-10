@@ -1,3 +1,6 @@
 export { AssetCache, Assets } from "./asset";
-export type { AssetLoader } from "./asset";
-export { loadImage } from "./loaders";
+export type { AssetAdapter, AssetLoader } from "./asset";
+export { AssetManager } from "./AssetManager";
+export { createAssetLoader, createLoadImage } from "./loaders";
+export * from "./types";
+

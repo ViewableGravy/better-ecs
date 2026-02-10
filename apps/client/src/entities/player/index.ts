@@ -1,31 +1,33 @@
 import { PlayerComponent } from "@/components/player";
-import type { EntityId, UserWorld } from "@repo/engine";
-import { Assets } from "@repo/engine/asset";
+import type { EntityId, RegisteredAssets, UserWorld } from "@repo/engine";
 import { Sprite, Texture, Transform2D } from "@repo/engine/components";
 
-export function ensurePlayer(world: UserWorld) {
-    let [player] = world.query(PlayerComponent);
+export function ensurePlayer(world: UserWorld, Assets: RegisteredAssets) {
+  let [player] = world.query(PlayerComponent);
 
-    if (!player) {
-        player = spawnPlayer(world);
-    }
+  if (!player) {
+    player = spawnPlayer(world, Assets);
+  }
 
-    return player;
+  return player;
 }
 
-export function spawnPlayer(world: UserWorld): EntityId {
-    const player = world.create();
-    const transform = new Transform2D(0, 0);
-    const playerComponent = new PlayerComponent("NewPlayer");
+export function spawnPlayer(
+  world: UserWorld,
+  Assets: RegisteredAssets,
+): EntityId {
+  const player = world.create();
+  const transform = new Transform2D(0, 0);
+  const playerComponent = new PlayerComponent("NewPlayer");
 
-    // Create a Texture from the cached image asset
-    const image = Assets.getStrict<HTMLImageElement>("player-sprite");
-    const texture = new Texture(image);
-    const sprite = new Sprite(texture, 40, 40);
+  // Create a Texture from the cached image asset
+  const image = Assets.getStrict("player-sprite");
+  const texture = new Texture(image);
+  const sprite = new Sprite(texture, 40, 40);
 
-    world.add(player, transform);
-    world.add(player, playerComponent);
-    world.add(player, sprite);
+  world.add(player, transform);
+  world.add(player, playerComponent);
+  world.add(player, sprite);
 
-    return player;
+  return player;
 }

@@ -1,20 +1,31 @@
-/**
- * Built-in asset loaders for common resource types.
- */
+import { AssetAdapter } from "./asset";
+import { AssetManager } from "./AssetManager";
 
 /**
- * Load an image from a URL and return the decoded HTMLImageElement.
- * Suitable for passing to `Assets.load("key", () => loadImage(url))`.
+ * Create an Asset Manager with the given registry.
  */
-export function loadImage(url: string): Promise<HTMLImageElement> {
-  return new Promise<HTMLImageElement>((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
+export function createAssetLoader<T extends Record<string, AssetAdapter<any>>>(
+  assets: T,
+): AssetManager<{
+  [K in keyof T]: T[K] extends AssetAdapter<infer R> ? R : never;
+}> {
+  return new AssetManager({ assets });
+}
 
-    img.onload = () => resolve(img);
-    img.onerror = (_e) =>
-      reject(new Error(`Failed to load image: ${url}`));
+/**
+ * Create an adapter that loads an image from a URL and returns the decoded HTMLImageElement.
+ */
+export function createLoadImage(path: string): AssetAdapter<HTMLImageElement> {
+  return {
+    load: () =>
+      new Promise<HTMLImageElement>((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
 
-    img.src = url;
-  });
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error(`Failed to load image: ${path}`));
+
+        img.src = path;
+      }),
+  };
 }

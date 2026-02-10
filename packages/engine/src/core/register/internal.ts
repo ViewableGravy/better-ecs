@@ -1,40 +1,54 @@
 import { UserWorld } from "../../ecs/world";
 import type { EngineSystemTypes } from "../../systems/engine-system-types";
+// TODO: resolve these import errors.
+import { AssetManager } from "../../asset/AssetManager";
 import { executeWithContext } from "../context";
 import { SceneManager } from "../scene/scene-manager";
 import type { SceneDefinitionTuple, SceneName } from "../scene/scene.types";
 import type { EngineFrame, EngineUpdate, FrameStats } from "../types";
-import type { EngineInitializationSystem, EngineSystem, SystemFactoryTuple } from "./system";
+import type {
+  EngineInitializationSystem,
+  EngineSystem,
+  SystemFactoryTuple,
+} from "./system";
 
 /***** TYPE DEFINITIONS *****/
 type StartEngineOpts = {
   fps?: number;
   ups?: number;
   signal?: AbortSignal;
+};
+
+type StartEngineGenerator = AsyncGenerator<
+  readonly [EngineUpdate, EngineFrame],
+  void,
+  unknown
+>;
+
+type SystemName<TFactory> = TFactory extends {
+  ["~types"]: { name: infer N extends string };
 }
-
-type StartEngineGenerator = AsyncGenerator<readonly [EngineUpdate, EngineFrame], void, unknown>;
-
-type SystemName<TFactory> = TFactory extends { 
-  ["~types"]: { name: infer N extends string } 
-} ? N : never;
+  ? N
+  : never;
 
 type SystemsTupleToRecord<T extends SystemFactoryTuple> = {
-  [Factory in T[number] as SystemName<Factory>]: ReturnType<Factory>
-}
+  [Factory in T[number] as SystemName<Factory>]: ReturnType<Factory>;
+};
 
 /** Combines user-defined systems with built-in engine systems */
-type AllSystems<T extends SystemFactoryTuple> = SystemsTupleToRecord<T> & EngineSystemTypes;
+type AllSystems<T extends SystemFactoryTuple> = SystemsTupleToRecord<T> &
+  EngineSystemTypes;
 
 /** Converts scene tuple to a record of scene names to scene definitions */
 type ScenesTupleToRecord<T extends SceneDefinitionTuple> = {
-  [Scene in T[number] as SceneName<Scene>]: Scene
-}
+  [Scene in T[number] as SceneName<Scene>]: Scene;
+};
 
 /***** COMPONENT START *****/
 export class EngineClass<
   TSystems extends SystemFactoryTuple,
-  TScenes extends SceneDefinitionTuple = []
+  TScenes extends SceneDefinitionTuple = [],
+  TAssets extends Record<string, unknown> = Record<string, unknown>,
 > {
   #systems: Record<string, EngineSystem<any>>;
 
@@ -54,6 +68,11 @@ export class EngineClass<
    */
   public readonly scene: SceneManager<TScenes>;
 
+  /**
+   * Asset manager for handling loading and caching of resources.
+   */
+  public readonly assets: AssetManager<TAssets>;
+
   public frame: FrameStats = {
     updateDelta: 0,
     frameDelta: 0,
@@ -68,33 +87,38 @@ export class EngineClass<
 
   public constructor(
     systems: Record<string, EngineSystem<any>>,
-    scenes: SceneDefinitionTuple = []
+    scenes: SceneDefinitionTuple = [],
+    assets: AssetManager<TAssets>,
   ) {
     this.#systems = systems;
     this.scene = new SceneManager<TScenes>(scenes);
     this.scene.setEngineRef(this);
+    this.assets = assets;
 
     this.frame.phase = this.#phaseFn;
-    
+
     this.precomputeSystemOrder();
   }
 
   private precomputeSystemOrder() {
     const allSystems = Object.values(this.#systems);
 
-    const getPriority = (system: EngineSystem<any>, phase: "update" | "render"): number => {
-        if (typeof system.priority === "number") {
-          return system.priority;
-        }
-        return system.priority[phase] ?? 0;
+    const getPriority = (
+      system: EngineSystem<any>,
+      phase: "update" | "render",
+    ): number => {
+      if (typeof system.priority === "number") {
+        return system.priority;
+      }
+      return system.priority[phase] ?? 0;
     };
 
     this.#updateSystems = allSystems
-      .filter((s) => ['update', 'all'].includes(s.phase))
+      .filter((s) => ["update", "all"].includes(s.phase))
       .sort((a, b) => getPriority(b, "update") - getPriority(a, "update"));
 
     this.#renderSystems = allSystems
-      .filter((s) => ['render', 'all'].includes(s.phase))
+      .filter((s) => ["render", "all"].includes(s.phase))
       .sort((a, b) => getPriority(b, "render") - getPriority(a, "render"));
   }
 
@@ -159,7 +183,7 @@ export class EngineClass<
     const yieldState = [updateState, frameState] as const;
 
     const requestAnimationFrame = (cb: (time: number) => void) => {
-      if (typeof window !== 'undefined' && window.requestAnimationFrame) {
+      if (typeof window !== "undefined" && window.requestAnimationFrame) {
         return window.requestAnimationFrame(cb);
       }
       return setTimeout(() => cb(performance.now()), 1000 / this.frame.fps);
@@ -178,9 +202,9 @@ export class EngineClass<
       // This is common when VSync is active and the calculated sleep matches the refresh rate
       const frameTolerance = frameTime * 0.15;
       const updateTolerance = updateTime * 0.15;
-      
-      const updateShouldRun = updateDelta >= (updateTime - updateTolerance);
-      const frameShouldRun = frameDelta >= (frameTime - frameTolerance);
+
+      const updateShouldRun = updateDelta >= updateTime - updateTolerance;
+      const frameShouldRun = frameDelta >= frameTime - frameTolerance;
 
       if (updateShouldRun || frameShouldRun) {
         (updateState as any).delta = updateDelta;
@@ -223,9 +247,8 @@ export class EngineClass<
     if (!shouldUpdate) return;
 
     this.#currentPhase = phase;
-    const systemsToRun = phase === "update"
-      ? this.#updateSystems 
-      : this.#renderSystems;
+    const systemsToRun =
+      phase === "update" ? this.#updateSystems : this.#renderSystems;
 
     executeWithContext({ engine: this } as any, () => {
       for (const system of systemsToRun) {

@@ -12,5 +12,6 @@
     "**/.nx": true,
     "**/dist": true,
     "**/performance-testing/results": true
-  }
+  },
+  "editor.indentSize": 2
 }

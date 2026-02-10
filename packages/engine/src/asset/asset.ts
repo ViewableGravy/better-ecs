@@ -11,6 +11,11 @@
  *   const same = assets.get("player"); // synchronous, same reference
  */
 
+export interface AssetAdapter<T> {
+  load: (path: string) => Promise<T>;
+  // Future: metadata, parser options, etc.
+}
+
 export type AssetLoader<T> = () => Promise<T>;
 
 export class AssetCache {
