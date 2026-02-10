@@ -55,6 +55,14 @@ export class AssetCache {
     return this.#cache.get(key) as T | undefined;
   }
 
+  ensure<T>(key: string): T {
+    const value = this.get<T>(key);
+    if (value === undefined) {
+      throw new Error(`Asset with key "${key}" not found in cache`);
+    }
+    return value;
+  }
+
   /**
    * Check whether an asset is loaded (synchronously available).
    */

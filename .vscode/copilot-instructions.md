@@ -1,9 +1,0 @@
-- Assume the dev server is always running on port 3000 (only if it is not do you then attempt to start it)
-- Always use tools to assert types/lint/tests (never assume they work)
-- Always prefer guard clauses over nested/else statements
-- Always use `bun` for the following tasks:
-  - Running tests (unless vitest config exists)
-  - Running scripts
-  - Installing Packages
-- Always use `nx` for the following tasks:
-  - Bootstrapping new packages
