@@ -5,6 +5,21 @@ import { CollectRenderablesStage } from "./stages/CollectRenderables";
 import { CommitStage } from "./stages/Commit";
 import { SortStage } from "./stages/Sort";
 
+// prettier-ignore
+export const System = createRenderPipeline("render")({
+  initializeContext() {
+    const canvas = getResizeableCanvas();
+    const renderer = new Canvas2DRenderer();
+
+    const assets = useAssets();
+    renderer.initialize(canvas, assets);
+
+    return new RenderPipelineContext(renderer);
+  },
+  stages: [CollectRenderablesStage, SortStage, CommitStage],
+});
+
+// Utility function to get the canvas and handle resizing
 function getResizeableCanvas(): HTMLCanvasElement {
   const canvas = invariantById<HTMLCanvasElement>("game");
 
@@ -19,18 +34,3 @@ function getResizeableCanvas(): HTMLCanvasElement {
 
   return canvas;
 }
-
-// prettier-ignore
-export const System = createRenderPipeline("render")({
-  initializeContext() {
-    const canvas = getResizeableCanvas();
-    const renderer = new Canvas2DRenderer();
-
-    // Link the renderer to the engine's asset manager
-    const assets = useAssets();
-    renderer.initialize(canvas, assets);
-
-    return new RenderPipelineContext(renderer);
-  },
-  stages: [CollectRenderablesStage, SortStage, CommitStage],
-});
