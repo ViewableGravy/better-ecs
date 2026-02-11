@@ -69,7 +69,7 @@ export class Color {
  */
 export class Sprite {
   /** The asset ID of the texture to display. */
-  public texture: keyof RegisteredAssets;
+  public assetId: Exclude<keyof RegisteredAssets, number | symbol>;
 
   /** Display width in world units (0 = derive from texture). */
   public width: number;
@@ -99,7 +99,7 @@ export class Sprite {
   public layer: number;
 
   constructor(
-    texture: keyof RegisteredAssets,
+    assetId: Exclude<keyof RegisteredAssets, number | symbol>,
     width: number = 0,
     height: number = 0,
     anchorX: number = 0.5,
@@ -110,7 +110,7 @@ export class Sprite {
     zOrder: number = 0,
     layer: number = 0,
   ) {
-    this.texture = texture;
+    this.assetId = assetId;
     this.width = width;
     this.height = height;
     this.anchorX = anchorX;

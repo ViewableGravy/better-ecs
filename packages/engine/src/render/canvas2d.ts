@@ -1,4 +1,5 @@
 import { AssetManager } from "../asset/AssetManager";
+import { type Shape } from "../components/shape";
 import { Color, Sprite } from "../components/sprite";
 import type { Texture } from "../components/texture";
 import type { Transform2D } from "../components/transform/transform2d";
@@ -47,6 +48,20 @@ const SHARED_SPRITE_DATA: SpriteRenderData = {
   flipX: false,
   flipY: false,
   tint: new Color(),
+};
+
+const SHARED_SHAPE_DATA: ShapeRenderData = {
+  type: "rectangle",
+  x: 0,
+  y: 0,
+  width: 0,
+  height: 0,
+  rotation: 0,
+  scaleX: 1,
+  scaleY: 1,
+  fill: new Color(),
+  stroke: null,
+  strokeWidth: 0,
 };
 
 // Fallback colors
@@ -137,12 +152,12 @@ export class Canvas2DRenderer implements Renderer {
   renderSprite(sprite: Sprite, transform: Transform2D, alpha: number): void {
     if (!this.ctx || !this.canvas) return;
 
-    const tex = this.getTexture(sprite.texture);
+    const tex = this.getTexture(sprite.assetId);
 
     if (!tex) {
       // Texture not yet available — render fallback
       if (this.config.showFallback) {
-        const status = this.getTextureStatus(sprite.texture);
+        const status = this.getTextureStatus(sprite.assetId);
         this.drawFallback(sprite, transform, alpha, status.state);
       }
       return;
@@ -169,6 +184,23 @@ export class Canvas2DRenderer implements Renderer {
     d.tint = sprite.tint;
 
     this.drawSprite(d);
+  }
+
+  renderShape(shape: Shape, transform: Transform2D, alpha: number): void {
+    const d = SHARED_SHAPE_DATA;
+    d.type = shape.type;
+    d.x = lerp(transform.prev.pos.x, transform.curr.pos.x, alpha);
+    d.y = lerp(transform.prev.pos.y, transform.curr.pos.y, alpha);
+    d.width = shape.width;
+    d.height = shape.height;
+    d.rotation = transform.curr.rotation;
+    d.scaleX = transform.curr.scale.x;
+    d.scaleY = transform.curr.scale.y;
+    d.fill = shape.fill;
+    d.stroke = shape.stroke;
+    d.strokeWidth = shape.strokeWidth;
+
+    this.drawShape(d);
   }
 
   // ── Texture management ───────────────────────────────────────────

@@ -1,4 +1,5 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec";
+import { RenderQueue } from "../render/render-queue";
 import type { Renderer } from "../render/renderer";
 import { useOverloadedSystem } from "./context";
 import { createSystem, type EngineSystem, type SystemPriority } from "./register/system";
@@ -9,10 +10,12 @@ export type RenderPipelineStage = () => void;
 export class RenderPipelineContext<TCustom extends object = object, TCommands = unknown> {
   renderer: Renderer;
   commands: CommandBuffer<TCommands>;
+  queue: RenderQueue;
   custom: TCustom;
 
   constructor(renderer: Renderer) {
     this.renderer = renderer;
+    this.queue = new RenderQueue();
 
     // @ts-expect-error Defaults to {} and is then populated via .attach()
     this.custom = {};
@@ -84,6 +87,7 @@ export const createRenderPipeline = <TName extends string>(name: TName) => {
         const system =
           useOverloadedSystem<EngineSystem<RenderPipelineSchema<TCustom, TCommand>>>(name);
         system.data.commands.clear();
+        system.data.queue.clear();
 
         for (const stage of options.stages) {
           stage();

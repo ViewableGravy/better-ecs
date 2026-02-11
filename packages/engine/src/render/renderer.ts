@@ -1,4 +1,5 @@
 import type { AssetManager } from "../asset/AssetManager";
+import type { Shape } from "../components/shape";
 import type { Sprite } from "../components/sprite";
 import { Color } from "../components/sprite";
 import type { Texture } from "../components/texture";
@@ -152,6 +153,11 @@ export interface Renderer {
    * @param alpha     Interpolation alpha for smooth rendering between updates.
    */
   renderSprite(sprite: Sprite, transform: Transform2D, alpha: number): void;
+
+  /**
+   * Render a shape entity.
+   */
+  renderShape(shape: Shape, transform: Transform2D, alpha: number): void;
 
   /** Draw a shape */
   drawShape(data: ShapeRenderData): void;

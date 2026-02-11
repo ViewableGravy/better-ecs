@@ -1,4 +1,3 @@
-import type { EntityId } from "@repo/engine";
 
 export type Rect = {
   x: number;
@@ -13,8 +12,3 @@ export type View2D = {
   zoom: number;
   viewport?: Rect;
 };
-
-export type RenderCommand =
-  | { kind: "setView"; view: View2D }
-  | { kind: "shape"; entity: EntityId }
-  | { kind: "sprite"; entity: EntityId };

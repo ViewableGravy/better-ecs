@@ -11,7 +11,6 @@ export function ExtractViewStage(): void {
   const { data } = useSystem("render");
 
   const renderer = data.renderer;
-  const commands = data.commands;
 
   // Calculate interpolation factor based on time since last update
   const updateTimeMs = 1000 / engine.frame.ups;
@@ -36,11 +35,6 @@ export function ExtractViewStage(): void {
     view.y = lerp(t.prev.pos.y, t.curr.pos.y, alpha);
     view.zoom = renderer.getHeight() / (cam.orthoSize * 2);
 
-    commands.push({
-      kind: "setView",
-      view,
-    });
-
     found = true;
     break;
   }
@@ -49,9 +43,5 @@ export function ExtractViewStage(): void {
     view.x = 0;
     view.y = 0;
     view.zoom = 1;
-    commands.push({
-      kind: "setView",
-      view,
-    });
   }
 }
