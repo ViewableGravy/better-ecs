@@ -21,7 +21,7 @@ The system utilizes TypeScript template literal types to enforce a hierarchical 
 Users augment the `Register` interface using the `engine` which contains the necessary generics to register the type of Assets for the engine.
 
 ```ts
-declare module '@repo/engine' {
+declare module "@repo/engine" {
   interface Register {
     Engine: ReturnType<typeof createEngine>;
   }
@@ -65,10 +65,7 @@ All assets will follow a standard interface, but may use a different adapter for
 ```ts
 // assets/loader.ts
 export const loader = createAssetLoader({
-    assets: {
-        "sprites/player": createLoadImage("/player.png"),
-    }
-    ...
+  "sprites/player": createLoadImage("/player.png"),
 })
 
 // main.ts
@@ -79,13 +76,16 @@ const engine = createEngine({
 });
 ```
 
+Note: in the future, createAssetLoader may require extra arguments, if this is the case, it should be updated to `createAssetLoader(args)(registry)` similar to other patterns, but for now since this does not
+require that, we can just inline th registry
+
 ### Contextual Hooks
 
 Systems interact with assets using the `useAssets()` hook, which provides access to the engine-scoped manager with full type safety derived from `RegisteredEngine`.
 
 ```ts
 const assets = useAssets();
-const playerSprite = assets.getStrict('global:sprites/player');
+const playerSprite = assets.getStrict("global:sprites/player");
 ```
 
 ## Persistence & Lifecycle
