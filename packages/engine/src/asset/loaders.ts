@@ -1,14 +1,15 @@
 import { AssetAdapter } from "./asset";
 import { AssetManager } from "./AssetManager";
 
+type Registry = Record<string, AssetAdapter<any>>;
+type Assets<TRegistry extends Registry = Registry> = {
+  [K in keyof TRegistry]: TRegistry[K] extends AssetAdapter<infer R> ? R : never;
+};
+
 /**
  * Create an Asset Manager with the given registry.
  */
-export function createAssetLoader<T extends Record<string, AssetAdapter<any>>>(
-  assets: T,
-): AssetManager<{
-  [K in keyof T]: T[K] extends AssetAdapter<infer R> ? R : never;
-}> {
+export function createAssetLoader<T extends Registry>(assets: T): AssetManager<Assets<T>> {
   return new AssetManager({ assets });
 }
 
