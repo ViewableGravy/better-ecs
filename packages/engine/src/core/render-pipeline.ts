@@ -1,26 +1,28 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec";
 import type { Renderer } from "../render/renderer";
-import { CommandBuffer } from "./utils/command-buffer";
-import { createSystem, type EngineSystem, type SystemPriority } from "./register/system";
 import { useOverloadedSystem } from "./context";
+import { createSystem, type EngineSystem, type SystemPriority } from "./register/system";
+import { CommandBuffer } from "./utils/command-buffer";
 
 export type RenderPipelineStage = () => void;
 
-export class RenderPipelineContext<TCustom extends object = {}, TCommands = unknown> {
+export class RenderPipelineContext<TCustom extends object = object, TCommands = unknown> {
   renderer: Renderer;
   commands: CommandBuffer<TCommands>;
   custom: TCustom;
 
   constructor(renderer: Renderer) {
     this.renderer = renderer;
-    
+
     // @ts-expect-error Defaults to {} and is then populated via .attach()
     this.custom = {};
     this.commands = new CommandBuffer<TCommands>();
   }
 
   attach<TCommands>(commands: CommandBuffer<TCommands>): RenderPipelineContext<TCustom, TCommands>;
-  attach<TAttach extends object>(custom: TAttach): RenderPipelineContext<TCustom & TAttach, TCommands>;
+  attach<TAttach extends object>(
+    custom: TAttach,
+  ): RenderPipelineContext<TCustom & TAttach, TCommands>;
   attach(value: CommandBuffer<TCommands> | object): RenderPipelineContext<object, TCommands> {
     if (value instanceof CommandBuffer) {
       this.commands = value;
@@ -70,17 +72,17 @@ export const createRenderPipeline = <TName extends string>(name: TName) => {
       enabled: options.enabled ?? true,
       priority: options.priority ?? 0,
       schema: {
-        default: getOrInitContext(),
+        default: {} as RenderPipelineContext<TCustom, TCommand>,
         schema: createPipelineSchema<RenderPipelineContext<TCustom, TCommand>>(),
       },
       initialize: () => {
-        const system = useOverloadedSystem<EngineSystem<RenderPipelineSchema<TCustom, TCommand>>>(name);
+        const system =
+          useOverloadedSystem<EngineSystem<RenderPipelineSchema<TCustom, TCommand>>>(name);
         system.data = getOrInitContext();
       },
       system: () => {
-        const system = useOverloadedSystem<EngineSystem<RenderPipelineSchema<TCustom, TCommand>>>(
-          name
-        );
+        const system =
+          useOverloadedSystem<EngineSystem<RenderPipelineSchema<TCustom, TCommand>>>(name);
         system.data.commands.clear();
 
         for (const stage of options.stages) {

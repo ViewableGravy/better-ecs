@@ -11,6 +11,6 @@ export const Scene = createScene("TestScene")({
     await Assets.load("player-sprite");
 
     spawnCamera(world);
-    spawnPlayer(world, Assets);
+    spawnPlayer(world);
   },
 });

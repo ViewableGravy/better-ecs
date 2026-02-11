@@ -1,11 +1,9 @@
-import { Texture } from "./texture";
-
 export class Color {
   constructor(
     public r: number = 1,
     public g: number = 1,
     public b: number = 1,
-    public a: number = 1
+    public a: number = 1,
   ) {}
 
   public set(r: number, g: number, b: number, a: number = 1): this {
@@ -33,9 +31,15 @@ export class Color {
 
   /** Convert to hex string (ignores alpha) */
   public toHex(): string {
-    const r = Math.round(this.r * 255).toString(16).padStart(2, '0');
-    const g = Math.round(this.g * 255).toString(16).padStart(2, '0');
-    const b = Math.round(this.b * 255).toString(16).padStart(2, '0');
+    const r = Math.round(this.r * 255)
+      .toString(16)
+      .padStart(2, "0");
+    const g = Math.round(this.g * 255)
+      .toString(16)
+      .padStart(2, "0");
+    const b = Math.round(this.b * 255)
+      .toString(16)
+      .padStart(2, "0");
     return `#${r}${g}${b}`;
   }
 
@@ -47,7 +51,7 @@ export class Color {
       parseInt(result[1], 16) / 255,
       parseInt(result[2], 16) / 255,
       parseInt(result[3], 16) / 255,
-      1
+      1,
     );
   }
 }
@@ -55,13 +59,15 @@ export class Color {
 /**
  * Sprite component — a textured quad attached to an entity.
  *
- * Holds a reference to a `Texture` (which itself points at a TextureSource).
+ * Holds a reference to a texture asset ID. The render system resolves this
+ * ID to a Texture object via the AssetManager and then to a GPU handle.
+ *
  * The render system reads this component together with Transform2D to draw
  * the entity on screen.
  */
 export class Sprite {
-  /** The Texture to display. */
-  public texture: Texture;
+  /** The asset ID of the texture to display. */
+  public texture: string;
 
   /** Display width in world units (0 = derive from texture). */
   public width: number;
@@ -91,7 +97,7 @@ export class Sprite {
   public layer: number;
 
   constructor(
-    texture: Texture,
+    texture: string,
     width: number = 0,
     height: number = 0,
     anchorX: number = 0.5,

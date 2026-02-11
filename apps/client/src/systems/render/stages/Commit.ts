@@ -83,30 +83,25 @@ export function CommitStage(): void {
 
         if (!sprite || !transform) continue;
 
-        // Lazily ensure the texture source is uploaded to the renderer
-        let handle = renderer.getTextureHandle(sprite.texture.source.uid);
-        if (handle === null) {
-          handle = renderer.loadTexture(sprite.texture);
-        }
+        // Resolve the texture using the renderer's asset manager
+        const tex = renderer.getTexture(sprite.texture);
 
-        const tex = sprite.texture;
-        const w = sprite.width || tex.width;
-        const h = sprite.height || tex.height;
-
-        SHARED_SPRITE_DATA.texture = handle;
+        SHARED_SPRITE_DATA.texture = tex.handle;
         SHARED_SPRITE_DATA.x = lerp(transform.prev.pos.x, transform.curr.pos.x, alpha);
         SHARED_SPRITE_DATA.y = lerp(transform.prev.pos.y, transform.curr.pos.y, alpha);
-        SHARED_SPRITE_DATA.width = w;
-        SHARED_SPRITE_DATA.height = h;
+        SHARED_SPRITE_DATA.width = sprite.width || tex.width;
+        SHARED_SPRITE_DATA.height = sprite.height || tex.height;
         SHARED_SPRITE_DATA.rotation = transform.curr.rotation;
         SHARED_SPRITE_DATA.scaleX = transform.curr.scale.x;
         SHARED_SPRITE_DATA.scaleY = transform.curr.scale.y;
         SHARED_SPRITE_DATA.anchorX = sprite.anchorX;
         SHARED_SPRITE_DATA.anchorY = sprite.anchorY;
+
         SHARED_SPRITE_DATA.sourceX = tex.frameX;
         SHARED_SPRITE_DATA.sourceY = tex.frameY;
         SHARED_SPRITE_DATA.sourceWidth = tex.frameWidth;
         SHARED_SPRITE_DATA.sourceHeight = tex.frameHeight;
+
         SHARED_SPRITE_DATA.flipX = sprite.flipX;
         SHARED_SPRITE_DATA.flipY = sprite.flipY;
         SHARED_SPRITE_DATA.tint = sprite.tint;

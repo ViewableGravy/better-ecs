@@ -1,3 +1,4 @@
+import type { AssetManager } from "../asset/AssetManager";
 import { Color } from "../components/sprite";
 import type { Texture } from "../components/texture";
 
@@ -6,6 +7,19 @@ import type { Texture } from "../components/texture";
  * The actual type depends on the renderer implementation.
  */
 export type TextureHandle = number;
+
+/**
+ * Metadata about a loaded texture.
+ */
+export interface TextureInfo {
+  handle: TextureHandle;
+  width: number;
+  height: number;
+  frameX: number;
+  frameY: number;
+  frameWidth: number;
+  frameHeight: number;
+}
 
 /**
  * Data required to render a sprite.
@@ -52,39 +66,49 @@ export interface ShapeRenderData {
  * Implementations can target Canvas2D, WebGL, WebGPU, etc.
  */
 export interface Renderer {
-  /** Initialize the renderer with a canvas element */
-  initialize(canvas: HTMLCanvasElement): void;
-  
+  /** Initialize the renderer with a canvas element and optional asset manager */
+  initialize(canvas: HTMLCanvasElement, assets?: AssetManager): void;
+
   /** Begin a new frame */
   beginFrame(): void;
-  
+
   /** End the current frame */
   endFrame(): void;
-  
+
   /** Clear the screen with a color */
   clear(color: Color): void;
-  
+
   /** Set the camera transform (position and zoom) */
   setCamera(x: number, y: number, zoom: number): void;
-  
-  /** Load a texture from an engine Texture object, returns a handle */
+
+  /**
+   * Get a texture handle and info from an asset ID.
+   * Requires the renderer to be initialized with an AssetManager.
+   */
+  getTexture(assetId: string): TextureInfo;
+
+  /**
+   * Load a texture from an engine Texture object, returns a handle.
+   * Implementation should handle caching such that multiple calls with the
+   * same TextureSource return the same handle.
+   */
   loadTexture(texture: Texture): TextureHandle;
-  
+
   /** Get a previously loaded texture handle by its source uid */
   getTextureHandle(sourceUid: number): TextureHandle | null;
-  
+
   /** Delete a loaded texture */
   deleteTexture(handle: TextureHandle): void;
-  
+
   /** Draw a sprite */
   drawSprite(data: SpriteRenderData): void;
-  
+
   /** Draw a shape */
   drawShape(data: ShapeRenderData): void;
-  
+
   /** Get canvas width */
   getWidth(): number;
-  
+
   /** Get canvas height */
   getHeight(): number;
 }
