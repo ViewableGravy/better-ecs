@@ -1,8 +1,8 @@
 import { PlayerComponent } from "@/components/player";
-import type { EntityId, RegisteredAssets, UserWorld } from "@repo/engine";
+import type { EntityId, UserWorld } from "@repo/engine";
 import { Sprite, Transform2D } from "@repo/engine/components";
 
-export function ensurePlayer(world: UserWorld, Assets: RegisteredAssets) {
+export function ensurePlayer(world: UserWorld) {
   let [player] = world.query(PlayerComponent);
 
   if (!player) {

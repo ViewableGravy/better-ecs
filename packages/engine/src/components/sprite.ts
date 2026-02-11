@@ -1,3 +1,5 @@
+import type { RegisteredAssets } from "../core";
+
 export class Color {
   constructor(
     public r: number = 1,
@@ -67,7 +69,7 @@ export class Color {
  */
 export class Sprite {
   /** The asset ID of the texture to display. */
-  public texture: string;
+  public texture: keyof RegisteredAssets;
 
   /** Display width in world units (0 = derive from texture). */
   public width: number;
@@ -97,7 +99,7 @@ export class Sprite {
   public layer: number;
 
   constructor(
-    texture: string,
+    texture: keyof RegisteredAssets,
     width: number = 0,
     height: number = 0,
     anchorX: number = 0.5,

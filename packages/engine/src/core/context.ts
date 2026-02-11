@@ -1,9 +1,5 @@
 import type { UserWorld } from "../ecs/world";
-import type {
-  AllSceneNames,
-  RegisteredAssets,
-  RegisteredEngine,
-} from "./engine-types";
+import type { AllSceneNames, RegisteredAssetManager, RegisteredEngine } from "./engine-types";
 import type { EngineSystem } from "./register/system";
 
 /***** TYPE DEFINITIONS *****/
@@ -87,9 +83,7 @@ export function useSystem<TSystem extends keyof RegisteredEngine["systems"]>(
  * @example
  * const { data } = useOverloadedSystem<EngineSystem<typeof schema>>("plugin:fps-counter");
  */
-export function useOverloadedSystem<TOverride extends EngineSystem>(
-  system: string,
-): TOverride {
+export function useOverloadedSystem<TOverride extends EngineSystem>(system: string): TOverride {
   const engine = useEngine();
   return (engine.systems as any)[system] as TOverride;
 }
@@ -99,7 +93,7 @@ export function useWorld(): UserWorld {
   return engine.world;
 }
 
-export function useAssets(): RegisteredAssets {
+export function useAssets(): RegisteredAssetManager {
   const engine = useEngine();
   return engine.assets;
 }
@@ -116,9 +110,7 @@ export function useAssets(): RegisteredAssets {
  * await setScene("game");
  * ```
  */
-export function useSetScene(): <TName extends AllSceneNames>(
-  sceneName: TName,
-) => Promise<void> {
+export function useSetScene(): <TName extends AllSceneNames>(sceneName: TName) => Promise<void> {
   const engine = useEngine();
   return (sceneName) => (engine as any).scene.set(sceneName);
 }

@@ -31,18 +31,21 @@ export type RegisteredEngine<TRegister = Register> = TRegister extends {
  * Helper type to get all available system names including both user-defined
  * and built-in engine systems.
  */
-export type AllSystemNames<TRegister = Register> =
-  keyof RegisteredEngine<TRegister>["systems"];
+export type AllSystemNames<TRegister = Register> = keyof RegisteredEngine<TRegister>["systems"];
 
 /**
  * Helper type to get all available scene names from the registered engine.
  * Extracts the keys (scene names) from the scenes record.
  */
-export type AllSceneNames<TRegister = Register> =
-  keyof RegisteredEngine<TRegister>["scenes"];
+export type AllSceneNames<TRegister = Register> = keyof RegisteredEngine<TRegister>["scenes"];
 
 /**
- * Helper type to get the registered assets from the engine.
+ * Helper type to get the registered asset manager from the engine.
+ */
+export type RegisteredAssetManager<TRegister = Register> = RegisteredEngine<TRegister>["assets"];
+
+/**
+ * Helper type to get the user world type from the registered engine.
  */
 export type RegisteredAssets<TRegister = Register> =
-  RegisteredEngine<TRegister>["assets"];
+  RegisteredAssetManager<TRegister> extends AssetManager<infer TAssets> ? TAssets : never;
