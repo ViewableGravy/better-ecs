@@ -2,6 +2,7 @@ import { AssetAdapter } from "./asset";
 
 type Assets = Record<string, unknown>;
 type Registry = { assets: Record<string, AssetAdapter<any>> };
+type AssetKey<TAssets extends Assets> = keyof TAssets extends string ? keyof TAssets : never;
 
 export class AssetManager<TAssets extends Assets = Assets> {
   // TODO: this is not a map of string, any, similarly to how requests is not
@@ -30,7 +31,7 @@ export class AssetManager<TAssets extends Assets = Assets> {
    * strict typed retrieval.
    * Throws if asset is missing in storage.
    */
-  getStrict<K extends keyof TAssets>(key: K): TAssets[K] {
+  getStrict<K extends AssetKey<TAssets>>(key: K): TAssets[K] {
     const k = String(key);
     const state = this.states.get(k);
 
@@ -52,14 +53,14 @@ export class AssetManager<TAssets extends Assets = Assets> {
   /**
    * Typed retrieval. Returns undefined if missing (and triggers load).
    */
-  get<K extends keyof TAssets>(key: K): TAssets[K] | undefined {
-    return this.getLoose(key as string);
+  get<K extends AssetKey<TAssets>>(key: K): TAssets[K] | undefined {
+    return this.getLoose(key);
   }
 
   /**
    * Loose retrieval by path string.
    */
-  getLoose(path: string): any | undefined {
+  getLoose(path: string): any {
     const state = this.states.get(path);
 
     if (state === "ready") {
@@ -67,13 +68,13 @@ export class AssetManager<TAssets extends Assets = Assets> {
     }
 
     if (state === undefined) {
-      this.load(path).catch(() => undefined);
+      this.load(path as AssetKey<TAssets>).catch(() => undefined);
     }
 
     return undefined;
   }
 
-  public load(key: string): Promise<any> {
+  public load<K extends AssetKey<TAssets>>(key: K): Promise<TAssets[K]> {
     const existing = this.requests.get(key);
     if (existing) {
       return existing;
