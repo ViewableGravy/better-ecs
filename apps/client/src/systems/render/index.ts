@@ -1,12 +1,8 @@
 import { invariantById } from "@/utilities/selectors";
 import { createRenderPipeline, RenderPipelineContext, useAssets } from "@repo/engine";
-import { Color } from "@repo/engine/components";
 import { Canvas2DRenderer } from "@repo/engine/render";
-import type { View2D } from "./render/Commands";
-import { CollectShapesStage } from "./stages/CollectShapes";
-import { CollectSpritesStage } from "./stages/CollectSprites";
+import { CollectRenderablesStage } from "./stages/CollectRenderables";
 import { CommitStage } from "./stages/Commit";
-import { ExtractViewStage } from "./stages/ExtractView";
 import { SortStage } from "./stages/Sort";
 
 function getResizeableCanvas(): HTMLCanvasElement {
@@ -34,16 +30,7 @@ export const System = createRenderPipeline("render")({
     const assets = useAssets();
     renderer.initialize(canvas, assets);
 
-    const view: View2D = { x: 0, y: 0, zoom: 1 };
-    const clearColor = new Color(0.1, 0.1, 0.15, 1);
-
-    return new RenderPipelineContext(renderer).attach({ alpha: 0, view, clearColor });
+    return new RenderPipelineContext(renderer);
   },
-  stages: [
-    ExtractViewStage, 
-    CollectShapesStage,
-    CollectSpritesStage,
-    SortStage, 
-    CommitStage
-  ],
+  stages: [CollectRenderablesStage, SortStage, CommitStage],
 });
