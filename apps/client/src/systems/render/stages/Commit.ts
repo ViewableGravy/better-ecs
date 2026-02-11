@@ -1,6 +1,6 @@
 import { useSystem, useWorld } from "@repo/engine";
 import { Color, Shape, Sprite, Transform2D } from "@repo/engine/components";
-import type { ShapeRenderData, SpriteRenderData } from "@repo/engine/render";
+import type { ShapeRenderData } from "@repo/engine/render";
 import { lerp } from "../render/utils";
 
 const CLEAR_COLOR = new Color(0.1, 0.1, 0.15, 1);
@@ -17,26 +17,6 @@ const SHARED_SHAPE_DATA: ShapeRenderData = {
   fill: new Color(),
   stroke: null,
   strokeWidth: 0,
-};
-
-const SHARED_SPRITE_DATA: SpriteRenderData = {
-  texture: 0,
-  x: 0,
-  y: 0,
-  width: 0,
-  height: 0,
-  rotation: 0,
-  scaleX: 1,
-  scaleY: 1,
-  anchorX: 0.5,
-  anchorY: 0.5,
-  sourceX: 0,
-  sourceY: 0,
-  sourceWidth: 0,
-  sourceHeight: 0,
-  flipX: false,
-  flipY: false,
-  tint: new Color(),
 };
 
 export function CommitStage(): void {
@@ -83,30 +63,9 @@ export function CommitStage(): void {
 
         if (!sprite || !transform) continue;
 
-        // Resolve the texture using the renderer's asset manager
-        const tex = renderer.getTexture(sprite.texture);
-
-        SHARED_SPRITE_DATA.texture = tex.handle;
-        SHARED_SPRITE_DATA.x = lerp(transform.prev.pos.x, transform.curr.pos.x, alpha);
-        SHARED_SPRITE_DATA.y = lerp(transform.prev.pos.y, transform.curr.pos.y, alpha);
-        SHARED_SPRITE_DATA.width = sprite.width || tex.width;
-        SHARED_SPRITE_DATA.height = sprite.height || tex.height;
-        SHARED_SPRITE_DATA.rotation = transform.curr.rotation;
-        SHARED_SPRITE_DATA.scaleX = transform.curr.scale.x;
-        SHARED_SPRITE_DATA.scaleY = transform.curr.scale.y;
-        SHARED_SPRITE_DATA.anchorX = sprite.anchorX;
-        SHARED_SPRITE_DATA.anchorY = sprite.anchorY;
-
-        SHARED_SPRITE_DATA.sourceX = tex.frameX;
-        SHARED_SPRITE_DATA.sourceY = tex.frameY;
-        SHARED_SPRITE_DATA.sourceWidth = tex.frameWidth;
-        SHARED_SPRITE_DATA.sourceHeight = tex.frameHeight;
-
-        SHARED_SPRITE_DATA.flipX = sprite.flipX;
-        SHARED_SPRITE_DATA.flipY = sprite.flipY;
-        SHARED_SPRITE_DATA.tint = sprite.tint;
-
-        renderer.drawSprite(SHARED_SPRITE_DATA);
+        // The renderer handles everything: asset resolution, texture upload,
+        // caching, fallback rendering, and drawing.
+        renderer.renderSprite(sprite, transform, alpha);
         break;
       }
     }

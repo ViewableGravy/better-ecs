@@ -80,6 +80,10 @@ export default defineConfig({
         find: "@/entities",
         replacement: path.resolve(__dirname, "src/entities"),
       },
+      {
+        find: "@/utilities",
+        replacement: path.resolve(__dirname, "src/utilities"),
+      },
     ],
   },
   build: {
