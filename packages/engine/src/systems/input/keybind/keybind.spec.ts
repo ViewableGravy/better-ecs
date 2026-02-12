@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { createMatchKeybind } from './keybind';
-import type { InputState } from '../system';
+import type { InputState } from '../input.types';
 import type { Match } from './keybind.types';
 
 /**

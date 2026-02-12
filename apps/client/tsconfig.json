@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "target": "ES2022",
@@ -10,13 +10,24 @@
     "skipLibCheck": true,
     "composite": false,
     "strict": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "noUncheckedIndexedAccess": true
+    "paths": {
+      "@repo/engine": ["../../packages/engine/src/index.ts"],
+      "@repo/engine/*": ["../../packages/engine/src/*/index.ts"],
+      "@repo/plugins": ["../../packages/plugins/src/index.ts"],
+      "@repo/utils": ["../../packages/utils/src/index.ts"],
+      "@/*": ["./src/*"]
+    }
   },
   "include": ["src/**/*"],
   "references": [
     {
-      "path": "../../packages/engine/tsconfig.lib.json"
+      "path": "../../packages/hmr"
+    },
+    {
+      "path": "../../packages/plugins"
+    },
+    {
+      "path": "../../packages/engine"
     }
   ]
 }

@@ -1,26 +1,19 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": "./src",
     "outDir": "./dist",
-    "declaration": true,
+    "rootDir": "./src",
+    "lib": ["DOM", "ESNext"],
     "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
     "noEmit": false,
-    "types": ["node", "vite/client"]
+    "skipLibCheck": true
   },
   "include": ["src/**/*.ts"],
   "exclude": [
-    "vite.config.ts",
-    "vite.config.mts",
-    "vitest.config.ts",
-    "vitest.config.mts",
     "src/**/*.test.ts",
-    "src/**/*.spec.ts",
-    "src/**/*.test.tsx",
-    "src/**/*.spec.tsx",
-    "src/**/*.test.js",
-    "src/**/*.spec.js",
-    "src/**/*.test.jsx",
-    "src/**/*.spec.jsx"
+    "src/**/*.spec.ts"
   ]
 }

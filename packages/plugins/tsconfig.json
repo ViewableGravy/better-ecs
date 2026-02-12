@@ -8,10 +8,14 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "noPropertyAccessFromIndexSignature": true,
-    "lib": ["DOM", "ESNext"]
+    "lib": ["DOM", "ESNext"],
+    "paths": {
+      "@repo/engine": ["../../packages/engine/src/index.ts"],
+      "@repo/engine/*": ["../../packages/engine/src/*/index.ts"],
+      "@repo/utils": ["../../packages/utils/src/index.ts"]
+    }
   },
   "files": [],
-  "include": [],
   "references": [
     {
       "path": "./tsconfig.lib.json"

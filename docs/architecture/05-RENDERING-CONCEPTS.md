@@ -264,11 +264,35 @@ This document analyzes rendering patterns from established game engines and defi
 
 ### Proposed Components (Engine)
 
-#### Transform Component
+#### Transform Components
+
+The engine provides specialized transform components to support both 2D and 3D games without unnecessary overhead.
+
+**Transform2D**
+Optimized for 2D games. Stores only X/Y position, Z rotation, and X/Y scale.
 
 ```typescript
-// packages/engine/src/components/transform.ts
-export class Transform {
+// packages/engine/src/components/transform2d.ts
+export class Transform2D {
+  // Position
+  x: number = 0;
+  y: number = 0;
+  
+  // Rotation (radians, z-axis only)
+  rotation: number = 0;
+  
+  // Scale
+  scaleX: number = 1;
+  scaleY: number = 1;
+}
+```
+
+**Transform3D**
+Full 3D transform for 3D games or complex 2D setups.
+
+```typescript
+// packages/engine/src/components/transform3d.ts
+export class Transform3D {
   // Position
   x: number = 0;
   y: number = 0;
@@ -286,7 +310,7 @@ export class Transform {
 }
 ```
 
-**Note:** No parent/child hierarchy in core. Hierarchy is a plugin concern if needed.
+**Note:** No parent/child hierarchy in core. Hierarchy is a plugin concern if needed. Systems should query for the specific transform type they support, or use a union if handling both.
 
 #### Camera Component
 

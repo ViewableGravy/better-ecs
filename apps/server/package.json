@@ -5,9 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "node --watch src/main.ts",
-    "build": "tsc",
+    "build": "npx tsc",
+    "clean": "rm -rf dist",
     "start": "node dist/main.js",
-    "lint": "tsc --noEmit"
+    "lint": "npx tsc --noEmit",
+    "typecheck": "npx tsc --noEmit"
   },
   "dependencies": {
     "@repo/engine": "*"

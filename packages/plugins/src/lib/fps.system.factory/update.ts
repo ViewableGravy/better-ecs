@@ -4,7 +4,7 @@ import { useOverloadedSystem, useSystem, useEngine } from "@repo/engine";
 import type { EngineSystem, AnyEngine } from "@repo/engine";
 import { updateModeVisibility } from "./initialize";
 
-let slidersInitialized = false;
+const SLIDER_INIT_ATTR = "data-fps-sliders-initialized";
 
 export function update(opts: Opts) {
   const { data } = useOverloadedSystem<EngineSystem<typeof schema>>("plugin:fps-counter");
@@ -31,9 +31,12 @@ export function update(opts: Opts) {
   }
 
   // Initialize slider event listeners in advanced mode
-  if (data.mode === "advanced" && !slidersInitialized) {
-    initializeSliders(opts.element, data, engine);
-    slidersInitialized = true;
+  if (data.mode === "advanced") {
+    const container = opts.element.querySelector('aside');
+    if (container && !container.hasAttribute(SLIDER_INIT_ATTR)) {
+      initializeSliders(opts.element, data, engine);
+      container.setAttribute(SLIDER_INIT_ATTR, "true");
+    }
   }
 
   data.upsBuffer.updates++;

@@ -6,13 +6,13 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "noEmit": true,
-    "skipLibCheck": true,
-    "composite": false
+    "skipLibCheck": true
   },
   "include": ["src/**/*"],
   "references": [
+    // UPDATED BY NX SYNC
     {
-      "path": "../../packages/engine/tsconfig.lib.json"
+      "path": "../../packages/engine"
     }
   ]
 }

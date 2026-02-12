@@ -8,21 +8,30 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "tsc --build tsconfig.lib.json",
+        "command": "npx tsc -p tsconfig.lib.json",
+        "cwd": "packages/engine"
+      },
+      "inputs": ["default", "^default"],
+      "outputs": ["{projectRoot}/dist"]
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rm -rf dist tsconfig.lib.tsbuildinfo",
         "cwd": "packages/engine"
       }
     },
     "typecheck": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "tsc --build tsconfig.lib.json --emitDeclarationOnly",
+        "command": "npx tsc --noEmit",
         "cwd": "packages/engine"
       }
     },
     "lint": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "tsc --noEmit",
+        "command": "npx tsc --noEmit",
         "cwd": "packages/engine"
       }
     },

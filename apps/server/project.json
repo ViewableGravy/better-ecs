@@ -15,7 +15,16 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "tsc",
+        "command": "npx tsc",
+        "cwd": "apps/server"
+      },
+      "inputs": ["default", "^default"],
+      "outputs": ["{projectRoot}/dist"]
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rm -rf dist",
         "cwd": "apps/server"
       }
     },
@@ -29,7 +38,14 @@
     "lint": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "tsc --noEmit",
+        "command": "npx tsc --noEmit",
+        "cwd": "apps/server"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx tsc --noEmit",
         "cwd": "apps/server"
       }
     }

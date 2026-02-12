@@ -1,65 +1,36 @@
-import { createSystem, useEngine, useSystem, useWorld } from "@repo/engine";
-import { Transform } from "@repo/engine/components";
-import z from "zod";
+import { invariantById } from "@/utilities/selectors";
+import { createRenderPipeline, RenderPipelineContext, useAssets } from "@repo/engine";
+import { Canvas2DRenderer } from "@repo/engine/render";
+import { CollectRenderablesStage } from "./stages/CollectRenderables";
+import { CommitStage } from "./stages/Commit";
+import { SortStage } from "./stages/Sort";
 
-export const System = createSystem("render")({
-  initialize: Initialize,
-  system: Entrypoint,
-  phase: "render",
-  schema: {
-    default: {},
-    schema: z.object({}),
+// prettier-ignore
+export const System = createRenderPipeline("render")({
+  initializeContext() {
+    const canvas = getResizeableCanvas();
+    const renderer = new Canvas2DRenderer();
+
+    const assets = useAssets();
+    renderer.initialize(canvas, assets);
+
+    return new RenderPipelineContext(renderer);
   },
+  stages: [CollectRenderablesStage, SortStage, CommitStage],
 });
 
-/**
- * Lerp between previous and current position based on interpolation factor
- */
-function lerp(prev: number, current: number, alpha: number): number {
-  return prev + ((current - prev) * alpha);
-}
+// Utility function to get the canvas and handle resizing
+function getResizeableCanvas(): HTMLCanvasElement {
+  const canvas = invariantById<HTMLCanvasElement>("game");
 
-function Entrypoint() {
-  const engine = useEngine();
-  const world = useWorld();
-
-  const canvas = document.getElementById("game") as HTMLCanvasElement;
-  const context = canvas.getContext("2d");
-
-  if (!context) return;
-
-  // Calculate interpolation factor based on time since last update
-  // This prevents teleporting by resetting to 0 after each update
-  const updateTimeMs = 1000 / engine.frame.ups;
-  const timeSinceLastUpdate = performance.now() - engine.frame.lastUpdateTime;
-  const alpha = Math.min(timeSinceLastUpdate / updateTimeMs, 1.0);
-
-  // Clear the canvas
-  context.clearRect(0, 0, canvas.width, canvas.height);
-
-  for (const entityId of world.query(Transform)) {
-    const transform = world.get(entityId, Transform);
-
-    if (!transform) continue;
-
-    // Interpolate between previous and current position
-    const interpolatedX = lerp(transform.prev.x, transform.curr.x, alpha);
-    const interpolatedY = lerp(transform.prev.y, transform.curr.y, alpha);
-
-    // Draw the entity as a rectangle at the interpolated position
-    context.fillRect(interpolatedX, interpolatedY, 10, 10);
-  }
-}
-
-function Initialize() {
+  // Handle canvas resize
   function resizeCanvas(): void {
-    const canvas = document.getElementById("game") as HTMLCanvasElement;
-    if (!canvas) return;
-
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
   }
 
   resizeCanvas();
   window.addEventListener("resize", resizeCanvas);
+
+  return canvas;
 }

@@ -55,20 +55,21 @@ Each context is a complete, isolated simulation boundary:
 1. **00-SPATIAL-CONTEXTS-ARCHITECTURE.md** - Core architecture and mental model
 2. **01-IMPLEMENTATION-ROADMAP.md** - Step-by-step implementation plan
 3. **05-RENDERING-CONCEPTS.md** - Rendering primitives and cross-engine analysis
-4. **09-CONCERNS-AND-CONSIDERATIONS.md** - Risk assessment and edge cases
+4. **10-FEATURE-RENDER-THREADING.md** - OffscreenCanvas + render thread architecture
+5. **09-CONCERNS-AND-CONSIDERATIONS.md** - Risk assessment and edge cases
 
 ### Feature Implementation (Read During Development)
 
-5. **02-FEATURE-RENDERING-ABSTRACTIONS.md** - GPU abstraction and sprite rendering
-6. **03-FEATURE-SCENE-LEVEL-SYSTEMS.md** - Scene-level system support
-7. **04-FEATURE-SPATIAL-CONTEXTS-PLUGIN.md** - Core plugin implementation
-8. **07-FEATURE-PERSISTENCE.md** - Save/load system for contexts
-9. **06-FEATURE-VISUAL-EDITOR.md** - Visual authoring tool
+6. **02-FEATURE-RENDERING-ABSTRACTIONS.md** - GPU abstraction and sprite rendering
+7. **03-FEATURE-SCENE-LEVEL-SYSTEMS.md** - Scene-level system support
+8. **04-FEATURE-SPATIAL-CONTEXTS-PLUGIN.md** - Core plugin implementation
+9. **07-FEATURE-PERSISTENCE.md** - Save/load system for contexts
+10. **06-FEATURE-VISUAL-EDITOR.md** - Visual authoring tool
 
 ### Reference (As Needed)
 
-10. **08-PLUGIN-BASED-IMPLEMENTATION.md** - Detailed plugin design (original)
-11. **README.md** - Complete index and usage guide
+11. **08-PLUGIN-BASED-IMPLEMENTATION.md** - Detailed plugin design (original)
+12. **README.md** - Complete index and usage guide
 
 ---
 
@@ -263,8 +264,8 @@ This architecture follows established Better ECS patterns:
 
 ### Documentation Quality ✅
 
-- ✅ 11 comprehensive documents
-- ✅ 7,096+ lines of documentation
+- ✅ 12 comprehensive documents
+- ✅ 7,000+ lines of documentation
 - ✅ Every feature has API + implementation
 - ✅ All concerns documented
 - ✅ Clear examples throughout

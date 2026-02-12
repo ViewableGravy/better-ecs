@@ -115,5 +115,44 @@ const engineNoScenes = createEngine({
 // World should still be accessible
 expectTypeOf(engineNoScenes.world).not.toBeUndefined();
 
-export {};
+// ============================================================
+// Test: AllSceneNames resolves correctly with module augmentation
+// ============================================================
 
+import { AllSceneNames } from '../../core/engine-types';
+
+// When Register is properly augmented with an engine...
+// Define a test register interface
+type TestRegister = {
+  Engine: typeof engine;
+}
+
+// AllSceneNames should be the union of scene name literals, not 'any' or 'string'
+type TestSceneNames = AllSceneNames<TestRegister>;
+
+// Should NOT be 'any'
+expectTypeOf<TestSceneNames>().not.toBeAny();
+
+// Should NOT be 'string' (it should be a narrow union)
+expectTypeOf<TestSceneNames>().not.toEqualTypeOf<string>();
+
+// Should be assignable from valid scene names
+expectTypeOf<"menu">().toExtend<TestSceneNames>();
+expectTypeOf<"game">().toExtend<TestSceneNames>();
+expectTypeOf<"pause">().toExtend<TestSceneNames>();
+
+// ============================================================
+// Test: AllSystemNames resolves correctly
+// ============================================================
+
+import { AllSystemNames } from '../../core/engine-types';
+
+type TestSystemNames = AllSystemNames<TestRegister>;
+
+// Should NOT be 'any'
+expectTypeOf<TestSystemNames>().not.toBeAny();
+
+// Should include registered system name
+expectTypeOf<"test">().toExtend<TestSystemNames>();
+
+export {};

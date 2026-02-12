@@ -6,28 +6,46 @@
   "tags": ["type:client"],
   "targets": {
     "dev": {
-      "executor": "@nx/vite:dev-server",
+      "executor": "nx:run-commands",
       "options": {
-        "buildTarget": "client:build"
+        "command": "bun run dev",
+        "cwd": "apps/client"
       }
     },
     "build": {
-      "executor": "@nx/vite:build",
-      "outputs": ["{options.outputPath}"],
+      "executor": "nx:run-commands",
       "options": {
-        "outputPath": "dist"
+        "command": "bun run build",
+        "cwd": "apps/client"
+      },
+      "inputs": ["default", "^default"],
+      "outputs": ["{projectRoot}/dist"]
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rm -rf dist",
+        "cwd": "apps/client"
       }
     },
     "preview": {
-      "executor": "@nx/vite:preview-server",
+      "executor": "nx:run-commands",
       "options": {
-        "buildTarget": "client:build"
+        "command": "bun run preview",
+        "cwd": "apps/client"
       }
     },
     "lint": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "tsc --noEmit",
+        "command": "npx tsc --noEmit",
+        "cwd": "apps/client"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx tsc --noEmit",
         "cwd": "apps/client"
       }
     }

@@ -40,6 +40,7 @@ export default [
                 'type:engine',
                 'type:plugins',
                 'type:utils',
+                'type:hmr',
               ],
             },
             {
@@ -68,6 +69,9 @@ export default [
       '**/*.mjs',
     ],
     // Override or add rules here
-    rules: {},
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-inferrable-types": "off",
+    },
   },
 ];
