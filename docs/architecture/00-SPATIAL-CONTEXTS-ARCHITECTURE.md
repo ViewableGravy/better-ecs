@@ -4,6 +4,13 @@
 
 This document defines the architectural foundation for **spatial contexts** in the Better ECS engine. Spatial contexts enable complex world organization through **dedicated World instances** acting as simulation boundaries, orchestrated by a plugin-based system.
 
+> **Update (Feb 2026): clarified constraints**
+>
+> - Only **one scene** is active at a time.
+> - A scene can own **many worlds/contexts** simultaneously.
+> - Worlds can be **nested** and may occupy the **same coordinates** in the parent world (e.g. house interior overlapping the overworld).
+> - “Active context” should be interpreted as the **focused world** (the world the player currently inhabits), not “the only loaded world”.
+
 ### Core Principle
 
 **A context equals a dedicated World instance.**
@@ -38,6 +45,7 @@ Scene
 ```
 
 Each context is a complete, independent World instance with:
+
 - Its own entity set
 - Its own component stores
 - Its own physics space
@@ -46,15 +54,18 @@ Each context is a complete, independent World instance with:
 ### Consequences
 
 **Isolation by Default:**
+
 - Physics runs per-world with no cross-context queries
 - Gameplay systems operate only on the active world
 - Entities in different contexts never interact unless explicitly orchestrated
 
 **Composition for Rendering:**
+
 - Rendering may composite multiple worlds (parent + active)
 - Visual layering is a rendering concern, not a simulation concern
 
 **Plugin Orchestration:**
+
 - A plugin manages world lifecycle, transitions, and composition
 - The engine provides only multi-world support primitives
 
@@ -65,6 +76,7 @@ Each context is a complete, independent World instance with:
 ### Engine Layer (Minimal, Generic)
 
 **Responsibilities:**
+
 - ECS primitives (Entity, Component, World)
 - Multiple World support per scene
 - GPU abstractions (WebGL/WebGPU)
@@ -73,6 +85,7 @@ Each context is a complete, independent World instance with:
 - Batching helpers
 
 **Does NOT provide:**
+
 - Context definitions or logic
 - Cross-context coordination
 - Rendering behavior or policies
@@ -83,6 +96,7 @@ Each context is a complete, independent World instance with:
 **Package:** `@repo/plugins/spatial-contexts`
 
 **Responsibilities:**
+
 - Context definitions and registry
 - World lifecycle management
 - Transition orchestration
@@ -91,6 +105,7 @@ Each context is a complete, independent World instance with:
 - Editor integration APIs
 
 **Provides:**
+
 - `useActiveContext()` - ID of the currently focused context (e.g. for input/rendering policy)
 - `useContextWorld(id)` - Access specific world
 - `useContextManager()` - Plugin orchestration API
@@ -98,6 +113,7 @@ Each context is a complete, independent World instance with:
 ### User/Game Layer (Defines Behavior)
 
 **Responsibilities:**
+
 - Render systems (what to draw, how to composite)
 - Gameplay systems (movement, combat, AI)
 - Game-specific components
@@ -116,31 +132,33 @@ User systems call `useWorld()` and remain context-unaware unless they explicitly
 Each world owns its own physics space. Physics systems have no knowledge of contexts.
 
 **Implications:**
+
 - Objects inside a house never collide with overworld entities
 - Bullets, triggers, and AI operate only within their world
 - Cross-context interaction is always opt-in through plugin logic
 
 **Portal Example:**
+
 ```typescript
 // Portals are plugin-managed, not physics-managed
 const portalSystem = createSystem("portal")({
   system() {
     const world = useWorld();
     const contextManager = useContextManager();
-    
+
     for (const portalId of world.query(Portal, Transform)) {
       const portal = world.get(portalId, Portal)!;
       const transform = world.get(portalId, Transform)!;
-      
+
       // Check for player overlap (within same world)
       const player = findPlayerInRange(transform.position);
-      
+
       if (player && isOverlapping(player, transform)) {
         // Transition to target context
         contextManager.transitionTo(portal.targetContext);
       }
     }
-  }
+  },
 });
 ```
 
@@ -153,15 +171,17 @@ No physics system needs to know about contexts. Portals are gameplay features im
 ### Engine Provides Graphics Primitives Only
 
 **Graphics API (Engine):**
+
 - WebGL / WebGPU abstraction
 - Texture and mesh management
 - Camera transforms
 - Batching helpers
 - Shader compilation
- - Rendering primitives and higher-level draw helpers (exported from `@repo/engine/render`, not directly from `@repo/engine`)
+- Rendering primitives and higher-level draw helpers (exported from `@repo/engine/render`, not directly from `@repo/engine`)
 
 **No Rendering Policy in Engine:**
 The engine does NOT decide:
+
 - What components mean "visible"
 - Draw order or layering
 - Post-effects or composition
@@ -177,20 +197,20 @@ const renderSystem = createSystem("render")({
     const contextManager = useContextManager();
     const activeContext = contextManager.getActiveContext();
     const parentContext = contextManager.getParent(activeContext);
-    
+
     // Clear canvas
     clearScreen();
-    
+
     // Draw parent context as backdrop (optional)
     if (parentContext) {
       const parentWorld = contextManager.getWorld(parentContext);
       drawWorld(parentWorld, { opacity: 0.3, filter: "blur(2px)" });
     }
-    
+
     // Draw active context (full opacity)
     const activeWorld = contextManager.getWorld(activeContext);
     drawWorld(activeWorld, { opacity: 1.0 });
-  }
+  },
 });
 ```
 
@@ -256,12 +276,12 @@ const contextManager = useContextManager();
 
 Because `Context === World`, context resolution is implicit:
 
-1.  **By Entity Reference:** If you hold an entity ID and its World (e.g. within a system), the World *is* the context.
-2.  **By Transform (Single World):** Within a world, spatial queries (Triggers/Portals) determine if an entity should *transition* to another context.
+1.  **By Entity Reference:** If you hold an entity ID and its World (e.g. within a system), the World _is_ the context.
+2.  **By Transform (Single World):** Within a world, spatial queries (Triggers/Portals) determine if an entity should _transition_ to another context.
 3.  **By Transform (Cross World):** Because worlds are disjoint simulation boundaries (Coordinate `0,0` exists in both Overworld and House), you cannot resolve a generic Transform to a Context without knowing which world that transform belongs to.
 
 **Recommendation:**
-Avoid global utility functions like `getContext(transform)`. Instead, logical transitions (like entering a house) should be handled by gameplay systems detecting triggers in the *current* world and commanding the `ContextManager` to switch the active context ID.
+Avoid global utility functions like `getContext(transform)`. Instead, logical transitions (like entering a house) should be handled by gameplay systems detecting triggers in the _current_ world and commanding the `ContextManager` to switch the active context ID.
 
 ### Standard World Access (Context-Agnostic)
 
@@ -270,12 +290,12 @@ Avoid global utility functions like `getContext(transform)`. Instead, logical tr
 const mySystem = createSystem("mySystem")({
   system() {
     const world = useWorld(); // Always returns active world
-    
+
     // Standard ECS operations
     for (const id of world.query(Position, Velocity)) {
       // ...
     }
-  }
+  },
 });
 ```
 
@@ -288,15 +308,18 @@ const mySystem = createSystem("mySystem")({
 ### Editor Behavior
 
 **Context Selection:**
+
 - Shows list of all contexts in scene
 - User selects active context for editing
 - Parent context displayed as read-only backdrop
 
 **Entity Creation:**
+
 - New entities created in active context only
 - Cannot create entities in parent from child view
 
 **Portal Creation:**
+
 - Portals created in parent context
 - Portal targets point to child contexts
 - Visual indicators show portal destinations
@@ -315,6 +338,7 @@ const mySystem = createSystem("mySystem")({
 ### Decision 1: Contexts Are World Boundaries, Not Tags
 
 **Rejected Alternatives:**
+
 - ❌ Context as a component/tag on entities
 - ❌ Context as a query filter
 - ❌ Single world with context-aware systems
@@ -323,6 +347,7 @@ const mySystem = createSystem("mySystem")({
 ✅ Each context is a dedicated World instance
 
 **Rationale:**
+
 - Clear simulation boundaries
 - Physics naturally isolated
 - No special-case logic in systems
@@ -331,6 +356,7 @@ const mySystem = createSystem("mySystem")({
 ### Decision 2: Native Physics Unchanged
 
 **Rejected Alternatives:**
+
 - ❌ Add context filters to physics systems
 - ❌ Global physics space with layer masks
 - ❌ Special collision rules for contexts
@@ -339,6 +365,7 @@ const mySystem = createSystem("mySystem")({
 ✅ Each world has its own physics space
 
 **Rationale:**
+
 - Zero engine modifications for physics
 - No performance overhead
 - Predictable behavior
@@ -347,6 +374,7 @@ const mySystem = createSystem("mySystem")({
 ### Decision 3: Rendering is User-Defined
 
 **Rejected Alternatives:**
+
 - ❌ Engine defines context rendering rules
 - ❌ Auto-composite parent contexts
 - ❌ Built-in z-order for contexts
@@ -355,6 +383,7 @@ const mySystem = createSystem("mySystem")({
 ✅ Game code defines all rendering behavior
 
 **Rationale:**
+
 - Maximum flexibility
 - Games may not want parent rendering
 - Different visual styles per game
@@ -363,6 +392,7 @@ const mySystem = createSystem("mySystem")({
 ### Decision 4: Plugin-Based Implementation
 
 **Rejected Alternatives:**
+
 - ❌ Build contexts into engine core
 - ❌ Make contexts a first-class engine feature
 
@@ -370,6 +400,7 @@ const mySystem = createSystem("mySystem")({
 ✅ Contexts as a standalone plugin
 
 **Rationale:**
+
 - Zero cost for games not using contexts
 - Easier to iterate on design
 - Clean separation of concerns
@@ -380,21 +411,25 @@ const mySystem = createSystem("mySystem")({
 ## Implementation Strategy
 
 ### Phase 1: Engine Foundations
+
 - Multi-world support in SceneManager
 - Generic GPU abstraction layer
 - Camera primitives
 
 ### Phase 2: Plugin Core
+
 - Context manager implementation
 - World lifecycle orchestration
 - Access helper hooks
 
 ### Phase 3: Context Features
+
 - Transition system
 - Serialization/deserialization
 - Prefetching/streaming
 
 ### Phase 4: Editor Integration
+
 - Context selector UI
 - Scoped entity creation
 - Portal authoring tools
@@ -417,6 +452,7 @@ See [01-IMPLEMENTATION-ROADMAP.md](./01-IMPLEMENTATION-ROADMAP.md) for detailed 
 Spatial contexts provide powerful world organization through a simple principle: **context = world**. By keeping the engine minimal and pushing complexity into a plugin, we maintain the engine's flexibility while enabling sophisticated multi-world scenarios.
 
 The architecture ensures:
+
 - ✅ Clean separation of concerns
 - ✅ Zero cost when unused
 - ✅ Framework-agnostic core

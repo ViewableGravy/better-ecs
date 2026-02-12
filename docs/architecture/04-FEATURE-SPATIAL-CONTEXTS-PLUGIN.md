@@ -1,5 +1,18 @@
 # Feature: Spatial Contexts Plugin
 
+## Update (Feb 2026): clarified constraints + smaller subtasks
+
+This feature is being designed with the following constraints:
+
+- There is only ever **one active scene** at a time.
+- A scene may own **many worlds/contexts** at once (nested, overlapping coordinate spaces allowed).
+- “Active context” should be interpreted as the **focused world** (the world the local player inhabits), not “the only loaded world”.
+- The render pipeline already exists (render queue + pipeline stages). Spatial contexts should integrate with it.
+
+The implementation work has been split into much smaller, actionable documents here:
+
+- [docs/architecture/04-FEATURE-SPATIAL-CONTEXTS-PLUGIN/README.md](./04-FEATURE-SPATIAL-CONTEXTS-PLUGIN/README.md)
+
 ## Part 1: Public API & User Experience
 
 ### Overview
@@ -118,16 +131,20 @@ const transitionSystem = createSystem("transition")({
 
 ```typescript
 import { Portal } from "@repo/plugins/spatial-contexts/components";
-import { Transform } from "@repo/engine/components";
+import { Transform2D } from "@repo/engine/components";
 
 // Create portal entity
 const portal = world.create();
 world.add(portal, Transform2D, new Transform2D(10, 5));
-world.add(portal, Portaln new Portal({
-  targetContext: "house_1",
-  transition: "fade",
-  requireInteraction: true, // Press button vs automatic
-}));
+world.add(
+  portal,
+  Portal,
+  new Portal({
+    targetContext: "house_1",
+    transition: "fade",
+    requireInteraction: true, // Press button vs automatic
+  }),
+);
 
 // Portal system (auto-registered by plugin)
 // Detects when player enters portal and triggers transition

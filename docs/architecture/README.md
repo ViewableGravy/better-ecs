@@ -186,6 +186,12 @@ Each feature document has **two parts:**
 
 **Core plugin implementation.**
 
+**Update (Feb 2026):** Spatial contexts assumes **one active scene** at a time, with **many worlds/contexts** managed within that scene.
+
+For a smaller, step-by-step breakdown of implementation tasks, see:
+
+- [docs/architecture/04-FEATURE-SPATIAL-CONTEXTS-PLUGIN/README.md](./04-FEATURE-SPATIAL-CONTEXTS-PLUGIN/README.md)
+
 **Public API:**
 
 - `createContextScene()` factory
