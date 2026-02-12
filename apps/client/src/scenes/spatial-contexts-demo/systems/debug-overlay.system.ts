@@ -4,9 +4,8 @@ import { Shape, Transform2D } from "@repo/engine/components";
 import { useContextManager } from "@repo/plugins";
 import z from "zod";
 import { RenderVisibility } from "../components/render-visibility";
-import { DUNGEON, HOUSE, OVERWORLD } from "../constants";
 
-export const DebugOverlaySystem = createSystem("client:spatial-contexts-debug")({
+export const DebugOverlaySystem = createSystem("demo:spatial-contexts-debug")({
   phase: "all",
   schema: {
     default: {},
@@ -63,7 +62,7 @@ function getAlphaState(manager: ReturnType<typeof useContextManager>) {
     interior: 1,
   };
 
-  for (const contextId of [OVERWORLD, HOUSE, DUNGEON] as const) {
+  for (const { id: contextId } of manager.listDefinitions()) {
     const world = manager.getWorld(contextId);
     if (!world) continue;
 

@@ -1,5 +1,7 @@
 import type { UserWorld } from "@repo/engine";
 import { Color, Shape, Transform2D } from "@repo/engine/components";
+import type { ContextId } from "@repo/plugins";
+import { ContextVisualBinding } from "../components/context-visual-binding";
 import { RenderVisibility } from "../components/render-visibility";
 
 type SpawnHouseOptions = {
@@ -7,6 +9,7 @@ type SpawnHouseOptions = {
   y: number;
   width: number;
   height: number;
+  contextId: ContextId;
 };
 
 export function spawnHouse(world: UserWorld, opts: SpawnHouseOptions): number {
@@ -27,6 +30,7 @@ export function spawnHouse(world: UserWorld, opts: SpawnHouseOptions): number {
     ),
   );
   world.add(entity, new RenderVisibility("house-roof", 1));
+  world.add(entity, new ContextVisualBinding(opts.contextId));
 
   return entity;
 }

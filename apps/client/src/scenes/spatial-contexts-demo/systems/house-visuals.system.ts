@@ -1,15 +1,16 @@
 import { PlayerComponent } from "@/components/player";
 import { createSystem } from "@repo/engine";
 import { Shape, Sprite } from "@repo/engine/components";
-import { useContextManager } from "@repo/plugins";
+import { type ContextId, useContextManager } from "@repo/plugins";
 import z from "zod";
+import { ContextVisualBinding } from "../components/context-visual-binding";
+import { InsideContext } from "../components/inside-context";
 import { RenderVisibility } from "../components/render-visibility";
-import { DUNGEON, HOUSE, OVERWORLD } from "../constants";
 import { getHouseBlend } from "./house-transition.state";
 
 const INSIDE_OUTSIDE_ALPHA = 0.5;
 
-export const HouseVisualsSystem = createSystem("client:house-visuals")({
+export const HouseVisualsSystem = createSystem("demo:context-visuals")({
   phase: "render",
   schema: {
     default: {},
@@ -17,10 +18,12 @@ export const HouseVisualsSystem = createSystem("client:house-visuals")({
   },
   system() {
     const manager = useContextManager();
+    const rootContextId = manager.getRootContextId();
     const focused = manager.getFocusedContextId();
+    const activeInteriorContextId = getActiveInteriorContextId(manager, focused, rootContextId);
     const blend = getHouseBlend();
 
-    for (const contextId of [OVERWORLD, HOUSE, DUNGEON] as const) {
+    for (const { id: contextId } of manager.listDefinitions()) {
       const world = manager.getWorld(contextId);
       if (!world) continue;
 
@@ -37,7 +40,14 @@ export const HouseVisualsSystem = createSystem("client:house-visuals")({
         const visibility = world.get(entityId, RenderVisibility);
         if (!shape || !visibility) continue;
 
-        const alphaMultiplier = getAlphaMultiplier(visibility.role, blend);
+        const visualBinding = world.get(entityId, ContextVisualBinding);
+        const alphaMultiplier = getAlphaMultiplier({
+          role: visibility.role,
+          blend,
+          worldContextId: contextId,
+          activeInteriorContextId,
+          visualContextId: visualBinding?.contextId,
+        });
         shape.fill.a = visibility.baseAlpha * alphaMultiplier;
 
         if (shape.stroke) {
@@ -51,16 +61,58 @@ export const HouseVisualsSystem = createSystem("client:house-visuals")({
   },
 });
 
-function getAlphaMultiplier(role: RenderVisibility["role"], blend: number): number {
+function getActiveInteriorContextId(
+  manager: ReturnType<typeof useContextManager>,
+  focusedContextId: ContextId,
+  rootContextId: ContextId,
+): ContextId | undefined {
+  if (focusedContextId !== rootContextId) {
+    return focusedContextId;
+  }
+
+  const rootWorld = manager.getWorld(rootContextId);
+  if (!rootWorld) {
+    return undefined;
+  }
+
+  const [playerId] = rootWorld.query(PlayerComponent);
+  if (!playerId) {
+    return undefined;
+  }
+
+  return rootWorld.get(playerId, InsideContext)?.contextId;
+}
+
+function getAlphaMultiplier(args: {
+  role: RenderVisibility["role"];
+  blend: number;
+  worldContextId: ContextId;
+  activeInteriorContextId?: ContextId;
+  visualContextId?: ContextId;
+}): number {
+  const { role, blend, worldContextId, activeInteriorContextId, visualContextId } = args;
+
   if (role === "outside") {
     return lerp(1, INSIDE_OUTSIDE_ALPHA, blend);
   }
 
   if (role === "house-roof") {
-    return 1 - blend;
+    if (activeInteriorContextId && visualContextId === activeInteriorContextId) {
+      return 1 - blend;
+    }
+
+    return 1;
   }
 
   if (role === "house-interior") {
+    if (!activeInteriorContextId) {
+      return 0;
+    }
+
+    if (worldContextId !== activeInteriorContextId) {
+      return 0;
+    }
+
     return blend;
   }
 

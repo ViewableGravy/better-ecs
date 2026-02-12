@@ -4,7 +4,7 @@ import { Transform2D } from "@repo/engine/components";
 import z from "zod";
 import { CircleCollider } from "../components/circle-collider";
 
-export const SceneCollisionSystem = createSystem("client:spatial-contexts-collision")({
+export const SceneCollisionSystem = createSystem("demo:spatial-contexts-collision")({
   phase: "update",
   priority: 100,
   schema: {
