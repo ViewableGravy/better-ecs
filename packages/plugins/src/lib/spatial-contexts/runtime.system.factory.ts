@@ -1,31 +1,24 @@
-import { createSystem, useEngine } from "@repo/engine";
+import { createSystem, useEngine, useScene } from "@repo/engine";
 import z from "zod";
-import { getSpatialContextManager } from "./install";
+import { installSpatialContexts } from "./install";
 
 /**
- * Keeps `engine.world` bound to the currently focused context world.
- *
- * Add this system to the engine systems list (like other plugins).
+ * Creates a scene-scoped runtime system that binds `engine.world` to the focused context.
  */
-export const SpatialContextsRuntimeSystem = createSystem("plugin:spatial-contexts-runtime")({
-  phase: "all",
-  priority: 100_000,
-  schema: {
-    default: {},
-    schema: z.object({}),
-  },
-  system() {
-    const engine = useEngine();
-    const scene = engine.scene.context;
-    if (!scene) return;
-
-    const manager = getSpatialContextManager(scene);
-    if (!manager) return;
-
-    const focused = manager.getFocusedContextId();
-
-    // Bind engine active world to focused context.
-    // This affects `useWorld()` for all systems.
-    engine.scene.setActiveWorld(focused);
-  },
-});
+export function createSpatialContextsRuntimeSystem(sceneName: string) {
+  return createSystem(`plugin:spatial-contexts-runtime:${sceneName}`)({
+    phase: "all",
+    priority: 100_000,
+    schema: {
+      default: {},
+      schema: z.object({}),
+    },
+    system() {
+      const engine = useEngine();
+      const scene = useScene();
+      const manager = installSpatialContexts(scene);
+      const focused = manager.getFocusedContextId();
+      engine.scene.setActiveWorld(focused);
+    },
+  });
+}

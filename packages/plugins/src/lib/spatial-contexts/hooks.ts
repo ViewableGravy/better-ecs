@@ -9,7 +9,7 @@ export function useContextManager(): SpatialContextManager {
   const manager = getSpatialContextManager(scene);
   if (!manager) {
     throw new Error(
-      "Spatial contexts not installed for active scene. Call installSpatialContexts(scene) in sceneSetup().",
+      "Spatial contexts not installed for active scene. Use createContextScene(...) or call installSpatialContexts(scene) in sceneSetup().",
     );
   }
 

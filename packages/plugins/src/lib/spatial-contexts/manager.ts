@@ -44,8 +44,8 @@ export class SpatialContextManager {
     return this.#focusedId;
   }
 
-  async setFocusedContextId(id: ContextId): Promise<void> {
-    await this.ensureWorldLoaded(id);
+  setFocusedContextId(id: ContextId): void {
+    this.ensureWorldLoaded(id);
     this.#focusedId = id;
   }
 
@@ -65,13 +65,13 @@ export class SpatialContextManager {
     return world;
   }
 
-  async ensureWorldLoaded(id: ContextId): Promise<UserWorld> {
+  ensureWorldLoaded(id: ContextId): UserWorld {
     const existing = this.getWorld(id);
     if (existing) {
       const def = this.#definitions.get(id);
       if (def?.setup && !this.#setupCompleted.has(id)) {
         this.#setupCompleted.add(id);
-        await def.setup(existing);
+        def.setup(existing);
       }
 
       return existing;
@@ -82,7 +82,7 @@ export class SpatialContextManager {
     const def = this.#definitions.get(id);
     if (def?.setup && !this.#setupCompleted.has(id)) {
       this.#setupCompleted.add(id);
-      await def.setup(world);
+      def.setup(world);
     }
 
     return world;

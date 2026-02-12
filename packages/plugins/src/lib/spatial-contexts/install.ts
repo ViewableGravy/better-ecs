@@ -1,5 +1,4 @@
 import type { SceneContext } from "@repo/engine";
-import type { ContextId } from "./context-id";
 import type { ContextDefinition } from "./definition";
 import { SpatialContextManager } from "./manager";
 
@@ -7,7 +6,6 @@ const STORE = new WeakMap<SceneContext, SpatialContextManager>();
 
 export type InstallSpatialContextsOptions = {
   definitions?: readonly ContextDefinition[];
-  focusedContextId?: ContextId;
 };
 
 export function installSpatialContexts(
@@ -26,11 +24,6 @@ export function installSpatialContexts(
   }
 
   STORE.set(scene, manager);
-
-  if (opts?.focusedContextId) {
-    // Fire-and-forget; v1 is synchronous unless a setup returns a promise.
-    void manager.setFocusedContextId(opts.focusedContextId);
-  }
 
   return manager;
 }

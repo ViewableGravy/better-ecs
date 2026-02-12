@@ -10,13 +10,20 @@ export type PortalActivationArgs = {
 };
 
 export type PortalSystemOptions = {
+  /** Optional system name override. */
+  name?: string;
+
   /**
    * Return true to activate a portal. The plugin does not enforce any trigger shape in v1.
    */
   shouldActivate: (args: PortalActivationArgs) => boolean;
 
-  onEnter?: (args: PortalActivationArgs & { nextFocusedContextId: ContextId }) => void;
+  onEnter?: (
+    args: PortalActivationArgs & { nextFocusedContextId: ContextId; nextWorld: UserWorld },
+  ) => void;
 
   /** Called when a teleport portal is activated (after focusing the target). */
-  onTeleport?: (args: PortalActivationArgs & { nextFocusedContextId: ContextId }) => void;
+  onTeleport?: (
+    args: PortalActivationArgs & { nextFocusedContextId: ContextId; nextWorld: UserWorld },
+  ) => void;
 };

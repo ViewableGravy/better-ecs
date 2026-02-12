@@ -1,6 +1,6 @@
 // apps/client/src/main.ts
 import * as Engine from "@repo/engine";
-import { System as FPSCounter, SpatialContextsRuntimeSystem } from "@repo/plugins";
+import { System as FPSCounter } from "@repo/plugins";
 import { Loader } from "./assets";
 import { Scene as RenderingDemoScene } from "./scenes/rendering-demo";
 import { Scene as SpatialContextsDemoScene } from "./scenes/spatial-contexts-demo";
@@ -37,10 +37,6 @@ async function main() {
           },
         },
       }),
-
-      // Spatial contexts runtime (binds focused context to engine.world)
-      SpatialContextsRuntimeSystem,
-
       // Update systems
       Movement,
       Physics,

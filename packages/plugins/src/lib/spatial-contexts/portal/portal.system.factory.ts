@@ -5,7 +5,7 @@ import { Portal } from "./portal.component";
 import type { PortalSystemOptions } from "./portal.types";
 
 export const createPortalSystem = (opts: PortalSystemOptions) => {
-  return createSystem("plugin:spatial-contexts-portals")({
+  return createSystem(opts.name ?? "plugin:spatial-contexts-portals")({
     phase: "update",
     priority: 50_000,
     schema: {
@@ -17,8 +17,9 @@ export const createPortalSystem = (opts: PortalSystemOptions) => {
       const world = useWorld();
       const focusedContextId = manager.getFocusedContextId();
 
-      // Only process portals in the focused world.
-      if (manager.getWorld(focusedContextId) !== world) return;
+      // `useWorld()` is already bound to the focused context world by the runtime system.
+      // Do not compare wrapper object identity here: SceneManager and SceneContext use
+      // different UserWorld wrappers for the same internal world.
 
       for (const portalEntity of world.query(Portal)) {
         const portal = world.get(portalEntity, Portal);
@@ -29,12 +30,16 @@ export const createPortalSystem = (opts: PortalSystemOptions) => {
         if (!opts.shouldActivate(args)) continue;
 
         const nextFocusedContextId = portal.targetContextId;
-        void manager.setFocusedContextId(nextFocusedContextId);
-        opts.onEnter?.({ ...args, nextFocusedContextId });
+        manager.setFocusedContextId(nextFocusedContextId);
+        const nextWorld = manager.getWorldOrThrow(nextFocusedContextId);
+
+        opts.onEnter?.({ ...args, nextFocusedContextId, nextWorld });
 
         if (portal.mode === "teleport") {
-          opts.onTeleport?.({ ...args, nextFocusedContextId });
+          opts.onTeleport?.({ ...args, nextFocusedContextId, nextWorld });
         }
+
+        return;
       }
     },
   });
