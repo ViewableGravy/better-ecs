@@ -18,14 +18,8 @@ describe("AssetManager", () => {
     expect(result).toBeUndefined();
     expect(loadMock).toHaveBeenCalledWith("test");
 
-    // Wait for microtasks
-    await vi.waitFor(() => {
-      try {
-        manager.getStrict("test");
-      } catch {
-        throw new Error("Not ready");
-      }
-    });
+    // Await the in-flight request triggered by get()
+    await manager.load("test");
 
     // After load
     expect(manager.getStrict("test")).toBe("data");
@@ -69,13 +63,8 @@ describe("AssetManager", () => {
 
     manager.get("test");
 
-    await vi.waitFor(() => {
-      try {
-        manager.getStrict("test");
-      } catch (e: any) {
-        if (!e.message.includes("failed to load")) throw e;
-      }
-    });
+    // Await the in-flight request triggered by get() and swallow the rejection.
+    await manager.load("test").catch(() => undefined);
 
     expect(() => manager.getStrict("test")).toThrow(/failed to load/);
     consoleSpy.mockRestore();

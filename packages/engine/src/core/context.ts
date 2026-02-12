@@ -1,15 +1,24 @@
 import type { UserWorld } from "../ecs/world";
 import type { AllSceneNames, RegisteredAssetManager, RegisteredEngine } from "./engine-types";
+import type { EngineClass } from "./register/internal";
 import type { EngineSystem } from "./register/system";
+import type { SceneContext } from "./scene/scene-context";
 
 /***** TYPE DEFINITIONS *****/
 type Context = {
   engine: RegisteredEngine | null;
+  scene: SceneContext | null;
+};
+
+type LooseContext = {
+  engine: EngineClass<any, any, any> | null;
+  scene: SceneContext | null;
 };
 
 /***** CONSTS *****/
 const context: Context = {
   engine: null,
+  scene: null,
 };
 
 export function setContext(cb: (ctx: Context) => void) {
@@ -19,13 +28,11 @@ export function setContext(cb: (ctx: Context) => void) {
 function resetContext() {
   setContext((ctx) => {
     ctx.engine = null;
+    ctx.scene = null;
   });
 }
 
-export function executeWithContext<T>(
-  context: Context,
-  fn: () => T,
-): T extends Promise<any> ? T : T {
+export function executeWithContext<T>(context: Partial<LooseContext>, fn: () => T): T {
   setContext((ctx) => {
     for (const key in context) {
       (ctx as any)[key] = (context as any)[key];
@@ -91,6 +98,18 @@ export function useOverloadedSystem<TOverride extends EngineSystem>(system: stri
 export function useWorld(): UserWorld {
   const engine = useEngine();
   return engine.world;
+}
+
+export function useScene(): SceneContext {
+  if (!context.engine) {
+    throw new Error("useScene() called outside of a system execution context");
+  }
+
+  if (!context.scene) {
+    throw new Error("useScene() called outside of scene context (no active scene)");
+  }
+
+  return context.scene;
 }
 
 export function useAssets(): RegisteredAssetManager {

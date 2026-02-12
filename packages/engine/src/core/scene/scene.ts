@@ -3,7 +3,7 @@ import { SCENE_BRAND, type SceneConfig, type SceneDefinition } from "./scene.typ
 
 /**
  * Creates a scene definition with the given name and configuration.
- * 
+ *
  * @example
  * ```ts
  * const MenuScene = createScene("menu")({
@@ -16,19 +16,27 @@ import { SCENE_BRAND, type SceneConfig, type SceneDefinition } from "./scene.typ
  *   }
  * });
  * ```
- * 
+ *
  * @param name - The unique name for the scene
  * @returns A function that takes scene config and returns a SceneDefinition
  */
 export const createScene = <TName extends string>(name: TName) => {
   return (config: SceneConfig): SceneDefinition<TName> => {
     // Default teardown is a no-op function
-    const defaultTeardown = () => { /* no-op */ };
-    
+    const defaultTeardown = () => {
+      /* no-op */
+    };
+    const defaultSceneHook = () => {
+      /* no-op */
+    };
+
     return {
       name,
+      systems: config.systems ?? [],
       setup: config.setup,
+      sceneSetup: config.sceneSetup ?? defaultSceneHook,
       teardown: config.teardown ?? defaultTeardown,
+      sceneTeardown: config.sceneTeardown ?? defaultSceneHook,
       [SCENE_BRAND]: true as const,
     };
   };

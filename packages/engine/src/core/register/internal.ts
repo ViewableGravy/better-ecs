@@ -6,11 +6,7 @@ import { executeWithContext } from "../context";
 import { SceneManager } from "../scene/scene-manager";
 import type { SceneDefinitionTuple, SceneName } from "../scene/scene.types";
 import type { EngineFrame, EngineUpdate, FrameStats } from "../types";
-import type {
-  EngineInitializationSystem,
-  EngineSystem,
-  SystemFactoryTuple,
-} from "./system";
+import type { EngineInitializationSystem, EngineSystem, SystemFactoryTuple } from "./system";
 
 /***** TYPE DEFINITIONS *****/
 type StartEngineOpts = {
@@ -19,11 +15,7 @@ type StartEngineOpts = {
   signal?: AbortSignal;
 };
 
-type StartEngineGenerator = AsyncGenerator<
-  readonly [EngineUpdate, EngineFrame],
-  void,
-  unknown
->;
+type StartEngineGenerator = AsyncGenerator<readonly [EngineUpdate, EngineFrame], void, unknown>;
 
 type SystemName<TFactory> = TFactory extends {
   ["~types"]: { name: infer N extends string };
@@ -36,8 +28,7 @@ type SystemsTupleToRecord<T extends SystemFactoryTuple> = {
 };
 
 /** Combines user-defined systems with built-in engine systems */
-type AllSystems<T extends SystemFactoryTuple> = SystemsTupleToRecord<T> &
-  EngineSystemTypes;
+type AllSystems<T extends SystemFactoryTuple> = SystemsTupleToRecord<T> & EngineSystemTypes;
 
 /** Converts scene tuple to a record of scene names to scene definitions */
 type ScenesTupleToRecord<T extends SceneDefinitionTuple> = {
@@ -103,10 +94,7 @@ export class EngineClass<
   private precomputeSystemOrder() {
     const allSystems = Object.values(this.#systems);
 
-    const getPriority = (
-      system: EngineSystem<any>,
-      phase: "update" | "render",
-    ): number => {
+    const getPriority = (system: EngineSystem<any>, phase: "update" | "render"): number => {
       if (typeof system.priority === "number") {
         return system.priority;
       }
@@ -140,7 +128,7 @@ export class EngineClass<
   public async initialize(): Promise<void> {
     if (this.initialized) return;
 
-    await executeWithContext({ engine: this } as any, async () => {
+    await executeWithContext({ engine: this }, async () => {
       // Run initialization system if provided
       if (this.initializationSystem) {
         await this.initializationSystem.system();
@@ -247,11 +235,20 @@ export class EngineClass<
     if (!shouldUpdate) return;
 
     this.#currentPhase = phase;
-    const systemsToRun =
-      phase === "update" ? this.#updateSystems : this.#renderSystems;
+    const systemsToRun = phase === "update" ? this.#updateSystems : this.#renderSystems;
 
-    executeWithContext({ engine: this } as any, () => {
+    const activeSceneContext = this.scene.context;
+    const sceneSystemsToRun = this.scene.getSystemsForPhase(phase);
+
+    executeWithContext({ engine: this, scene: activeSceneContext }, () => {
+      // 1) Engine/global systems
       for (const system of systemsToRun) {
+        if (!system.enabled) continue;
+        system.system();
+      }
+
+      // 2) Scene-specific systems (active scene only)
+      for (const system of sceneSystemsToRun) {
         if (!system.enabled) continue;
         system.system();
       }

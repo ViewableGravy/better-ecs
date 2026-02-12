@@ -1,8 +1,5 @@
 // Register folder exports
-export type {
-  EngineSystemNames,
-  EngineSystemTypes,
-} from "../systems/engine-system-types";
+export type { EngineSystemNames, EngineSystemTypes } from "../systems/engine-system-types";
 export * from "./engine-types";
 export * from "./register/engine";
 export * from "./register/system";
@@ -16,6 +13,7 @@ export {
   useDelta,
   useEngine,
   useOverloadedSystem,
+  useScene,
   useSetScene,
   useSystem,
   useWorld,
