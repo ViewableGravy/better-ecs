@@ -13,9 +13,11 @@ This directory contains the **complete architectural documentation** for impleme
 ### Foundation Documents
 
 #### [00-SPATIAL-CONTEXTS-ARCHITECTURE.md](./00-SPATIAL-CONTEXTS-ARCHITECTURE.md)
+
 **The canonical architecture reference.**
 
 Defines the complete spatial contexts architecture including:
+
 - Core mental model (context = world)
 - Architecture boundaries (engine/plugin/user)
 - Physics integration (isolated per world)
@@ -29,9 +31,11 @@ Defines the complete spatial contexts architecture including:
 ---
 
 #### [01-IMPLEMENTATION-ROADMAP.md](./01-IMPLEMENTATION-ROADMAP.md)
+
 **High-level implementation plan.**
 
 Provides step-by-step roadmap with:
+
 - 8 implementation phases
 - Task breakdown per phase
 - Dependencies and ordering
@@ -44,9 +48,11 @@ Provides step-by-step roadmap with:
 ---
 
 #### [05-RENDERING-CONCEPTS.md](./05-RENDERING-CONCEPTS.md)
+
 **Cross-engine rendering analysis and design.**
 
 Comprehensive discussion of rendering primitives:
+
 - Core concepts (Transform, Camera, Mesh, Texture, Sprite)
 - Cross-engine comparison (Unity, Godot, Three.js, Bevy)
 - Better ECS rendering design (minimal engine, maximum flexibility)
@@ -58,9 +64,11 @@ Comprehensive discussion of rendering primitives:
 ---
 
 #### [10-FEATURE-RENDER-THREADING.md](./10-FEATURE-RENDER-THREADING.md)
+
 **OffscreenCanvas + render worker architecture.**
 
 Documents a render-thread approach for Better ECS, including:
+
 - Extract/commit split aligned with systems
 - Backpressure (“latest-wins”) to avoid stutter
 - Transport options (postMessage vs SharedArrayBuffer triple-buffer)
@@ -71,9 +79,11 @@ Documents a render-thread approach for Better ECS, including:
 ---
 
 #### [08-PLUGIN-BASED-IMPLEMENTATION.md](./08-PLUGIN-BASED-IMPLEMENTATION.md)
+
 **Detailed plugin implementation specification.**
 
 The original, comprehensive plugin-based implementation document covering:
+
 - Plugin vs engine responsibilities (detailed breakdown)
 - Core plugin abstractions with code
 - Engine modifications required
@@ -88,9 +98,11 @@ The original, comprehensive plugin-based implementation document covering:
 ---
 
 #### [09-CONCERNS-AND-CONSIDERATIONS.md](./09-CONCERNS-AND-CONSIDERATIONS.md)
+
 **Risk assessment and edge case catalog.**
 
 Documents potential issues:
+
 - Architectural concerns
 - Performance concerns
 - Edge cases (portal loops, missing targets, etc.)
@@ -107,6 +119,7 @@ Documents potential issues:
 ## Feature Implementation Documents
 
 Each feature document has **two parts:**
+
 1. **Public API & User Experience:** How users interact with the feature
 2. **Internal Implementation Steps:** Step-by-step stories for development
 
@@ -115,14 +128,17 @@ Each feature document has **two parts:**
 ### Phase 1: Rendering Foundations
 
 #### [02-FEATURE-RENDERING-ABSTRACTIONS.md](./02-FEATURE-RENDERING-ABSTRACTIONS.md)
+
 **GPU abstraction and sprite rendering.**
 
 **Public API:**
+
 - Transform, Camera, Sprite components
 - Renderer interface
 - Rendering utilities and hooks
 
 **Implementation:**
+
 - 11 stories covering components, renderer, WebGL backend, utilities
 - Estimated time: 2-3 weeks
 
@@ -133,14 +149,17 @@ Each feature document has **two parts:**
 ### Phase 2: Scene-Level Systems
 
 #### [03-FEATURE-SCENE-LEVEL-SYSTEMS.md](./03-FEATURE-SCENE-LEVEL-SYSTEMS.md)
+
 **Enable systems to operate at scene level.**
 
 **Public API:**
-- `scope: "scene"` in system definition
+
+- `systems` array in `createScene` definition
 - `useScene()` hook
 - Scene context with multi-world access
 
 **Implementation:**
+
 - 10 stories covering types, scene context, hooks, engine integration
 - Estimated time: 1 week
 
@@ -151,6 +170,7 @@ Each feature document has **two parts:**
 ### Phase 3: Multi-World Support
 
 **Note:** Multi-world engine support is documented inline in Phase 2 and Phase 4 documents. It involves:
+
 - Extending SceneManager to track multiple worlds
 - Adding `scene.getWorld(id)` accessor
 - Migrate implicit default-world usage and provide tooling to remove legacy implicit behaviors
@@ -163,15 +183,18 @@ Each feature document has **two parts:**
 ### Phase 4: Spatial Contexts Plugin
 
 #### [04-FEATURE-SPATIAL-CONTEXTS-PLUGIN.md](./04-FEATURE-SPATIAL-CONTEXTS-PLUGIN.md)
+
 **Core plugin implementation.**
 
 **Public API:**
+
 - `createContextScene()` factory
 - `useContextManager()`, `useActiveContext()`, `useContextWorld()` hooks
 - Portal component and system
 - Context streaming
 
 **Implementation:**
+
 - 11 stories covering plugin package, context manager, hooks, portals, streaming
 - Estimated time: 2 weeks
 
@@ -182,6 +205,7 @@ Each feature document has **two parts:**
 ### Phase 5-6: Transitions and Rendering
 
 **Note:** Context transitions and rendering are covered in the spatial contexts plugin document (04). Key features:
+
 - Portal collision detection
 - Context transition orchestration
 - Composite rendering (parent + active)
@@ -195,15 +219,18 @@ Each feature document has **two parts:**
 ### Phase 7: Persistence
 
 #### [07-FEATURE-PERSISTENCE.md](./07-FEATURE-PERSISTENCE.md)
+
 **Save and load system for contexts.**
 
 **Public API:**
+
 - `saveContext()`, `loadContext()` functions
 - `saveScene()`, `loadScene()` functions
 - Component serialization with `@Serializable()`
 - Save manager utilities
 
 **Implementation:**
+
 - 15 stories covering serialization, world save/load, context persistence, file I/O
 - Estimated time: 2 weeks
 
@@ -214,9 +241,11 @@ Each feature document has **two parts:**
 ### Phase 8: Visual Editor
 
 #### [06-FEATURE-VISUAL-EDITOR.md](./06-FEATURE-VISUAL-EDITOR.md)
+
 **Graphical scene authoring tool.**
 
 **Public Features:**
+
 - Context selector UI
 - Entity browser and inspector
 - Scene viewport with gizmos
@@ -224,6 +253,7 @@ Each feature document has **two parts:**
 - Save/load integration
 
 **Implementation:**
+
 - 15 stories covering editor core, UI components, viewport, tools, persistence
 - Estimated time: 6-7 weeks
 
@@ -281,14 +311,17 @@ Each implementation story follows this structure:
 ### Story N: Title
 
 **Files:**
+
 - List of files to create/modify
 
 **Steps:**
+
 1. First step
 2. Second step
-...
+   ...
 
 **Acceptance:**
+
 - [ ] Acceptance criterion 1
 - [ ] Acceptance criterion 2
 ```
@@ -328,22 +361,27 @@ Each implementation story follows this structure:
 All features in this architecture align with Better ECS principles:
 
 ### 1. Components Are Pure Data
+
 ✅ All context-related components (Portal, etc.) are pure data
 ✅ No behavior in components
 
 ### 2. Systems Do Not Call Each Other
+
 ✅ Systems communicate via shared data (active context ID, etc.)
 ✅ No direct system-to-system calls
 
 ### 3. Zero Overhead When Unused
+
 ✅ Spatial contexts are a plugin—games that don't use them pay zero cost
 ✅ Scene-level systems optional—world-level systems unchanged
 
 ### 4. Plugin-Based Features
+
 ✅ Spatial contexts live entirely in plugin package
 ✅ Engine provides only generic multi-world primitives
 
 ### 5. Framework-Agnostic Core
+
 ✅ Engine has no context-specific code
 ✅ Rendering is user-defined, not engine-enforced
 
@@ -352,6 +390,7 @@ All features in this architecture align with Better ECS principles:
 ## Version History
 
 **Version 1.0** (2026-02-01)
+
 - Initial comprehensive documentation
 - All 8 phases documented
 - Feature documents with API and implementation details
@@ -375,27 +414,30 @@ When updating this documentation:
 
 ### Implementation Timeline
 
-| Phase | Feature | Weeks | Documents |
-|-------|---------|-------|-----------|
-| 1 | Rendering Foundations | 2-3 | [02](./02-FEATURE-RENDERING-ABSTRACTIONS.md), [05](./05-RENDERING-CONCEPTS.md) |
-| 2 | Scene-Level Systems | 1 | [03](./03-FEATURE-SCENE-LEVEL-SYSTEMS.md) |
-| 3 | Multi-World Support | 1 | Inline in Phase 2/4 docs |
-| 4 | Plugin Core | 2 | [04](./04-FEATURE-SPATIAL-CONTEXTS-PLUGIN.md) |
-| 5-6 | Transitions & Rendering | 2-3 | [04](./04-FEATURE-SPATIAL-CONTEXTS-PLUGIN.md) |
-| 7 | Persistence | 2 | [07](./07-FEATURE-PERSISTENCE.md) |
-| 8 | Visual Editor | 6-7 | [06](./06-FEATURE-VISUAL-EDITOR.md) |
+| Phase | Feature                 | Weeks | Documents                                                                      |
+| ----- | ----------------------- | ----- | ------------------------------------------------------------------------------ |
+| 1     | Rendering Foundations   | 2-3   | [02](./02-FEATURE-RENDERING-ABSTRACTIONS.md), [05](./05-RENDERING-CONCEPTS.md) |
+| 2     | Scene-Level Systems     | 1     | [03](./03-FEATURE-SCENE-LEVEL-SYSTEMS.md)                                      |
+| 3     | Multi-World Support     | 1     | Inline in Phase 2/4 docs                                                       |
+| 4     | Plugin Core             | 2     | [04](./04-FEATURE-SPATIAL-CONTEXTS-PLUGIN.md)                                  |
+| 5-6   | Transitions & Rendering | 2-3   | [04](./04-FEATURE-SPATIAL-CONTEXTS-PLUGIN.md)                                  |
+| 7     | Persistence             | 2     | [07](./07-FEATURE-PERSISTENCE.md)                                              |
+| 8     | Visual Editor           | 6-7   | [06](./06-FEATURE-VISUAL-EDITOR.md)                                            |
 
 **Total:** 16-20 weeks
 
 ### Document Reading Order
 
 **For Understanding:**
+
 1. 00 → 05 → 01 → 09
 
 **For Implementation:**
+
 1. 01 (roadmap) → Feature docs in phase order (02 → 03 → 04 → 07 → 06)
 
 **For Review:**
+
 1. 00 → 09 → Feature docs (skim Part 1 of each)
 
 ---
