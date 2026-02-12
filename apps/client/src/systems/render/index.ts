@@ -1,9 +1,7 @@
 import { invariantById } from "@/utilities/selectors";
 import { createRenderPipeline, RenderPipelineContext, useAssets } from "@repo/engine";
 import { Canvas2DRenderer } from "@repo/engine/render";
-import { CollectRenderablesStage } from "./stages/CollectRenderables";
-import { CommitStage } from "./stages/Commit";
-import { SortStage } from "./stages/Sort";
+import { RenderVisibleWorldsStage } from "./stages/RenderVisibleWorlds";
 
 // prettier-ignore
 export const System = createRenderPipeline("render")({
@@ -16,7 +14,7 @@ export const System = createRenderPipeline("render")({
 
     return new RenderPipelineContext(renderer);
   },
-  stages: [CollectRenderablesStage, SortStage, CommitStage],
+  stages: [RenderVisibleWorldsStage],
 });
 
 // Utility function to get the canvas and handle resizing

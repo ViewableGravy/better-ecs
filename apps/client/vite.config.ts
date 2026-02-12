@@ -84,6 +84,10 @@ export default defineConfig({
         find: "@/utilities",
         replacement: path.resolve(__dirname, "src/utilities"),
       },
+      {
+        find: "@/systems",
+        replacement: path.resolve(__dirname, "src/systems"),
+      },
     ],
   },
   build: {

@@ -1,23 +1,13 @@
-import { useEngine, useSystem, useWorld } from "@repo/engine";
-import { Camera, Color, Shape, Sprite, Transform2D } from "@repo/engine/components";
+import type { UserWorld } from "@repo/engine";
+import { Camera, Shape, Sprite, Transform2D } from "@repo/engine/components";
+import type { RenderQueue, Renderer } from "@repo/engine/render";
 
-const CLEAR_COLOR = new Color(0.1, 0.1, 0.15, 1);
-
-export function CommitStage(): void {
-  const world = useWorld();
-  const engine = useEngine();
-  const { data } = useSystem("render");
-
-  const { renderer, queue } = data;
-
-  // Calculate interpolation alpha
-  const updateTimeMs = 1000 / engine.frame.ups;
-  const timeSinceLastUpdate = performance.now() - engine.frame.lastUpdateTime;
-  const alpha = Math.min(timeSinceLastUpdate / updateTimeMs, 1.0);
-
-  renderer.high.begin();
-  renderer.high.clear(CLEAR_COLOR);
-
+export function commitWorld(
+  world: UserWorld,
+  renderer: Renderer,
+  queue: RenderQueue,
+  alpha: number,
+): void {
   // --- Camera ---
   let cameraSet = false;
   for (const id of world.query(Camera, Transform2D)) {
@@ -54,6 +44,4 @@ export function CommitStage(): void {
       renderer.high.render(sprite, transform, alpha);
     }
   }
-
-  renderer.high.end();
 }

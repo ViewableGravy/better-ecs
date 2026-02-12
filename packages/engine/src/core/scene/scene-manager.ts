@@ -20,8 +20,10 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
   #activeScene: SceneDefinition<string> | null = null;
   #activeSceneContext: SceneContext | null = null;
 
-  // Always points at the default world for the active scene (or the fallback world)
+  // Always points at the *active* world for the active scene (or the fallback world).
+  // The active world is typically the scene default, but can be changed (e.g. spatial contexts).
   #activeWorld: World;
+  #activeWorldId: string | null = null;
   // Stable wrapper whose internal world pointer is swapped during transitions
   #userWorld: UserWorld;
 
@@ -74,9 +76,14 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
       .sort((a, b) => getPriority(b) - getPriority(a));
   }
 
-  /** Get the currently active scene's default world. */
+  /** Get the currently active scene's active world (defaults to the scene default world). */
   get world(): UserWorld {
     return this.#userWorld;
+  }
+
+  /** Get the id of the currently active world for the active scene. */
+  get activeWorldId(): string | null {
+    return this.#activeWorldId;
   }
 
   /**
@@ -85,6 +92,30 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
    */
   get internalWorld(): World {
     return this.#activeWorld;
+  }
+
+  /**
+   * Set the currently active world (affects what `engine.world` / `useWorld()` returns).
+   *
+   * This does not unload/load worlds; it only switches which already-loaded world is treated
+   * as the active world for system execution.
+   */
+  setActiveWorld(id: string): void {
+    const ctx = this.#activeSceneContext;
+    if (!ctx) {
+      throw new Error("Cannot set active world without an active scene");
+    }
+
+    const internal = ctx.getInternalWorld(id);
+    if (!internal) {
+      throw new Error(
+        `Cannot set active world to "${id}": world is not loaded in the active scene`,
+      );
+    }
+
+    this.#activeWorldId = id;
+    this.#activeWorld = internal;
+    this.#userWorld.setWorld(internal);
   }
 
   /** Get the name of the currently active scene, or null if no scene is active. */
@@ -162,6 +193,7 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
 
         const prevDefault = prevContext.getInternalWorld(prevContext.defaultWorldId);
         if (prevDefault) {
+          this.#activeWorldId = prevContext.defaultWorldId;
           this.#activeWorld = prevDefault;
           this.#userWorld.setWorld(prevDefault);
         }
@@ -181,6 +213,7 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
 
       this.#activeScene = newScene;
       this.#activeSceneContext = newContext;
+      this.#activeWorldId = newContext.defaultWorldId;
       this.#activeWorld = newWorld;
       this.#userWorld.setWorld(newWorld);
 

@@ -1,11 +1,9 @@
-import { useSystem, useWorld } from "@repo/engine";
+import type { UserWorld } from "@repo/engine";
 import { Shape, Sprite } from "@repo/engine/components";
+import type { RenderQueue } from "@repo/engine/render";
 
-export function SortStage(): void {
-  const world = useWorld();
-  const { data } = useSystem("render");
-
-  data.queue.sortSprites((a, b) => {
+export function sortRenderQueue(world: UserWorld, queue: RenderQueue): void {
+  queue.sortSprites((a, b) => {
     const sa = world.get(a, Sprite);
     const sb = world.get(b, Sprite);
     if (!sa || !sb) return 0;
@@ -13,7 +11,7 @@ export function SortStage(): void {
     return sa.zOrder - sb.zOrder;
   });
 
-  data.queue.sortShapes((a, b) => {
+  queue.sortShapes((a, b) => {
     const sa = world.get(a, Shape);
     const sb = world.get(b, Shape);
     if (!sa || !sb) return 0;

@@ -1,11 +1,8 @@
-import { useSystem, useWorld } from "@repo/engine";
+import type { UserWorld } from "@repo/engine";
 import { Shape, Sprite, Transform2D } from "@repo/engine/components";
+import type { RenderQueue } from "@repo/engine/render";
 
-export function CollectRenderablesStage(): void {
-  const world = useWorld();
-  const { data } = useSystem("render");
-  const queue = data.queue;
-
+export function collectRenderables(world: UserWorld, queue: RenderQueue): void {
   for (const id of world.query(Sprite, Transform2D)) {
     queue.addSprite(id);
   }
