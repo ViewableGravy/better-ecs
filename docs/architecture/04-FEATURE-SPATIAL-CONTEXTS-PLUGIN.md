@@ -122,12 +122,12 @@ import { Transform } from "@repo/engine/components";
 
 // Create portal entity
 const portal = world.create();
-world.add(portal, Transform, { x: 10, y: 5 });
-world.add(portal, Portal, {
+world.add(portal, Transform2D, new Transform2D(10, 5));
+world.add(portal, Portaln new Portal({
   targetContext: "house_1",
   transition: "fade",
   requireInteraction: true, // Press button vs automatic
-});
+}));
 
 // Portal system (auto-registered by plugin)
 // Detects when player enters portal and triggers transition
