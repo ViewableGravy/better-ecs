@@ -1,5 +1,5 @@
 import { PlayerComponent } from "@/components/player";
-import { createSystem } from "@repo/engine";
+import { createSystem, useDelta } from "@repo/engine";
 import { Shape, Sprite } from "@repo/engine/components";
 import { type ContextId, useContextManager } from "@repo/plugins";
 import { ContextVisualBinding } from "../components/context-visual-binding";
@@ -13,10 +13,11 @@ export const HouseVisualsSystem = createSystem("demo:context-visuals")({
   phase: "render",
   system() {
     const manager = useContextManager();
+    const [_, __, updateProgress] = useDelta();
     const rootContextId = manager.getRootContextId();
     const focused = manager.getFocusedContextId();
     const activeInteriorContextId = getActiveInteriorContextId(manager, focused, rootContextId);
-    const blend = getHouseBlend();
+    const blend = getHouseBlend(updateProgress);
 
     for (const { id: contextId } of manager.listDefinitions()) {
       const world = manager.getWorld(contextId);

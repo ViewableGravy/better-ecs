@@ -4,6 +4,7 @@ const EPSILON = 0.0001;
 
 const transition = {
   blend: 0,
+  previousBlend: 0,
   targetBlend: 0,
 };
 
@@ -12,12 +13,13 @@ export function setHouseInsideTarget(insideHouse: boolean): void {
 }
 
 export function tickHouseTransition(updateDeltaMs: number): void {
+  transition.previousBlend = transition.blend;
   const step = getTransitionStep(updateDeltaMs, HOUSE_TRANSITION_DURATION_SECONDS);
   transition.blend = approach(transition.blend, transition.targetBlend, step);
 }
 
-export function getHouseBlend(): number {
-  return transition.blend;
+export function getHouseBlend(alpha = 1): number {
+  return transition.previousBlend + (transition.blend - transition.previousBlend) * alpha;
 }
 
 export function isHouseBlendOutsideComplete(): boolean {

@@ -63,9 +63,13 @@ export function useEngine(): RegisteredEngine {
   return context.engine;
 }
 
-export function useDelta(): [updateDelta: number, frameDelta: number] {
+export function useDelta(): [updateDelta: number, frameDelta: number, updateProgress: number] {
   const engine = useEngine();
-  return [engine.frame.updateDelta, engine.frame.frameDelta];
+  return [
+    engine.frame.updateDelta,
+    engine.frame.frameDelta,
+    engine.frame.updateProgress,
+  ];
 }
 
 /**

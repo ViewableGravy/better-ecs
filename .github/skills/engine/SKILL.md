@@ -83,7 +83,7 @@ The engine exports several hooks to access context within a system's `Entrypoint
 |------|-------------|-------|
 | `useWorld()` | Returns the ECS World instance for querying entities and components. | `const world = useWorld();` |
 | `useSystem(name)` | Accesses a system's state/data (including its own). Types are inferred from `Register`. | `const { data } = useSystem("engine:input");` |
-| `useDelta()` | Returns the time delta for the current frame. | `const [delta] = useDelta();` |
+| `useDelta()` | Returns the time delta and update progress for the current frame. | `const [updateDelta, frameDelta, updateProgress] = useDelta();` |
 | `useEngine()` | Returns the root engine instance. | `const engine = useEngine();` |
 | `useSetScene()` | Returns a function to switch the active scene. | `const setScene = useSetScene();` |
 
