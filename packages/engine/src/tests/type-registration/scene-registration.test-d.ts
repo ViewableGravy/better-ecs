@@ -62,6 +62,14 @@ const TestSystem = createSystem("test")({
   },
 });
 
+const NoSchemaSystem = createSystem("test:no-schema")({
+  system() {
+    /* no-op */
+  },
+});
+
+expectTypeOf<ReturnType<typeof NoSchemaSystem>["data"]>().toEqualTypeOf<Record<string, never>>();
+
 // ============================================================
 // Test: createScene returns correct types
 // ============================================================
@@ -81,7 +89,7 @@ expectTypeOf(PauseScene.name).toEqualTypeOf<"pause">();
 // ============================================================
 
 const engine = createEngine({
-  systems: [TestSystem],
+  systems: [TestSystem, NoSchemaSystem],
   scenes: [MenuScene, GameScene, PauseScene],
 });
 
@@ -178,6 +186,9 @@ expectTypeOf<TestSystemNames>().not.toBeAny();
 
 // Should include registered system name
 expectTypeOf<"test">().toExtend<TestSystemNames>();
+
+// Should include schema-less system name
+expectTypeOf<"test:no-schema">().toExtend<TestSystemNames>();
 
 // Should include scene-registered system name
 expectTypeOf<"scene:only">().toExtend<TestSystemNames>();

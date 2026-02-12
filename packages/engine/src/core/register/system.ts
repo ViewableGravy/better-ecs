@@ -1,9 +1,26 @@
+import type { StandardSchemaV1 } from "@standard-schema/spec";
 import type { InferStandardSchema, StandardSchema } from "../types";
 
 /***** TYPE DEFINITIONS *****/
 export type SystemPriority = number | { update?: number; render?: number };
+type EmptySystemData = Record<string, never>;
+type EmptySystemSchema = StandardSchemaV1<EmptySystemData, EmptySystemData>;
+
+const emptySystemSchema: EmptySystemSchema = {
+  "~standard": {
+    version: 1,
+    vendor: "@repo/engine",
+    validate: () => ({ value: {}, issues: [] }),
+  },
+};
+
+const emptySystemSchemaConfig = {
+  default: {},
+  schema: emptySystemSchema,
+};
+
 export type SystemOpts<TSchema extends StandardSchema, TMethods extends Record<string, any>> = {
-  schema: {
+  schema?: {
     default: InferStandardSchema<NoInfer<TSchema>>["input"];
     schema: TSchema;
   };
@@ -46,9 +63,20 @@ export type EngineInitializationSystem = {
 
 /***** COMPONENT START *****/
 export const createSystem = <TName extends string>(name: TName) => {
-  return <TSchema extends StandardSchema = StandardSchema, TMethods extends Record<string, any> = object>(
+  return <
+    TSchema extends StandardSchema = EmptySystemSchema,
+    TMethods extends Record<string, any> = object,
+  >(
     opts: SystemOpts<TSchema, TMethods>,
   ): SystemFactory<TName, TSchema, TMethods> => {
+    // `TSchema` is generic and may represent either a user-provided schema or
+    // the implicit empty-object schema when omitted. This narrow cast keeps the
+    // fallback localized to this boundary.
+    const schemaConfig = (opts.schema ?? emptySystemSchemaConfig) as {
+      default: InferStandardSchema<NoInfer<TSchema>>["input"];
+      schema: TSchema;
+    };
+
     // If the HMR runtime is active and a system with this name already
     // exists, hot-swap the live system's behaviour while keeping its state.
     // This runs at module-evaluation time so wrapped factories (e.g. plugin
@@ -68,8 +96,8 @@ export const createSystem = <TName extends string>(name: TName) => {
     const factory = (): EngineSystem<TSchema> & TMethods => {
       const system: EngineSystem<TSchema> = {
         name: name,
-        data: opts.schema.default,
-        schema: opts.schema.schema,
+        data: schemaConfig.default,
+        schema: schemaConfig.schema,
         phase: opts.phase ?? "update",
         priority: opts.priority ?? 0,
         enabled: opts.enabled ?? true,
@@ -85,12 +113,12 @@ export const createSystem = <TName extends string>(name: TName) => {
     const result: SystemFactory<TName, TSchema, TMethods> = Object.assign(factory, {
       ["~types"]: {
         name: name,
-        schema: opts.schema.schema,
+        schema: schemaConfig.schema,
       },
     });
 
     return result;
-  };;
+  };
 };
 
 export const createInitializationSystem = (system: () => void): EngineInitializationSystem => {

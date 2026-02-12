@@ -2,15 +2,10 @@ import { PlayerComponent } from "@/components/player";
 import { createSystem } from "@repo/engine";
 import { Shape, Transform2D } from "@repo/engine/components";
 import { useContextManager } from "@repo/plugins";
-import z from "zod";
 import { RenderVisibility } from "../components/render-visibility";
 
 export const DebugOverlaySystem = createSystem("demo:spatial-contexts-debug")({
   phase: "all",
-  schema: {
-    default: {},
-    schema: z.object({}),
-  },
   system() {
     const manager = useContextManager();
 
