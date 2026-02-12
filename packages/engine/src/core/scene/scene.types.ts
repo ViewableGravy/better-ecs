@@ -21,26 +21,26 @@ export type SceneConfig = {
    * Called when the scene becomes active. Use this to create entities and set up the scene.
    * @param world - The scene's world instance
    */
-  setup: (world: UserWorld) => void | Promise<void>;
+  setup: (world: UserWorld) => any;
 
   /**
    * Called when the scene becomes active with access to the scene context.
    * Use this to register additional worlds, scene-wide state, etc.
    */
-  sceneSetup?: (scene: SceneContext) => void | Promise<void>;
+  sceneSetup?: (scene: SceneContext) => any;
 
   /**
    * Called when the scene is being deactivated. Use this for any custom cleanup.
    * Note: Entity cleanup is handled automatically by the engine.
    * @param world - The scene's world instance
    */
-  teardown?: (world: UserWorld) => void | Promise<void>;
+  teardown?: (world: UserWorld) => any;
 
   /**
    * Called when the scene is being deactivated with access to the scene context.
    * Use this to cleanup scene-wide state and additional worlds.
    */
-  sceneTeardown?: (scene: SceneContext) => void | Promise<void>;
+  sceneTeardown?: (scene: SceneContext) => any;
 };
 
 /**
