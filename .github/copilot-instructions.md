@@ -18,3 +18,11 @@
   - Adding new exports to packages
   - Modifying tsconfig paths or rootDirs
 - When conforming to function interfaces that expect a single argument, but the argument in the implementation is unused, do not create the argument (as it will still conform to the interface if the arg is not present). In cases where there are multiple arguments, but only some are used, use `_`, `__`, etc. naming convention to indicate unused arguments.
+- Public API (public functions, properties, classes, etc.) should have a minimal API surface.
+  - Avoid excessive userland properties, functions, etc.
+  - Aim for the minimal necessary API to reduce userland complexity.
+  - Use the following techniques to reduce intellisense clutter
+    - Make functionality composable, allowing the user to import their desired functionality, rather than offering dozens of properties
+    - Consider breaking up internal functionality into separate properties
+      for a smaller intellisense footprint per object level
+    - Consider Internal / User types for the same object, where types are casted to userland types with a smaller surface, while internal types have a larger surface with more properties for internal use.
