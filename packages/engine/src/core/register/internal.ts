@@ -4,7 +4,7 @@ import type { EngineSystemTypes } from "../../systems/engine-system-types";
 import { AssetManager } from "../../asset/AssetManager";
 import { executeWithContext } from "../context";
 import { SceneManager } from "../scene/scene-manager";
-import type { SceneDefinitionTuple, SceneName } from "../scene/scene.types";
+import type { SceneDefinition, SceneDefinitionTuple, SceneName } from "../scene/scene.types";
 import type { EngineFrame, EngineUpdate, FrameStats } from "../types";
 import type { EngineInitializationSystem, EngineSystem, SystemFactoryTuple } from "./system";
 
@@ -27,8 +27,23 @@ type SystemsTupleToRecord<T extends SystemFactoryTuple> = {
   [Factory in T[number] as SystemName<Factory>]: ReturnType<Factory>;
 };
 
-/** Combines user-defined systems with built-in engine systems */
-type AllSystems<T extends SystemFactoryTuple> = SystemsTupleToRecord<T> & EngineSystemTypes;
+type FactoriesToRecord<TFactories> = {
+  [Factory in Extract<
+    TFactories,
+    (...args: unknown[]) => unknown
+  > as SystemName<Factory>]: ReturnType<Factory>;
+};
+
+type SceneSystemFactories<T extends SceneDefinitionTuple> =
+  T[number] extends SceneDefinition<string, infer TSceneSystems extends SystemFactoryTuple>
+    ? TSceneSystems[number]
+    : never;
+
+/** Combines engine/global systems, active-scene systems, and built-in engine systems */
+type AllSystems<
+  T extends SystemFactoryTuple,
+  TScenes extends SceneDefinitionTuple,
+> = SystemsTupleToRecord<T> & FactoriesToRecord<SceneSystemFactories<TScenes>> & EngineSystemTypes;
 
 /** Converts scene tuple to a record of scene names to scene definitions */
 type ScenesTupleToRecord<T extends SceneDefinitionTuple> = {
@@ -42,6 +57,7 @@ export class EngineClass<
   TAssets extends Record<string, unknown> = Record<string, unknown>,
 > {
   #systems: Record<string, EngineSystem<any>>;
+  #systemsView: Record<string, EngineSystem<any>>;
 
   // Cached sorted lists for each phase
   #updateSystems: EngineSystem<any>[] = [];
@@ -88,6 +104,20 @@ export class EngineClass<
 
     this.frame.phase = this.#phaseFn;
 
+    // Provide a stable view that can resolve both engine systems and
+    // active-scene systems by name.
+    this.#systemsView = new Proxy(this.#systems, {
+      get: (target, prop) => {
+        if (typeof prop !== "string") return (target as any)[prop];
+        if (prop in target) return (target as any)[prop];
+        return this.scene.getActiveSystem(prop);
+      },
+      has: (target, prop) => {
+        if (typeof prop !== "string") return prop in target;
+        return prop in target || this.scene.getActiveSystem(prop) !== undefined;
+      },
+    });
+
     this.precomputeSystemOrder();
   }
 
@@ -111,8 +141,8 @@ export class EngineClass<
   }
 
   /** Prefer `useSystem()` in systems instead. */
-  public get systems(): AllSystems<TSystems> {
-    return this.#systems as any;
+  public get systems(): AllSystems<TSystems, TScenes> {
+    return this.#systemsView as any;
   }
 
   /** Get registered scenes */

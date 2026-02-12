@@ -1,4 +1,5 @@
 // packages/engine/src/core/scene/scene.ts
+import type { SystemFactoryTuple } from "../register/system";
 import { SCENE_BRAND, type SceneConfig, type SceneDefinition } from "./scene.types";
 
 /**
@@ -21,7 +22,9 @@ import { SCENE_BRAND, type SceneConfig, type SceneDefinition } from "./scene.typ
  * @returns A function that takes scene config and returns a SceneDefinition
  */
 export const createScene = <TName extends string>(name: TName) => {
-  return (config: SceneConfig): SceneDefinition<TName> => {
+  return <const TSystems extends SystemFactoryTuple = []>(
+    config: SceneConfig<TSystems>,
+  ): SceneDefinition<TName, TSystems> => {
     // Default teardown is a no-op function
     const defaultTeardown = () => {
       /* no-op */
@@ -32,7 +35,10 @@ export const createScene = <TName extends string>(name: TName) => {
 
     return {
       name,
-      systems: config.systems ?? [],
+      // TypeScript cannot prove that the fallback `[]` matches the inferred
+      // `TSystems` (especially when `systems` is omitted and `TSystems` defaults).
+      // This cast is the minimal, contained workaround.
+      systems: (config.systems ?? []) as TSystems,
       setup: config.setup,
       sceneSetup: config.sceneSetup ?? defaultSceneHook,
       teardown: config.teardown ?? defaultTeardown,

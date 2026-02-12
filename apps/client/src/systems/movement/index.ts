@@ -7,7 +7,7 @@ export const System = createSystem("movement")({
   system: Entrypoint,
   schema: {
     default: {},
-    schema: z.object({})
+    schema: z.object({}),
   },
 });
 
@@ -18,10 +18,10 @@ function Entrypoint() {
   const [updateDelta] = useDelta();
 
   /***** QUERIES *****/
-  const [playerId] = world.query(PlayerComponent)
+  const [playerId] = world.query(PlayerComponent);
 
   if (!playerId) return;
- 
+
   const transform = world.get(playerId, Transform2D);
 
   if (!transform) return;
@@ -30,7 +30,7 @@ function Entrypoint() {
   // Maps physical keys to movement directions
   for (const code of data.keysActive) {
     const speed = 50 * (updateDelta / 1000);
-    
+
     // Vertical movement: Arrow keys or W/S
     if (code === "ArrowUp" || code === "KeyW") {
       transform.curr.pos.y -= speed;
@@ -38,7 +38,7 @@ function Entrypoint() {
     if (code === "ArrowDown" || code === "KeyS") {
       transform.curr.pos.y += speed;
     }
-    
+
     // Horizontal movement: Arrow keys or A/D
     if (code === "ArrowLeft" || code === "KeyA") {
       transform.curr.pos.x -= speed;
@@ -48,4 +48,3 @@ function Entrypoint() {
     }
   }
 }
-

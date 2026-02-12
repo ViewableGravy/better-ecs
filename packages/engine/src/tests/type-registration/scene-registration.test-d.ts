@@ -4,40 +4,62 @@
  * Tests that scene names are properly inferred and setScene has correct types.
  */
 
-import { expectTypeOf } from 'vitest';
-import { createScene, createEngine, createSystem, createInitializationSystem, type SceneDefinition } from '../../core';
-import z from 'zod';
+import { expectTypeOf } from "vitest";
+import z from "zod";
+import {
+  createEngine,
+  createInitializationSystem,
+  createScene,
+  createSystem,
+  type SceneDefinition,
+} from "../../core";
 
 // ============================================================
 // Setup: Create test scenes and systems
 // ============================================================
 
+// Scene-only system (registered via scene definition, not engine.systems array)
+const SceneOnlySystem = createSystem("scene:only")({
+  schema: {
+    default: null,
+    schema: z.null(),
+  },
+  system() {
+    /* no-op */
+  },
+});
+
 const MenuScene = createScene("menu")({
+  systems: [SceneOnlySystem],
   setup(world) {
     world.create();
   },
   teardown() {
     // cleanup
-  }
+  },
 });
 
 const GameScene = createScene("game")({
   setup(world) {
     world.create();
-  }
+  },
 });
 
 const PauseScene = createScene("pause")({
-  setup() { /* setup */ }
+  setup() {
+    /* setup */
+  },
 });
 
 // Minimal test system
 const TestSystem = createSystem("test")({
   schema: {
     default: { count: 0 },
-    schema: z.object({ count: z.number() })
+    schema: z.object({ count: z.number() }),
   },
-  system() { /* no-op */ }
+  system() {
+    /* no-op */
+  },
 });
 
 // ============================================================
@@ -109,7 +131,9 @@ createEngine({
 
 const engineNoScenes = createEngine({
   systems: [TestSystem],
-  initialization: createInitializationSystem(() => { /* no-op */ }),
+  initialization: createInitializationSystem(() => {
+    /* no-op */
+  }),
 });
 
 // World should still be accessible
@@ -119,13 +143,13 @@ expectTypeOf(engineNoScenes.world).not.toBeUndefined();
 // Test: AllSceneNames resolves correctly with module augmentation
 // ============================================================
 
-import { AllSceneNames } from '../../core/engine-types';
+import { AllSceneNames } from "../../core/engine-types";
 
 // When Register is properly augmented with an engine...
 // Define a test register interface
 type TestRegister = {
   Engine: typeof engine;
-}
+};
 
 // AllSceneNames should be the union of scene name literals, not 'any' or 'string'
 type TestSceneNames = AllSceneNames<TestRegister>;
@@ -145,7 +169,7 @@ expectTypeOf<"pause">().toExtend<TestSceneNames>();
 // Test: AllSystemNames resolves correctly
 // ============================================================
 
-import { AllSystemNames } from '../../core/engine-types';
+import { AllSystemNames } from "../../core/engine-types";
 
 type TestSystemNames = AllSystemNames<TestRegister>;
 
@@ -155,4 +179,8 @@ expectTypeOf<TestSystemNames>().not.toBeAny();
 // Should include registered system name
 expectTypeOf<"test">().toExtend<TestSystemNames>();
 
-export {};
+// Should include scene-registered system name
+expectTypeOf<"scene:only">().toExtend<TestSystemNames>();
+
+export { };
+

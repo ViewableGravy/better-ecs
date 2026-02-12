@@ -13,9 +13,9 @@ export const SCENE_BRAND: unique symbol = Symbol.for("@repo/engine:scene");
 /**
  * Scene configuration options passed to createScene.
  */
-export type SceneConfig = {
+export type SceneConfig<TSystems extends SystemFactoryTuple = SystemFactoryTuple> = {
   /** Optional scene-level systems that only run while this scene is active. */
-  systems?: SystemFactoryTuple;
+  systems?: TSystems;
 
   /**
    * Called when the scene becomes active. Use this to create entities and set up the scene.
@@ -46,12 +46,15 @@ export type SceneConfig = {
 /**
  * A scene definition that can be registered with the engine.
  */
-export type SceneDefinition<TName extends string = string> = {
+export type SceneDefinition<
+  TName extends string = string,
+  TSystems extends SystemFactoryTuple = SystemFactoryTuple,
+> = {
   /** The unique name of the scene */
   readonly name: TName;
 
   /** Scene-specific systems (instantiated per engine) */
-  readonly systems: SystemFactoryTuple;
+  readonly systems: TSystems;
 
   /** Set up the scene (create entities, etc.) */
   setup: (world: UserWorld) => void | Promise<void>;
@@ -72,12 +75,22 @@ export type SceneDefinition<TName extends string = string> = {
 /**
  * An array of scene definitions to be registered with the engine.
  */
-export type SceneDefinitionTuple = ReadonlyArray<SceneDefinition<string>>;
+export type SceneDefinitionTuple = ReadonlyArray<SceneDefinition<string, SystemFactoryTuple>>;
 
 /**
  * Extracts the name type from a scene definition.
  */
-export type SceneName<TScene> = TScene extends SceneDefinition<infer N> ? N : never;
+export type SceneName<TScene> =
+  TScene extends SceneDefinition<infer N, infer TSystems>
+    ? TSystems extends SystemFactoryTuple
+      ? N
+      : never
+    : never;
+
+/** Converts a tuple of scene definitions to a record of scene names to definitions. */
+export type ScenesTupleToRecord<T extends SceneDefinitionTuple> = {
+  [Scene in T[number] as SceneName<Scene>]: Scene;
+};
 
 /**
  * Converts a tuple of scene definitions to a union of their names.

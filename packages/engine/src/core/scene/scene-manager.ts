@@ -108,7 +108,7 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
   }
 
   /** Get all registered scene definitions as a record. */
-  get all(): { [K in SceneName<TScenes[number]>]: SceneDefinition<K> } {
+  get all(): { [Scene in TScenes[number] as SceneName<Scene>]: Scene } {
     return Object.fromEntries(this.#scenes) as any;
   }
 
@@ -123,6 +123,14 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
     const entry = this.#sceneSystems.get(this.#activeScene.name);
     if (!entry) return [];
     return phase === "update" ? entry.update : entry.render;
+  }
+
+  /** @internal Get a scene-level system instance by name for the active scene. */
+  getActiveSystem(name: string): EngineSystem | undefined {
+    if (!this.#activeScene) return undefined;
+    const entry = this.#sceneSystems.get(this.#activeScene.name);
+    if (!entry) return undefined;
+    return entry.all.find((s) => s.name === name);
   }
 
   /**
