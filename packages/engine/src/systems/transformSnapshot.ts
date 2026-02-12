@@ -6,7 +6,7 @@ export const transformSnapshotSystem = createSystem("engine:transformSnapshot")(
   phase: "update",
   system: () => {
     const world = useWorld();
-    
+
     // Snapshot Transform2D
     for (const entityId of world.query(Transform2D)) {
       const transform = world.get(entityId, Transform2D);

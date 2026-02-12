@@ -4,6 +4,4 @@ export const System = createSystem("collision")({
   system: Entrypoint,
 });
 
-function Entrypoint() {
-  
-}
+function Entrypoint() {}

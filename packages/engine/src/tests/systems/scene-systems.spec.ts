@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import z from "zod";
 
 import { createEngine, createScene, createSystem, useScene } from "../../core";
 
