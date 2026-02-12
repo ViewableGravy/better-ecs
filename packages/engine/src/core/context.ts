@@ -65,11 +65,7 @@ export function useEngine(): RegisteredEngine {
 
 export function useDelta(): [updateDelta: number, frameDelta: number, updateProgress: number] {
   const engine = useEngine();
-  return [
-    engine.frame.updateDelta,
-    engine.frame.frameDelta,
-    engine.frame.updateProgress,
-  ];
+  return [engine.frame.updateDelta, engine.frame.frameDelta, engine.frame.updateProgress];
 }
 
 /**
