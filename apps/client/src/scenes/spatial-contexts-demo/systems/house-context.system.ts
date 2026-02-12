@@ -3,7 +3,6 @@ import { ensurePlayer } from "@/entities/player";
 import { createSystem, type EntityId, useDelta, useWorld } from "@repo/engine";
 import { Transform2D } from "@repo/engine/components";
 import { type ContextId, useContextManager } from "@repo/plugins";
-import z from "zod";
 import { ContextEntryRegion } from "../components/context-entry-region";
 import { InsideContext } from "../components/inside-context";
 import {
@@ -19,10 +18,6 @@ import {
 
 export const HouseContextSystem = createSystem("demo:context-focus")({
   phase: "update",
-  schema: {
-    default: {},
-    schema: z.object({}),
-  },
   system() {
     const manager = useContextManager();
     const world = useWorld();

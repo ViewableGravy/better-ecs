@@ -20,10 +20,6 @@ import {
 
 // Scene-only system (registered via scene definition, not engine.systems array)
 const SceneOnlySystem = createSystem("scene:only")({
-  schema: {
-    default: null,
-    schema: z.null(),
-  },
   system() {
     /* no-op */
   },

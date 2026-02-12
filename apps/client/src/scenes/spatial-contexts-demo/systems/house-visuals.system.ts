@@ -2,7 +2,6 @@ import { PlayerComponent } from "@/components/player";
 import { createSystem } from "@repo/engine";
 import { Shape, Sprite } from "@repo/engine/components";
 import { type ContextId, useContextManager } from "@repo/plugins";
-import z from "zod";
 import { ContextVisualBinding } from "../components/context-visual-binding";
 import { InsideContext } from "../components/inside-context";
 import { RenderVisibility } from "../components/render-visibility";
@@ -12,10 +11,6 @@ const INSIDE_OUTSIDE_ALPHA = 0.5;
 
 export const HouseVisualsSystem = createSystem("demo:context-visuals")({
   phase: "render",
-  schema: {
-    default: {},
-    schema: z.object({}),
-  },
   system() {
     const manager = useContextManager();
     const rootContextId = manager.getRootContextId();

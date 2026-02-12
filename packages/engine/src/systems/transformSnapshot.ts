@@ -1,14 +1,9 @@
-import z from "zod";
 import { Transform2D, Transform3D } from "../components/transform";
 import { useWorld } from "../core/context";
 import { createSystem } from "../core/register/system";
 
 export const transformSnapshotSystem = createSystem("engine:transformSnapshot")({
   phase: "update",
-  schema: {
-    default: {},
-    schema: z.object({}),
-  },
   system: () => {
     const world = useWorld();
     

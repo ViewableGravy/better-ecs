@@ -9,10 +9,6 @@ describe("Scene-level systems", () => {
     const controller = new AbortController();
 
     const EngineOrderSystem = createSystem("test:engine-order")({
-      schema: {
-        default: null,
-        schema: z.null(),
-      },
       phase: "update",
       priority: 10_000,
       system() {
@@ -21,10 +17,6 @@ describe("Scene-level systems", () => {
     });
 
     const SceneOrderSystem = createSystem("test:scene-order")({
-      schema: {
-        default: null,
-        schema: z.null(),
-      },
       phase: "update",
       priority: 10_000,
       system() {
@@ -72,10 +64,6 @@ describe("Scene-level systems", () => {
     const controller = new AbortController();
 
     const ThrowingSystem = createSystem("test:useScene-throws")({
-      schema: {
-        default: null,
-        schema: z.null(),
-      },
       phase: "update",
       system() {
         // No active scene: should throw

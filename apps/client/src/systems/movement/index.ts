@@ -1,14 +1,9 @@
 import { createSystem, useDelta, useSystem, useWorld } from "@repo/engine";
 import { Transform2D } from "@repo/engine/components";
-import z from "zod";
 import { PlayerComponent } from "../../components/player";
 
 export const System = createSystem("movement")({
   system: Entrypoint,
-  schema: {
-    default: {},
-    schema: z.object({}),
-  },
 });
 
 function Entrypoint() {

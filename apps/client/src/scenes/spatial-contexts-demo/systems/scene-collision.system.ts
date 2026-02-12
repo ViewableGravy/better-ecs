@@ -1,16 +1,11 @@
 import { PlayerComponent } from "@/components/player";
 import { createSystem, useWorld } from "@repo/engine";
 import { Transform2D } from "@repo/engine/components";
-import z from "zod";
 import { CircleCollider } from "../components/circle-collider";
 
 export const SceneCollisionSystem = createSystem("demo:spatial-contexts-collision")({
   phase: "update",
   priority: 100,
-  schema: {
-    default: {},
-    schema: z.object({}),
-  },
   system() {
     const world = useWorld();
 

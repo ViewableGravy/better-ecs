@@ -1,5 +1,4 @@
 import { createSystem, useEngine, useScene } from "@repo/engine";
-import z from "zod";
 import { installSpatialContexts } from "./install";
 
 /**
@@ -9,10 +8,6 @@ export function createSpatialContextsRuntimeSystem(sceneName: string) {
   return createSystem(`plugin:spatial-contexts-runtime:${sceneName}`)({
     phase: "all",
     priority: 100_000,
-    schema: {
-      default: {},
-      schema: z.object({}),
-    },
     system() {
       const engine = useEngine();
       const scene = useScene();

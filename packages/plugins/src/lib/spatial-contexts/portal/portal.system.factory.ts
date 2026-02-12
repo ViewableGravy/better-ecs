@@ -1,5 +1,4 @@
 import { createSystem, useWorld } from "@repo/engine";
-import z from "zod";
 import { useContextManager } from "../hooks";
 import { Portal } from "./portal.component";
 import type { PortalSystemOptions } from "./portal.types";
@@ -8,10 +7,6 @@ export const createPortalSystem = (opts: PortalSystemOptions) => {
   return createSystem(opts.name ?? "plugin:spatial-contexts-portals")({
     phase: "update",
     priority: 50_000,
-    schema: {
-      default: {},
-      schema: z.object({}),
-    },
     system() {
       const manager = useContextManager();
       const world = useWorld();

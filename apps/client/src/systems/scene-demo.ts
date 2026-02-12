@@ -1,5 +1,3 @@
-import z from "zod";
-
 import { createSystem, useScene } from "@repo/engine";
 
 /**
@@ -8,10 +6,6 @@ import { createSystem, useScene } from "@repo/engine";
  * This runs only while the scene that registers it is active.
  */
 export const System = createSystem("client:scene-demo")({
-  schema: {
-    default: null,
-    schema: z.null(),
-  },
   phase: "update",
   system() {
     const scene = useScene();
