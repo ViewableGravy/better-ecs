@@ -1,9 +1,9 @@
-import { circleVsCircle, circleVsRect, rectVsRect, type CollisionFn } from "./narrowphase";
 import {
   getPrimitiveColliderKey,
   type PrimitiveCollider,
   type PrimitiveColliderKey,
-} from "./types";
+} from "../types";
+import { circleVsCircle, circleVsRect, rectVsRect, type CollisionFn } from "./narrowphase";
 
 export type CollisionPair = {
   fn: CollisionFn;

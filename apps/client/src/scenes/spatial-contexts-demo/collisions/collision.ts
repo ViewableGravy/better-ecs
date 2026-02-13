@@ -14,6 +14,11 @@ export function collides(
   return collidesInternal(a, aTransform, b, bTransform);
 }
 
+/**
+ * Resolves a collision by moving the subject collider out of the other collider.
+ * This function assumes that the colliders are already colliding, and does
+ * not perform any checks before resolving.
+ */
 export function resolve(
   subjectCollider: Collider,
   subjectTransform: Transform2D,

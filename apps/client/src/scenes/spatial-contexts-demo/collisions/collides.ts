@@ -1,6 +1,6 @@
 import type { Transform2D } from "@repo/engine/components";
+import { getCollisionFn } from "./check";
 import { CompoundCollider } from "./colliders/compound";
-import { getCollisionFn } from "./collision-matrix";
 import { getPrimitiveColliderKey, type Collider, type PrimitiveCollider } from "./types";
 
 type Collides = (

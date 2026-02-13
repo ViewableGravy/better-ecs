@@ -1,7 +1,7 @@
 import type { Transform2D } from "@repo/engine/components";
-import { CircleCollider } from "./colliders/circle";
-import { RectangleCollider } from "./colliders/rectangle";
-import type { PrimitiveCollider } from "./types";
+import { CircleCollider } from "../colliders/circle";
+import { RectangleCollider } from "../colliders/rectangle";
+import type { PrimitiveCollider } from "../types";
 
 export type CollisionFn = (
   a: PrimitiveCollider,
