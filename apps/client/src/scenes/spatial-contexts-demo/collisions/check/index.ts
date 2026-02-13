@@ -1,9 +1,19 @@
+import type { Transform2D } from "@repo/engine/components";
 import {
   getPrimitiveColliderKey,
   type PrimitiveCollider,
   type PrimitiveColliderKey,
 } from "../types";
-import { circleVsCircle, circleVsRect, rectVsRect, type CollisionFn } from "./narrowphase";
+import { circleVsCircle } from "./circle-circle";
+import { circleVsRect } from "./circle-rect";
+import { rectVsRect } from "./rect-rect";
+
+export type CollisionFn = (
+  a: PrimitiveCollider,
+  aTransform: Transform2D,
+  b: PrimitiveCollider,
+  bTransform: Transform2D,
+) => boolean;
 
 export type CollisionPair = {
   fn: CollisionFn;

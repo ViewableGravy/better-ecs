@@ -65,17 +65,18 @@ function collidesInternal(
     return false;
   }
 
-  const fn = getCollisionFn(a, b);
-  if (!fn) {
+  const collisionPair = getCollisionFn(a, b);
+
+  if (!collisionPair) {
     warnMissingPair(a, b);
     return false;
   }
 
-  if (fn.shouldSwap) {
-    return fn.fn(b, bTransform, a, aTransform);
+  if (collisionPair.shouldSwap) {
+    return collisionPair.fn(b, bTransform, a, aTransform);
   }
 
-  return fn.fn(a, aTransform, b, bTransform);
+  return collisionPair.fn(a, aTransform, b, bTransform);
 }
 
 function getCacheKeyCollider(collider: Collider): PrimitiveCollider {
