@@ -6,6 +6,8 @@ type SpawnBackgroundOptions = {
   width: number;
   height: number;
   color: Color;
+  stroke?: Color;
+  strokeWidth?: number;
   role?: RenderVisibilityRole;
   baseAlpha?: number;
 };
@@ -15,7 +17,16 @@ export function spawnBackground(world: UserWorld, opts: SpawnBackgroundOptions):
   world.add(entity, new Transform2D(0, 0));
   world.add(
     entity,
-    new Shape("rectangle", opts.width, opts.height, opts.color, null, 0, -100, -100),
+    new Shape(
+      "rectangle",
+      opts.width,
+      opts.height,
+      opts.color,
+      opts.stroke ?? null,
+      opts.strokeWidth ?? 0,
+      -100,
+      -100,
+    ),
   );
   world.add(entity, new RenderVisibility(opts.role ?? "outside", opts.baseAlpha ?? 1));
   return entity;

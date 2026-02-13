@@ -23,7 +23,12 @@ export const HouseVisualsSystem = createSystem("demo:context-visuals")({
       const world = manager.getWorld(contextId);
       if (!world) continue;
 
-      const playerAlpha = contextId === focused ? 1 : 0;
+      const playerAlpha = getPlayerAlpha({
+        contextId,
+        focusedContextId: focused,
+        rootContextId,
+        activeInteriorContextId,
+      });
 
       for (const entityId of world.query(PlayerComponent, Sprite)) {
         const sprite = world.get(entityId, Sprite);
@@ -47,10 +52,7 @@ export const HouseVisualsSystem = createSystem("demo:context-visuals")({
         shape.fill.a = visibility.baseAlpha * alphaMultiplier;
 
         if (shape.stroke) {
-          shape.stroke.a =
-            visibility.role === "house-roof"
-              ? visibility.baseAlpha
-              : visibility.baseAlpha * alphaMultiplier;
+          shape.stroke.a = visibility.baseAlpha * alphaMultiplier;
         }
       }
     }
@@ -77,6 +79,29 @@ function getActiveInteriorContextId(
   }
 
   return rootWorld.get(playerId, InsideContext)?.contextId;
+}
+
+function getPlayerAlpha(args: {
+  contextId: ContextId;
+  focusedContextId: ContextId;
+  rootContextId: ContextId;
+  activeInteriorContextId?: ContextId;
+}): number {
+  const { contextId, focusedContextId, rootContextId, activeInteriorContextId } = args;
+
+  if (focusedContextId === rootContextId && activeInteriorContextId) {
+    if (contextId === activeInteriorContextId) {
+      return 1;
+    }
+
+    if (contextId === rootContextId) {
+      return 1;
+    }
+
+    return 0;
+  }
+
+  return contextId === focusedContextId ? 1 : 0;
 }
 
 function getAlphaMultiplier(args: {

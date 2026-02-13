@@ -36,8 +36,14 @@ export const HouseContextSystem = createSystem("demo:context-focus")({
     if (focused === rootContextId) {
       const region = findContainingContextRegion(world, transform);
       if (!region) {
-        clearInsideContext(world, playerId);
         setHouseInsideTarget(false);
+        const insideContext = world.get(playerId, InsideContext);
+        if (insideContext) {
+          syncPlayerToContext(manager, insideContext.contextId, transform);
+        }
+        if (isHouseBlendOutsideComplete()) {
+          clearInsideContext(world, playerId);
+        }
         return;
       }
 
@@ -82,9 +88,10 @@ export const HouseContextSystem = createSystem("demo:context-focus")({
       return;
     }
 
-    clearInsideContext(world, playerId);
     setHouseInsideTarget(false);
-    if (!isHouseBlendOutsideComplete()) return;
+    const parentPlayerId = ensurePlayer(parentWorld);
+    setInsideContext(parentWorld, parentPlayerId, focused, sourceRegion.regionEntityId);
+    clearInsideContext(world, playerId);
 
     switchContext(manager, definition.parentId, transform);
   },
@@ -128,4 +135,24 @@ function clearInsideContext(world: ReturnType<typeof useWorld>, playerId: Entity
   }
 
   world.remove(playerId, InsideContext);
+}
+
+function syncPlayerToContext(
+  manager: ReturnType<typeof useContextManager>,
+  contextId: ContextId,
+  sourceTransform: Transform2D,
+): void {
+  const targetWorld = manager.getWorld(contextId);
+  if (!targetWorld) {
+    return;
+  }
+
+  const targetPlayerId = ensurePlayer(targetWorld);
+  const targetTransform = targetWorld.get(targetPlayerId, Transform2D);
+  if (!targetTransform) {
+    return;
+  }
+
+  targetTransform.curr.copyFrom(sourceTransform.curr);
+  targetTransform.prev.copyFrom(sourceTransform.prev);
 }

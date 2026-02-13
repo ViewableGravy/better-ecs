@@ -22,6 +22,8 @@ export function defineHouseContext() {
         width: HOUSE_HALF_WIDTH * 2,
         height: HOUSE_HALF_HEIGHT * 2,
         color: new Color(0.4, 0.3, 0.2, 1),
+        stroke: new Color(0.18, 0.1, 0.07, 1),
+        strokeWidth: 6,
         role: "house-interior",
       });
 

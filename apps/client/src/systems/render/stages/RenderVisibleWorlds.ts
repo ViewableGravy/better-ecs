@@ -1,3 +1,5 @@
+import { PlayerComponent } from "@/components/player";
+import { InsideContext } from "@/scenes/spatial-contexts-demo/components/inside-context";
 import { useEngine, useSystem, useWorld } from "@repo/engine";
 import { Color } from "@repo/engine/components";
 import { getSpatialContextManager } from "@repo/spatial-contexts";
@@ -16,6 +18,7 @@ export function RenderVisibleWorldsStage(): void {
   const scene = engine.scene.context;
   const manager = scene ? getSpatialContextManager(scene) : undefined;
   const worlds = manager ? manager.getVisibleWorlds() : [useWorld()];
+  const transitionWorld = manager ? getTransitionWorld(manager) : undefined;
 
   // Calculate interpolation alpha
   const updateTimeMs = 1000 / engine.frame.ups;
@@ -32,5 +35,36 @@ export function RenderVisibleWorldsStage(): void {
     commitWorld(world, renderer, queue, alpha);
   }
 
+  if (transitionWorld && !worlds.includes(transitionWorld)) {
+    queue.clear();
+    collectRenderables(transitionWorld, queue);
+    sortRenderQueue(transitionWorld, queue);
+    commitWorld(transitionWorld, renderer, queue, alpha);
+  }
+
   renderer.high.end();
+}
+
+function getTransitionWorld(manager: ReturnType<typeof getSpatialContextManager>) {
+  const rootContextId = manager.getRootContextId();
+  if (manager.getFocusedContextId() !== rootContextId) {
+    return undefined;
+  }
+
+  const rootWorld = manager.getWorld(rootContextId);
+  if (!rootWorld) {
+    return undefined;
+  }
+
+  const [playerId] = rootWorld.query(PlayerComponent);
+  if (!playerId) {
+    return undefined;
+  }
+
+  const insideContext = rootWorld.get(playerId, InsideContext);
+  if (!insideContext) {
+    return undefined;
+  }
+
+  return manager.getWorld(insideContext.contextId);
 }

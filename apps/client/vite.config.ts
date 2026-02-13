@@ -99,6 +99,10 @@ export default defineConfig({
         find: "@/systems",
         replacement: path.resolve(__dirname, "src/systems"),
       },
+      {
+        find: "@/scenes",
+        replacement: path.resolve(__dirname, "src/scenes"),
+      },
     ],
   },
   build: {
