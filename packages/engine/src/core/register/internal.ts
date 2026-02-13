@@ -1,7 +1,6 @@
-import { UserWorld } from "../../ecs/world";
-import type { EngineSystemTypes } from "../../systems/engine-system-types";
-// TODO: resolve these import errors.
 import { AssetManager } from "../../asset/AssetManager";
+import type { UserWorld } from "../../ecs/world";
+import type { EngineSystemTypes } from "../../systems/engine-system-types";
 import { executeWithContext } from "../context";
 import { SceneManager } from "../scene/scene-manager";
 import type { SceneDefinition, SceneDefinitionTuple, SceneName } from "../scene/scene.types";

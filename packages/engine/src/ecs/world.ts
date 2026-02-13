@@ -1,24 +1,25 @@
+/* eslint-disable @typescript-eslint/no-unsafe-function-type */
 // packages/engine/src/ecs/world.ts
 import type { Class } from "type-fest";
-import type { EntityId } from './entity';
-import { createEntityId, invalidateEntity } from './entity';
-import { ComponentStore } from './storage';
+import type { EntityId } from "./entity";
+import { createEntityId, invalidateEntity } from "./entity";
+import { ComponentStore } from "./storage";
 
-export interface UserWorld {
-  create  (): EntityId;
-  destroy (entityId: EntityId): void;
+export interface IUserWorld {
+  create(): EntityId;
+  destroy(entityId: EntityId): void;
 
-  add<T>  (entityId: EntityId, componentType: Class<T>, component: T): void;
-  add<T>  (entityId: EntityId, component: T)                         : void;
-  get<T>  (entityId: EntityId, componentType: Class<T>)              : T | undefined;
-  all     ()                                                         : EntityId[];
-  has     (entityId: EntityId, componentType: Class<any>)            : boolean;
-  remove  (entityId: EntityId, componentType: Class<any>)            : void;
+  add<T>(entityId: EntityId, componentType: Class<T>, component: T): void;
+  add<T>(entityId: EntityId, component: T): void;
+  get<T>(entityId: EntityId, componentType: Class<T>): T | undefined;
+  all(): EntityId[];
+  has(entityId: EntityId, componentType: Class<any>): boolean;
+  remove(entityId: EntityId, componentType: Class<any>): void;
 
-  query   (...componentTypes: Function[]): EntityId[];
+  query(...componentTypes: Function[]): EntityId[];
 }
 
-export class UserWorld implements UserWorld {
+export class UserWorld implements IUserWorld {
   constructor(private world: World) {}
 
   /** @internal Update the wrapped world without reallocating the wrapper. */
@@ -59,12 +60,22 @@ export class UserWorld implements UserWorld {
   query(...componentTypes: Function[]): EntityId[] {
     return this.world.query(...componentTypes);
   }
+
+  invariantQuery(...componentTypes: Function[]): [EntityId, ...EntityId[]] {
+    const results = this.world.query(...componentTypes);
+    if (results.length === 0) {
+      throw new Error(
+        `Invariant query for components [${componentTypes.map((t) => t.name).join(", ")}] returned no results`,
+      );
+    }
+    return results as [EntityId, ...EntityId[]];
+  }
 }
 
 export class World {
   private entities = new Set<EntityId>();
   private componentStores = new Map<Function, ComponentStore<any>>();
-  
+
   /** Optional scene identifier for debugging */
   public sceneId?: string;
 
@@ -106,7 +117,10 @@ export class World {
       throw new Error(`Entity ${entityId} does not exist`);
     }
 
-    const componentType = component !== undefined ? (componentTypeOrComponent as Function) : (componentTypeOrComponent as any).constructor;
+    const componentType =
+      component !== undefined
+        ? (componentTypeOrComponent as Function)
+        : (componentTypeOrComponent as any).constructor;
     const comp = component !== undefined ? component : (componentTypeOrComponent as T);
 
     let store = this.componentStores.get(componentType) as ComponentStore<T> | undefined;
@@ -163,8 +177,8 @@ export class World {
 
       if (!store) return []; // No entities have all required components
 
-      // Since we will short circuit if any store is missing, 
-      // we know all entities for this store are in other stores, 
+      // Since we will short circuit if any store is missing,
+      // we know all entities for this store are in other stores,
       // but we only keep the smallest one to iterate over
       if (store.count() < smallestCount) {
         smallestStore = store;

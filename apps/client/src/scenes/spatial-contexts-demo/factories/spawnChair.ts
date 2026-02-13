@@ -1,6 +1,6 @@
 import type { UserWorld } from "@repo/engine";
 import { Color, Shape, Transform2D } from "@repo/engine/components";
-import { CircleCollider } from "../components/circle-collider";
+import { CircleCollider } from "../collisions/colliders/circle";
 import { RenderVisibility } from "../components/render-visibility";
 
 type SpawnChairOptions = {

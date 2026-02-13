@@ -26,3 +26,5 @@
     - Consider breaking up internal functionality into separate properties
       for a smaller intellisense footprint per object level
     - Consider Internal / User types for the same object, where types are casted to userland types with a smaller surface, while internal types have a larger surface with more properties for internal use.
+- Always remove files when all exports are removed from the file
+  - DO NOT leave empty files or export `{}` if the file is no longer used

@@ -2,7 +2,7 @@ import { spawnCamera } from "@/entities/camera";
 import { ensurePlayer } from "@/entities/player";
 import type { UserWorld } from "@repo/engine";
 import { Transform2D } from "@repo/engine/components";
-import { CircleCollider } from "../components/circle-collider";
+import { CircleCollider } from "../collisions/colliders/circle";
 
 export function setupContextPlayer(world: UserWorld, x: number, y: number): void {
   spawnCamera(world);
