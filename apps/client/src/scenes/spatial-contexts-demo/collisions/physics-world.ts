@@ -3,7 +3,7 @@ import { Transform2D } from "@repo/engine/components";
 import { CircleCollider } from "./colliders/circle";
 import { CompoundCollider } from "./colliders/compound";
 import { RectangleCollider } from "./colliders/rectangle";
-import { getEntityCollider } from "./entity-collider";
+import { getEntityCollider } from "./entity/get";
 import type { Collider } from "./types";
 
 export interface PhysicsBody {

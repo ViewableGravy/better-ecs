@@ -1,8 +1,8 @@
 import type { EntityId, UserWorld } from "@repo/engine";
-import { CircleCollider } from "./colliders/circle";
-import { CompoundCollider } from "./colliders/compound";
-import { RectangleCollider } from "./colliders/rectangle";
-import type { Collider } from "./types";
+import { CircleCollider } from "../colliders/circle";
+import { CompoundCollider } from "../colliders/compound";
+import { RectangleCollider } from "../colliders/rectangle";
+import type { Collider } from "../types";
 
 /**
  * Returns the primary collider component for an entity.

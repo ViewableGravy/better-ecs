@@ -1,9 +1,6 @@
 import type { Transform2D } from "@repo/engine/components";
-import {
-  getPrimitiveColliderKey,
-  type PrimitiveCollider,
-  type PrimitiveColliderKey,
-} from "../types";
+import { type PrimitiveCollider, type PrimitiveColliderKey } from "../types";
+import { getPrimitiveColliderKey } from "../utils";
 import { circleVsCircle } from "./circle-circle";
 import { circleVsRect } from "./circle-rect";
 import { rectVsRect } from "./rect-rect";

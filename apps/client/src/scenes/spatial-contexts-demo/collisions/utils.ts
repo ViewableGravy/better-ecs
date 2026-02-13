@@ -1,5 +1,15 @@
 import type { Transform2D } from "@repo/engine/components";
+import { CircleCollider } from "./colliders/circle";
 import { RectangleCollider } from "./colliders/rectangle";
+import type { PrimitiveCollider, PrimitiveColliderKey } from "./types";
+
+export function getPrimitiveColliderKey(collider: PrimitiveCollider): PrimitiveColliderKey {
+  if (collider instanceof CircleCollider) {
+    return "circle";
+  }
+
+  return "rect";
+}
 
 export function clamp(value: number, min: number, max: number): number {
   if (value < min) {

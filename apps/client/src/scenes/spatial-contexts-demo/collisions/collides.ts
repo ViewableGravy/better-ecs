@@ -1,10 +1,8 @@
 import type { Transform2D } from "@repo/engine/components";
-import { CompoundCollider } from "../colliders/compound";
-import { type Collider, type PrimitiveCollider } from "../types";
-import { getPrimitiveColliderKey } from "../utils";
-import { createCollisionKey, getCollisionFn } from "./matrix";
-
-export { createCollisionKey, getCollisionFn };
+import { createCollisionKey, getCollisionFn } from "./check";
+import { CompoundCollider } from "./colliders/compound";
+import { type Collider, type PrimitiveCollider } from "./types";
+import { getPrimitiveColliderKey } from "./utils";
 
 type Collides = (
   a: Collider,
@@ -90,7 +88,10 @@ function warnMissingPair(a: PrimitiveCollider, b: PrimitiveCollider): void {
   }
 
   // prettier-ignore
-  const pairKey = createCollisionKey(getPrimitiveColliderKey(a), getPrimitiveColliderKey(b));
+  const pairKey = createCollisionKey(
+    getPrimitiveColliderKey(a),
+    getPrimitiveColliderKey(b)
+  );
 
   if (warnedPairs.has(pairKey)) {
     return;
