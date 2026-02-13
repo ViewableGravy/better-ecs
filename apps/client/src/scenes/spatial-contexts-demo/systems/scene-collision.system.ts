@@ -1,7 +1,6 @@
 import { PlayerComponent } from "@/components/player";
+import { PhysicsWorld, collides, resolve } from "@plugins/collisions";
 import { createSystem, useWorld } from "@repo/engine";
-import { collides, resolve } from "../collisions";
-import { PhysicsWorld } from "../collisions/physics-world";
 
 const physicsWorld = new PhysicsWorld();
 

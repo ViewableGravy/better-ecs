@@ -11,6 +11,7 @@
     "composite": false,
     "strict": true,
     "paths": {
+      "@plugins/*": ["../../packages/plugins/src/*"],
       "@repo/engine": ["../../packages/engine/src/index.ts"],
       "@repo/engine/*": ["../../packages/engine/src/*/index.ts"],
       "@repo/plugins": ["../../packages/plugins/src/index.ts"],

@@ -61,6 +61,10 @@ export default defineConfig({
         replacement: path.resolve(__dirname, "../../packages/hmr/src/index.ts"),
       },
       {
+        find: "@plugins",
+        replacement: path.resolve(__dirname, "../../packages/plugins/src"),
+      },
+      {
         find: "@repo/plugins",
         replacement: path.resolve(__dirname, "../../packages/plugins/src/index.ts"),
       },
