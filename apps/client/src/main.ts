@@ -1,6 +1,6 @@
 // apps/client/src/main.ts
 import * as Engine from "@repo/engine";
-import { System as FPSCounter } from "@repo/plugins";
+import { System as FPSCounter } from "@repo/fps";
 import { Loader } from "./assets";
 import { Scene as RenderingDemoScene } from "./scenes/rendering-demo";
 import { Scene as SpatialContextsDemoScene } from "./scenes/spatial-contexts-demo";

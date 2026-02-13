@@ -11,10 +11,16 @@
       "path": "./packages/engine"
     },
     {
-      "path": "./packages/plugins"
+      "path": "./packages/foundation/physics"
     },
     {
-      "path": "./packages/hmr"
+      "path": "./packages/foundation/spatial-contexts"
+    },
+    {
+      "path": "./packages/features/fps"
+    },
+    {
+      "path": "./packages/tooling/hmr"
     },
     {
       "path": "./apps/client"

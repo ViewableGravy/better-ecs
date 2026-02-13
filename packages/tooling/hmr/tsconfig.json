@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "forceConsistentCasingInFileNames": true,
     "strict": true,
@@ -8,15 +8,11 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "noPropertyAccessFromIndexSignature": true,
-    "lib": ["DOM", "ESNext"],
-    "paths": {
-      "@repo/engine": ["../../packages/engine/src/index.ts"],
-      "@repo/engine/*": ["../../packages/engine/src/*/index.ts"],
-      "@repo/utils": ["../../packages/utils/src/index.ts"]
-    }
+    "lib": ["DOM", "ESNext"]
   },
   "files": [],
   "references": [
+    // UPDATED BY NX SYNC
     {
       "path": "./tsconfig.lib.json"
     }

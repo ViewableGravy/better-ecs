@@ -1,7 +1,11 @@
 import { PlayerComponent } from "@/components/player";
 import { ensurePlayer } from "@/entities/player";
 import { Transform2D } from "@repo/engine/components";
-import { createContextScene, createPortalSystem, type PortalActivationArgs } from "@repo/plugins";
+import {
+  createContextScene,
+  createPortalSystem,
+  type PortalActivationArgs,
+} from "@repo/spatial-contexts";
 import { DUNGEON, HOUSE, OVERWORLD } from "./constants";
 import { defineDungeonContext } from "./contexts/define-dungeon-context";
 import { defineHouseContext } from "./contexts/define-house-context";

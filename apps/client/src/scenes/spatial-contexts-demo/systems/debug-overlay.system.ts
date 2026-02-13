@@ -1,7 +1,7 @@
 import { PlayerComponent } from "@/components/player";
 import { createSystem } from "@repo/engine";
 import { Shape, Transform2D } from "@repo/engine/components";
-import { useContextManager } from "@repo/plugins";
+import { useContextManager } from "@repo/spatial-contexts";
 import { RenderVisibility } from "../components/render-visibility";
 
 export const DebugOverlaySystem = createSystem("demo:spatial-contexts-debug")({

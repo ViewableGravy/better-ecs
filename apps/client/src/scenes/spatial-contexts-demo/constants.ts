@@ -1,4 +1,4 @@
-import { contextId } from "@repo/plugins";
+import { contextId } from "@repo/spatial-contexts";
 
 export const OVERWORLD = contextId("default");
 export const HOUSE = contextId("house_1");

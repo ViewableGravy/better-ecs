@@ -1,0 +1,46 @@
+{
+  "name": "physics",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/foundation/physics/src",
+  "projectType": "library",
+  "tags": ["type:foundation", "domain:physics"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun x tsc -p tsconfig.lib.json",
+        "cwd": "packages/foundation/physics"
+      },
+      "inputs": ["default", "^default"],
+      "outputs": ["{projectRoot}/dist"]
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rm -rf dist tsconfig.lib.tsbuildinfo",
+        "cwd": "packages/foundation/physics"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun x tsc --noEmit",
+        "cwd": "packages/foundation/physics"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun x tsc --noEmit",
+        "cwd": "packages/foundation/physics"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun x vitest run --passWithNoTests",
+        "cwd": "packages/foundation/physics"
+      }
+    }
+  }
+}

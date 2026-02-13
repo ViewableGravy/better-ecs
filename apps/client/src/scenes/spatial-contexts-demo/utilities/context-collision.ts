@@ -1,7 +1,7 @@
 import type { EntityId, UserWorld } from "@repo/engine";
 import { Vec2 } from "@repo/engine";
 import { Transform2D } from "@repo/engine/components";
-import type { ContextId } from "@repo/plugins";
+import type { ContextId } from "@repo/spatial-contexts";
 import { ContextEntryRegion } from "../components/context-entry-region";
 
 export type ContextRegionMatch = {
@@ -9,7 +9,10 @@ export type ContextRegionMatch = {
   contextId: ContextId;
 };
 
-export function isInsideContextRegion(playerTransform: Transform2D, region: ContextEntryRegion): boolean {
+export function isInsideContextRegion(
+  playerTransform: Transform2D,
+  region: ContextEntryRegion,
+): boolean {
   const playerPosition = new Vec2(playerTransform.curr.pos.x, playerTransform.curr.pos.y);
   return region.bounds.containsPoint(playerPosition);
 }

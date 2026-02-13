@@ -1,6 +1,6 @@
 import type { UserWorld } from "@repo/engine";
 import { Color, Shape, Transform2D } from "@repo/engine/components";
-import type { ContextId } from "@repo/plugins";
+import type { ContextId } from "@repo/spatial-contexts";
 import { ContextVisualBinding } from "../components/context-visual-binding";
 import { RenderVisibility } from "../components/render-visibility";
 

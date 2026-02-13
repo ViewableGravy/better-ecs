@@ -1,0 +1,32 @@
+{
+  "name": "@repo/spatial-contexts",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./portal": {
+      "types": "./src/portal/index.ts",
+      "default": "./src/portal/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "bun x tsc -p tsconfig.lib.json",
+    "clean": "rm -rf dist tsconfig.lib.tsbuildinfo",
+    "lint": "bun x tsc --noEmit",
+    "typecheck": "bun x tsc --noEmit",
+    "test": "bun x vitest run"
+  },
+  "dependencies": {
+    "@repo/engine": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "vitest": "^4.0.0"
+  }
+}

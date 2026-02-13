@@ -1,0 +1,30 @@
+{
+  "name": "@repo/fps",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "bun x tsc -p tsconfig.lib.json",
+    "clean": "rm -rf dist tsconfig.lib.tsbuildinfo",
+    "lint": "bun x tsc --noEmit",
+    "typecheck": "bun x tsc --noEmit",
+    "test": "bun x vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@repo/engine": "workspace:*",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@standard-schema/spec": "^1.1.0",
+    "typescript": "^5.3.3",
+    "vitest": "^4.0.0"
+  }
+}

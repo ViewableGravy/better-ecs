@@ -1,7 +1,7 @@
 import { PlayerComponent } from "@/components/player";
 import { createSystem, useDelta } from "@repo/engine";
 import { Shape, Sprite } from "@repo/engine/components";
-import { type ContextId, useContextManager } from "@repo/plugins";
+import { type ContextId, useContextManager } from "@repo/spatial-contexts";
 import { ContextVisualBinding } from "../components/context-visual-binding";
 import { InsideContext } from "../components/inside-context";
 import { RenderVisibility } from "../components/render-visibility";

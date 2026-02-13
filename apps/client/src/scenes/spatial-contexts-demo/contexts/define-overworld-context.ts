@@ -1,5 +1,5 @@
 import { Color } from "@repo/engine/components";
-import { defineContext } from "@repo/plugins";
+import { defineContext } from "@repo/spatial-contexts";
 import { DUNGEON, HOUSE, HOUSE_HALF_HEIGHT, HOUSE_HALF_WIDTH, OVERWORLD } from "../constants";
 import { spawnBackground } from "../factories/spawnBackground";
 import { spawnContextEntryRegion } from "../factories/spawnContextEntryRegion";

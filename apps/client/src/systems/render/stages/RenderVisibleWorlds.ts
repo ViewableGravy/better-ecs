@@ -1,6 +1,6 @@
 import { useEngine, useSystem, useWorld } from "@repo/engine";
 import { Color } from "@repo/engine/components";
-import { getSpatialContextManager } from "@repo/plugins";
+import { getSpatialContextManager } from "@repo/spatial-contexts";
 import { collectRenderables } from "./CollectRenderables";
 import { commitWorld } from "./Commit";
 import { sortRenderQueue } from "./Sort";

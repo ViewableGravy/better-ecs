@@ -1,0 +1,25 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "lib": ["DOM", "ESNext"],
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "noEmit": false,
+    "skipLibCheck": true,
+    "paths": {
+      "@repo/engine": ["../../../packages/engine/src/index.ts"],
+      "@repo/engine/*": ["../../../packages/engine/src/*/index.ts"]
+    }
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts"],
+  "references": [
+    {
+      "path": "../../engine/tsconfig.lib.json"
+    }
+  ]
+}

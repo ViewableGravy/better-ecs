@@ -58,15 +58,22 @@ export default defineConfig({
       },
       {
         find: "@repo/hmr",
-        replacement: path.resolve(__dirname, "../../packages/hmr/src/index.ts"),
+        replacement: path.resolve(__dirname, "../../packages/tooling/hmr/src/index.ts"),
       },
       {
-        find: "@plugins",
-        replacement: path.resolve(__dirname, "../../packages/plugins/src"),
+        find: "@repo/physics",
+        replacement: path.resolve(__dirname, "../../packages/foundation/physics/src/index.ts"),
       },
       {
-        find: "@repo/plugins",
-        replacement: path.resolve(__dirname, "../../packages/plugins/src/index.ts"),
+        find: "@repo/spatial-contexts",
+        replacement: path.resolve(
+          __dirname,
+          "../../packages/foundation/spatial-contexts/src/index.ts",
+        ),
+      },
+      {
+        find: "@repo/fps",
+        replacement: path.resolve(__dirname, "../../packages/features/fps/src/index.ts"),
       },
       {
         find: "@repo/utils",

@@ -11,10 +11,12 @@
     "composite": false,
     "strict": true,
     "paths": {
-      "@plugins/*": ["../../packages/plugins/src/*"],
       "@repo/engine": ["../../packages/engine/src/index.ts"],
       "@repo/engine/*": ["../../packages/engine/src/*/index.ts"],
-      "@repo/plugins": ["../../packages/plugins/src/index.ts"],
+      "@repo/fps": ["../../packages/features/fps/src/index.ts"],
+      "@repo/physics": ["../../packages/foundation/physics/src/index.ts"],
+      "@repo/spatial-contexts": ["../../packages/foundation/spatial-contexts/src/index.ts"],
+      "@repo/spatial-contexts/*": ["../../packages/foundation/spatial-contexts/src/*"],
       "@repo/utils": ["../../packages/utils/src/index.ts"],
       "@/*": ["./src/*"]
     }
@@ -22,10 +24,16 @@
   "include": ["src/**/*"],
   "references": [
     {
-      "path": "../../packages/hmr"
+      "path": "../../packages/tooling/hmr"
     },
     {
-      "path": "../../packages/plugins"
+      "path": "../../packages/foundation/physics"
+    },
+    {
+      "path": "../../packages/foundation/spatial-contexts"
+    },
+    {
+      "path": "../../packages/features/fps"
     },
     {
       "path": "../../packages/engine"

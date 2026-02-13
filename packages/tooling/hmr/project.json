@@ -1,15 +1,15 @@
 {
   "name": "hmr",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "packages/hmr/src",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/tooling/hmr/src",
   "projectType": "library",
   "tags": ["type:hmr"],
   "targets": {
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx tsc -p tsconfig.lib.json",
-        "cwd": "packages/hmr"
+        "command": "bun x tsc -p tsconfig.lib.json",
+        "cwd": "packages/tooling/hmr"
       },
       "inputs": ["default", "^default"],
       "outputs": ["{projectRoot}/dist"]
@@ -18,21 +18,21 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "rm -rf dist tsconfig.lib.tsbuildinfo",
-        "cwd": "packages/hmr"
+        "cwd": "packages/tooling/hmr"
       }
     },
     "lint": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx tsc --noEmit",
-        "cwd": "packages/hmr"
+        "command": "bun x tsc --noEmit",
+        "cwd": "packages/tooling/hmr"
       }
     },
     "typecheck": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx tsc --noEmit",
-        "cwd": "packages/hmr"
+        "command": "bun x tsc --noEmit",
+        "cwd": "packages/tooling/hmr"
       }
     }
   }

@@ -28,7 +28,7 @@ Defined in:
 
 ### Context scene wrapper
 
-The scene uses `createContextScene(...)` from `@repo/plugins`.
+The scene uses `createContextScene(...)` from `@repo/spatial-contexts`.
 
 This ensures context manager setup happens automatically at scene creation time and avoids manual global runtime registration from app bootstrap.
 

@@ -1,6 +1,6 @@
 import type { UserWorld } from "@repo/engine";
 import { Color, Shape, Transform2D } from "@repo/engine/components";
-import { Portal, type PortalOpts } from "@repo/plugins";
+import { Portal, type PortalOpts } from "@repo/spatial-contexts";
 import { RenderVisibility, type RenderVisibilityRole } from "../components/render-visibility";
 
 type SpawnDoorOptions = {

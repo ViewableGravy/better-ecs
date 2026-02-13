@@ -80,9 +80,11 @@ This ensures the codebase stays clean, maintainable, and doesn't accumulate tech
 **Core Packages:**
 
 - `packages/engine/` - Core ECS engine logic (World, Entity, Storage, Systems).
-- `packages/plugins/` - Shared engine plugins (e.g., FPS counter).
+- `packages/foundation/` - Foundational runtime packages (e.g., physics, spatial-contexts).
+- `packages/features/` - Optional gameplay/dev feature packages (e.g., fps).
+- `packages/tooling/` - Tooling packages (e.g., hmr).
 
-**Dependencies**: Uses workspace protocol (`workspace:*`) - engine → plugins → apps.
+**Dependencies**: Uses workspace protocol (`workspace:*`) - engine/foundation/features/tooling → apps.
 
 ## Common development tasks
 
@@ -122,7 +124,7 @@ This ensures the codebase stays clean, maintainable, and doesn't accumulate tech
 - Main entry point: `apps/client/src/main.ts`.
 - Uses Vite for development and bundling.
 - Implements render systems (e.g., `systems/render/index.ts`).
-- Uses `@repo/plugins` for shared utilities like FPS counters.
+- Uses grouped packages like `@repo/fps`, `@repo/physics`, and `@repo/spatial-contexts`.
 
 **Server:**
 

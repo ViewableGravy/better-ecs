@@ -1,15 +1,15 @@
 {
-  "name": "plugins",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "packages/plugins/src",
+  "name": "spatial-contexts",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/foundation/spatial-contexts/src",
   "projectType": "library",
-  "tags": ["type:plugins"],
+  "tags": ["type:foundation", "domain:spatial-contexts"],
   "targets": {
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx tsc -p tsconfig.lib.json",
-        "cwd": "packages/plugins"
+        "command": "bun x tsc -p tsconfig.lib.json",
+        "cwd": "packages/foundation/spatial-contexts"
       },
       "inputs": ["default", "^default"],
       "outputs": ["{projectRoot}/dist"]
@@ -18,28 +18,28 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "rm -rf dist tsconfig.lib.tsbuildinfo",
-        "cwd": "packages/plugins"
+        "cwd": "packages/foundation/spatial-contexts"
       }
     },
     "lint": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx tsc --noEmit",
-        "cwd": "packages/plugins"
+        "command": "bun x tsc --noEmit",
+        "cwd": "packages/foundation/spatial-contexts"
       }
     },
     "typecheck": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx tsc --noEmit",
-        "cwd": "packages/plugins"
+        "command": "bun x tsc --noEmit",
+        "cwd": "packages/foundation/spatial-contexts"
       }
     },
     "test": {
       "executor": "nx:run-commands",
       "options": {
         "command": "bun x vitest run",
-        "cwd": "packages/plugins"
+        "cwd": "packages/foundation/spatial-contexts"
       }
     }
   }
