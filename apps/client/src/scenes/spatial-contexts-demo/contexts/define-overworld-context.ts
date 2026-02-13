@@ -34,10 +34,10 @@ export function defineOverworldContext() {
       });
 
       spawnContextEntryRegion(world, {
-        x: 0,
-        y: 0,
-        halfWidth: HOUSE_HALF_WIDTH,
-        halfHeight: HOUSE_HALF_HEIGHT,
+        topLeftX: -HOUSE_HALF_WIDTH,
+        topLeftY: -HOUSE_HALF_HEIGHT,
+        width: HOUSE_HALF_WIDTH * 2,
+        height: HOUSE_HALF_HEIGHT * 2,
         targetContextId: HOUSE,
       });
 

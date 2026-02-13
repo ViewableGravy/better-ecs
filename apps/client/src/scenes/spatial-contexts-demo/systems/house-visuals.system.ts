@@ -13,7 +13,7 @@ export const HouseVisualsSystem = createSystem("demo:context-visuals")({
   phase: "render",
   system() {
     const manager = useContextManager();
-    const [_, __, updateProgress] = useDelta();
+    const [, , updateProgress] = useDelta();
     const rootContextId = manager.getRootContextId();
     const focused = manager.getFocusedContextId();
     const activeInteriorContextId = getActiveInteriorContextId(manager, focused, rootContextId);

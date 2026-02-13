@@ -7,6 +7,7 @@ export * from "./ecs/entity";
 export * from "./ecs/storage";
 export * from "./ecs/world";
 export * from "./math";
+export { Rectangle } from "./math/geometry/rectangle";
 export * from "./serialization";
 export * from "./systems/input";
 export * from "./systems/transformSnapshot";

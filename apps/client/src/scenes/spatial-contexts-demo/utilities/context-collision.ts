@@ -9,37 +9,22 @@ export type ContextRegionMatch = {
   contextId: ContextId;
 };
 
-export function isPointInsideAxisAlignedBounds(
-  point: Vec2,
-  center: Vec2,
-  halfExtents: Vec2,
-): boolean {
-  const offset = point.clone().subtract(center);
-  return Math.abs(offset.x) <= halfExtents.x && Math.abs(offset.y) <= halfExtents.y;
-}
-
-export function isInsideContextRegion(
-  playerTransform: Transform2D,
-  regionTransform: Transform2D,
-  region: ContextEntryRegion,
-): boolean {
+export function isInsideContextRegion(playerTransform: Transform2D, region: ContextEntryRegion): boolean {
   const playerPosition = new Vec2(playerTransform.curr.pos.x, playerTransform.curr.pos.y);
-  const regionCenter = new Vec2(regionTransform.curr.pos.x, regionTransform.curr.pos.y);
-  return isPointInsideAxisAlignedBounds(playerPosition, regionCenter, region.halfExtents);
+  return region.bounds.containsPoint(playerPosition);
 }
 
 export function findContainingContextRegion(
   world: UserWorld,
   playerTransform: Transform2D,
 ): ContextRegionMatch | undefined {
-  for (const regionEntityId of world.query(ContextEntryRegion, Transform2D)) {
+  for (const regionEntityId of world.query(ContextEntryRegion)) {
     const region = world.get(regionEntityId, ContextEntryRegion);
-    const regionTransform = world.get(regionEntityId, Transform2D);
-    if (!region || !regionTransform) {
+    if (!region) {
       continue;
     }
 
-    if (!isInsideContextRegion(playerTransform, regionTransform, region)) {
+    if (!isInsideContextRegion(playerTransform, region)) {
       continue;
     }
 

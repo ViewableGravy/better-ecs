@@ -69,18 +69,13 @@ export const HouseContextSystem = createSystem("demo:context-focus")({
     }
 
     const sourceRegionBounds = parentWorld.get(sourceRegion.regionEntityId, ContextEntryRegion);
-    const sourceRegionTransform = parentWorld.get(sourceRegion.regionEntityId, Transform2D);
-    if (!sourceRegionBounds || !sourceRegionTransform) {
+    if (!sourceRegionBounds) {
       clearInsideContext(world, playerId);
       setHouseInsideTarget(false);
       return;
     }
 
-    const isInsideSourceRegion = isInsideContextRegion(
-      transform,
-      sourceRegionTransform,
-      sourceRegionBounds,
-    );
+    const isInsideSourceRegion = isInsideContextRegion(transform, sourceRegionBounds);
     if (isInsideSourceRegion) {
       setInsideContext(world, playerId, focused, sourceRegion.regionEntityId);
       setHouseInsideTarget(true);
