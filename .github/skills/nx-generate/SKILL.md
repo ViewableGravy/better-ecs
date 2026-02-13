@@ -144,6 +144,11 @@ Generators provide a starting point. Modify the output as needed to:
 
 **Important:** If you replace or delete generated test files (e.g., `*.spec.ts`), either write meaningful replacement tests or remove the `test` target from the project configuration. Empty test suites will cause `nx test` to fail.
 
+**Important:** If the new package introduces new import relationships (or new `tags` in `project.json`), update module-boundary rules in [eslint.config.mjs](eslint.config.mjs):
+
+- add/update `depConstraints` for the new source tag
+- update consumer tags (for example `type:client`) so imports are explicitly allowed
+
 ### 9. Format and Verify
 
 Format all generated/modified files:

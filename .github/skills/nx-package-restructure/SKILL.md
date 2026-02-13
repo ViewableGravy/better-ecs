@@ -70,6 +70,11 @@ Replace imports and aliases in apps/packages:
 - TS `compilerOptions.paths`
 - app/package dependencies
 
+Also update module-boundary lint rules in [eslint.config.mjs](eslint.config.mjs) when tags/import relationships change:
+
+- add or update `depConstraints` for new source tags (for example `type:foundation`, `type:feature`)
+- ensure consuming tags (for example `type:client`) explicitly allow the new tag(s)
+
 ### 6) Relink workspaces
 
 Run install from repo root to refresh symlinks:

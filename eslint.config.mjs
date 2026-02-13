@@ -1,55 +1,66 @@
-import nx from '@nx/eslint-plugin';
+import nx from "@nx/eslint-plugin";
 
 export default [
-  ...nx.configs['flat/base'],
-  ...nx.configs['flat/typescript'],
-  ...nx.configs['flat/javascript'],
+  ...nx.configs["flat/base"],
+  ...nx.configs["flat/typescript"],
+  ...nx.configs["flat/javascript"],
   {
     ignores: [
-      '**/dist',
-      '**/out-tsc',
-      '**/vite.config.*.timestamp*',
-      '**/vitest.config.*.timestamp*',
+      "**/dist",
+      "**/out-tsc",
+      "**/vite.config.*.timestamp*",
+      "**/vitest.config.*.timestamp*",
     ],
   },
   {
-    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    files: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"],
     rules: {
-      '@nx/enforce-module-boundaries': [
-        'error',
+      "@nx/enforce-module-boundaries": [
+        "error",
         {
           enforceBuildableLibDependency: true,
-          allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$'],
+          allow: ["^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$"],
           depConstraints: [
             {
-              sourceTag: 'type:utils',
-              onlyDependOnLibsWithTags: ['type:utils'],
+              sourceTag: "type:utils",
+              onlyDependOnLibsWithTags: ["type:utils"],
             },
             {
-              sourceTag: 'type:engine',
-              onlyDependOnLibsWithTags: ['type:engine', 'type:utils'],
+              sourceTag: "type:engine",
+              onlyDependOnLibsWithTags: ["type:engine", "type:utils"],
             },
             {
-              sourceTag: 'type:plugins',
-              onlyDependOnLibsWithTags: ['type:plugins', 'type:engine', 'type:utils'],
+              sourceTag: "type:foundation",
+              onlyDependOnLibsWithTags: ["type:foundation", "type:engine", "type:utils"],
             },
             {
-              sourceTag: 'type:client',
+              sourceTag: "type:feature",
               onlyDependOnLibsWithTags: [
-                'type:client',
-                'type:engine',
-                'type:plugins',
-                'type:utils',
-                'type:hmr',
+                "type:feature",
+                "type:foundation",
+                "type:engine",
+                "type:utils",
               ],
             },
             {
-              sourceTag: 'type:server',
+              sourceTag: "type:client",
               onlyDependOnLibsWithTags: [
-                'type:server',
-                'type:engine',
-                'type:plugins',
-                'type:utils',
+                "type:client",
+                "type:engine",
+                "type:foundation",
+                "type:feature",
+                "type:utils",
+                "type:hmr",
+              ],
+            },
+            {
+              sourceTag: "type:server",
+              onlyDependOnLibsWithTags: [
+                "type:server",
+                "type:engine",
+                "type:foundation",
+                "type:feature",
+                "type:utils",
               ],
             },
           ],
@@ -59,14 +70,14 @@ export default [
   },
   {
     files: [
-      '**/*.ts',
-      '**/*.tsx',
-      '**/*.cts',
-      '**/*.mts',
-      '**/*.js',
-      '**/*.jsx',
-      '**/*.cjs',
-      '**/*.mjs',
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.cts",
+      "**/*.mts",
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.cjs",
+      "**/*.mjs",
     ],
     // Override or add rules here
     rules: {
