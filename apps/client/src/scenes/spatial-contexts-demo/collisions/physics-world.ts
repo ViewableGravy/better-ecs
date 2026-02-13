@@ -1,13 +1,14 @@
 import type { EntityId, UserWorld } from "@repo/engine";
 import { Transform2D } from "@repo/engine/components";
 import { CircleCollider } from "./colliders/circle";
+import { CompoundCollider } from "./colliders/compound";
 import { RectangleCollider } from "./colliders/rectangle";
 import { getEntityCollider } from "./entity-collider";
-import type { PrimitiveCollider } from "./types";
+import type { Collider } from "./types";
 
 export interface PhysicsBody {
   entityId: EntityId;
-  collider: PrimitiveCollider;
+  collider: Collider;
   transform: Transform2D;
 }
 
@@ -68,20 +69,22 @@ type Aabb = {
   bottom: number;
 };
 
-function getAabb(collider: PrimitiveCollider, transform: Transform2D): Aabb {
-  if (collider instanceof CircleCollider) {
+function getAabb(collider: Collider, transform: Transform2D): Aabb {
+  const broadPhaseCollider = collider instanceof CompoundCollider ? collider.collider : collider;
+
+  if (broadPhaseCollider instanceof CircleCollider) {
     const centerX = transform.curr.pos.x;
     const centerY = transform.curr.pos.y;
 
     return {
-      left: centerX - collider.radius,
-      top: centerY - collider.radius,
-      right: centerX + collider.radius,
-      bottom: centerY + collider.radius,
+      left: centerX - broadPhaseCollider.radius,
+      top: centerY - broadPhaseCollider.radius,
+      right: centerX + broadPhaseCollider.radius,
+      bottom: centerY + broadPhaseCollider.radius,
     };
   }
 
-  if (!(collider instanceof RectangleCollider)) {
+  if (!(broadPhaseCollider instanceof RectangleCollider)) {
     return {
       left: 0,
       top: 0,
@@ -94,10 +97,10 @@ function getAabb(collider: PrimitiveCollider, transform: Transform2D): Aabb {
   const y = transform.curr.pos.y;
 
   return {
-    left: collider.bounds.left + x,
-    top: collider.bounds.top + y,
-    right: collider.bounds.right + x,
-    bottom: collider.bounds.bottom + y,
+    left: broadPhaseCollider.bounds.left + x,
+    top: broadPhaseCollider.bounds.top + y,
+    right: broadPhaseCollider.bounds.right + x,
+    bottom: broadPhaseCollider.bounds.bottom + y,
   };
 }
 

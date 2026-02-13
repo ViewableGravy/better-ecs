@@ -1,13 +1,6 @@
 import type { Transform2D } from "@repo/engine/components";
 import { RectangleCollider } from "./colliders/rectangle";
 
-export type RectangleBounds = {
-  left: number;
-  top: number;
-  right: number;
-  bottom: number;
-};
-
 export function clamp(value: number, min: number, max: number): number {
   if (value < min) {
     return min;
@@ -20,17 +13,38 @@ export function clamp(value: number, min: number, max: number): number {
   return value;
 }
 
-export function getRectangleBounds(
-  collider: RectangleCollider,
-  transform: Transform2D,
-): RectangleBounds {
-  const x = transform.curr.pos.x;
-  const y = transform.curr.pos.y;
+/**
+ * Returns the world-space left edge of a rectangle collider as a primitive value.
+ *
+ * Keep this allocation-free. Do not replace with an object-returning helper.
+ */
+export function getRectangleLeft(collider: RectangleCollider, transform: Transform2D): number {
+  return collider.bounds.left + transform.curr.pos.x;
+}
 
-  return {
-    left: collider.bounds.left + x,
-    top: collider.bounds.top + y,
-    right: collider.bounds.right + x,
-    bottom: collider.bounds.bottom + y,
-  };
+/**
+ * Returns the world-space top edge of a rectangle collider as a primitive value.
+ *
+ * Keep this allocation-free. Do not replace with an object-returning helper.
+ */
+export function getRectangleTop(collider: RectangleCollider, transform: Transform2D): number {
+  return collider.bounds.top + transform.curr.pos.y;
+}
+
+/**
+ * Returns the world-space right edge of a rectangle collider as a primitive value.
+ *
+ * Keep this allocation-free. Do not replace with an object-returning helper.
+ */
+export function getRectangleRight(collider: RectangleCollider, transform: Transform2D): number {
+  return collider.bounds.right + transform.curr.pos.x;
+}
+
+/**
+ * Returns the world-space bottom edge of a rectangle collider as a primitive value.
+ *
+ * Keep this allocation-free. Do not replace with an object-returning helper.
+ */
+export function getRectangleBottom(collider: RectangleCollider, transform: Transform2D): number {
+  return collider.bounds.bottom + transform.curr.pos.y;
 }

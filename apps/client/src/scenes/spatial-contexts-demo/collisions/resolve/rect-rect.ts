@@ -1,3 +1,3 @@
-export function resolveRectVsRect(...any: any[]): void {
+export function resolveRectVsRect(): void {
   // Intentionally no-op for now.
 }

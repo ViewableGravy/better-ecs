@@ -1,7 +1,7 @@
 import type { Transform2D } from "@repo/engine/components";
 import { RectangleCollider } from "../colliders/rectangle";
 import type { PrimitiveCollider } from "../types";
-import { getRectangleBounds } from "../utils";
+import { getRectangleBottom, getRectangleLeft, getRectangleRight, getRectangleTop } from "../utils";
 
 export function rectVsRect(
   a: PrimitiveCollider,
@@ -17,14 +17,21 @@ export function rectVsRect(
     return false;
   }
 
-  const aBounds = getRectangleBounds(a, aTransform);
-  const bBounds = getRectangleBounds(b, bTransform);
+  const aLeft = getRectangleLeft(a, aTransform);
+  const aRight = getRectangleRight(a, aTransform);
+  const bLeft = getRectangleLeft(b, bTransform);
+  const bRight = getRectangleRight(b, bTransform);
 
-  if (aBounds.right <= bBounds.left || bBounds.right <= aBounds.left) {
+  if (aRight <= bLeft || bRight <= aLeft) {
     return false;
   }
 
-  if (aBounds.bottom <= bBounds.top || bBounds.bottom <= aBounds.top) {
+  const aTop = getRectangleTop(a, aTransform);
+  const bTop = getRectangleTop(b, bTransform);
+  const aBottom = getRectangleBottom(a, aTransform);
+  const bBottom = getRectangleBottom(b, bTransform);
+
+  if (aBottom <= bTop || bBottom <= aTop) {
     return false;
   }
 

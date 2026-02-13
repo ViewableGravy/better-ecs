@@ -42,6 +42,6 @@ export function resolve(
   }
 
   if (subjectCollider instanceof RectangleCollider && otherCollider instanceof RectangleCollider) {
-    return resolveRectVsRect(subjectCollider, subjectTransform, otherCollider, otherTransform);
+    return resolveRectVsRect();
   }
 }

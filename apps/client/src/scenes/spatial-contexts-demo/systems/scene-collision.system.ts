@@ -1,6 +1,6 @@
 import { PlayerComponent } from "@/components/player";
 import { createSystem, useWorld } from "@repo/engine";
-import * as Collision from "../collisions/collision";
+import { collides, resolve } from "../collisions";
 import { PhysicsWorld } from "../collisions/physics-world";
 
 const physicsWorld = new PhysicsWorld();
@@ -25,19 +25,9 @@ export const SceneCollisionSystem = createSystem("demo:spatial-contexts-collisio
 
     for (const otherBody of candidateBodies) {
       if (
-        Collision.collides(
-          playerBody.collider,
-          playerBody.transform,
-          otherBody.collider,
-          otherBody.transform,
-        )
+        collides(playerBody.collider, playerBody.transform, otherBody.collider, otherBody.transform)
       ) {
-        Collision.resolve(
-          playerBody.collider,
-          playerBody.transform,
-          otherBody.collider,
-          otherBody.transform,
-        );
+        resolve(playerBody.collider, playerBody.transform, otherBody.collider, otherBody.transform);
       }
     }
   },

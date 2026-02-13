@@ -1,7 +1,13 @@
 import type { Transform2D } from "@repo/engine/components";
 import { CircleCollider } from "../colliders/circle";
 import { RectangleCollider } from "../colliders/rectangle";
-import { clamp, getRectangleBounds } from "../utils";
+import {
+  clamp,
+  getRectangleBottom,
+  getRectangleLeft,
+  getRectangleRight,
+  getRectangleTop,
+} from "../utils";
 import { resolveCircleInsideRect } from "./utils";
 
 export function resolveCircleVsRect(
@@ -12,9 +18,12 @@ export function resolveCircleVsRect(
 ): void {
   const centerX = subjectTransform.curr.pos.x;
   const centerY = subjectTransform.curr.pos.y;
-  const bounds = getRectangleBounds(other, otherTransform);
-  const closestX = clamp(centerX, bounds.left, bounds.right);
-  const closestY = clamp(centerY, bounds.top, bounds.bottom);
+  const left = getRectangleLeft(other, otherTransform);
+  const top = getRectangleTop(other, otherTransform);
+  const right = getRectangleRight(other, otherTransform);
+  const bottom = getRectangleBottom(other, otherTransform);
+  const closestX = clamp(centerX, left, right);
+  const closestY = clamp(centerY, top, bottom);
   const dx = centerX - closestX;
   const dy = centerY - closestY;
   const distanceSq = dx * dx + dy * dy;
@@ -24,7 +33,7 @@ export function resolveCircleVsRect(
   }
 
   if (distanceSq === 0) {
-    resolveCircleInsideRect(subjectTransform, subject.radius, bounds);
+    resolveCircleInsideRect(subjectTransform, subject.radius, left, top, right, bottom);
     return;
   }
 
