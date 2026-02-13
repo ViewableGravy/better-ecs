@@ -40,6 +40,6 @@ export function getCollisionFn(
   );
 }
 
-function createCollisionKey(a: PrimitiveColliderKey, b: PrimitiveColliderKey): string {
+export function createCollisionKey(a: PrimitiveColliderKey, b: PrimitiveColliderKey): string {
   return `${a}:${b}`;
 }

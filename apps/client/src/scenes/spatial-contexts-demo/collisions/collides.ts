@@ -1,5 +1,5 @@
 import type { Transform2D } from "@repo/engine/components";
-import { getCollisionFn } from "./check";
+import { createCollisionKey, getCollisionFn } from "./check";
 import { CompoundCollider } from "./colliders/compound";
 import { getPrimitiveColliderKey, type Collider, type PrimitiveCollider } from "./types";
 
@@ -18,6 +18,32 @@ export const collides: Collides = (a, aTransform, b, bTransform) => {
   return collidesInternal(a, aTransform, b, bTransform, collisionPass);
 };
 
+function collidesCompound(
+  compound: CompoundCollider,
+  compoundTransform: Transform2D,
+  other: Collider,
+  otherTransform: Transform2D,
+  pass: number,
+): boolean {
+  if (!collidesInternal(compound.collider, compoundTransform, other, otherTransform, pass)) {
+    return false;
+  }
+
+  const cacheKey = getCacheKeyCollider(other);
+  for (const child of compound.children) {
+    if (compound.hasCheckedPair(child, cacheKey, pass)) {
+      continue;
+    }
+
+    compound.markCheckedPair(child, cacheKey, pass);
+    if (collidesInternal(child, compoundTransform, other, otherTransform, pass)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 function collidesInternal(
   a: Collider,
   aTransform: Transform2D,
@@ -26,43 +52,11 @@ function collidesInternal(
   pass: number,
 ): boolean {
   if (a instanceof CompoundCollider) {
-    if (!collidesInternal(a.collider, aTransform, b, bTransform, pass)) {
-      return false;
-    }
-
-    const cacheKey = getCacheKeyCollider(b);
-    for (const child of a.children) {
-      if (a.hasCheckedPair(child, cacheKey, pass)) {
-        continue;
-      }
-
-      a.markCheckedPair(child, cacheKey, pass);
-      if (collidesInternal(child, aTransform, b, bTransform, pass)) {
-        return true;
-      }
-    }
-
-    return false;
+    return collidesCompound(a, aTransform, b, bTransform, pass);
   }
 
   if (b instanceof CompoundCollider) {
-    if (!collidesInternal(a, aTransform, b.collider, bTransform, pass)) {
-      return false;
-    }
-
-    const cacheKey = getCacheKeyCollider(a);
-    for (const child of b.children) {
-      if (b.hasCheckedPair(child, cacheKey, pass)) {
-        continue;
-      }
-
-      b.markCheckedPair(child, cacheKey, pass);
-      if (collidesInternal(a, aTransform, child, bTransform, pass)) {
-        return true;
-      }
-    }
-
-    return false;
+    return collidesCompound(b, bTransform, a, aTransform, pass);
   }
 
   const collisionPair = getCollisionFn(a, b);
@@ -92,7 +86,12 @@ function warnMissingPair(a: PrimitiveCollider, b: PrimitiveCollider): void {
     return;
   }
 
-  const pairKey = `${getPrimitiveColliderKey(a)}:${getPrimitiveColliderKey(b)}`;
+  // prettier-ignore
+  const pairKey = createCollisionKey(
+    getPrimitiveColliderKey(a),
+    getPrimitiveColliderKey(b)
+  );
+
   if (warnedPairs.has(pairKey)) {
     return;
   }
