@@ -4,10 +4,8 @@ import { FPSSystem } from "./plugins/fps";
 import { Scene as RenderingDemoScene } from "./scenes/rendering-demo";
 import { Scene as SpatialContextsDemoScene } from "./scenes/spatial-contexts-demo";
 import { Scene as TestScene } from "./scenes/test";
-import { System as Collision } from "./systems/collision";
 import { System as Initialize } from "./systems/initialisation";
 import { System as Movement } from "./systems/movement";
-import { System as Physics } from "./systems/physics";
 import { Render } from "./systems/render";
 
 export const createAppEngine = () => {
@@ -20,8 +18,6 @@ export const createAppEngine = () => {
       FPSSystem,
       // Update systems
       Movement,
-      Physics,
-      Collision,
     ],
     render: Render,
     scenes: [
