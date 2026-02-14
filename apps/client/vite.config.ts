@@ -2,10 +2,11 @@ import { engineHmr } from "@repo/hmr/plugin";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import { defineConfig } from "vite";
+import typescript from 'vite-tsconfig-paths';
 
 export default defineConfig({
   root: __dirname,
-  plugins: [tailwindcss(), engineHmr()],
+  plugins: [tailwindcss(), engineHmr(), typescript()],
   server: {
     port: 3000,
     host: "127.0.0.1",
@@ -27,83 +28,6 @@ export default defineConfig({
       ignored: ["**/node_modules/**", "**/dist/**", "**/.git/**", "**/performance-testing/**"],
     },
     allowedHosts: true,
-  },
-  resolve: {
-    alias: [
-      // Point workspace packages to their source for HMR in development
-      // Order matters - more specific paths first
-      {
-        find: "@repo/engine/core",
-        replacement: path.resolve(__dirname, "../../packages/engine/src/core/index"),
-      },
-      {
-        find: "@repo/engine/components",
-        replacement: path.resolve(__dirname, "../../packages/engine/src/components/index"),
-      },
-      {
-        find: "@repo/engine/render",
-        replacement: path.resolve(__dirname, "../../packages/engine/src/render/index"),
-      },
-      {
-        find: "@repo/engine/asset",
-        replacement: path.resolve(__dirname, "../../packages/engine/src/asset/index"),
-      },
-      {
-        find: "@repo/engine/texture",
-        replacement: path.resolve(__dirname, "../../packages/engine/src/texture/index"),
-      },
-      {
-        find: "@repo/engine",
-        replacement: path.resolve(__dirname, "../../packages/engine/src/index"),
-      },
-      {
-        find: "@repo/hmr",
-        replacement: path.resolve(__dirname, "../../packages/tooling/hmr/src/index"),
-      },
-      {
-        find: "@repo/physics",
-        replacement: path.resolve(__dirname, "../../packages/foundation/physics/src/index"),
-      },
-      {
-        find: "@repo/spatial-contexts",
-        replacement: path.resolve(
-          __dirname,
-          "../../packages/foundation/spatial-contexts/src/index",
-        ),
-      },
-      {
-        find: "@repo/fps",
-        replacement: path.resolve(__dirname, "../../packages/features/fps/src/index"),
-      },
-      {
-        find: "@repo/utils",
-        replacement: path.resolve(__dirname, "../../packages/utils/src/index"),
-      },
-      {
-        find: "@/assets",
-        replacement: path.resolve(__dirname, "src/assets"),
-      },
-      {
-        find: "@/components",
-        replacement: path.resolve(__dirname, "src/components"),
-      },
-      {
-        find: "@/entities",
-        replacement: path.resolve(__dirname, "src/entities"),
-      },
-      {
-        find: "@/utilities",
-        replacement: path.resolve(__dirname, "src/utilities"),
-      },
-      {
-        find: "@/systems",
-        replacement: path.resolve(__dirname, "src/systems"),
-      },
-      {
-        find: "@/scenes",
-        replacement: path.resolve(__dirname, "src/scenes"),
-      },
-    ],
   },
   build: {
     target: "es2022",
