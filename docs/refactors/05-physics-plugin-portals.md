@@ -26,9 +26,40 @@
 >
 > When building this plugin, ensure that it is written following best practices, clean and well structured in code (multiple files, functions, etc. with proper isolation and composability).
 
-## Current Implementation
+## Verification (1-3)
 
-Currently, `ContextEntryRegion` (portals) is handled separately from `CircleCollider` (physical obstacles). Portals are checked in a transition system, while obstacles are handled in `SceneCollisionSystem`.
+The following are already in place:
+
+1. ✅ `ContextEntryRegion` uses `Rectangle` bounds.
+2. ✅ `@repo/physics` exists as a separate package and provides colliders (`CircleCollider`, `RectangleCollider`, `CompoundCollider`) and collision APIs.
+3. ✅ Scene collision logic is centralized in `SceneCollisionSystem` and uses the physics package (`PhysicsWorld`, `collides`, `resolve`).
+
+## Addressing 4 + 5
+
+### 4) Remove constants-driven scene wiring
+
+- The scene no longer depends on a dedicated `constants.ts` import for context IDs / dimensions.
+- Context definitions now receive IDs and bounds as injected options from scene setup.
+- This keeps wiring data-driven and allows future runtime/config injection without rewriting systems.
+
+### 5) Portal collisions via physics colliders
+
+- `Portal` remains pure functionality/metadata.
+- Portals have **no required default shape or collider**.
+- Collision behavior is composed by attaching a physics collider to the same entity (e.g., door entity + `Portal` + `RectangleCollider`).
+- Portal activation now uses physics overlap (`collides`) between player collider and portal collider.
+
+## Collision Actions (`resolve` vs custom behavior)
+
+`resolve` is for physical separation (blocking). Custom collision behavior should be modeled as **trigger activation**.
+
+Current pattern:
+
+- use `collides(...)` to detect overlap
+- track enter state (`wasInside` → `inside`) to fire only on enter
+- invoke custom action (`onEnter`, `onTeleport`, etc.)
+
+This gives ECS composition without forcing all overlaps to be physical blockers.
 
 ## Proposed Changes
 
@@ -38,6 +69,8 @@ Currently, `ContextEntryRegion` (portals) is handled separately from `CircleColl
 2. **Move Primitives to Engine**: Move `Rectangle`, `Circle` math classes to `packages/engine/src/math`.
 3. **Composable Design**: Portals will have a `Transform2D`, `ContextEntryRegion` (metadata), and a `Collider` (shape).
 4. **Collision vs Trigger**: Differentiate between "Physical Colliders" (which block movement) and "Triggers" (which just report an overlapping event). Portals would likely be Triggers.
+
+> Note: In current implementation, trigger semantics are achieved by `collides` + enter-state tracking. A dedicated `Trigger` component/system can still be added later for a generalized event stream (`enter/stay/exit`) across all gameplay features.
 
 ## Benefits
 

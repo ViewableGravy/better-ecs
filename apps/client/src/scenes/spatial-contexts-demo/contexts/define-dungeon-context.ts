@@ -1,14 +1,18 @@
 import { Color } from "@repo/engine/components";
-import { defineContext } from "@repo/spatial-contexts";
-import { DUNGEON, OVERWORLD } from "../constants";
+import { defineContext, type ContextId } from "@repo/spatial-contexts";
 import { spawnDoor } from "../factories/spawnDoor";
 import { spawnDungeon } from "../factories/spawnDungeon";
 import { setupContextPlayer } from "./shared";
 
-export function defineDungeonContext() {
+type DungeonContextOptions = {
+  overworldId: ContextId;
+  dungeonId: ContextId;
+};
+
+export function defineDungeonContext(options: DungeonContextOptions) {
   return defineContext({
-    id: DUNGEON,
-    parentId: OVERWORLD,
+    id: options.dungeonId,
+    parentId: options.overworldId,
     policy: {
       visibility: "focused-only",
       simulation: "focused-only",
@@ -24,7 +28,7 @@ export function defineDungeonContext() {
         role: "outside",
         portal: {
           mode: "teleport",
-          targetContextId: OVERWORLD,
+          targetContextId: options.overworldId,
           spawn: { x: 0, y: 40 },
           label: "Dungeon -> Overworld",
         },

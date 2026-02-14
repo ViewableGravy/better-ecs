@@ -1,6 +1,5 @@
 import { Color } from "@repo/engine/components";
-import { defineContext } from "@repo/spatial-contexts";
-import { DUNGEON, HOUSE, HOUSE_HALF_HEIGHT, HOUSE_HALF_WIDTH, OVERWORLD } from "../constants";
+import { defineContext, type ContextId } from "@repo/spatial-contexts";
 import { spawnBackground } from "../factories/spawnBackground";
 import { spawnContextEntryRegion } from "../factories/spawnContextEntryRegion";
 import { spawnDoor } from "../factories/spawnDoor";
@@ -8,9 +7,17 @@ import { spawnHouse } from "../factories/spawnHouse";
 import { spawnTree } from "../factories/spawnTree";
 import { setupContextPlayer } from "./shared";
 
-export function defineOverworldContext() {
+type OverworldContextOptions = {
+  overworldId: ContextId;
+  houseId: ContextId;
+  dungeonId: ContextId;
+  houseHalfWidth: number;
+  houseHalfHeight: number;
+};
+
+export function defineOverworldContext(options: OverworldContextOptions) {
   return defineContext({
-    id: OVERWORLD,
+    id: options.overworldId,
     policy: {
       visibility: "stack",
       simulation: "focused-only",
@@ -28,17 +35,17 @@ export function defineOverworldContext() {
       spawnHouse(world, {
         x: 0,
         y: 0,
-        width: HOUSE_HALF_WIDTH * 2,
-        height: HOUSE_HALF_HEIGHT * 2,
-        contextId: HOUSE,
+        width: options.houseHalfWidth * 2,
+        height: options.houseHalfHeight * 2,
+        contextId: options.houseId,
       });
 
       spawnContextEntryRegion(world, {
-        topLeftX: -HOUSE_HALF_WIDTH,
-        topLeftY: -HOUSE_HALF_HEIGHT,
-        width: HOUSE_HALF_WIDTH * 2,
-        height: HOUSE_HALF_HEIGHT * 2,
-        targetContextId: HOUSE,
+        topLeftX: -options.houseHalfWidth,
+        topLeftY: -options.houseHalfHeight,
+        width: options.houseHalfWidth * 2,
+        height: options.houseHalfHeight * 2,
+        targetContextId: options.houseId,
       });
 
       spawnTree(world, { x: -260, y: -140 });
@@ -56,7 +63,7 @@ export function defineOverworldContext() {
         role: "outside",
         portal: {
           mode: "teleport",
-          targetContextId: DUNGEON,
+          targetContextId: options.dungeonId,
           spawn: { x: 0, y: 160 },
           label: "Overworld -> Dungeon",
         },
