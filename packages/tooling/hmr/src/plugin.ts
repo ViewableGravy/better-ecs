@@ -1,4 +1,4 @@
-import type { Plugin } from 'vite';
+import type { Plugin } from "vite";
 
 /**
  * Vite plugin that enables Hot Module Replacement for ECS systems.
@@ -25,8 +25,8 @@ import type { Plugin } from 'vite';
  */
 export function engineHmr(): Plugin {
   return {
-    name: 'engine-hmr',
-    apply: 'serve',
+    name: "engine-hmr",
+    apply: "serve",
 
     transformIndexHtml() {
       // Inject the HMR runtime initialization before any app modules load.
@@ -34,10 +34,10 @@ export function engineHmr(): Plugin {
       // calls `register()` on first load.
       return [
         {
-          tag: 'script',
-          attrs: { type: 'module' },
-          injectTo: 'head-prepend' as const,
-          children: /* js */`
+          tag: "script",
+          attrs: { type: "module" },
+          injectTo: "head-prepend" as const,
+          children: /* js */ `
 globalThis.__ENGINE_HMR__ = (() => {
   const runtime = {
     systems: null,
@@ -48,7 +48,6 @@ globalThis.__ENGINE_HMR__ = (() => {
       if (!existing) return false;
       existing.system = fresh.system;
       existing.initialize = fresh.initialize;
-      existing.phase = fresh.phase;
       existing.priority = fresh.priority;
       existing.enabled = fresh.enabled;
       return true;
@@ -63,11 +62,10 @@ globalThis.__ENGINE_HMR__ = (() => {
 
     transform(code, id) {
       if (!/\.[tj]sx?$/.test(id)) return;
-      if (id.includes('node_modules')) return;
+      if (id.includes("node_modules")) return;
 
       const isSystemModule =
-        code.includes('createSystem(') ||
-        code.includes('createRenderPipeline(');
+        code.includes("createSystem(") || code.includes("createRenderPipeline(");
 
       if (!isSystemModule) return;
 

@@ -1,12 +1,8 @@
-import type { UserWorld } from "../ecs/world";
-import {
-  FrameAllocator,
-  createFrameAllocator,
-  type FrameAllocatorRegistry,
-} from "../render/frame-allocator";
-import { RenderQueue } from "../render/render-queue";
-import type { Renderer } from "../render/renderer";
-import { useEngine } from "./context";
+import type { UserWorld } from "../../ecs/world";
+import { FrameAllocator, type FrameAllocatorRegistry } from "../../render/frame-allocator";
+import { RenderQueue } from "../../render/render-queue";
+import type { Renderer } from "../../render/renderer";
+import { useEngine } from "../context";
 
 export type RenderPassScope = "frame" | "world";
 
@@ -14,19 +10,39 @@ export interface WorldProvider {
   getVisibleWorlds(): readonly UserWorld[];
 }
 
+export class RenderPipelineContext<
+  TRegistry extends FrameAllocatorRegistry = FrameAllocatorRegistry,
+  TState extends object = Record<string, never>,
+> {
+  readonly renderer: Renderer;
+  readonly queue = new RenderQueue();
+  readonly frameAllocator: FrameAllocator<TRegistry>;
+  readonly worldProvider: WorldProvider;
+  readonly state: TState;
+
+  visibleWorlds: readonly UserWorld[] = [];
+  world: UserWorld;
+  alpha = 1;
+
+  constructor(options: {
+    renderer: Renderer;
+    worldProvider: WorldProvider;
+    frameAllocator: FrameAllocator<TRegistry>;
+    state: TState;
+    world: UserWorld;
+  }) {
+    this.renderer = options.renderer;
+    this.worldProvider = options.worldProvider;
+    this.frameAllocator = options.frameAllocator;
+    this.state = options.state;
+    this.world = options.world;
+  }
+}
+
 export type RenderPassContext<
   TRegistry extends FrameAllocatorRegistry = FrameAllocatorRegistry,
   TState extends object = Record<string, never>,
-> = {
-  renderer: Renderer;
-  queue: RenderQueue;
-  frameAllocator: FrameAllocator<TRegistry>;
-  worldProvider: WorldProvider;
-  visibleWorlds: readonly UserWorld[];
-  world: UserWorld | null;
-  alpha: number;
-  state: TState;
-};
+> = RenderPipelineContext<TRegistry, TState>;
 
 export type RenderPass<
   TRegistry extends FrameAllocatorRegistry = FrameAllocatorRegistry,
@@ -88,32 +104,26 @@ export function createRenderPipeline<
   TRegistry extends FrameAllocatorRegistry = Record<string, never>,
   TState extends object = Record<string, never>,
 >(options: CreateRenderPipelineOptions<TRegistry, TState>): RenderPipeline {
-  let context: RenderPassContext<TRegistry, TState> | null = null;
+  let context: RenderPipelineContext<TRegistry, TState> | null = null;
 
-  const getOrInitializeContext = (): RenderPassContext<TRegistry, TState> => {
+  const getOrInitializeContext = (): RenderPipelineContext<TRegistry, TState> => {
     if (context) {
       return context;
     }
 
     const initialized = options.initializeContext();
-    // The fallback allocator is only used when no registry is supplied.
-    // TypeScript cannot infer an empty object as `TRegistry` at this boundary.
-    const frameAllocator =
-      initialized.frameAllocator ?? createFrameAllocator<TRegistry>({} as TRegistry);
+    const frameAllocator = initialized.frameAllocator ?? new FrameAllocator({} as TRegistry);
     const worldProvider = initialized.worldProvider ?? new DefaultWorldProvider();
 
-    context = {
+    context = new RenderPipelineContext({
       renderer: initialized.renderer,
-      queue: new RenderQueue(),
       frameAllocator,
       worldProvider,
-      visibleWorlds: [],
-      world: null,
-      alpha: 1,
       // `state` defaults to an empty object and is optionally extended by user code.
       // This cast is localized to the initialization boundary.
       state: (initialized.state ?? {}) as TState,
-    };
+      world: useEngine().world,
+    });
 
     return context;
   };
@@ -131,8 +141,6 @@ export function createRenderPipeline<
       passContext.world = world;
       pass.execute(passContext);
     }
-
-    passContext.world = null;
   };
 
   return {
@@ -156,7 +164,7 @@ export function createRenderPipeline<
           runPass(pass, passContext);
         }
       } finally {
-        passContext.world = null;
+        passContext.world = useEngine().world;
         passContext.frameAllocator.endFrame();
       }
     },

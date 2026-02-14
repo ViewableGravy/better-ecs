@@ -2,7 +2,7 @@ import { AssetManager } from "../../asset/AssetManager";
 import type { UserWorld } from "../../ecs/world";
 import type { EngineSystemTypes } from "../../systems/engine-system-types";
 import { executeWithContext } from "../context";
-import type { RenderPipeline } from "../render-pipeline";
+import type { RenderPipeline } from "../render-pipeline/render-pipeline";
 import { SceneManager } from "../scene/scene-manager";
 import type { SceneDefinition, SceneDefinitionTuple, SceneName } from "../scene/scene.types";
 import type { EngineFrame, EngineUpdate, FrameStats } from "../types";
@@ -130,16 +130,9 @@ export class EngineClass<
   private precomputeSystemOrder() {
     const allSystems = Object.values(this.#systems);
 
-    const getPriority = (system: EngineSystem<any>, phase: "update"): number => {
-      if (typeof system.priority === "number") {
-        return system.priority;
-      }
-      return system.priority[phase] ?? 0;
-    };
+    const getPriority = (system: EngineSystem<any>): number => system.priority;
 
-    this.#updateSystems = allSystems
-      .filter((s) => ["update", "all"].includes(s.phase))
-      .sort((a, b) => getPriority(b, "update") - getPriority(a, "update"));
+    this.#updateSystems = allSystems.sort((a, b) => getPriority(b) - getPriority(a));
   }
 
   /** Prefer `useSystem()` in systems instead. */
@@ -160,7 +153,7 @@ export class EngineClass<
   public async initialize(): Promise<void> {
     if (this.initialized) return;
 
-    await executeWithContext({ engine: this }, async () => {
+    await executeWithContext({ engine: this, scene: this.scene.context }, async () => {
       // Run initialization system if provided
       if (this.initializationSystem) {
         await this.initializationSystem.system();

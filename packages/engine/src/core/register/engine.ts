@@ -1,7 +1,7 @@
 import { AssetManager } from "../../asset/AssetManager";
 import { inputSystem } from "../../systems/input";
 import { transformSnapshotSystem } from "../../systems/transformSnapshot";
-import type { RenderPipeline } from "../render-pipeline";
+import type { RenderPipeline } from "../render-pipeline/render-pipeline";
 import type { SceneDefinitionTuple, SceneName } from "../scene/scene.types";
 import { EngineClass } from "./internal";
 import type { EngineInitializationSystem, EngineSystem, SystemFactoryTuple } from "./system";

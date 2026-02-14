@@ -5,7 +5,6 @@ import { useContextManager } from "@repo/spatial-contexts";
 import { RenderVisibility } from "../components/render-visibility";
 
 export const DebugOverlaySystem = createSystem("demo:spatial-contexts-debug")({
-  phase: "all",
   system() {
     const manager = useContextManager();
 

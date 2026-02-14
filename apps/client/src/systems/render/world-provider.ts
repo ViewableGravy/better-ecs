@@ -5,9 +5,7 @@ import { getSpatialContextManager, type SpatialContextManager } from "@repo/spat
 
 export class ActiveWorldProvider implements WorldProvider {
   getVisibleWorlds(): readonly UserWorld[] {
-    const engine = useEngine();
-    const scene = engine.scene.context;
-    const manager = scene ? getSpatialContextManager(scene) : undefined;
+    const manager = getSpatialContextManager(useEngine().scene.context);
 
     if (!manager) {
       return [useWorld()];

@@ -74,7 +74,7 @@ describe("EngineClass with scenes", () => {
     expect(engine.scenes).toHaveProperty("game");
   });
 
-  it("should have no active scene initially", () => {
+  it("should have a default active scene context initially", () => {
     const MenuScene = createScene("menu")({
       setup: () => {
         /* setup */
@@ -86,7 +86,7 @@ describe("EngineClass with scenes", () => {
       scenes: [MenuScene],
     });
 
-    expect(engine.scene.current).toBeNull();
+    expect(engine.scene.current).toBe("__default__");
   });
 
   it("should provide world access via engine.scene.world", () => {

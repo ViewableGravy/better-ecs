@@ -13,7 +13,6 @@ describe("createSystem", () => {
     const system = NoSchemaSystem();
 
     expect(system.data).toEqual({});
-    expect(system.phase).toBe("update");
     expect(system.priority).toBe(0);
     expect(system.enabled).toBe(true);
   });

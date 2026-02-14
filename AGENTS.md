@@ -150,6 +150,8 @@ This ensures the codebase stays clean, maintainable, and doesn't accumulate tech
 - **Vite source references**: Package imports resolved via Vite should point to `src/` (not `dist/`) to enable hot reloading during development. Path aliases in `tsconfig.json` map `@repo/<pkg>` to the source entry points.
 - **TypeScript project references**: TypeScript `references` in `tsconfig.json` files are managed by Nx's sync generator (`nx sync`). Do not manually add or remove `references` entries.
 - **Module declaration for type registration**: Apps use `declare module "@repo/engine"` to augment the `Register` interface with the concrete engine type (e.g., `Engine: Awaited<ReturnType<typeof main>>`). This is similar to how TanStack Router uses module declaration for route-level type safety. This pattern is intentional and should be preserved.
+  - Prefer inference-based registration. Do not annotate `main` (or equivalent app bootstrap function) as `AnyEngine`, as that widens system typing and breaks `useSystem` inference.
+  - If a direct `ReturnType<typeof main>` causes non-portable inferred type errors, register via an inferred engine factory return type (e.g., `Engine: ReturnType<typeof createAppEngine>`), still without widening to `AnyEngine`.
 
 ## Development workflow
 

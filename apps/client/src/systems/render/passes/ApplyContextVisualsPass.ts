@@ -3,21 +3,21 @@ import { ContextVisualBinding } from "@/scenes/spatial-contexts-demo/components/
 import { InsideContext } from "@/scenes/spatial-contexts-demo/components/inside-context";
 import { RenderVisibility } from "@/scenes/spatial-contexts-demo/components/render-visibility";
 import { getHouseBlend } from "@/scenes/spatial-contexts-demo/systems/house-transition.state";
+import { lerp } from "@/utilities/math";
 import { createRenderPass, useEngine } from "@repo/engine";
 import { Shape, Sprite } from "@repo/engine/components";
-import { getSpatialContextManager, type ContextId } from "@repo/spatial-contexts";
+import {
+  getSpatialContextManager,
+  type ContextId,
+  type SpatialContextManager,
+} from "@repo/spatial-contexts";
 
 const INSIDE_OUTSIDE_ALPHA = 0.5;
 
 export const ApplyContextVisualsPass = createRenderPass("apply-context-visuals")({
   execute() {
     const engine = useEngine();
-    const scene = engine.scene.context;
-    if (!scene) {
-      return;
-    }
-
-    const manager = getSpatialContextManager(scene);
+    const manager = getSpatialContextManager(engine.scene.context);
     if (!manager) {
       return;
     }
@@ -76,14 +76,10 @@ export const ApplyContextVisualsPass = createRenderPass("apply-context-visuals")
 });
 
 function getActiveInteriorContextId(
-  manager: ReturnType<typeof getSpatialContextManager>,
+  manager: SpatialContextManager,
   focusedContextId: ContextId,
   rootContextId: ContextId,
 ): ContextId | undefined {
-  if (!manager) {
-    return undefined;
-  }
-
   if (focusedContextId !== rootContextId) {
     return focusedContextId;
   }
@@ -158,8 +154,4 @@ function getAlphaMultiplier(args: {
   }
 
   return 1;
-}
-
-function lerp(start: number, end: number, alpha: number): number {
-  return start + (end - start) * alpha;
 }

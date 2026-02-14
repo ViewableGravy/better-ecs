@@ -6,10 +6,6 @@ import { sortRenderQueue } from "../stages/Sort";
 export const RenderWorldPass = createRenderPass("draw")({
   scope: "world",
   execute({ world, queue, renderer, alpha }) {
-    if (!world) {
-      return;
-    }
-
     queue.clear();
     collectRenderables(world, queue);
     sortRenderQueue(world, queue);

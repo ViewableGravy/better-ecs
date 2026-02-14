@@ -1,9 +1,11 @@
 import {
+  createRenderPass,
   createSystem,
   useEngine,
   useOverloadedSystem,
   type EngineSystem,
-  type RenderPass,
+  type StandardSchema,
+  type SystemFactory,
 } from "@repo/engine";
 import { initialize } from "./initialize";
 import { render } from "./render";
@@ -20,17 +22,13 @@ const defaultState: FPSCounterData = {
   customUps: null,
 };
 
-let currentOptions: Opts | null = null;
-
-export const System = (opts: Opts) => {
+export const System = (
+  opts: Opts,
+): SystemFactory<"plugin:fps-counter", StandardSchema, Record<string, never>> => {
   return createSystem("plugin:fps-counter")({
     system: EntryPoint,
-    initialize: () => {
-      currentOptions = opts;
-      initialize(opts.element);
-    },
+    initialize: () => initialize(opts.element),
     priority: 1,
-    phase: "update",
     schema: {
       schema: schema,
       default: { ...defaultState, mode: opts.defaultMode ?? defaultState.mode },
@@ -61,17 +59,15 @@ export const System = (opts: Opts) => {
   }
 };
 
-export const createFPSRenderPass = (): RenderPass => {
+export function createFPS(opts: Opts) {
   return {
-    name: "plugin:fps-counter:ui",
-    execute() {
-      if (!currentOptions) {
-        return;
-      }
-
-      render(currentOptions);
-    },
+    system: System(opts),
+    pass: createRenderPass("plugin:fps-counter:ui")({
+      execute() {
+        render(opts);
+      },
+    }),
   };
-};
+}
 
-export type { FPSCounterData };
+export type { FPSCounterData, Opts };

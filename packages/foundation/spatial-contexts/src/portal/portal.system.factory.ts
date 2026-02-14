@@ -5,7 +5,6 @@ import type { PortalSystemOptions } from "./portal.types";
 
 export const createPortalSystem = (opts: PortalSystemOptions) => {
   return createSystem(opts.name ?? "plugin:spatial-contexts-portals")({
-    phase: "update",
     priority: 50_000,
     system() {
       const manager = useContextManager();

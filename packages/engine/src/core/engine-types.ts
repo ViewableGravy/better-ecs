@@ -1,6 +1,6 @@
 import { SceneManager } from ".";
 import { AssetManager } from "../asset";
-import type { RenderPipeline } from "./render-pipeline";
+import type { RenderPipeline } from "./render-pipeline/render-pipeline";
 
 // --- Type Registration (via module augmentation) ---
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type, @typescript-eslint/no-empty-interface

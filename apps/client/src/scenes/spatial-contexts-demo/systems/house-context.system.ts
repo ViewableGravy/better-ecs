@@ -17,7 +17,6 @@ import {
 } from "./house-transition.state";
 
 export const HouseContextSystem = createSystem("demo:context-focus")({
-  phase: "update",
   system() {
     const manager = useContextManager();
     const world = useWorld();

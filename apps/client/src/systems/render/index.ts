@@ -1,7 +1,7 @@
+import { FPSPass } from "@/plugins/fps";
 import { invariantById } from "@/utilities/selectors";
 import { createRenderPipeline, useAssets } from "@repo/engine";
-import { Canvas2DRenderer, createFrameAllocator } from "@repo/engine/render";
-import { createFPSRenderPass } from "@repo/fps";
+import { Canvas2DRenderer, FrameAllocator } from "@repo/engine/render";
 import { ApplyContextVisualsPass } from "./passes/ApplyContextVisualsPass";
 import { BeginFramePass } from "./passes/BeginFramePass";
 import { EndFramePass } from "./passes/EndFramePass";
@@ -19,15 +19,15 @@ export const Render = createRenderPipeline({
     return {
       renderer,
       worldProvider: new ActiveWorldProvider(),
-      frameAllocator: createFrameAllocator({}),
+      frameAllocator: new FrameAllocator({}),
     };
   },
   passes: [
-    BeginFramePass,
-    ApplyContextVisualsPass,
-    RenderWorldPass,
-    createFPSRenderPass(),
-    EndFramePass,
+    BeginFramePass, 
+    ApplyContextVisualsPass, 
+    RenderWorldPass, 
+    FPSPass, 
+    EndFramePass
   ],
 });
 

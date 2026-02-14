@@ -15,13 +15,12 @@
  *      by name and swaps its behaviour while preserving its state/data.
  */
 
-const HMR_KEY = '__ENGINE_HMR__';
+const HMR_KEY = "__ENGINE_HMR__";
 
 export type EngineSystem = {
   name: string;
   data: unknown;
   schema: unknown;
-  phase: string;
   priority: unknown;
   enabled: boolean;
   system: () => void;

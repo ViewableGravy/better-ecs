@@ -15,15 +15,17 @@ import type { SceneDefinition, SceneDefinitionTuple, SceneName } from "./scene.t
  * - `engine.scene.world` - Get the active scene's default world
  */
 export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
+  static readonly DEFAULT_SCENE_NAME = "__default__" as const;
+
   #scenes: Map<string, SceneDefinition<string>> = new Map();
 
   #activeScene: SceneDefinition<string> | null = null;
-  #activeSceneContext: SceneContext | null = null;
+  #activeSceneContext: SceneContext;
 
   // Always points at the *active* world for the active scene (or the fallback world).
   // The active world is typically the scene default, but can be changed (e.g. spatial contexts).
   #activeWorld: World;
-  #activeWorldId: string | null = null;
+  #activeWorldId: string;
   // Stable wrapper whose internal world pointer is swapped during transitions
   #userWorld: UserWorld;
 
@@ -44,13 +46,15 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
   constructor(scenes: SceneDefinitionTuple = []) {
     this.#activeWorld = new World("__default__");
     this.#userWorld = new UserWorld(this.#activeWorld);
+    this.#activeSceneContext = new SceneContext(SceneManager.DEFAULT_SCENE_NAME, this.#activeWorld);
+    this.#activeWorldId = this.#activeSceneContext.defaultWorldId;
 
     // Register all scenes and instantiate their scene-level systems (per engine instance)
     for (const scene of scenes) {
       this.#scenes.set(scene.name, scene);
 
       const instances = scene.systems.map((factory) => factory());
-      const update = this.#sortSystemsForPhase(instances, "update");
+      const update = this.#sortSystemsForPhase(instances);
       this.#sceneSystems.set(scene.name, { all: instances, update });
     }
   }
@@ -63,15 +67,10 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
     this.#engineRef = engine;
   }
 
-  #sortSystemsForPhase(systems: EngineSystem[], phase: "update"): EngineSystem[] {
-    const getPriority = (system: EngineSystem): number => {
-      if (typeof system.priority === "number") return system.priority;
-      return system.priority[phase] ?? 0;
-    };
+  #sortSystemsForPhase(systems: EngineSystem[]): EngineSystem[] {
+    const getPriority = (system: EngineSystem): number => system.priority;
 
-    return systems
-      .filter((s) => [phase, "all"].includes(s.phase))
-      .sort((a, b) => getPriority(b) - getPriority(a));
+    return systems.sort((a, b) => getPriority(b) - getPriority(a));
   }
 
   /** Get the currently active scene's active world (defaults to the scene default world). */
@@ -79,8 +78,8 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
     return this.#userWorld;
   }
 
-  /** Get the id of the currently active world for the active scene. */
-  get activeWorldId(): string | null {
+  /** Get the id of the currently active world for the active scene context. */
+  get activeWorldId(): string {
     return this.#activeWorldId;
   }
 
@@ -99,12 +98,7 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
    * as the active world for system execution.
    */
   setActiveWorld(id: string): void {
-    const ctx = this.#activeSceneContext;
-    if (!ctx) {
-      throw new Error("Cannot set active world without an active scene");
-    }
-
-    const internal = ctx.getInternalWorld(id);
+    const internal = this.#activeSceneContext.getInternalWorld(id);
     if (!internal) {
       throw new Error(
         `Cannot set active world to "${id}": world is not loaded in the active scene`,
@@ -116,9 +110,9 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
     this.#userWorld.setWorld(internal);
   }
 
-  /** Get the name of the currently active scene, or null if no scene is active. */
-  get current(): string | null {
-    return this.#activeScene?.name ?? null;
+  /** Get the name of the currently active scene context. */
+  get current(): string {
+    return this.#activeScene?.name ?? this.#activeSceneContext.name;
   }
 
   /** Get the currently active scene definition, or null if no scene is active. */
@@ -126,8 +120,8 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
     return this.#activeScene;
   }
 
-  /** Get the currently active scene context, or null if no scene is active. */
-  get context(): SceneContext | null {
+  /** Get the currently active scene context. */
+  get context(): SceneContext {
     return this.#activeSceneContext;
   }
 
@@ -185,7 +179,7 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
 
     try {
       // Teardown previous scene
-      if (this.#activeScene && this.#activeSceneContext) {
+      if (this.#activeScene) {
         const prevScene = this.#activeScene;
         const prevContext = this.#activeSceneContext;
 
@@ -202,7 +196,6 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
         });
 
         prevContext.clearAllWorlds();
-        this.#activeSceneContext = null;
       }
 
       // Create new scene context + default world
