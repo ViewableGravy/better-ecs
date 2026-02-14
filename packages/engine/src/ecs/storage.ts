@@ -1,5 +1,4 @@
 // packages/engine/src/ecs/storage.ts
-import invariant from "tiny-invariant";
 import type { EntityId } from "./entity";
 import { getEntityIndex } from "./entity";
 
@@ -21,10 +20,11 @@ export class ComponentStore<T> {
     if (this.sparse.has(index)) {
       // Replace existing component
       const denseIndex = this.sparse.get(index);
-      invariant(
-        denseIndex !== undefined,
-        "ComponentStore invariant violated: missing dense index for existing sparse entry",
-      );
+      if (denseIndex === undefined) {
+        throw new Error(
+          "ComponentStore invariant violated: missing dense index for existing sparse entry",
+        );
+      }
       this.dense[denseIndex] = component;
     } else {
       // Add new component
@@ -68,14 +68,16 @@ export class ComponentStore<T> {
     if (denseIndex !== lastDenseIndex) {
       const lastComponent = this.dense[lastDenseIndex];
       const lastEntity = this.entityMap.get(lastDenseIndex);
-      invariant(
-        lastComponent !== undefined,
-        "ComponentStore invariant violated: missing last dense component during swap-remove",
-      );
-      invariant(
-        lastEntity !== undefined,
-        "ComponentStore invariant violated: missing last entity mapping during swap-remove",
-      );
+      if (lastComponent === undefined) {
+        throw new Error(
+          "ComponentStore invariant violated: missing last dense component during swap-remove",
+        );
+      }
+      if (lastEntity === undefined) {
+        throw new Error(
+          "ComponentStore invariant violated: missing last entity mapping during swap-remove",
+        );
+      }
       const lastEntityIndex = getEntityIndex(lastEntity);
 
       this.dense[denseIndex] = lastComponent;
@@ -91,10 +93,11 @@ export class ComponentStore<T> {
   *[Symbol.iterator](): IterableIterator<[EntityId, T]> {
     for (const [i, component] of this.dense.entries()) {
       const entityId = this.entityMap.get(i);
-      invariant(
-        entityId !== undefined,
-        "ComponentStore invariant violated: missing entity mapping during iteration",
-      );
+      if (entityId === undefined) {
+        throw new Error(
+          "ComponentStore invariant violated: missing entity mapping during iteration",
+        );
+      }
       yield [entityId, component];
     }
   }

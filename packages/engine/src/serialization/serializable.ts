@@ -111,10 +111,7 @@ export function serializable(type: Type) {
       Serializable.serializableFields.set(context.addInitializer, []);
     }
     const fields = Serializable.serializableFields.get(context.addInitializer);
-    invariant(
-      fields !== undefined,
-      "Serializable invariant violated: missing serializable field registry",
-    );
+    invariant(fields, "Serializable invariant violated: missing serializable field registry");
     fields.push([context.name as string, type]);
   }
 

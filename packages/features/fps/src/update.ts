@@ -43,10 +43,7 @@ export function update(opts: Opts) {
   data.upsBuffer.updates++;
 
   const upsBufferStart = data.upsBuffer.start;
-  invariant(
-    upsBufferStart !== null,
-    "UPS buffer start time must be initialized before update ticks",
-  );
+  invariant(upsBufferStart, "UPS buffer start time must be initialized before update ticks");
 
   // Check if rate has passed (UPS calculation in update phase)
   if (upsBufferStart + 1000 > now) return;

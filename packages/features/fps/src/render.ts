@@ -7,10 +7,7 @@ export function render(opts: Opts) {
   const engine = useEngine();
   const { data } = useOverloadedSystem<EngineSystem<typeof schema>>("plugin:fps-counter");
   const fpsBufferStart = data.fpsBuffer.start;
-  invariant(
-    fpsBufferStart !== null,
-    "FPS buffer start time must be initialized before render updates",
-  );
+  invariant(fpsBufferStart, "FPS buffer start time must be initialized before render updates");
 
   data.fpsBuffer.frames++;
 
