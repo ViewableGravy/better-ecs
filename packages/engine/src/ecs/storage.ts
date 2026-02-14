@@ -1,6 +1,7 @@
 // packages/engine/src/ecs/storage.ts
-import type { EntityId } from './entity';
-import { getEntityIndex } from './entity';
+import invariant from "tiny-invariant";
+import type { EntityId } from "./entity";
+import { getEntityIndex } from "./entity";
 
 /**
  * Sparse-set component storage.
@@ -16,10 +17,14 @@ export class ComponentStore<T> {
    */
   add(entityId: EntityId, component: T): void {
     const index = getEntityIndex(entityId);
-    
+
     if (this.sparse.has(index)) {
       // Replace existing component
-      const denseIndex = this.sparse.get(index)!;
+      const denseIndex = this.sparse.get(index);
+      invariant(
+        denseIndex !== undefined,
+        "ComponentStore invariant violated: missing dense index for existing sparse entry",
+      );
       this.dense[denseIndex] = component;
     } else {
       // Add new component
@@ -36,7 +41,7 @@ export class ComponentStore<T> {
   get(entityId: EntityId): T | undefined {
     const index = getEntityIndex(entityId);
     const denseIndex = this.sparse.get(index);
-    
+
     if (denseIndex === undefined) return undefined;
     return this.dense[denseIndex];
   }
@@ -55,18 +60,27 @@ export class ComponentStore<T> {
   remove(entityId: EntityId): void {
     const index = getEntityIndex(entityId);
     const denseIndex = this.sparse.get(index);
-    
+
     if (denseIndex === undefined) return;
 
     // Swap-remove: move last element to this position
     const lastDenseIndex = this.dense.length - 1;
     if (denseIndex !== lastDenseIndex) {
+      const lastComponent = this.dense[lastDenseIndex];
       const lastEntity = this.entityMap.get(lastDenseIndex);
-      const lastEntityIndex = lastEntity !== undefined ? getEntityIndex(lastEntity) : -1;
-      
-      this.dense[denseIndex] = this.dense[lastDenseIndex];
+      invariant(
+        lastComponent !== undefined,
+        "ComponentStore invariant violated: missing last dense component during swap-remove",
+      );
+      invariant(
+        lastEntity !== undefined,
+        "ComponentStore invariant violated: missing last entity mapping during swap-remove",
+      );
+      const lastEntityIndex = getEntityIndex(lastEntity);
+
+      this.dense[denseIndex] = lastComponent;
       this.sparse.set(lastEntityIndex, denseIndex);
-      this.entityMap.set(denseIndex, lastEntity!);
+      this.entityMap.set(denseIndex, lastEntity);
     }
 
     this.dense.pop();
@@ -75,9 +89,12 @@ export class ComponentStore<T> {
   }
 
   *[Symbol.iterator](): IterableIterator<[EntityId, T]> {
-    for (let i = 0; i < this.dense.length; i++) {
-      const entityId = this.entityMap.get(i)!;
-      const component = this.dense[i];
+    for (const [i, component] of this.dense.entries()) {
+      const entityId = this.entityMap.get(i);
+      invariant(
+        entityId !== undefined,
+        "ComponentStore invariant violated: missing entity mapping during iteration",
+      );
       yield [entityId, component];
     }
   }

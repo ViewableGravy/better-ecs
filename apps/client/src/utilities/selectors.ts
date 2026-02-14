@@ -11,3 +11,19 @@ export const invariantById = <TElement extends HTMLElement = HTMLElement>(id: st
   invariant(element, `Element with id ${id} not found`);
   return element as TElement;
 };
+
+/**
+ * Gets an element by CSS selector and throws an error if it is not found.
+ * @param root - The element/document to query from.
+ * @param selector - The CSS selector.
+ * @returns The first matching element.
+ * @throws Will throw an error if no matching element is found.
+ */
+export const invariantQuerySelector = <TElement extends Element = HTMLElement>(
+  root: Document | Element,
+  selector: string,
+): TElement => {
+  const element = root.querySelector<TElement>(selector);
+  invariant(element, `Element matching selector ${selector} not found`);
+  return element;
+};
