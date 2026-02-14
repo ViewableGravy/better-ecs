@@ -4,4 +4,6 @@ export const System = createSystem("physics")({
   system: Entrypoint,
 });
 
-function Entrypoint() {}
+function Entrypoint() {
+  /* Silence is golden */
+}

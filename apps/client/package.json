@@ -8,7 +8,7 @@
     "build": "vite build",
     "clean": "rm -rf dist",
     "preview": "vite preview",
-    "lint": "npx tsc --noEmit",
+    "lint": "bun x eslint .",
     "typecheck": "npx tsc --noEmit"
   },
   "dependencies": {

@@ -14,7 +14,7 @@
   "scripts": {
     "build": "npx tsc -p tsconfig.lib.json",
     "clean": "rm -rf dist tsconfig.lib.tsbuildinfo",
-    "lint": "npx tsc --noEmit",
+    "lint": "bun x eslint .",
     "typecheck": "npx tsc --noEmit"
   },
   "dependencies": {},

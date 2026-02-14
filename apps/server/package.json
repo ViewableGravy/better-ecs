@@ -8,7 +8,7 @@
     "build": "npx tsc",
     "clean": "rm -rf dist",
     "start": "node dist/main.js",
-    "lint": "npx tsc --noEmit",
+    "lint": "bun x eslint .",
     "typecheck": "npx tsc --noEmit"
   },
   "dependencies": {
