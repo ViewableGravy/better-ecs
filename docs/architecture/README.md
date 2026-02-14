@@ -47,19 +47,14 @@ Provides step-by-step roadmap with:
 
 ---
 
-#### [05-RENDERING-CONCEPTS.md](./05-RENDERING-CONCEPTS.md)
+#### Rendering Foundations (Implemented)
 
-**Cross-engine rendering analysis and design.**
+Rendering abstractions are now implemented in code:
 
-Comprehensive discussion of rendering primitives:
+- `packages/engine/src/components/` (Transform, Camera, Sprite)
+- `packages/engine/src/render/` (renderer interfaces and implementations)
 
-- Core concepts (Transform, Camera, Mesh, Texture, Sprite)
-- Cross-engine comparison (Unity, Godot, Three.js, Bevy)
-- Better ECS rendering design (minimal engine, maximum flexibility)
-- Integration with spatial contexts
-- Implementation recommendations
-
-**Read this** before implementing rendering features.
+Use code and tests as the canonical reference for rendering behavior.
 
 ---
 
@@ -127,43 +122,25 @@ Each feature document has **two parts:**
 
 ### Phase 1: Rendering Foundations
 
-#### [02-FEATURE-RENDERING-ABSTRACTIONS.md](./02-FEATURE-RENDERING-ABSTRACTIONS.md)
+#### Rendering Abstractions (Completed)
 
-**GPU abstraction and sprite rendering.**
+The implementation is complete and documented by code/tests in:
 
-**Public API:**
-
-- Transform, Camera, Sprite components
-- Renderer interface
-- Rendering utilities and hooks
-
-**Implementation:**
-
-- 11 stories covering components, renderer, WebGL backend, utilities
-- Estimated time: 2-3 weeks
-
-**Prerequisites:** None
+- `packages/engine/src/components/`
+- `packages/engine/src/render/`
+- `packages/engine/src/tests/`
 
 ---
 
 ### Phase 2: Scene-Level Systems
 
-#### [03-FEATURE-SCENE-LEVEL-SYSTEMS.md](./03-FEATURE-SCENE-LEVEL-SYSTEMS.md)
+#### Scene-Level Systems (Completed)
 
-**Enable systems to operate at scene level.**
+The implementation is complete and available in:
 
-**Public API:**
-
-- `systems` array in `createScene` definition
-- `useScene()` hook
-- Scene context with multi-world access
-
-**Implementation:**
-
-- 10 stories covering types, scene context, hooks, engine integration
-- Estimated time: 1 week
-
-**Prerequisites:** Phase 1 (Rendering)
+- `packages/engine/src/core/scene/`
+- `packages/engine/src/core/context.ts` (`useScene()`)
+- `packages/engine/src/tests/systems/scene-systems.spec.ts`
 
 ---
 
@@ -182,29 +159,14 @@ Each feature document has **two parts:**
 
 ### Phase 4: Spatial Contexts Plugin
 
-#### [04-FEATURE-SPATIAL-CONTEXTS-PLUGIN.md](./04-FEATURE-SPATIAL-CONTEXTS-PLUGIN.md)
+#### [04-FEATURE-SPATIAL-CONTEXTS-PLUGIN/README.md](./04-FEATURE-SPATIAL-CONTEXTS-PLUGIN/README.md)
 
-**Core plugin implementation.**
+**Core plugin implementation breakdown.**
 
-**Update (Feb 2026):** Spatial contexts assumes **one active scene** at a time, with **many worlds/contexts** managed within that scene.
+Spatial contexts implementation is active in:
 
-For a smaller, step-by-step breakdown of implementation tasks, see:
-
-- [docs/architecture/04-FEATURE-SPATIAL-CONTEXTS-PLUGIN/README.md](./04-FEATURE-SPATIAL-CONTEXTS-PLUGIN/README.md)
-
-**Public API:**
-
-- `createContextScene()` factory
-- `useContextManager()`, `useActiveContext()`, `useContextWorld()` hooks
-- Portal component and system
-- Context streaming
-
-**Implementation:**
-
-- 11 stories covering plugin package, context manager, hooks, portals, streaming
-- Estimated time: 2 weeks
-
-**Prerequisites:** Phase 3 (Multi-world support)
+- `packages/foundation/spatial-contexts/src/`
+- `apps/client/src/scenes/spatial-contexts-demo/`
 
 ---
 
@@ -282,7 +244,7 @@ For a smaller, step-by-step breakdown of implementation tasks, see:
 2. Read the corresponding feature document(s)
 3. Review **Part 1: Public API** to understand goals
 4. Follow **Part 2: Implementation Steps** story by story
-5. Reference **05-RENDERING-CONCEPTS.md** or **09-CONCERNS** as needed
+5. Reference engine rendering code or **09-CONCERNS** as needed
 6. Cross-reference with existing codebase patterns
 
 ### For Architecture Review
@@ -301,7 +263,7 @@ For a smaller, step-by-step breakdown of implementation tasks, see:
 
 1. Read **00-SPATIAL-CONTEXTS-ARCHITECTURE.md** (20 min)
 2. Skim **01-IMPLEMENTATION-ROADMAP.md** (10 min)
-3. Read **05-RENDERING-CONCEPTS.md** (30 min)
+3. Review engine render/components code (30 min)
 4. Review completed feature documents for implemented phases
 5. Reference **09-CONCERNS-AND-CONSIDERATIONS.md** when questions arise
 
@@ -422,11 +384,11 @@ When updating this documentation:
 
 | Phase | Feature                 | Weeks | Documents                                                                      |
 | ----- | ----------------------- | ----- | ------------------------------------------------------------------------------ |
-| 1     | Rendering Foundations   | 2-3   | [02](./02-FEATURE-RENDERING-ABSTRACTIONS.md), [05](./05-RENDERING-CONCEPTS.md) |
-| 2     | Scene-Level Systems     | 1     | [03](./03-FEATURE-SCENE-LEVEL-SYSTEMS.md)                                      |
+| 1     | Rendering Foundations   | 2-3   | Engine render/components code                                                    |
+| 2     | Scene-Level Systems     | 1     | Engine scene/context code                                                        |
 | 3     | Multi-World Support     | 1     | Inline in Phase 2/4 docs                                                       |
-| 4     | Plugin Core             | 2     | [04](./04-FEATURE-SPATIAL-CONTEXTS-PLUGIN.md)                                  |
-| 5-6   | Transitions & Rendering | 2-3   | [04](./04-FEATURE-SPATIAL-CONTEXTS-PLUGIN.md)                                  |
+| 4     | Plugin Core             | 2     | [04 subdocs](./04-FEATURE-SPATIAL-CONTEXTS-PLUGIN/README.md)                   |
+| 5-6   | Transitions & Rendering | 2-3   | [04 subdocs](./04-FEATURE-SPATIAL-CONTEXTS-PLUGIN/README.md)                   |
 | 7     | Persistence             | 2     | [07](./07-FEATURE-PERSISTENCE.md)                                              |
 | 8     | Visual Editor           | 6-7   | [06](./06-FEATURE-VISUAL-EDITOR.md)                                            |
 
@@ -436,11 +398,11 @@ When updating this documentation:
 
 **For Understanding:**
 
-1. 00 → 05 → 01 → 09
+1. 00 → 01 → 09 → 10
 
 **For Implementation:**
 
-1. 01 (roadmap) → Feature docs in phase order (02 → 03 → 04 → 07 → 06)
+1. 01 (roadmap) → Feature docs in phase order (04 subdocs → 07 → 06)
 
 **For Review:**
 
@@ -454,7 +416,7 @@ Questions about this architecture? Check:
 
 1. **Concerns document:** [09-CONCERNS-AND-CONSIDERATIONS.md](./09-CONCERNS-AND-CONSIDERATIONS.md)
 2. **Architecture discussion:** [00-SPATIAL-CONTEXTS-ARCHITECTURE.md](./00-SPATIAL-CONTEXTS-ARCHITECTURE.md)
-3. **Rendering concepts:** [05-RENDERING-CONCEPTS.md](./05-RENDERING-CONCEPTS.md)
+3. **Rendering implementation:** engine render/components modules
 4. **Project conventions:** `../AGENTS.md`
 
 ---

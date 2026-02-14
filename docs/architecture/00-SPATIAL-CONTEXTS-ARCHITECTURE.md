@@ -440,7 +440,7 @@ See [01-IMPLEMENTATION-ROADMAP.md](./01-IMPLEMENTATION-ROADMAP.md) for detailed 
 
 ## Next Steps
 
-1. **Review rendering concepts:** [05-RENDERING-CONCEPTS.md](./05-RENDERING-CONCEPTS.md)
+1. **Review engine rendering modules:** `packages/engine/src/render/` and `packages/engine/src/components/`
 2. **Understand feature APIs:** Individual feature docs in this folder
 3. **Read concerns document:** [09-CONCERNS-AND-CONSIDERATIONS.md](./09-CONCERNS-AND-CONSIDERATIONS.md)
 4. **Begin implementation:** Follow roadmap in priority order

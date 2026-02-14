@@ -14,7 +14,7 @@ This document provides a **high-level, step-by-step roadmap** for implementing t
 
 #### Tasks
 1. **Define rendering primitives**
-   - Research patterns from Unity, Godot, Three.js (see [05-RENDERING-CONCEPTS.md](./05-RENDERING-CONCEPTS.md))
+   - Research patterns from Unity, Godot, Three.js, Bevy (captured in implemented engine rendering APIs)
    - Define core types: Transform, Camera, Mesh, Texture, Sprite
    - Create component definitions
 

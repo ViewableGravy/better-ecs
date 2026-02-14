@@ -4,7 +4,7 @@
 
 To properly organize partitioned logic, we distinguish between three scopes of systems. This distinction ensures that `PartitionManager` runs in the correct context without user error.
 
-Reference: [03-FEATURE-SCENE-LEVEL-SYSTEMS.md](../03-FEATURE-SCENE-LEVEL-SYSTEMS.md)
+Reference: Scene-level systems roadmap in [01-IMPLEMENTATION-ROADMAP.md](../01-IMPLEMENTATION-ROADMAP.md)
 
 ### A. Global Systems (Existing)
 - **Scope**: Entire Engine lifetime.
