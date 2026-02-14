@@ -1,5 +1,6 @@
 import type { AnyEngine, EngineSystem } from "@repo/engine";
 import { useEngine, useOverloadedSystem, useSystem } from "@repo/engine";
+import invariant from "tiny-invariant";
 import { updateModeVisibility } from "./initialize";
 import type { Opts } from "./types";
 import { schema } from "./types";
@@ -41,10 +42,13 @@ export function update(opts: Opts) {
 
   data.upsBuffer.updates++;
 
-  // Check if rate has passed (UPS calculation in update phase)
-  if (data.upsBuffer.start! + 1000 > now) return;
+  const upsBufferStart = data.upsBuffer.start;
+  invariant(upsBufferStart, "UPS buffer start time must be initialized before update ticks");
 
-  const elapsedSec = (now - data.upsBuffer.start!) / 1000;
+  // Check if rate has passed (UPS calculation in update phase)
+  if (upsBufferStart + 1000 > now) return;
+
+  const elapsedSec = (now - upsBufferStart) / 1000;
   data.ups.push(data.upsBuffer.updates / elapsedSec);
 
   // Keep only the last barCount entries

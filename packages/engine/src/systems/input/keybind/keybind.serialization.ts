@@ -1,9 +1,9 @@
 import { z } from "zod";
-import type { KeyBind, KeyModifiers } from "./keybind.types";
+import type { KeyBind } from "./keybind.types";
 
 /**
  * Schema for serializing/deserializing KeyBind objects to JSON.
- * 
+ *
  * Example:
  * ```json
  * {
@@ -73,7 +73,7 @@ export function deserializeKeybinds(json: string): KeyBind[] {
 
 /**
  * Serialize keybinds to a configuration object.
- * 
+ *
  * Example usage:
  * ```ts
  * const config = {

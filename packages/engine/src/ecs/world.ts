@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-function-type */
 // packages/engine/src/ecs/world.ts
 import type { Class } from "type-fest";
 import type { EntityId } from "./entity";
