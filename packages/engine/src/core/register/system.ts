@@ -2,7 +2,7 @@ import type { StandardSchemaV1 } from "@standard-schema/spec";
 import type { InferStandardSchema, StandardSchema } from "../types";
 
 /***** TYPE DEFINITIONS *****/
-export type SystemPriority = number | { update?: number; render?: number };
+export type SystemPriority = number | { update?: number };
 type EmptySystemData = Record<string, never>;
 type EmptySystemSchema = StandardSchemaV1<EmptySystemData, EmptySystemData>;
 
@@ -24,7 +24,7 @@ export type SystemOpts<TSchema extends StandardSchema, TMethods extends Record<s
     default: InferStandardSchema<NoInfer<TSchema>>["input"];
     schema: TSchema;
   };
-  phase?: "update" | "render" | "all";
+  phase?: "update" | "all";
   priority?: SystemPriority;
   enabled?: boolean;
   system: () => void;
@@ -50,7 +50,7 @@ export type EngineSystem<TSchema extends StandardSchema = StandardSchema> = {
   name: string;
   data: InferStandardSchema<TSchema>["output"];
   schema: TSchema;
-  phase: "update" | "render" | "all";
+  phase: "update" | "all";
   priority: SystemPriority;
   system: () => void;
   initialize?: () => void;

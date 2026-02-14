@@ -1,10 +1,14 @@
 import { invariantById } from "@/utilities/selectors";
-import { createRenderPipeline, RenderPipelineContext, useAssets } from "@repo/engine";
-import { Canvas2DRenderer } from "@repo/engine/render";
-import { RenderVisibleWorldsStage } from "./stages/RenderVisibleWorlds";
+import { createRenderPipeline, useAssets } from "@repo/engine";
+import { Canvas2DRenderer, createFrameAllocator } from "@repo/engine/render";
+import { createFPSRenderPass } from "@repo/fps";
+import { ApplyContextVisualsPass } from "./passes/ApplyContextVisualsPass";
+import { BeginFramePass } from "./passes/BeginFramePass";
+import { EndFramePass } from "./passes/EndFramePass";
+import { RenderWorldPass } from "./passes/RenderWorldPass";
+import { ActiveWorldProvider } from "./world-provider";
 
-// prettier-ignore
-export const System = createRenderPipeline("render")({
+export const Render = createRenderPipeline({
   initializeContext() {
     const canvas = getResizeableCanvas();
     const renderer = new Canvas2DRenderer();
@@ -12,9 +16,19 @@ export const System = createRenderPipeline("render")({
     const assets = useAssets();
     renderer.initialize(canvas, assets);
 
-    return new RenderPipelineContext(renderer);
+    return {
+      renderer,
+      worldProvider: new ActiveWorldProvider(),
+      frameAllocator: createFrameAllocator({}),
+    };
   },
-  stages: [RenderVisibleWorldsStage],
+  passes: [
+    BeginFramePass,
+    ApplyContextVisualsPass,
+    RenderWorldPass,
+    createFPSRenderPass(),
+    EndFramePass,
+  ],
 });
 
 // Utility function to get the canvas and handle resizing

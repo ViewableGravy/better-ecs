@@ -1,98 +1,164 @@
-import type { StandardSchemaV1 } from "@standard-schema/spec";
+import type { UserWorld } from "../ecs/world";
+import {
+  FrameAllocator,
+  createFrameAllocator,
+  type FrameAllocatorRegistry,
+} from "../render/frame-allocator";
 import { RenderQueue } from "../render/render-queue";
 import type { Renderer } from "../render/renderer";
-import { useOverloadedSystem } from "./context";
-import { createSystem, type EngineSystem, type SystemPriority } from "./register/system";
-import { CommandBuffer } from "./utils/command-buffer";
+import { useEngine } from "./context";
 
-export type RenderPipelineStage = () => void;
+export type RenderPassScope = "frame" | "world";
 
-export class RenderPipelineContext<TCustom extends object = object, TCommands = unknown> {
+export interface WorldProvider {
+  getVisibleWorlds(): readonly UserWorld[];
+}
+
+export type RenderPassContext<
+  TRegistry extends FrameAllocatorRegistry = FrameAllocatorRegistry,
+  TState extends object = Record<string, never>,
+> = {
   renderer: Renderer;
-  commands: CommandBuffer<TCommands>;
   queue: RenderQueue;
-  custom: TCustom;
+  frameAllocator: FrameAllocator<TRegistry>;
+  worldProvider: WorldProvider;
+  visibleWorlds: readonly UserWorld[];
+  world: UserWorld | null;
+  alpha: number;
+  state: TState;
+};
 
-  constructor(renderer: Renderer) {
-    this.renderer = renderer;
-    this.queue = new RenderQueue();
+export type RenderPass<
+  TRegistry extends FrameAllocatorRegistry = FrameAllocatorRegistry,
+  TState extends object = Record<string, never>,
+> = {
+  readonly name: string;
+  readonly scope?: RenderPassScope;
+  execute: (context: RenderPassContext<TRegistry, TState>) => void;
+};
 
-    // @ts-expect-error Defaults to {} and is then populated via .attach()
-    this.custom = {};
-    this.commands = new CommandBuffer<TCommands>();
+/**
+ * utility function for creating a render pass. This is the same as defining the type
+ * explicitly but automatically infers the generic parameters from the provided object.
+ */
+export function createRenderPass(name: string) {
+  function internalCreateRenderPass<
+    TRegistry extends FrameAllocatorRegistry = FrameAllocatorRegistry,
+    TState extends object = Record<string, never>,
+  >(renderPass: Omit<RenderPass<TRegistry, TState>, "name">): RenderPass<TRegistry, TState> {
+    return {
+      ...renderPass,
+      name: `render:${name}`,
+    };
   }
 
-  attach<TCommands>(commands: CommandBuffer<TCommands>): RenderPipelineContext<TCustom, TCommands>;
-  attach<TAttach extends object>(
-    custom: TAttach,
-  ): RenderPipelineContext<TCustom & TAttach, TCommands>;
-  attach(value: CommandBuffer<TCommands> | object): RenderPipelineContext<object, TCommands> {
-    if (value instanceof CommandBuffer) {
-      this.commands = value;
-      return this;
-    }
+  return internalCreateRenderPass;
+}
 
-    this.custom = Object.assign(this.custom, value);
-    return this;
+export interface RenderPipeline {
+  initialize(): void;
+  render(): void;
+}
+
+type CreateRenderPipelineContext<
+  TRegistry extends FrameAllocatorRegistry,
+  TState extends object,
+> = {
+  renderer: Renderer;
+  worldProvider?: WorldProvider;
+  frameAllocator?: FrameAllocator<TRegistry>;
+  state?: TState;
+};
+
+type CreateRenderPipelineOptions<
+  TRegistry extends FrameAllocatorRegistry,
+  TState extends object,
+> = {
+  initializeContext: () => CreateRenderPipelineContext<TRegistry, TState>;
+  passes: readonly RenderPass<TRegistry, TState>[];
+};
+
+class DefaultWorldProvider implements WorldProvider {
+  getVisibleWorlds(): readonly UserWorld[] {
+    return [useEngine().world];
   }
 }
 
-type RenderPipelineSchema<TCustom extends object, TCommand> = StandardSchemaV1<
-  RenderPipelineContext<TCustom, TCommand>,
-  RenderPipelineContext<TCustom, TCommand>
->;
+export function createRenderPipeline<
+  TRegistry extends FrameAllocatorRegistry = Record<string, never>,
+  TState extends object = Record<string, never>,
+>(options: CreateRenderPipelineOptions<TRegistry, TState>): RenderPipeline {
+  let context: RenderPassContext<TRegistry, TState> | null = null;
 
-type RenderPipelineOptions<TCustom extends object, TCommand> = {
-  stages: RenderPipelineStage[];
-  initializeContext: () => RenderPipelineContext<TCustom, TCommand>;
-  enabled?: boolean;
-  priority?: SystemPriority;
-};
-
-const createPipelineSchema = <T>(): StandardSchemaV1<T, T> => {
-  return {
-    "~standard": {
-      version: 1,
-      vendor: "better-ecs",
-      validate: (value: unknown) => ({ value: value as T, issues: [] }),
-    },
-  };
-};
-
-export const createRenderPipeline = <TName extends string>(name: TName) => {
-  return <TCustom extends object, TCommand>(options: RenderPipelineOptions<TCustom, TCommand>) => {
-    let context: RenderPipelineContext<TCustom, TCommand> | null = null;
-
-    const getOrInitContext = (): RenderPipelineContext<TCustom, TCommand> => {
-      if (!context) {
-        context = options.initializeContext();
-      }
+  const getOrInitializeContext = (): RenderPassContext<TRegistry, TState> => {
+    if (context) {
       return context;
+    }
+
+    const initialized = options.initializeContext();
+    // The fallback allocator is only used when no registry is supplied.
+    // TypeScript cannot infer an empty object as `TRegistry` at this boundary.
+    const frameAllocator =
+      initialized.frameAllocator ?? createFrameAllocator<TRegistry>({} as TRegistry);
+    const worldProvider = initialized.worldProvider ?? new DefaultWorldProvider();
+
+    context = {
+      renderer: initialized.renderer,
+      queue: new RenderQueue(),
+      frameAllocator,
+      worldProvider,
+      visibleWorlds: [],
+      world: null,
+      alpha: 1,
+      // `state` defaults to an empty object and is optionally extended by user code.
+      // This cast is localized to the initialization boundary.
+      state: (initialized.state ?? {}) as TState,
     };
 
-    return createSystem(name)({
-      phase: "render",
-      enabled: options.enabled ?? true,
-      priority: options.priority ?? 0,
-      schema: {
-        default: {} as RenderPipelineContext<TCustom, TCommand>,
-        schema: createPipelineSchema<RenderPipelineContext<TCustom, TCommand>>(),
-      },
-      initialize: () => {
-        const system =
-          useOverloadedSystem<EngineSystem<RenderPipelineSchema<TCustom, TCommand>>>(name);
-        system.data = getOrInitContext();
-      },
-      system: () => {
-        const system =
-          useOverloadedSystem<EngineSystem<RenderPipelineSchema<TCustom, TCommand>>>(name);
-        system.data.commands.clear();
-        system.data.queue.clear();
-
-        for (const stage of options.stages) {
-          stage();
-        }
-      },
-    });
+    return context;
   };
-};
+
+  const runPass = (
+    pass: RenderPass<TRegistry, TState>,
+    passContext: RenderPassContext<TRegistry, TState>,
+  ): void => {
+    if ((pass.scope ?? "frame") === "frame") {
+      pass.execute(passContext);
+      return;
+    }
+
+    for (const world of passContext.visibleWorlds) {
+      passContext.world = world;
+      pass.execute(passContext);
+    }
+
+    passContext.world = null;
+  };
+
+  return {
+    initialize(): void {
+      getOrInitializeContext();
+    },
+    render(): void {
+      const passContext = getOrInitializeContext();
+      const engine = useEngine();
+
+      const updateTimeMs = 1000 / engine.frame.ups;
+      const timeSinceLastUpdate = performance.now() - engine.frame.lastUpdateTime;
+      passContext.alpha = Math.min(timeSinceLastUpdate / updateTimeMs, 1);
+      passContext.visibleWorlds = passContext.worldProvider.getVisibleWorlds();
+
+      passContext.queue.clear();
+      passContext.frameAllocator.beginFrame();
+
+      try {
+        for (const pass of options.passes) {
+          runPass(pass, passContext);
+        }
+      } finally {
+        passContext.world = null;
+        passContext.frameAllocator.endFrame();
+      }
+    },
+  };
+}

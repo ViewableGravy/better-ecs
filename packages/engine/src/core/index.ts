@@ -6,7 +6,6 @@ export * from "./register/system";
 export * from "./render-pipeline";
 export * from "./scene";
 export * from "./types";
-export * from "./utils/command-buffer";
 
 export {
   useAssets,

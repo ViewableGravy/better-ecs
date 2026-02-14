@@ -27,3 +27,12 @@ export { TextureCache } from "./texture-cache";
 
 // ── Render queue ────────────────────────────────────────────────
 export { RenderQueue } from "./render-queue";
+
+// ── Frame allocator ─────────────────────────────────────────────
+export {
+    FrameAllocator,
+    createFrameAllocator,
+    type FrameAllocatorRegistry,
+    type FramePoolFactory
+} from "./frame-allocator";
+

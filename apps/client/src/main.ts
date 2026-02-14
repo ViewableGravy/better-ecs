@@ -10,7 +10,7 @@ import { System as Collision } from "./systems/collision";
 import { System as Initialize } from "./systems/initialisation";
 import { System as Movement } from "./systems/movement";
 import { System as Physics } from "./systems/physics";
-import { System as Render } from "./systems/render";
+import { Render } from "./systems/render";
 import { invariantById } from "./utilities/selectors";
 
 declare module "@repo/engine" {
@@ -19,7 +19,7 @@ declare module "@repo/engine" {
   }
 }
 
-async function main() {
+async function main(): Promise<Engine.AnyEngine> {
   const engine = Engine.createEngine({
     assetLoader: Loader,
     initialization: Initialize,
@@ -41,10 +41,8 @@ async function main() {
       Movement,
       Physics,
       Collision,
-
-      // Render system
-      Render,
     ],
+    render: Render,
     scenes: [TestScene, RenderingDemoScene, SpatialContextsDemoScene],
   });
 

@@ -1,9 +1,14 @@
-import { createSystem, useEngine, useOverloadedSystem } from '@repo/engine';
-import type { EngineSystem } from '@repo/engine';
-import { initialize } from './initialize';
-import { render } from './render';
-import { update } from './update';
-import { schema, type Opts, type FPSCounterData } from './types';
+import {
+  createSystem,
+  useEngine,
+  useOverloadedSystem,
+  type EngineSystem,
+  type RenderPass,
+} from "@repo/engine";
+import { initialize } from "./initialize";
+import { render } from "./render";
+import { schema, type FPSCounterData, type Opts } from "./types";
+import { update } from "./update";
 
 const defaultState: FPSCounterData = {
   fpsBuffer: { start: null, frames: 0 },
@@ -12,19 +17,24 @@ const defaultState: FPSCounterData = {
   ups: [],
   mode: "default",
   customFps: null,
-  customUps: null
+  customUps: null,
 };
+
+let currentOptions: Opts | null = null;
 
 export const System = (opts: Opts) => {
   return createSystem("plugin:fps-counter")({
     system: EntryPoint,
-    initialize: () => initialize(opts.element),
+    initialize: () => {
+      currentOptions = opts;
+      initialize(opts.element);
+    },
     priority: 1,
-    phase: "all",
+    phase: "update",
     schema: {
       schema: schema,
-      default: { ...defaultState, mode: opts.defaultMode ?? defaultState.mode }
-    }
+      default: { ...defaultState, mode: opts.defaultMode ?? defaultState.mode },
+    },
   });
 
   function EntryPoint() {
@@ -47,15 +57,21 @@ export const System = (opts: Opts) => {
       data.fpsBuffer.start = now;
     }
 
-    if (engine.frame.phase("update")) {
-      return update(opts);
-    }
-
-    if (engine.frame.phase("render")) {
-      return render(opts);
-    }
+    update(opts);
   }
-}
+};
+
+export const createFPSRenderPass = (): RenderPass => {
+  return {
+    name: "plugin:fps-counter:ui",
+    execute() {
+      if (!currentOptions) {
+        return;
+      }
+
+      render(currentOptions);
+    },
+  };
+};
 
 export type { FPSCounterData };
-

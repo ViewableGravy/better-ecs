@@ -37,7 +37,6 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
     {
       all: EngineSystem[];
       update: EngineSystem[];
-      render: EngineSystem[];
     }
   > = new Map();
   #initializedSceneSystems: Set<string> = new Set();
@@ -52,8 +51,7 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
 
       const instances = scene.systems.map((factory) => factory());
       const update = this.#sortSystemsForPhase(instances, "update");
-      const render = this.#sortSystemsForPhase(instances, "render");
-      this.#sceneSystems.set(scene.name, { all: instances, update, render });
+      this.#sceneSystems.set(scene.name, { all: instances, update });
     }
   }
 
@@ -65,7 +63,7 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
     this.#engineRef = engine;
   }
 
-  #sortSystemsForPhase(systems: EngineSystem[], phase: "update" | "render"): EngineSystem[] {
+  #sortSystemsForPhase(systems: EngineSystem[], phase: "update"): EngineSystem[] {
     const getPriority = (system: EngineSystem): number => {
       if (typeof system.priority === "number") return system.priority;
       return system.priority[phase] ?? 0;
@@ -148,12 +146,12 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
     return this.#scenes.has(sceneName);
   }
 
-  /** @internal Get scene-level systems for the active scene and phase. */
-  getSystemsForPhase(phase: "update" | "render"): EngineSystem[] {
+  /** @internal Get scene-level systems for the active scene update loop. */
+  getUpdateSystems(): EngineSystem[] {
     if (!this.#activeScene) return [];
     const entry = this.#sceneSystems.get(this.#activeScene.name);
     if (!entry) return [];
-    return phase === "update" ? entry.update : entry.render;
+    return entry.update;
   }
 
   /** @internal Get a scene-level system instance by name for the active scene. */

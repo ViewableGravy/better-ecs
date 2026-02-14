@@ -1,5 +1,6 @@
 import { SceneManager } from ".";
 import { AssetManager } from "../asset";
+import type { RenderPipeline } from "./render-pipeline";
 
 // --- Type Registration (via module augmentation) ---
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type, @typescript-eslint/no-empty-interface
@@ -19,6 +20,7 @@ export type AnyEngine = {
   /** Scene manager for controlling scene lifecycle */
   scene: SceneManager<any>;
   assets: AssetManager<any>;
+  render: RenderPipeline | null;
 };
 
 export type RegisteredEngine<TRegister = Register> = TRegister extends {
