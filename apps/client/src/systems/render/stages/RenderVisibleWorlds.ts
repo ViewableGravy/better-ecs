@@ -2,7 +2,7 @@ import { PlayerComponent } from "@/components/player";
 import { InsideContext } from "@/scenes/spatial-contexts-demo/components/inside-context";
 import { useEngine, useSystem, useWorld } from "@repo/engine";
 import { Color } from "@repo/engine/components";
-import { getSpatialContextManager } from "@repo/spatial-contexts";
+import { getSpatialContextManager, type SpatialContextManager } from "@repo/spatial-contexts";
 import { collectRenderables } from "./CollectRenderables";
 import { commitWorld } from "./Commit";
 import { sortRenderQueue } from "./Sort";
@@ -45,7 +45,7 @@ export function RenderVisibleWorldsStage(): void {
   renderer.high.end();
 }
 
-function getTransitionWorld(manager: ReturnType<typeof getSpatialContextManager>) {
+function getTransitionWorld(manager: SpatialContextManager) {
   const rootContextId = manager.getRootContextId();
   if (manager.getFocusedContextId() !== rootContextId) {
     return undefined;

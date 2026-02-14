@@ -61,7 +61,7 @@
         "zod": "^4.3.4",
       },
       "devDependencies": {
-        "typescript": "^5.3.3",
+        "typescript": "^5.9.3",
         "vite": "^7.0.0",
       },
     },
@@ -73,7 +73,7 @@
       },
       "devDependencies": {
         "@types/node": "^20.11.0",
-        "typescript": "^5.3.3",
+        "typescript": "^5.9.3",
       },
     },
     "packages/engine": {
@@ -86,7 +86,7 @@
       },
       "devDependencies": {
         "@standard-schema/spec": "^1.1.0",
-        "typescript": "^5.3.3",
+        "typescript": "^5.9.3",
       },
     },
     "packages/features/fps": {
@@ -98,7 +98,7 @@
       },
       "devDependencies": {
         "@standard-schema/spec": "^1.1.0",
-        "typescript": "^5.3.3",
+        "typescript": "^5.9.3",
         "vitest": "^4.0.0",
       },
     },
@@ -109,7 +109,7 @@
         "@repo/engine": "workspace:*",
       },
       "devDependencies": {
-        "typescript": "^5.3.3",
+        "typescript": "^5.9.3",
         "vitest": "^4.0.0",
       },
     },
@@ -120,7 +120,7 @@
         "@repo/engine": "workspace:*",
       },
       "devDependencies": {
-        "typescript": "^5.3.3",
+        "typescript": "^5.9.3",
         "vitest": "^4.0.0",
       },
     },
@@ -128,7 +128,7 @@
       "name": "@repo/hmr",
       "version": "0.0.1",
       "devDependencies": {
-        "typescript": "^5.3.3",
+        "typescript": "^5.9.3",
         "vite": "^7.0.0",
       },
     },
@@ -136,7 +136,7 @@
       "name": "@repo/utils",
       "version": "0.0.1",
       "devDependencies": {
-        "typescript": "^5.3.3",
+        "typescript": "^5.9.3",
       },
     },
   },
@@ -2133,7 +2133,7 @@
 
     "yocto-queue": ["yocto-queue@0.1.0", "", {}, "sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q=="],
 
-    "zod": ["zod@4.3.4", "", {}, "sha512-Zw/uYiiyF6pUT1qmKbZziChgNPRu+ZRneAsMUDU6IwmXdWt5JwcUfy2bvLOCUtz5UniaN/Zx5aFttZYbYc7O/A=="],
+    "zod": ["zod@4.3.6", "", {}, "sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg=="],
 
     "@babel/core/semver": ["semver@6.3.1", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA=="],
 

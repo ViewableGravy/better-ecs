@@ -1,4 +1,4 @@
-import { engineHmr } from "@repo/hmr";
+import { engineHmr } from "@repo/hmr/plugin";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import { defineConfig } from "vite";
@@ -34,50 +34,50 @@ export default defineConfig({
       // Order matters - more specific paths first
       {
         find: "@repo/engine/core",
-        replacement: path.resolve(__dirname, "../../packages/engine/src/core/index.ts"),
+        replacement: path.resolve(__dirname, "../../packages/engine/src/core/index"),
       },
       {
         find: "@repo/engine/components",
-        replacement: path.resolve(__dirname, "../../packages/engine/src/components/index.ts"),
+        replacement: path.resolve(__dirname, "../../packages/engine/src/components/index"),
       },
       {
         find: "@repo/engine/render",
-        replacement: path.resolve(__dirname, "../../packages/engine/src/render/index.ts"),
+        replacement: path.resolve(__dirname, "../../packages/engine/src/render/index"),
       },
       {
         find: "@repo/engine/asset",
-        replacement: path.resolve(__dirname, "../../packages/engine/src/asset/index.ts"),
+        replacement: path.resolve(__dirname, "../../packages/engine/src/asset/index"),
       },
       {
         find: "@repo/engine/texture",
-        replacement: path.resolve(__dirname, "../../packages/engine/src/texture/index.ts"),
+        replacement: path.resolve(__dirname, "../../packages/engine/src/texture/index"),
       },
       {
         find: "@repo/engine",
-        replacement: path.resolve(__dirname, "../../packages/engine/src/index.ts"),
+        replacement: path.resolve(__dirname, "../../packages/engine/src/index"),
       },
       {
         find: "@repo/hmr",
-        replacement: path.resolve(__dirname, "../../packages/tooling/hmr/src/index.ts"),
+        replacement: path.resolve(__dirname, "../../packages/tooling/hmr/src/index"),
       },
       {
         find: "@repo/physics",
-        replacement: path.resolve(__dirname, "../../packages/foundation/physics/src/index.ts"),
+        replacement: path.resolve(__dirname, "../../packages/foundation/physics/src/index"),
       },
       {
         find: "@repo/spatial-contexts",
         replacement: path.resolve(
           __dirname,
-          "../../packages/foundation/spatial-contexts/src/index.ts",
+          "../../packages/foundation/spatial-contexts/src/index",
         ),
       },
       {
         find: "@repo/fps",
-        replacement: path.resolve(__dirname, "../../packages/features/fps/src/index.ts"),
+        replacement: path.resolve(__dirname, "../../packages/features/fps/src/index"),
       },
       {
         find: "@repo/utils",
-        replacement: path.resolve(__dirname, "../../packages/utils/src/index.ts"),
+        replacement: path.resolve(__dirname, "../../packages/utils/src/index"),
       },
       {
         find: "@/assets",

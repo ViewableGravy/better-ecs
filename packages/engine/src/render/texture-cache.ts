@@ -1,4 +1,4 @@
-import type { AssetManager } from "../asset/AssetManager";
+import type { LooseAssetManager } from "../asset/AssetManager";
 import type { Texture } from "../components/texture";
 
 /**
@@ -75,7 +75,7 @@ interface AssetTextureEntry {
  * is stored as generic HTMLImageElement | ImageBitmap | HTMLCanvasElement.
  */
 export class TextureCache {
-  private assets!: AssetManager;
+  private assets!: LooseAssetManager;
 
   // Texture management (low-level, by source UID)
   private nextTextureHandle: TextureHandle = 1;
@@ -98,7 +98,7 @@ export class TextureCache {
   }
 
   /** Bind the asset manager used for resolving asset IDs. */
-  initialize(assets: AssetManager): void {
+  initialize(assets: LooseAssetManager): void {
     this.assets = assets;
   }
 
@@ -127,9 +127,9 @@ export class TextureCache {
     }
 
     // Check if asset is available in the AssetManager
-    const texture = this.assets.get(assetId) as Texture | undefined;
+    const loadedAsset = this.assets.getLoose(assetId);
 
-    if (!texture) {
+    if (!isTextureAsset(loadedAsset)) {
       // Asset not loaded yet — mark as pending
       if (!existing) {
         this.assetTextures.set(assetId, {
@@ -150,6 +150,8 @@ export class TextureCache {
 
       return null;
     }
+
+    const texture = loadedAsset;
 
     // Asset is available — check upload budget
     if (
@@ -265,31 +267,14 @@ export class TextureCache {
    * resolves when all textures are loaded and uploaded.
    */
   async preload(assetIds: string[]): Promise<void> {
-    const loadPromises = assetIds.map((id) => this.assets.load(id));
+    const loadPromises = assetIds.map((id) => this.assets.loadLoose(id));
     const results = await Promise.allSettled(loadPromises);
 
     for (let i = 0; i < assetIds.length; i++) {
       const assetId = assetIds[i];
       const result = results[i];
 
-      if (result.status === "fulfilled") {
-        const texture = result.value as Texture;
-        const handle = this.load(texture);
-        this.assetTextures.set(assetId, {
-          assetId,
-          state: "ready",
-          info: {
-            handle,
-            width: texture.width,
-            height: texture.height,
-            frameX: texture.frameX,
-            frameY: texture.frameY,
-            frameWidth: texture.frameWidth,
-            frameHeight: texture.frameHeight,
-          },
-          texture,
-        });
-      } else {
+      if (result.status === "rejected") {
         this.assetTextures.set(assetId, {
           assetId,
           state: "error",
@@ -297,7 +282,36 @@ export class TextureCache {
           texture: null,
         });
         console.error(`[TextureCache] Failed to preload texture "${assetId}":`, result.reason);
+        continue;
       }
+
+      if (!isTextureAsset(result.value)) {
+        this.assetTextures.set(assetId, {
+          assetId,
+          state: "error",
+          info: null,
+          texture: null,
+        });
+        console.error(`[TextureCache] Preloaded asset "${assetId}" is not a Texture.`);
+        continue;
+      }
+
+      const texture = result.value;
+      const handle = this.load(texture);
+      this.assetTextures.set(assetId, {
+        assetId,
+        state: "ready",
+        info: {
+          handle,
+          width: texture.width,
+          height: texture.height,
+          frameX: texture.frameX,
+          frameY: texture.frameY,
+          frameWidth: texture.frameWidth,
+          frameHeight: texture.frameHeight,
+        },
+        texture,
+      });
     }
   }
 
@@ -327,4 +341,37 @@ export class TextureCache {
     this.assetTextures.clear();
     this.lazyLoadWarned.clear();
   }
+}
+
+function isTextureAsset(value: unknown): value is Texture {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  if (!("source" in value)) {
+    return false;
+  }
+
+  const source = value.source;
+  if (typeof source !== "object" || source === null) {
+    return false;
+  }
+
+  return (
+    "uid" in source &&
+    typeof source.uid === "number" &&
+    "resource" in source &&
+    "width" in value &&
+    typeof value.width === "number" &&
+    "height" in value &&
+    typeof value.height === "number" &&
+    "frameX" in value &&
+    typeof value.frameX === "number" &&
+    "frameY" in value &&
+    typeof value.frameY === "number" &&
+    "frameWidth" in value &&
+    typeof value.frameWidth === "number" &&
+    "frameHeight" in value &&
+    typeof value.frameHeight === "number"
+  );
 }

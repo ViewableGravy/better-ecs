@@ -1,4 +1,4 @@
-import type { AssetManager } from "../asset/AssetManager";
+import type { LooseAssetManager } from "../asset/AssetManager";
 import type { HighLevelRendererConfig } from "./canvas2d-high-level";
 import type { HighLevelRenderer } from "./high-level";
 import type { LowLevelRenderer } from "./low-level";
@@ -35,7 +35,7 @@ export { DEFAULT_RENDERER_CONFIG };
  */
 export interface Renderer {
   /** Initialize the renderer with a canvas and asset manager. */
-  initialize(canvas: HTMLCanvasElement, assets: AssetManager): void;
+  initialize(canvas: HTMLCanvasElement, assets: LooseAssetManager): void;
 
   /** Low-level draw primitives. */
   readonly low: LowLevelRenderer;

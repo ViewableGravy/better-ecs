@@ -1,4 +1,4 @@
-import type { AssetManager } from "../asset/AssetManager";
+import type { LooseAssetManager } from "../asset/AssetManager";
 import { Canvas2DHighLevel } from "./canvas2d-high-level";
 import { Canvas2DLowLevel } from "./canvas2d-low-level";
 import type { HighLevelRenderer } from "./high-level";
@@ -51,7 +51,7 @@ export class Canvas2DRenderer implements Renderer {
     });
   }
 
-  initialize(canvas: HTMLCanvasElement, assets: AssetManager): void {
+  initialize(canvas: HTMLCanvasElement, assets: LooseAssetManager): void {
     this.low.initialize(canvas);
     this.textureCache.initialize(assets);
   }

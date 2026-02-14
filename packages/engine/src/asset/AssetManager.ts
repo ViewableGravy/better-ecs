@@ -4,6 +4,11 @@ type Assets = Record<string, unknown>;
 type AssetKey<TAssets extends Assets> = Extract<keyof TAssets, string>;
 type AssetState = "loading" | "error" | "ready";
 
+export interface LooseAssetManager {
+  getLoose(path: string): unknown;
+  loadLoose(path: string): Promise<unknown>;
+}
+
 type Registry<TAssets extends Assets> = {
   assets: { [K in AssetKey<TAssets>]?: AssetAdapter<TAssets[K]> };
 };
@@ -16,7 +21,7 @@ type AssetRequests<TAssets extends Assets> = {
   [K in AssetKey<TAssets>]?: Promise<TAssets[K]>;
 };
 
-export class AssetManager<TAssets extends Assets = Assets> {
+export class AssetManager<TAssets extends Assets = Assets> implements LooseAssetManager {
   /**
    * Internal storage for resolved assets.
    */
@@ -102,6 +107,14 @@ export class AssetManager<TAssets extends Assets = Assets> {
     }
 
     return undefined;
+  }
+
+  loadLoose(path: string): Promise<TAssets[AssetKey<TAssets>] | undefined> {
+    if (!this.isRegisteredKey(path)) {
+      return Promise.resolve(undefined);
+    }
+
+    return this.load(path);
   }
 
   public load<K extends AssetKey<TAssets>>(key: K): Promise<TAssets[K]> {
