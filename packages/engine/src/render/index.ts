@@ -9,7 +9,7 @@ export type {
   TextureHandle,
   TextureInfo,
   TextureState,
-  TextureStatus,
+  TextureStatus
 } from "./renderer";
 
 export { DEFAULT_RENDERER_CONFIG } from "./renderer";
@@ -27,3 +27,11 @@ export { TextureCache } from "./texture-cache";
 
 // ── Render queue ────────────────────────────────────────────────
 export { RenderQueue } from "./render-queue";
+
+// ── Frame allocator ─────────────────────────────────────────────
+export {
+  FrameAllocator,
+  type FrameAllocatorRegistry,
+  type FramePoolFactory
+} from "./frame-allocator";
+

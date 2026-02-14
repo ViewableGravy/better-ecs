@@ -5,7 +5,6 @@ import { PhysicsWorld, collides, resolve } from "@repo/physics";
 const physicsWorld = new PhysicsWorld();
 
 export const SceneCollisionSystem = createSystem("demo:spatial-contexts-collision")({
-  phase: "update",
   priority: 100,
   system() {
     const world = useWorld();

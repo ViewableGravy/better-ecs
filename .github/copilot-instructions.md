@@ -16,6 +16,7 @@
     - Consider Internal/User types for the same object, where types are casted to userland types with a smaller surface, while internal types have a larger surface with more properties for internal use.
 - Always remove files when all exports are removed from the file.
   - Do not leave empty files or `export {}` if the file is no longer used.
+- Do not create unused functions/helpers. While practical to consider future usage while designing, do not create functionality for a use case that does not yet exist, prefer to write as needed
 
 # performance
 

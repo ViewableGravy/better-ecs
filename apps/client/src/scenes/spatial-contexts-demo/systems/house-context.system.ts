@@ -1,6 +1,6 @@
 import { PlayerComponent } from "@/components/player";
 import { ensurePlayer } from "@/entities/player";
-import { createSystem, type EntityId, useDelta, useWorld } from "@repo/engine";
+import { createSystem, type EntityId, useDelta, useEngine, useWorld } from "@repo/engine";
 import { Transform2D } from "@repo/engine/components";
 import { type ContextId, useContextManager } from "@repo/spatial-contexts";
 import { ContextEntryRegion } from "../components/context-entry-region";
@@ -17,7 +17,6 @@ import {
 } from "./house-transition.state";
 
 export const HouseContextSystem = createSystem("demo:context-focus")({
-  phase: "update",
   system() {
     const manager = useContextManager();
     const world = useWorld();
@@ -102,6 +101,7 @@ function switchContext(
   next: ContextId,
   sourceTransform: Transform2D,
 ): void {
+  const engine = useEngine();
   const target = manager.getWorldOrThrow(next);
   const targetPlayer = ensurePlayer(target);
   const targetTransform = target.get(targetPlayer, Transform2D);
@@ -111,6 +111,7 @@ function switchContext(
   targetTransform.prev.copyFrom(sourceTransform.prev);
 
   manager.setFocusedContextId(next);
+  engine.scene.setActiveWorld(next);
 }
 
 function setInsideContext(

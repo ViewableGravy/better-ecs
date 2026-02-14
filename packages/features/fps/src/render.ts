@@ -1,5 +1,4 @@
 import { useEngine, useOverloadedSystem, type EngineSystem } from "@repo/engine";
-import invariant from "tiny-invariant";
 import { schema, type Opts } from "./types";
 
 export function render(opts: Opts) {
@@ -7,7 +6,10 @@ export function render(opts: Opts) {
   const engine = useEngine();
   const { data } = useOverloadedSystem<EngineSystem<typeof schema>>("plugin:fps-counter");
   const fpsBufferStart = data.fpsBuffer.start;
-  invariant(fpsBufferStart, "FPS buffer start time must be initialized before render updates");
+  if (fpsBufferStart === null) {
+    data.fpsBuffer.start = now;
+    return;
+  }
 
   data.fpsBuffer.frames++;
 

@@ -3,7 +3,6 @@ import { useWorld } from "../core/context";
 import { createSystem } from "../core/register/system";
 
 export const transformSnapshotSystem = createSystem("engine:transformSnapshot")({
-  phase: "update",
   system: () => {
     const world = useWorld();
 

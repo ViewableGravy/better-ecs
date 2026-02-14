@@ -1,13 +1,13 @@
-import { createSystem, useWorld } from "@repo/engine";
+import { createSystem, useEngine, useWorld } from "@repo/engine";
 import { useContextManager } from "../hooks";
 import { Portal } from "./portal.component";
 import type { PortalSystemOptions } from "./portal.types";
 
 export const createPortalSystem = (opts: PortalSystemOptions) => {
   return createSystem(opts.name ?? "plugin:spatial-contexts-portals")({
-    phase: "update",
     priority: 50_000,
     system() {
+      const engine = useEngine();
       const manager = useContextManager();
       const world = useWorld();
       const focusedContextId = manager.getFocusedContextId();
@@ -26,6 +26,7 @@ export const createPortalSystem = (opts: PortalSystemOptions) => {
 
         const nextFocusedContextId = portal.targetContextId;
         manager.setFocusedContextId(nextFocusedContextId);
+        engine.scene.setActiveWorld(nextFocusedContextId);
         const nextWorld = manager.getWorldOrThrow(nextFocusedContextId);
 
         opts.onEnter?.({ ...args, nextFocusedContextId, nextWorld });

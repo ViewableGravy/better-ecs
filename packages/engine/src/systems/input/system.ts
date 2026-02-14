@@ -1,15 +1,14 @@
+import { EventPool } from "@repo/utils";
 import { useOverloadedSystem } from "../../core/context";
 import { createSystem, type EngineSystem } from "../../core/register/system";
-import { EventPool } from "@repo/utils";
-import { createMatchKeybind } from "./keybind/keybind";
 import { InputStateSchema } from "./input.types";
+import { createMatchKeybind } from "./keybind/keybind";
 
 /***** SYSTEM START *****/
 export const inputSystem = createSystem("engine:input")({
   initialize: Initialize,
   system: Entrypoint,
   enabled: true,
-  phase: "update",
   schema: {
     default: {
       keysDown: new Set<string>(),
@@ -25,11 +24,11 @@ export const inputSystem = createSystem("engine:input")({
     // Return methods object that will be merged with system
     // The methods will be called during system execution where useOverloadedSystem is available
     const data = system.data;
-    
+
     return {
-      matchKeybind: createMatchKeybind(data)
-    }
-  }
+      matchKeybind: createMatchKeybind(data),
+    };
+  },
 });
 
 /***** ENTRYPOINT START *****/
@@ -74,7 +73,7 @@ function Entrypoint() {
         if (!data.pressedBetweenUpdate.has(event.code)) {
           data.keysActive.delete(event.code);
         }
-        
+
         break;
       }
     }
@@ -83,14 +82,13 @@ function Entrypoint() {
     event.release();
   }
 
-  
-  // Clear the event buffer for next update  
+  // Clear the event buffer for next update
   data.eventBuffer.length = 0;
 }
 
 function Initialize() {
   // Only initialize in browser environment
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
 
   const { data } = useOverloadedSystem<EngineSystem<typeof InputStateSchema>>("engine:input");
 
@@ -103,26 +101,26 @@ function Initialize() {
 
     data.eventBuffer.push(
       eventPool.press(
-        "keydown", 
-        event.code, 
-        event.ctrlKey, 
-        event.shiftKey, 
-        event.altKey, 
-        event.metaKey
-      )
+        "keydown",
+        event.code,
+        event.ctrlKey,
+        event.shiftKey,
+        event.altKey,
+        event.metaKey,
+      ),
     );
   });
 
   window.addEventListener("keyup", (event) => {
     data.eventBuffer.push(
       eventPool.press(
-        "keyup", 
-        event.code, 
-        event.ctrlKey, 
-        event.shiftKey, 
-        event.altKey, 
-        event.metaKey
-      )
+        "keyup",
+        event.code,
+        event.ctrlKey,
+        event.shiftKey,
+        event.altKey,
+        event.metaKey,
+      ),
     );
   });
 }

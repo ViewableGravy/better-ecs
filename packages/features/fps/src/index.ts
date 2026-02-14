@@ -1,9 +1,16 @@
-import { createSystem, useEngine, useOverloadedSystem } from '@repo/engine';
-import type { EngineSystem } from '@repo/engine';
-import { initialize } from './initialize';
-import { render } from './render';
-import { update } from './update';
-import { schema, type Opts, type FPSCounterData } from './types';
+import {
+  createRenderPass,
+  createSystem,
+  useEngine,
+  useOverloadedSystem,
+  type EngineSystem,
+  type StandardSchema,
+  type SystemFactory,
+} from "@repo/engine";
+import { initialize } from "./initialize";
+import { render } from "./render";
+import { schema, type FPSCounterData, type Opts } from "./types";
+import { update } from "./update";
 
 const defaultState: FPSCounterData = {
   fpsBuffer: { start: null, frames: 0 },
@@ -12,19 +19,20 @@ const defaultState: FPSCounterData = {
   ups: [],
   mode: "default",
   customFps: null,
-  customUps: null
+  customUps: null,
 };
 
-export const System = (opts: Opts) => {
+export const System = (
+  opts: Opts,
+): SystemFactory<"plugin:fps-counter", StandardSchema, Record<string, never>> => {
   return createSystem("plugin:fps-counter")({
     system: EntryPoint,
     initialize: () => initialize(opts.element),
     priority: 1,
-    phase: "all",
     schema: {
       schema: schema,
-      default: { ...defaultState, mode: opts.defaultMode ?? defaultState.mode }
-    }
+      default: { ...defaultState, mode: opts.defaultMode ?? defaultState.mode },
+    },
   });
 
   function EntryPoint() {
@@ -47,15 +55,19 @@ export const System = (opts: Opts) => {
       data.fpsBuffer.start = now;
     }
 
-    if (engine.frame.phase("update")) {
-      return update(opts);
-    }
-
-    if (engine.frame.phase("render")) {
-      return render(opts);
-    }
+    update(opts);
   }
+};
+
+export function createFPS(opts: Opts) {
+  return {
+    system: System(opts),
+    pass: createRenderPass("plugin:fps-counter:ui")({
+      execute() {
+        render(opts);
+      },
+    }),
+  };
 }
 
-export type { FPSCounterData };
-
+export type { FPSCounterData, Opts };

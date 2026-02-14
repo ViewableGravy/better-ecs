@@ -8,7 +8,6 @@ describe("Scene-level systems", () => {
     const controller = new AbortController();
 
     const EngineOrderSystem = createSystem("test:engine-order")({
-      phase: "update",
       priority: 10_000,
       system() {
         order.push("engine");
@@ -16,7 +15,6 @@ describe("Scene-level systems", () => {
     });
 
     const SceneOrderSystem = createSystem("test:scene-order")({
-      phase: "update",
       priority: 10_000,
       system() {
         const scene = useScene();
@@ -59,35 +57,33 @@ describe("Scene-level systems", () => {
     expect(engineIndex).toBeLessThan(sceneIndex);
   });
 
-  it("useScene() should throw when no scene is active", async () => {
+  it("useScene() should resolve default scene when no explicit scene is active", async () => {
     const controller = new AbortController();
+    const observedNames: string[] = [];
 
-    const ThrowingSystem = createSystem("test:useScene-throws")({
-      phase: "update",
+    const SceneSystem = createSystem("test:useScene-default")({
       system() {
-        // No active scene: should throw
-        useScene();
+        observedNames.push(useScene().name);
+        controller.abort();
       },
     });
 
     const engine = createEngine({
-      systems: [ThrowingSystem],
+      systems: [SceneSystem],
       scenes: [],
     });
 
-    // Consume a single tick to trigger system execution.
-    await expect(
-      (async () => {
-        for await (const tick of engine.startEngine({
-          fps: 1000,
-          ups: 1000,
-          signal: controller.signal,
-        })) {
-          void tick;
-          // Stop if we somehow got here
-          controller.abort();
-        }
-      })(),
-    ).rejects.toThrow("useScene() called outside of scene context");
+    for await (const tick of engine.startEngine({
+      fps: 1000,
+      ups: 1000,
+      signal: controller.signal,
+    })) {
+      void tick;
+      if (controller.signal.aborted) {
+        break;
+      }
+    }
+
+    expect(observedNames[0]).toBe("__default__");
   });
 });

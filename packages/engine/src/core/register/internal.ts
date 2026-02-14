@@ -2,6 +2,7 @@ import { AssetManager } from "../../asset/AssetManager";
 import type { UserWorld } from "../../ecs/world";
 import type { EngineSystemTypes } from "../../systems/engine-system-types";
 import { executeWithContext } from "../context";
+import type { RenderPipeline } from "../render-pipeline";
 import { SceneManager } from "../scene/scene-manager";
 import type { SceneDefinition, SceneDefinitionTuple, SceneName } from "../scene/scene.types";
 import type { EngineFrame, EngineUpdate, FrameStats } from "../types";
@@ -58,9 +59,9 @@ export class EngineClass<
   #systems: Record<string, EngineSystem<any>>;
   #systemsView: Record<string, EngineSystem<any>>;
 
-  // Cached sorted lists for each phase
+  // Cached sorted list for update phase systems
   #updateSystems: EngineSystem<any>[] = [];
-  #renderSystems: EngineSystem<any>[] = [];
+  #renderPipeline: RenderPipeline | null;
 
   #currentPhase: "update" | "render" | null = null;
   #phaseFn = (phase: "update" | "render") => phase === this.#currentPhase;
@@ -79,6 +80,9 @@ export class EngineClass<
    */
   public readonly assets: AssetManager<TAssets>;
 
+  /** Render pipeline executed during frame ticks. */
+  public readonly render: RenderPipeline | null;
+
   public frame: FrameStats = {
     updateDelta: 0,
     frameDelta: 0,
@@ -95,11 +99,14 @@ export class EngineClass<
     systems: Record<string, EngineSystem<any>>,
     scenes: SceneDefinitionTuple = [],
     assets: AssetManager<TAssets>,
+    renderPipeline: RenderPipeline | null,
   ) {
     this.#systems = systems;
     this.scene = new SceneManager<TScenes>(scenes);
     this.scene.setEngineRef(this);
     this.assets = assets;
+    this.#renderPipeline = renderPipeline;
+    this.render = renderPipeline;
 
     this.frame.phase = this.#phaseFn;
 
@@ -123,20 +130,9 @@ export class EngineClass<
   private precomputeSystemOrder() {
     const allSystems = Object.values(this.#systems);
 
-    const getPriority = (system: EngineSystem<any>, phase: "update" | "render"): number => {
-      if (typeof system.priority === "number") {
-        return system.priority;
-      }
-      return system.priority[phase] ?? 0;
-    };
+    const getPriority = (system: EngineSystem<any>): number => system.priority;
 
-    this.#updateSystems = allSystems
-      .filter((s) => ["update", "all"].includes(s.phase))
-      .sort((a, b) => getPriority(b, "update") - getPriority(a, "update"));
-
-    this.#renderSystems = allSystems
-      .filter((s) => ["render", "all"].includes(s.phase))
-      .sort((a, b) => getPriority(b, "render") - getPriority(a, "render"));
+    this.#updateSystems = allSystems.sort((a, b) => getPriority(b) - getPriority(a));
   }
 
   /** Prefer `useSystem()` in systems instead. */
@@ -157,7 +153,7 @@ export class EngineClass<
   public async initialize(): Promise<void> {
     if (this.initialized) return;
 
-    await executeWithContext({ engine: this }, async () => {
+    await executeWithContext({ engine: this, scene: this.scene.context }, async () => {
       // Run initialization system if provided
       if (this.initializationSystem) {
         await this.initializationSystem.system();
@@ -169,6 +165,8 @@ export class EngineClass<
           system.initialize();
         }
       }
+
+      this.#renderPipeline?.initialize();
     });
 
     this.initialized = true;
@@ -237,12 +235,12 @@ export class EngineClass<
 
         // Skip system execution during scene transitions
         if (!this.scene.isTransitioning) {
-          // Run systems based on phase - render ALWAYS runs before update
+          // Render is always run before update when both are scheduled in a single tick.
           if (frameState.shouldUpdate) {
-            this.runSystems("render", frameState.shouldUpdate);
+            this.runRenderPipeline(frameState.shouldUpdate);
           }
           if (updateState.shouldUpdate) {
-            this.runSystems("update", updateState.shouldUpdate);
+            this.runUpdateSystems(updateState.shouldUpdate);
             // Update lastUpdateTime immediately to prevent double-running updates
             lastUpdateTime = now;
             this.frame.lastUpdateTime = now;
@@ -260,14 +258,29 @@ export class EngineClass<
     }
   }
 
-  private runSystems(phase: "update" | "render", shouldUpdate: boolean) {
+  private runRenderPipeline(shouldUpdate: boolean): void {
     if (!shouldUpdate) return;
+    if (!this.#renderPipeline) return;
 
-    this.#currentPhase = phase;
-    const systemsToRun = phase === "update" ? this.#updateSystems : this.#renderSystems;
+    this.#currentPhase = "render";
 
     const activeSceneContext = this.scene.context;
-    const sceneSystemsToRun = this.scene.getSystemsForPhase(phase);
+
+    executeWithContext({ engine: this, scene: activeSceneContext }, () => {
+      this.#renderPipeline?.render();
+    });
+
+    this.#currentPhase = null;
+  }
+
+  private runUpdateSystems(shouldUpdate: boolean) {
+    if (!shouldUpdate) return;
+
+    this.#currentPhase = "update";
+    const systemsToRun = this.#updateSystems;
+
+    const activeSceneContext = this.scene.context;
+    const sceneSystemsToRun = this.scene.getUpdateSystems();
 
     executeWithContext({ engine: this, scene: activeSceneContext }, () => {
       // 1) Engine/global systems

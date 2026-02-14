@@ -1,16 +1,23 @@
 import { Color } from "@repo/engine/components";
-import { defineContext } from "@repo/spatial-contexts";
-import { DUNGEON, HOUSE, HOUSE_HALF_HEIGHT, HOUSE_HALF_WIDTH, OVERWORLD } from "../constants";
+import { defineContext, type ContextId } from "@repo/spatial-contexts";
 import { spawnBackground } from "../factories/spawnBackground";
 import { spawnChair } from "../factories/spawnChair";
 import { spawnDoor } from "../factories/spawnDoor";
 import { spawnTable } from "../factories/spawnTable";
 import { setupContextPlayer } from "./shared";
 
-export function defineHouseContext() {
+type HouseContextOptions = {
+  overworldId: ContextId;
+  houseId: ContextId;
+  dungeonId: ContextId;
+  houseHalfWidth: number;
+  houseHalfHeight: number;
+};
+
+export function defineHouseContext(options: HouseContextOptions) {
   return defineContext({
-    id: HOUSE,
-    parentId: OVERWORLD,
+    id: options.houseId,
+    parentId: options.overworldId,
     policy: {
       visibility: "stack",
       simulation: "focused-only",
@@ -19,8 +26,8 @@ export function defineHouseContext() {
       setupContextPlayer(world, 0, 0);
 
       spawnBackground(world, {
-        width: HOUSE_HALF_WIDTH * 2,
-        height: HOUSE_HALF_HEIGHT * 2,
+        width: options.houseHalfWidth * 2,
+        height: options.houseHalfHeight * 2,
         color: new Color(0.4, 0.3, 0.2, 1),
         stroke: new Color(0.18, 0.1, 0.07, 1),
         strokeWidth: 6,
@@ -41,7 +48,7 @@ export function defineHouseContext() {
         role: "house-interior",
         portal: {
           mode: "teleport",
-          targetContextId: DUNGEON,
+          targetContextId: options.dungeonId,
           spawn: { x: 0, y: 160 },
           label: "House -> Dungeon",
         },

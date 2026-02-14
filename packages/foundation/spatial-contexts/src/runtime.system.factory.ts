@@ -6,7 +6,6 @@ import { installSpatialContexts } from "./install";
  */
 export function createSpatialContextsRuntimeSystem(sceneName: string) {
   return createSystem(`plugin:spatial-contexts-runtime:${sceneName}`)({
-    phase: "all",
     priority: 100_000,
     system() {
       const engine = useEngine();
