@@ -5,14 +5,17 @@
     "**/node_modules/**": true,
     "**/.nx/**": true,
     "**/dist/**": true,
+    "**/coverage/**": true,
     "**/performance-testing/results/**": true
   },
   "search.exclude": {
     "**/node_modules": true,
     "**/.nx": true,
     "**/dist": true,
+    "**/coverage": true,
     "**/performance-testing/results": true
   },
+  "nxConsole.disableFileWatching": true,
   "editor.indentSize": 2,
   "typescript.tsdk": "node_modules/typescript/lib"
 }
