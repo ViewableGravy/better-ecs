@@ -24,9 +24,9 @@ type CreateEngineOptions<
 
 /***** COMPONENT START *****/
 export function createEngine<
-  const TSystems extends SystemFactoryTuple,
-  const TScenes extends SceneDefinitionTuple = [],
-  const TAssets extends Record<string, unknown> = Record<string, unknown>,
+  TSystems extends SystemFactoryTuple,
+  TScenes extends SceneDefinitionTuple = [],
+  TAssets extends Record<string, unknown> = Record<string, unknown>,
 >(opts: CreateEngineOptions<TSystems, TScenes, TAssets>): EngineClass<TSystems, TScenes, TAssets> {
   // Create the engine instance
   const systemsRecord: Record<string, EngineSystem<any>> = {};

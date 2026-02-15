@@ -1,5 +1,4 @@
 // Register folder exports
-export type { EngineSystemNames, EngineSystemTypes } from "../systems/engine-system-types";
 export * from "./engine-types";
 export * from "./register/engine";
 export * from "./register/system";

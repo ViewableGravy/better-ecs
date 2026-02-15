@@ -6,6 +6,7 @@ export const System = createSystem("movement")({
   system: Entrypoint,
 });
 
+
 function Entrypoint() {
   /***** HOOKS *****/
   const world = useWorld();

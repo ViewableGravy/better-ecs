@@ -41,9 +41,12 @@ type SceneSystemFactories<T extends SceneDefinitionTuple> =
 
 /** Combines engine/global systems, active-scene systems, and built-in engine systems */
 type AllSystems<
-  T extends SystemFactoryTuple,
+  TSystems extends SystemFactoryTuple,
   TScenes extends SceneDefinitionTuple,
-> = SystemsTupleToRecord<T> & FactoriesToRecord<SceneSystemFactories<TScenes>> & EngineSystemTypes;
+> = 
+  & SystemsTupleToRecord<TSystems> 
+  & FactoriesToRecord<SceneSystemFactories<TScenes>> 
+  & EngineSystemTypes;
 
 /** Converts scene tuple to a record of scene names to scene definitions */
 type ScenesTupleToRecord<T extends SceneDefinitionTuple> = {
