@@ -1,6 +1,9 @@
 import type { UserWorld } from "@repo/engine";
 import { Camera, Shape, Sprite, Transform2D } from "@repo/engine/components";
 import type { RenderQueue, Renderer } from "@repo/engine/render";
+import { drawGrid } from "./DrawGrid";
+
+const BACKGROUND_LAYER_MAX = -1;
 
 export function commitWorld(
   world: UserWorld,
@@ -27,16 +30,40 @@ export function commitWorld(
 
   // --- Render Queue Processing ---
 
-  // 1. Shapes
+  // 1. Background shapes
   for (const id of queue.shapes) {
     const shape = world.get(id, Shape);
     const transform = world.get(id, Transform2D);
-    if (shape && transform) {
-      renderer.high.render(shape, transform, alpha);
+    if (!shape || !transform) {
+      continue;
     }
+
+    if (shape.layer > BACKGROUND_LAYER_MAX) {
+      continue;
+    }
+
+    renderer.high.render(shape, transform, alpha);
   }
 
-  // 2. Sprites
+  // 2. Grid overlay (above floor/background, below entities)
+  drawGrid(renderer);
+
+  // 3. Foreground shapes
+  for (const id of queue.shapes) {
+    const shape = world.get(id, Shape);
+    const transform = world.get(id, Transform2D);
+    if (!shape || !transform) {
+      continue;
+    }
+
+    if (shape.layer <= BACKGROUND_LAYER_MAX) {
+      continue;
+    }
+
+    renderer.high.render(shape, transform, alpha);
+  }
+
+  // 4. Sprites
   for (const id of queue.sprites) {
     const sprite = world.get(id, Sprite);
     const transform = world.get(id, Transform2D);

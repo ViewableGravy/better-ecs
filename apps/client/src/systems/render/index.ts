@@ -4,6 +4,7 @@ import { createRenderPipeline, useAssets } from "@repo/engine";
 import { Canvas2DRenderer, FrameAllocator } from "@repo/engine/render";
 import { ApplyContextVisualsPass } from "./passes/ApplyContextVisualsPass";
 import { BeginFramePass } from "./passes/BeginFramePass";
+import { ColliderDebugPass } from "./passes/ColliderDebugPass";
 import { EndFramePass } from "./passes/EndFramePass";
 import { RenderWorldPass } from "./passes/RenderWorldPass";
 import { ActiveWorldProvider } from "./world-provider";
@@ -26,6 +27,7 @@ export const Render = createRenderPipeline({
     BeginFramePass, 
     ApplyContextVisualsPass, 
     RenderWorldPass, 
+    ColliderDebugPass,
     FPSPass, 
     EndFramePass
   ],
