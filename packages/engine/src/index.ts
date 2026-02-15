@@ -18,6 +18,13 @@ type AnySystems = Record<string, any>;
 declare global {
   var __ENGINE_HMR__: {
     register?: (systems: AnySystems) => void;
+    registerCallbacks?: (callbacks: {
+      executeSystemDispose: (system: AnySystems[string]) => void;
+      executeSystemInitialize: (system: AnySystems[string]) => void;
+      reloadActiveScene: () => Promise<void>;
+      updateSceneDefinition: (scene: Record<string, unknown>) => boolean;
+    }) => void;
     onSystemCreated?: (systemInfo: AnySystemOpts) => void;
+    onSceneCreated?: (scene: Record<string, unknown>) => void;
   };
 }

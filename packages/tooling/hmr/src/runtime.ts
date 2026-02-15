@@ -25,12 +25,23 @@ export type EngineSystem = {
   enabled: boolean;
   system: () => void;
   initialize?: () => void;
+  dispose?: () => void;
+};
+
+export type HMRCallbacks = {
+  executeSystemDispose: (system: EngineSystem) => void;
+  executeSystemInitialize: (system: EngineSystem) => void;
+  reloadActiveScene: () => Promise<void>;
+  updateSceneDefinition: (scene: Record<string, unknown>) => boolean;
 };
 
 export type HMRRuntime = {
   systems: Record<string, EngineSystem> | null;
+  callbacks: HMRCallbacks | null;
   register(systems: Record<string, EngineSystem>): void;
+  registerCallbacks(callbacks: HMRCallbacks): void;
   onSystemCreated(fresh: EngineSystem): boolean;
+  onSceneCreated(fresh: Record<string, unknown>): boolean;
 };
 
 /**

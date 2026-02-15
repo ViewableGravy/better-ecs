@@ -10,22 +10,32 @@ export const System = createSystem("camera-zoom")({
   schema: {
     default: {
       pendingWheelDelta: 0,
+      wheelHandler: null,
     },
     schema: z.object({
       pendingWheelDelta: z.number(),
+      wheelHandler: z.function({
+        input: [z.instanceof(WheelEvent)],
+        output: z.void(),
+      }).nullable(),
     })
   },
   initialize() {
     const { data } = useSystem("camera-zoom");
 
-    window.addEventListener(
-      "wheel",
-      (event) => {
-        data.pendingWheelDelta += normalizeWheelDelta(event);
-        event.preventDefault();
-      },
-      { passive: false },
-    );
+    data.wheelHandler = (event: WheelEvent) => {
+      data.pendingWheelDelta += normalizeWheelDelta(event);
+      event.preventDefault();
+    };
+
+    window.addEventListener("wheel", data.wheelHandler, { passive: false });
+  },
+  dispose() {
+    const { data } = useSystem("camera-zoom");
+    if (data.wheelHandler) {
+      window.removeEventListener("wheel", data.wheelHandler);
+      data.wheelHandler = null;
+    }
   },
   system() {
     const { data } = useSystem("camera-zoom");

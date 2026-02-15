@@ -1,8 +1,9 @@
 import { AssetManager } from "../../asset/AssetManager";
 import { inputSystem } from "../../systems/input";
 import { transformSnapshotSystem } from "../../systems/transformSnapshot";
+import { executeWithContext } from "../context";
 import type { RenderPipeline } from "../render-pipeline";
-import type { SceneDefinitionTuple, SceneName } from "../scene/scene.types";
+import type { SceneDefinition, SceneDefinitionTuple, SceneName } from "../scene/scene.types";
 import { EngineClass } from "./internal";
 import type { EngineInitializationSystem, EngineSystem, SystemFactoryTuple } from "./system";
 export { EngineClass };
@@ -56,7 +57,45 @@ export function createEngine<
 
   // Register with HMR runtime if present (set up by @repo/hmr Vite plugin)
   const hmr = globalThis.__ENGINE_HMR__;
-  if (hmr?.register) hmr.register(systemsRecord);
+  if (hmr) {
+    // Build a combined record of all system instances (engine + scene-level)
+    // so the HMR runtime can hot-swap any system by name.
+    const allHmrSystems: Record<string, EngineSystem<any>> = { ...systemsRecord };
+    for (const system of engine.scene.getAllSceneSystems()) {
+      allHmrSystems[system.name] = system;
+    }
+
+    hmr.register?.(allHmrSystems);
+
+    // Provide callbacks the inline HMR runtime uses to invoke engine-internal
+    // lifecycle hooks (dispose, initialize, scene reload). The runtime is plain
+    // JavaScript and cannot import engine modules directly.
+    hmr.registerCallbacks?.({
+      executeSystemDispose(system) {
+        executeWithContext({ engine, scene: engine.scene.context }, () => {
+          if ('dispose' in system && typeof system.dispose === 'function') {
+            system.dispose();
+          }
+        });
+      },
+      executeSystemInitialize(system) {
+        executeWithContext({ engine, scene: engine.scene.context }, () => {
+          if ('initialize' in system && typeof system.initialize === 'function') {
+            system.initialize();
+          }
+        });
+      },
+      async reloadActiveScene() {
+        await engine.scene.reload();
+      },
+      updateSceneDefinition(scene) {
+        // Scene definitions from HMR arrive through the untyped global bridge.
+        // createScene produces conforming objects, so this cast is safe. No
+        // architecture change can avoid it since the bridge is plain JavaScript.
+        return engine.scene.updateDefinition(scene as unknown as SceneDefinition<string>);
+      },
+    });
+  }
 
   // Set initialization system if provided
   if (opts.initialization) {

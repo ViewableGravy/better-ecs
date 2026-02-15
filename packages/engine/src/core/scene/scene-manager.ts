@@ -178,51 +178,122 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
     this.#isTransitioning = true;
 
     try {
-      // Teardown previous scene
       if (this.#activeScene) {
-        const prevScene = this.#activeScene;
-        const prevContext = this.#activeSceneContext;
-
-        const prevDefault = prevContext.getInternalWorld(prevContext.defaultWorldId);
-        if (prevDefault) {
-          this.#activeWorldId = prevContext.defaultWorldId;
-          this.#activeWorld = prevDefault;
-          this.#userWorld.setWorld(prevDefault);
-        }
-
-        await executeWithContext({ engine: this.#engineRef, scene: prevContext }, async () => {
-          await prevScene.sceneTeardown(prevContext);
-          await prevScene.teardown(this.#userWorld);
-        });
-
-        prevContext.clearAllWorlds();
+        await this.#teardownActiveScene();
       }
 
-      // Create new scene context + default world
-      const newWorld = new World(sceneName as string);
-      const newContext = new SceneContext(newScene.name as string, newWorld);
-
-      this.#activeScene = newScene;
-      this.#activeSceneContext = newContext;
-      this.#activeWorldId = newContext.defaultWorldId;
-      this.#activeWorld = newWorld;
-      this.#userWorld.setWorld(newWorld);
-
-      // Setup new scene (and initialize its scene-level systems once)
-      await executeWithContext({ engine: this.#engineRef, scene: newContext }, async () => {
-        const systems = this.#sceneSystems.get(sceneName as string);
-        if (systems && !this.#initializedSceneSystems.has(sceneName as string)) {
-          for (const system of systems.all) {
-            system.initialize?.();
-          }
-          this.#initializedSceneSystems.add(sceneName as string);
-        }
-
-        await newScene.sceneSetup(newContext);
-        await newScene.setup(this.#userWorld);
-      });
+      await this.#setupScene(newScene);
     } finally {
       this.#isTransitioning = false;
     }
+  }
+
+  /**
+   * Reload the currently active scene by tearing it down and setting it up again.
+   * Used by HMR when a scene definition is updated.
+   * @internal
+   */
+  async reload(): Promise<void> {
+    if (!this.#activeScene) return;
+    if (this.#isTransitioning) return;
+
+    this.#isTransitioning = true;
+
+    try {
+      const sceneToReload = this.#activeScene;
+      await this.#teardownActiveScene();
+      await this.#setupScene(sceneToReload);
+    } finally {
+      this.#isTransitioning = false;
+    }
+  }
+
+  /**
+   * Update a registered scene definition in-place (for HMR).
+   * Returns true if the updated scene is the currently active scene.
+   * @internal
+   */
+  updateDefinition(fresh: SceneDefinition<string>): boolean {
+    const existing = this.#scenes.get(fresh.name);
+    if (!existing) return false;
+
+    existing.setup = fresh.setup;
+    existing.teardown = fresh.teardown;
+    existing.sceneSetup = fresh.sceneSetup;
+    existing.sceneTeardown = fresh.sceneTeardown;
+
+    return this.#activeScene?.name === fresh.name;
+  }
+
+  /**
+   * Get all scene-level system instances across all scenes.
+   * Used by HMR to register scene systems for hot-swapping.
+   * @internal
+   */
+  getAllSceneSystems(): EngineSystem[] {
+    const all: EngineSystem[] = [];
+    for (const entry of this.#sceneSystems.values()) {
+      all.push(...entry.all);
+    }
+    return all;
+  }
+
+  async #teardownActiveScene(): Promise<void> {
+    const prevScene = this.#activeScene;
+    const prevContext = this.#activeSceneContext;
+
+    if (!prevScene) return;
+
+    const systems = this.#sceneSystems.get(prevScene.name);
+
+    const prevDefault = prevContext.getInternalWorld(prevContext.defaultWorldId);
+    if (prevDefault) {
+      this.#activeWorldId = prevContext.defaultWorldId;
+      this.#activeWorld = prevDefault;
+      this.#userWorld.setWorld(prevDefault);
+    }
+
+    await executeWithContext({ engine: this.#engineRef, scene: prevContext }, async () => {
+      // Dispose scene-level systems before teardown
+      if (systems) {
+        for (const system of systems.all) {
+          system.dispose?.();
+        }
+      }
+
+      await prevScene.sceneTeardown(prevContext);
+      await prevScene.teardown(this.#userWorld);
+    });
+
+    if (systems) {
+      this.#initializedSceneSystems.delete(prevScene.name);
+    }
+
+    prevContext.clearAllWorlds();
+    this.#activeScene = null;
+  }
+
+  async #setupScene(scene: SceneDefinition<string>): Promise<void> {
+    const newWorld = new World(scene.name);
+    const newContext = new SceneContext(scene.name, newWorld);
+
+    this.#activeScene = scene;
+    this.#activeSceneContext = newContext;
+    this.#activeWorldId = newContext.defaultWorldId;
+    this.#activeWorld = newWorld;
+    this.#userWorld.setWorld(newWorld);
+
+    await executeWithContext({ engine: this.#engineRef, scene: newContext }, async () => {
+      const systems = this.#sceneSystems.get(scene.name);
+      if (systems && !this.#initializedSceneSystems.has(scene.name)) {
+        for (const system of systems.all) {
+          system.initialize?.();
+        }
+        this.#initializedSceneSystems.add(scene.name);
+      }
+
+      await scene.sceneSetup(newContext);
+      await scene.setup(this.#userWorld);
+    });
   }
 }

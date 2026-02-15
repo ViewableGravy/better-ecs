@@ -7,6 +7,7 @@ import { createMatchKeybind } from "./keybind/keybind";
 /***** SYSTEM START *****/
 export const inputSystem = createSystem("engine:input")({
   initialize: Initialize,
+  dispose: Dispose,
   system: Entrypoint,
   enabled: true,
   schema: {
@@ -86,6 +87,9 @@ function Entrypoint() {
   data.eventBuffer.length = 0;
 }
 
+let keydownHandler: ((event: KeyboardEvent) => void) | null = null;
+let keyupHandler: ((event: KeyboardEvent) => void) | null = null;
+
 function Initialize() {
   // Only initialize in browser environment
   if (typeof window === "undefined") return;
@@ -95,7 +99,7 @@ function Initialize() {
   const eventPool = new EventPool();
 
   // Browser event listeners: buffer events using physical key (code) instead of character (key)
-  window.addEventListener("keydown", (event) => {
+  keydownHandler = (event: KeyboardEvent) => {
     // Ignore auto-repeat keydown events to prevent unbounded buffering on long key holds.
     if (event.repeat) return;
 
@@ -109,9 +113,9 @@ function Initialize() {
         event.metaKey,
       ),
     );
-  });
+  };
 
-  window.addEventListener("keyup", (event) => {
+  keyupHandler = (event: KeyboardEvent) => {
     data.eventBuffer.push(
       eventPool.press(
         "keyup",
@@ -122,5 +126,22 @@ function Initialize() {
         event.metaKey,
       ),
     );
-  });
+  };
+
+  window.addEventListener("keydown", keydownHandler);
+  window.addEventListener("keyup", keyupHandler);
+}
+
+function Dispose() {
+  if (typeof window === "undefined") return;
+
+  if (keydownHandler) {
+    window.removeEventListener("keydown", keydownHandler);
+    keydownHandler = null;
+  }
+
+  if (keyupHandler) {
+    window.removeEventListener("keyup", keyupHandler);
+    keyupHandler = null;
+  }
 }
