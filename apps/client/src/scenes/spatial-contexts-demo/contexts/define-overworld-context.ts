@@ -1,6 +1,5 @@
 import { Color } from "@repo/engine/components";
 import { defineContext, type ContextId } from "@repo/spatial-contexts";
-import { spawnBackground } from "../factories/spawnBackground";
 import { spawnContextEntryRegion } from "../factories/spawnContextEntryRegion";
 import { spawnDoor } from "../factories/spawnDoor";
 import { spawnHouse } from "../factories/spawnHouse";
@@ -29,12 +28,6 @@ export function defineOverworldContext(options: OverworldContextOptions) {
 
       const houseLayout = createHouseLayout(options.houseHalfWidth, options.houseHalfHeight);
 
-      spawnBackground(world, {
-        width: 1200,
-        height: 800,
-        color: new Color(0.15, 0.2, 0.25, 1),
-        role: "outside",
-      });
 
       spawnHouse(world, {
         x: 0,

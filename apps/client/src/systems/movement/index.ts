@@ -21,7 +21,7 @@ export const System = createSystem("movement")({
     // Handle movement using physical key codes (layout-independent)
     // Maps physical keys to movement directions
     for (const code of data.keysActive) {
-      const speed = 50 * (updateDelta / 1000);
+      const speed = 100 * (updateDelta / 1000);
 
       // Vertical movement: Arrow keys or W/S
       if (code === "ArrowUp" || code === "KeyW") {

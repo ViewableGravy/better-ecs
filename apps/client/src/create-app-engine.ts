@@ -6,6 +6,7 @@ import { Scene as SpatialContextsDemoScene } from "./scenes/spatial-contexts-dem
 import { System as Collision } from "./scenes/spatial-contexts-demo/systems/scene-collision.system";
 import { Scene as TestScene } from "./scenes/test";
 import { System as CameraFollow } from "./systems/camera-follow";
+import { System as CameraZoom } from "./systems/camera-zoom";
 import { System as Initialize } from "./systems/initialisation";
 import { System as Movement } from "./systems/movement";
 import { Render } from "./systems/render";
@@ -22,6 +23,7 @@ export const createAppEngine = () => {
       Movement,
       Collision,
       CameraFollow,
+      CameraZoom,
     ],
     render: Render,
     scenes: [
