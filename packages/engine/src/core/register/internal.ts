@@ -7,6 +7,7 @@ import { SceneManager } from "../scene/scene-manager";
 import type { SceneDefinition, SceneDefinitionTuple, SceneName } from "../scene/scene.types";
 import type { EngineFrame, EngineUpdate, FrameStats } from "../types";
 import type { EngineInitializationSystem, EngineSystem, SystemFactoryTuple } from "./system";
+import { executeSystemInitialize } from "./system";
 
 /***** TYPE DEFINITIONS *****/
 type StartEngineOpts = {
@@ -164,9 +165,7 @@ export class EngineClass<
 
       // Initialize all systems
       for (const system of Object.values(this.#systems)) {
-        if (system.initialize) {
-          system.initialize();
-        }
+        executeSystemInitialize(system);
       }
 
       this.#renderPipeline?.initialize();

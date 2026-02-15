@@ -19,7 +19,7 @@ declare global {
   var __ENGINE_HMR__: {
     register?: (systems: AnySystems) => void;
     registerCallbacks?: (callbacks: {
-      executeSystemDispose: (system: AnySystems[string]) => void;
+      executeSystemCleanup: (system: AnySystems[string]) => void;
       executeSystemInitialize: (system: AnySystems[string]) => void;
       reloadActiveScene: () => Promise<void>;
       updateSceneDefinition: (scene: Record<string, unknown>) => boolean;

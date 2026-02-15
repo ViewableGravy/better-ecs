@@ -29,13 +29,15 @@ export const System = createSystem("camera-zoom")({
     };
 
     window.addEventListener("wheel", data.wheelHandler, { passive: false });
-  },
-  dispose() {
-    const { data } = useSystem("camera-zoom");
-    if (data.wheelHandler) {
+
+    return () => {
+      if (!data.wheelHandler) {
+        return;
+      }
+
       window.removeEventListener("wheel", data.wheelHandler);
       data.wheelHandler = null;
-    }
+    };
   },
   system() {
     const { data } = useSystem("camera-zoom");

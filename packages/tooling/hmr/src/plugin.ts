@@ -49,15 +49,15 @@ globalThis.__ENGINE_HMR__ = (() => {
       const existing = runtime.systems[fresh.name];
       if (!existing) return false;
 
-      // Dispose old system lifecycle before swapping
+      // Run previous cleanup before swapping lifecycle behaviour
       if (runtime.callbacks) {
-        runtime.callbacks.executeSystemDispose(existing);
+        runtime.callbacks.executeSystemCleanup(existing);
       }
 
       // Swap behaviour, preserve state (data/schema)
       existing.system = fresh.system;
       existing.initialize = fresh.initialize;
-      existing.dispose = fresh.dispose;
+      existing.react = undefined;
       existing.priority = fresh.priority;
       existing.enabled = fresh.enabled;
 

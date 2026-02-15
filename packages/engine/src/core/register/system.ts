@@ -3,6 +3,8 @@ import type { InferStandardSchema, StandardSchema } from "../types";
 
 /***** TYPE DEFINITIONS *****/
 export type SystemPriority = number;
+export type SystemCleanup = () => void;
+export type SystemInitialize = () => void | SystemCleanup;
 type EmptySystemData = Record<string, never>;
 type EmptySystemSchema = StandardSchemaV1<EmptySystemData, EmptySystemData>;
 
@@ -27,8 +29,7 @@ export type SystemOpts<TSchema extends StandardSchema, TMethods extends Record<s
   priority?: SystemPriority;
   enabled?: boolean;
   system: () => void;
-  initialize?: () => void;
-  dispose?: () => void;
+  initialize?: SystemInitialize;
   methods?: (system: EngineSystem<TSchema>) => TMethods;
 };
 export type SystemFactory<
@@ -52,9 +53,27 @@ export type EngineSystem<TSchema extends StandardSchema = StandardSchema> = {
   schema: TSchema;
   priority: SystemPriority;
   system: () => void;
-  initialize?: () => void;
-  dispose?: () => void;
+  initialize?: SystemInitialize;
+  react?: SystemCleanup;
   enabled: boolean;
+};
+
+export const executeSystemCleanup = (system: EngineSystem): void => {
+  if (!system.react) return;
+
+  system.react();
+  system.react = undefined;
+};
+
+export const executeSystemInitialize = (system: EngineSystem): void => {
+  executeSystemCleanup(system);
+
+  if (!system.initialize) return;
+
+  const cleanup = system.initialize();
+  if (typeof cleanup === "function") {
+    system.react = cleanup;
+  }
 };
 
 export type EngineInitializationSystem = {
@@ -87,7 +106,6 @@ export const createSystem = <TName extends string>(name: TName) => {
         name,
         system: opts.system,
         initialize: opts.initialize,
-        dispose: opts.dispose,
         priority: opts.priority ?? 0,
         enabled: opts.enabled ?? true,
       });
@@ -102,7 +120,7 @@ export const createSystem = <TName extends string>(name: TName) => {
         enabled: opts.enabled ?? true,
         system: opts.system,
         initialize: opts.initialize,
-        dispose: opts.dispose,
+        react: undefined,
       };
 
       const methods = opts.methods ? opts.methods(system) : ({} as TMethods);

@@ -3,6 +3,7 @@ import { UserWorld, World } from "../../ecs/world";
 import { executeWithContext } from "../context";
 import type { EngineClass } from "../register/internal";
 import type { EngineSystem } from "../register/system";
+import { executeSystemCleanup, executeSystemInitialize } from "../register/system";
 import { SceneContext } from "./scene-context";
 import type { SceneDefinition, SceneDefinitionTuple, SceneName } from "./scene.types";
 
@@ -254,10 +255,10 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
     }
 
     await executeWithContext({ engine: this.#engineRef, scene: prevContext }, async () => {
-      // Dispose scene-level systems before teardown
+      // Cleanup scene-level systems before teardown
       if (systems) {
         for (const system of systems.all) {
-          system.dispose?.();
+          executeSystemCleanup(system);
         }
       }
 
@@ -287,7 +288,7 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
       const systems = this.#sceneSystems.get(scene.name);
       if (systems && !this.#initializedSceneSystems.has(scene.name)) {
         for (const system of systems.all) {
-          system.initialize?.();
+          executeSystemInitialize(system);
         }
         this.#initializedSceneSystems.add(scene.name);
       }

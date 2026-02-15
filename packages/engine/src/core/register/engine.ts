@@ -6,6 +6,10 @@ import type { RenderPipeline } from "../render-pipeline";
 import type { SceneDefinition, SceneDefinitionTuple, SceneName } from "../scene/scene.types";
 import { EngineClass } from "./internal";
 import type { EngineInitializationSystem, EngineSystem, SystemFactoryTuple } from "./system";
+import {
+  executeSystemCleanup as runSystemCleanup,
+  executeSystemInitialize as runSystemInitialize,
+} from "./system";
 export { EngineClass };
 
 /***** TYPE DEFINITIONS *****/
@@ -68,21 +72,17 @@ export function createEngine<
     hmr.register?.(allHmrSystems);
 
     // Provide callbacks the inline HMR runtime uses to invoke engine-internal
-    // lifecycle hooks (dispose, initialize, scene reload). The runtime is plain
+    // lifecycle hooks (cleanup, initialize, scene reload). The runtime is plain
     // JavaScript and cannot import engine modules directly.
     hmr.registerCallbacks?.({
-      executeSystemDispose(system) {
+      executeSystemCleanup(system) {
         executeWithContext({ engine, scene: engine.scene.context }, () => {
-          if ('dispose' in system && typeof system.dispose === 'function') {
-            system.dispose();
-          }
+          runSystemCleanup(system);
         });
       },
       executeSystemInitialize(system) {
         executeWithContext({ engine, scene: engine.scene.context }, () => {
-          if ('initialize' in system && typeof system.initialize === 'function') {
-            system.initialize();
-          }
+          runSystemInitialize(system);
         });
       },
       async reloadActiveScene() {

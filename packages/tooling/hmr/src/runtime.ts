@@ -24,12 +24,19 @@ export type EngineSystem = {
   priority: unknown;
   enabled: boolean;
   system: () => void;
-  initialize?: () => void;
-  dispose?: () => void;
+  initialize?: () => void | (() => void);
+
+  /**
+   * An automatically appended "dispose" function which is assigned the return
+   * of `initialize()` if it returns a function. this is used for hot reloading
+   * and is called before swapping in a new system implementation, allowing the old system to clean up any side effects (e.g. event listeners, intervals) before the new
+   * implementation takes over.
+   */
+  react?: () => void;
 };
 
 export type HMRCallbacks = {
-  executeSystemDispose: (system: EngineSystem) => void;
+  executeSystemCleanup: (system: EngineSystem) => void;
   executeSystemInitialize: (system: EngineSystem) => void;
   reloadActiveScene: () => Promise<void>;
   updateSceneDefinition: (scene: Record<string, unknown>) => boolean;
