@@ -1,13 +1,16 @@
+import type { RenderVisibilityRole } from "@/scenes/spatial-contexts-demo/components/render-visibility";
 import { invariantById } from "@/utilities/selectors";
 import { resolveCameraView, screenToWorld } from "@/utilities/world-camera";
-import { createSystem, useEngine, useSystem, useWorld } from "@repo/engine";
+import { createSystem, useEngine, useSystem, useWorld, type UserWorld } from "@repo/engine";
+import { getManager } from "@repo/spatial-contexts";
 import { syncColliderDebugWorld } from "./collider-debug";
 import { ColliderDebugProxy, GhostPreview } from "./components";
 import { bindBuildModeDomEvents } from "./events";
 import { syncPlacementGhost } from "./ghost";
 import { ensureHotbarIndicator, removeHotbarIndicator, updateHotbarIndicator } from "./hud";
 import { handleBuildModeKeybinds } from "./input";
-import { deleteAt, placeBox, snapToGrid } from "./placement";
+import { Placement } from "./placement";
+import { resolvePlacementWorld } from "./placement-target";
 import { buildModeState } from "./state";
 import { destroyEntitiesWithComponent } from "./transient";
 
@@ -44,8 +47,9 @@ export const System = createSystem("demo:build-mode")({
       camera,
     );
 
-    const snappedX = snapToGrid(worldPointer.x);
-    const snappedY = snapToGrid(worldPointer.y);
+    const snappedX = Placement.snapToGrid(worldPointer.x);
+    const snappedY = Placement.snapToGrid(worldPointer.y);
+    const placementTarget = resolvePlacementWorld(engine, world, worldPointer.x, worldPointer.y);
 
     // Keep ghosts scoped to the active world only.
     // This avoids leaked transient entities during world/context transitions.
@@ -55,11 +59,16 @@ export const System = createSystem("demo:build-mode")({
       }
     }
 
-    if (buildModeState.selectedItem === null) {
+    if (buildModeState.selectedItem === null || placementTarget.blocked) {
       destroyEntitiesWithComponent([world], GhostPreview);
       buildModeState.ghostEntityId = null;
     } else {
-      buildModeState.ghostEntityId = syncPlacementGhost(world, buildModeState.ghostEntityId, snappedX, snappedY);
+      buildModeState.ghostEntityId = syncPlacementGhost(
+        world,
+        buildModeState.ghostEntityId,
+        snappedX,
+        snappedY,
+      );
     }
 
     if (!buildModeState.colliderDebugVisible) {
@@ -75,14 +84,47 @@ export const System = createSystem("demo:build-mode")({
     buildModeState.pendingDelete = false;
     buildModeState.pendingPlace = false;
 
-    if (shouldDelete) {
-      deleteAt(world, worldPointer.x, worldPointer.y);
+    if (shouldDelete && !placementTarget.blocked) {
+      Placement.deleteAt({
+        world: placementTarget.world,
+        worldX: worldPointer.x,
+        worldY: worldPointer.y,
+      });
     }
 
-    if (!shouldPlace || buildModeState.selectedItem !== "box") {
+    if (!shouldPlace || buildModeState.selectedItem !== "box" || placementTarget.blocked) {
       return;
     }
 
-    placeBox(world, snappedX, snappedY);
+    Placement.spawnBox({
+      world: placementTarget.world,
+      snappedX,
+      snappedY,
+      renderVisibilityRole: resolvePlacementRenderVisibilityRole(engine, world, placementTarget.world),
+    });
   },
 });
+
+function resolvePlacementRenderVisibilityRole(
+  engine: ReturnType<typeof useEngine>,
+  activeWorld: UserWorld,
+  placementWorld: UserWorld,
+): RenderVisibilityRole {
+  const manager = getManager(engine.scene.context);
+  if (!manager) {
+    return "outside";
+  }
+
+  if (placementWorld !== activeWorld) {
+    return "outside";
+  }
+
+  const focusedContextId = manager.getFocusedContextId();
+  const rootContextId = manager.getRootContextId();
+
+  if (focusedContextId === rootContextId) {
+    return "outside";
+  }
+
+  return "house-interior";
+}

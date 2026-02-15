@@ -8,7 +8,27 @@ import {
 } from "./const";
 import type { BuildModeState } from "./state";
 
-type MatchKeybind = (bind: { code: string; modifiers: { ctrl?: boolean; shift?: boolean; alt?: boolean; meta?: boolean } }) => boolean;
+/**********************************************************************************************************
+ *   TYPE DEFINITIONS
+ **********************************************************************************************************/
+
+type MatchKeybindModifiers = {
+  ctrl?: boolean;
+  shift?: boolean;
+  alt?: boolean;
+  meta?: boolean;
+};
+
+type MatchKeybindArgs = {
+  code: string;
+  modifiers: MatchKeybindModifiers;
+};
+
+type MatchKeybind = (bind: MatchKeybindArgs) => boolean;
+
+/**********************************************************************************************************
+ *   COMPONENT START
+ **********************************************************************************************************/
 
 export function handleBuildModeKeybinds(state: BuildModeState, matchKeybind: MatchKeybind): void {
   if (matchKeybind(HOTBAR_SLOT_BOX)) {

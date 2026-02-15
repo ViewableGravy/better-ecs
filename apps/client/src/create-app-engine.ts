@@ -21,11 +21,11 @@ export const createAppEngine = () => {
       // Plugins
       FPSSystem,
       // Update systems
-      BuildMode,
       Movement,
       Collision,
       CameraFollow,
       CameraZoom,
+      BuildMode,
     ],
     render: Render,
     scenes: [

@@ -55,12 +55,14 @@ export function drawGrid(world: UserWorld, renderer: Renderer): void {
 
   const worldWidth = maxX - minX;
   const worldHeight = maxY - minY;
+  const lineCenterX = (minX + maxX) * 0.5;
+  const lineCenterY = (minY + maxY) * 0.5;
 
   for (let x = minX; x <= maxX; x += xStep) {
     renderer.low.drawShape({
       type: "line",
       x,
-      y: cameraY,
+      y: lineCenterY,
       width: worldHeight,
       height: 1,
       rotation: Math.PI / 2,
@@ -75,7 +77,7 @@ export function drawGrid(world: UserWorld, renderer: Renderer): void {
   for (let y = minY; y <= maxY; y += yStep) {
     renderer.low.drawShape({
       type: "line",
-      x: cameraX,
+      x: lineCenterX,
       y,
       width: worldWidth,
       height: 1,
