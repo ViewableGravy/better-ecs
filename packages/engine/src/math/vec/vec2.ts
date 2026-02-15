@@ -12,9 +12,16 @@ export class Vec2 {
    * @param y The y component
    * @returns This vector for chaining
    */
-  public set(x: number, y: number): this {
-    this.x = x;
-    this.y = y;
+  public set(vec: Vec2): this;
+  public set(x: number, y: number): this;
+  public set(arg1: Vec2 | number, arg2?: number): this {
+    if (arg1 instanceof Vec2) {
+      this.x = arg1.x;
+      this.y = arg1.y;
+    } else {
+      this.x = arg1;
+      this.y = arg2 ?? 0;
+    }
     return this;
   }
 

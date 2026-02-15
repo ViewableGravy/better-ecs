@@ -3,10 +3,10 @@ import { ensurePlayer } from "@/entities/player";
 import { Transform2D } from "@repo/engine/components";
 import { collides, getEntityCollider } from "@repo/physics";
 import {
-  contextId,
-  createContextScene,
-  createPortalSystem,
-  type PortalActivationArgs,
+    contextId,
+    createContextScene,
+    createPortalSystem,
+    type PortalActivationArgs,
 } from "@repo/spatial-contexts";
 import { defineDungeonContext } from "./contexts/define-dungeon-context";
 import { defineHouseContext } from "./contexts/define-house-context";

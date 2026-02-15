@@ -84,6 +84,7 @@ export const HouseContextSystem = createSystem("demo:context-focus")({
     if (isInsideSourceRegion) {
       setInsideContext(world, playerId, focused, sourceRegion.regionEntityId);
       setHouseInsideTarget(true);
+      syncPlayerToContext(manager, definition.parentId, transform);
       return;
     }
 
