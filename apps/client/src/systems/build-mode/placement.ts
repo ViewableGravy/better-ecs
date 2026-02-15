@@ -9,19 +9,6 @@ import { BOX_SIZE, DELETE_POINT_RADIUS, GRID_CELL_SIZE, HALF_BOX_SIZE, PLACED_FI
  *   TYPE DEFINITIONS
  **********************************************************************************************************/
 
-type SpawnBoxArgs = {
-  world: UserWorld;
-  snappedX: number;
-  snappedY: number;
-  renderVisibilityRole: RenderVisibilityRole;
-};
-
-type DeleteAtArgs = {
-  world: UserWorld;
-  worldX: number;
-  worldY: number;
-};
-
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
@@ -40,9 +27,7 @@ export class Placement {
     return Math.floor(value / GRID_CELL_SIZE) * GRID_CELL_SIZE;
   }
 
-  public static deleteAt(args: DeleteAtArgs): void {
-    const { world, worldX, worldY } = args;
-
+  public static deleteAt(world: UserWorld, worldX: number, worldY: number): void {
     Placement.deletePointTransform.curr.pos.set(worldX, worldY);
     Placement.deletePointTransform.prev.pos.set(worldX, worldY);
 
@@ -66,9 +51,12 @@ export class Placement {
     }
   }
 
-  public static spawnBox(args: SpawnBoxArgs): void {
-    const { world, snappedX, snappedY, renderVisibilityRole } = args;
-
+  public static spawnBox(
+    world: UserWorld,
+    snappedX: number,
+    snappedY: number,
+    renderVisibilityRole: RenderVisibilityRole,
+  ): void {
     if (!Placement.canSpawnBox(world, snappedX, snappedY)) {
       return;
     }

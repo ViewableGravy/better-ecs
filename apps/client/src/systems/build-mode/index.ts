@@ -12,7 +12,7 @@ import { handleBuildModeKeybinds } from "./input";
 import { Placement } from "./placement";
 import { resolvePlacementWorld } from "./placement-target";
 import { buildModeState } from "./state";
-import { destroyEntitiesWithComponent } from "./transient";
+import { destroyEntitiesWithComponent, destroyEntitiesWithComponentInWorld } from "./transient";
 
 export const System = createSystem("demo:build-mode")({
   initialize() {
@@ -30,8 +30,7 @@ export const System = createSystem("demo:build-mode")({
     const engine = useEngine();
     const world = useWorld();
     const input = useSystem("engine:input");
-
-    const sceneWorlds = [...engine.scene.context.worlds];
+    const sceneWorlds = engine.scene.context.worlds;
 
     handleBuildModeKeybinds(buildModeState, input.matchKeybind);
     updateHotbarIndicator(buildModeState);
@@ -39,28 +38,34 @@ export const System = createSystem("demo:build-mode")({
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
     const camera = resolveCameraView(world, viewportHeight);
-    const worldPointer = screenToWorld(
+    const worldPointerX = screenToWorld(
       buildModeState.mouseScreenX,
-      buildModeState.mouseScreenY,
       viewportWidth,
+      camera.x,
+      camera.zoom,
+    );
+    const worldPointerY = screenToWorld(
+      buildModeState.mouseScreenY,
       viewportHeight,
-      camera,
+      camera.y,
+      camera.zoom,
     );
 
-    const snappedX = Placement.snapToGrid(worldPointer.x);
-    const snappedY = Placement.snapToGrid(worldPointer.y);
-    const placementTarget = resolvePlacementWorld(engine, world, worldPointer.x, worldPointer.y);
+    const snappedX = Placement.snapToGrid(worldPointerX);
+    const snappedY = Placement.snapToGrid(worldPointerY);
+    const placementTarget = resolvePlacementWorld(engine, world, worldPointerX, worldPointerY);
+    const placementWorld = placementTarget.world ?? world;
 
     // Keep ghosts scoped to the active world only.
     // This avoids leaked transient entities during world/context transitions.
     for (const sceneWorld of sceneWorlds) {
       if (sceneWorld !== world) {
-        destroyEntitiesWithComponent([sceneWorld], GhostPreview);
+        destroyEntitiesWithComponentInWorld(sceneWorld, GhostPreview);
       }
     }
 
     if (buildModeState.selectedItem === null || placementTarget.blocked) {
-      destroyEntitiesWithComponent([world], GhostPreview);
+      destroyEntitiesWithComponentInWorld(world, GhostPreview);
       buildModeState.ghostEntityId = null;
     } else {
       buildModeState.ghostEntityId = syncPlacementGhost(
@@ -85,23 +90,19 @@ export const System = createSystem("demo:build-mode")({
     buildModeState.pendingPlace = false;
 
     if (shouldDelete && !placementTarget.blocked) {
-      Placement.deleteAt({
-        world: placementTarget.world,
-        worldX: worldPointer.x,
-        worldY: worldPointer.y,
-      });
+      Placement.deleteAt(placementWorld, worldPointerX, worldPointerY);
     }
 
     if (!shouldPlace || buildModeState.selectedItem !== "box" || placementTarget.blocked) {
       return;
     }
 
-    Placement.spawnBox({
-      world: placementTarget.world,
+    Placement.spawnBox(
+      placementWorld,
       snappedX,
       snappedY,
-      renderVisibilityRole: resolvePlacementRenderVisibilityRole(engine, world, placementTarget.world),
-    });
+      resolvePlacementRenderVisibilityRole(engine, world, placementWorld),
+    );
   },
 });
 

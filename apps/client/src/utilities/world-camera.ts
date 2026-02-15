@@ -12,6 +12,12 @@ export type CameraSelection = {
   transform: Transform2D;
 };
 
+const cameraViewBuffer: CameraView = {
+  x: 0,
+  y: 0,
+  zoom: 1,
+};
+
 export function resolveCameraSelection(
   world: UserWorld,
   cameraEntityId?: EntityId,
@@ -47,28 +53,27 @@ export function resolveCameraView(
   const selection = resolveCameraSelection(world, cameraEntityId);
 
   if (!selection) {
-    return { x: 0, y: 0, zoom: 1 };
+    cameraViewBuffer.x = 0;
+    cameraViewBuffer.y = 0;
+    cameraViewBuffer.zoom = 1;
+    return cameraViewBuffer;
   }
 
   const { camera, transform } = selection;
   const zoom = camera.orthoSize > 0 ? viewportHeight / (camera.orthoSize * 2) : 1;
 
-  return {
-    x: transform.curr.pos.x,
-    y: transform.curr.pos.y,
-    zoom,
-  };
+  cameraViewBuffer.x = transform.curr.pos.x;
+  cameraViewBuffer.y = transform.curr.pos.y;
+  cameraViewBuffer.zoom = zoom;
+
+  return cameraViewBuffer;
 }
 
 export function screenToWorld(
-  screenX: number,
-  screenY: number,
-  viewportWidth: number,
-  viewportHeight: number,
-  camera: CameraView,
-): { x: number; y: number } {
-  return {
-    x: (screenX - viewportWidth / 2) / camera.zoom + camera.x,
-    y: (screenY - viewportHeight / 2) / camera.zoom + camera.y,
-  };
+  screenValue: number,
+  viewportSize: number,
+  cameraAxis: number,
+  cameraZoom: number,
+): number {
+  return (screenValue - viewportSize / 2) / cameraZoom + cameraAxis;
 }

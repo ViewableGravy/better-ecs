@@ -9,7 +9,7 @@ import { getManager } from "@repo/spatial-contexts";
 
 type PlacementWorldResolution = {
   contextId?: ContextId;
-  world: UserWorld;
+  world?: UserWorld;
   blocked: boolean;
 };
 
@@ -24,6 +24,11 @@ type BuildModeEngine = {
  **********************************************************************************************************/
 
 const pointBuffer = new Vec2();
+const placementWorldResolutionBuffer: PlacementWorldResolution = {
+  contextId: undefined,
+  world: undefined,
+  blocked: false,
+};
 
 export function resolvePlacementWorld(
   engine: BuildModeEngine,
@@ -31,9 +36,13 @@ export function resolvePlacementWorld(
   worldX: number,
   worldY: number,
 ): PlacementWorldResolution {
+  const result = placementWorldResolutionBuffer;
   const manager = getManager(engine.scene.context);
   if (!manager) {
-    return { contextId: undefined, world: activeWorld, blocked: false };
+    result.contextId = undefined;
+    result.world = activeWorld;
+    result.blocked = false;
+    return result;
   }
 
   const focusedContextId = manager.getFocusedContextId();
@@ -43,49 +52,44 @@ export function resolvePlacementWorld(
     const rootWorld = manager.getWorld(rootContextId) ?? activeWorld;
     const blocked = containsAnyContextRegion(rootWorld, worldX, worldY);
 
-    return {
-      contextId: rootContextId,
-      world: rootWorld,
-      blocked,
-    };
+    result.contextId = rootContextId;
+    result.world = rootWorld;
+    result.blocked = blocked;
+    return result;
   }
 
   const focusedWorld = manager.getWorld(focusedContextId) ?? activeWorld;
   const focusedDefinition = manager.listDefinitions().find((definition) => definition.id === focusedContextId);
 
   if (!focusedDefinition?.parentId) {
-    return {
-      contextId: focusedContextId,
-      world: focusedWorld,
-      blocked: false,
-    };
+    result.contextId = focusedContextId;
+    result.world = focusedWorld;
+    result.blocked = false;
+    return result;
   }
 
   const parentWorld = manager.getWorld(focusedDefinition.parentId);
   if (!parentWorld) {
-    return {
-      contextId: focusedContextId,
-      world: focusedWorld,
-      blocked: false,
-    };
+    result.contextId = focusedContextId;
+    result.world = focusedWorld;
+    result.blocked = false;
+    return result;
   }
 
   const sourceRegion = findRegionForContext(parentWorld, focusedContextId);
   if (!sourceRegion) {
-    return {
-      contextId: focusedContextId,
-      world: focusedWorld,
-      blocked: false,
-    };
+    result.contextId = focusedContextId;
+    result.world = focusedWorld;
+    result.blocked = false;
+    return result;
   }
 
   const insideFocusedRegion = pointInsideRegion(sourceRegion, worldX, worldY);
 
-  return {
-    contextId: insideFocusedRegion ? focusedContextId : focusedDefinition.parentId,
-    world: insideFocusedRegion ? focusedWorld : parentWorld,
-    blocked: false,
-  };
+  result.contextId = insideFocusedRegion ? focusedContextId : focusedDefinition.parentId;
+  result.world = insideFocusedRegion ? focusedWorld : parentWorld;
+  result.blocked = false;
+  return result;
 }
 
 function containsAnyContextRegion(world: UserWorld, worldX: number, worldY: number): boolean {
