@@ -1,3 +1,5 @@
+import type { EntityId } from "@repo/engine";
+
 export class GridPosition {
   public constructor(
     public x: number,
@@ -17,3 +19,7 @@ export class Placeable {
 }
 
 export class GhostPreview {}
+
+export class ColliderDebugProxy {
+  public constructor(public targetId: EntityId) {}
+}

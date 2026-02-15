@@ -1,4 +1,4 @@
-import type { UserWorld } from "@repo/engine";
+import { useEngine, type UserWorld } from "@repo/engine";
 import { Camera, Shape, Sprite, Transform2D } from "@repo/engine/components";
 import type { RenderQueue, Renderer } from "@repo/engine/render";
 import { drawGrid } from "./DrawGrid";
@@ -46,7 +46,9 @@ export function commitWorld(
   }
 
   // 2. Grid overlay (above floor/background, below entities)
-  drawGrid(renderer);
+  if (useEngine().world === world) {
+    drawGrid(world, renderer);
+  }
 
   // 3. Foreground shapes
   for (const id of queue.shapes) {

@@ -1,6 +1,8 @@
-import { GRID_CELL_SIZE } from "@/systems/build-mode/constants";
+import { GridBounds } from "@/components/grid-bounds";
+import { GRID_CELL_SIZE } from "@/systems/build-mode/const";
 import { buildModeState } from "@/systems/build-mode/state";
-import { Color } from "@repo/engine/components";
+import type { UserWorld } from "@repo/engine";
+import { Color, Shape, Transform2D } from "@repo/engine/components";
 import type { Renderer } from "@repo/engine/render";
 
 const GRID_COLOR = new Color(1, 0.1, 0.75, 1);
@@ -8,7 +10,7 @@ const GRID_FILL = new Color(0, 0, 0, 0);
 const GRID_LINE_WIDTH = 1;
 const MAX_LINES_PER_AXIS = 600;
 
-export function drawGrid(renderer: Renderer): void {
+export function drawGrid(world: UserWorld, renderer: Renderer): void {
   if (!buildModeState.gridVisible) {
     return;
   }
@@ -26,10 +28,21 @@ export function drawGrid(renderer: Renderer): void {
   const halfWidth = viewportWidth / (2 * cameraZoom);
   const halfHeight = viewportHeight / (2 * cameraZoom);
 
-  const minX = Math.floor((cameraX - halfWidth) / GRID_CELL_SIZE) * GRID_CELL_SIZE;
-  const maxX = Math.ceil((cameraX + halfWidth) / GRID_CELL_SIZE) * GRID_CELL_SIZE;
-  const minY = Math.floor((cameraY - halfHeight) / GRID_CELL_SIZE) * GRID_CELL_SIZE;
-  const maxY = Math.ceil((cameraY + halfHeight) / GRID_CELL_SIZE) * GRID_CELL_SIZE;
+  const viewportMinX = Math.floor((cameraX - halfWidth) / GRID_CELL_SIZE) * GRID_CELL_SIZE;
+  const viewportMaxX = Math.ceil((cameraX + halfWidth) / GRID_CELL_SIZE) * GRID_CELL_SIZE;
+  const viewportMinY = Math.floor((cameraY - halfHeight) / GRID_CELL_SIZE) * GRID_CELL_SIZE;
+  const viewportMaxY = Math.ceil((cameraY + halfHeight) / GRID_CELL_SIZE) * GRID_CELL_SIZE;
+
+  const bounds = getGridBounds(world);
+
+  const minX = bounds ? Math.max(viewportMinX, alignDown(bounds.minX)) : viewportMinX;
+  const maxX = bounds ? Math.min(viewportMaxX, alignUp(bounds.maxX)) : viewportMaxX;
+  const minY = bounds ? Math.max(viewportMinY, alignDown(bounds.minY)) : viewportMinY;
+  const maxY = bounds ? Math.min(viewportMaxY, alignUp(bounds.maxY)) : viewportMaxY;
+
+  if (minX > maxX || minY > maxY) {
+    return;
+  }
 
   const rawColumns = Math.max(1, Math.ceil((maxX - minX) / GRID_CELL_SIZE));
   const rawRows = Math.max(1, Math.ceil((maxY - minY) / GRID_CELL_SIZE));
@@ -74,4 +87,42 @@ export function drawGrid(renderer: Renderer): void {
       strokeWidth: GRID_LINE_WIDTH,
     });
   }
+}
+
+function alignDown(value: number): number {
+  return Math.floor(value / GRID_CELL_SIZE) * GRID_CELL_SIZE;
+}
+
+function alignUp(value: number): number {
+  return Math.ceil(value / GRID_CELL_SIZE) * GRID_CELL_SIZE;
+}
+
+function getGridBounds(world: UserWorld):
+  | {
+      minX: number;
+      minY: number;
+      maxX: number;
+      maxY: number;
+    }
+  | undefined {
+  for (const id of world.query(GridBounds, Shape, Transform2D)) {
+    const shape = world.get(id, Shape);
+    const transform = world.get(id, Transform2D);
+
+    if (!shape || !transform || shape.type !== "rectangle") {
+      continue;
+    }
+
+    const halfWidth = shape.width / 2;
+    const halfHeight = shape.height / 2;
+
+    return {
+      minX: transform.curr.pos.x - halfWidth,
+      minY: transform.curr.pos.y - halfHeight,
+      maxX: transform.curr.pos.x + halfWidth,
+      maxY: transform.curr.pos.y + halfHeight,
+    };
+  }
+
+  return undefined;
 }

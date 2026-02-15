@@ -1,3 +1,4 @@
+import { GridBounds } from "@/components/grid-bounds";
 import type { UserWorld } from "@repo/engine";
 import { Color, Shape, Transform2D } from "@repo/engine/components";
 import { RenderVisibility } from "../components/render-visibility";
@@ -20,6 +21,7 @@ export function spawnDungeon(world: UserWorld): number {
     ),
   );
   world.add(entity, new RenderVisibility("house-interior", 1));
+  world.add(entity, new GridBounds());
 
   return entity;
 }

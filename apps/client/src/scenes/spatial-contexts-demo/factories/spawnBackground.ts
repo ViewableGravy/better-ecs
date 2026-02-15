@@ -1,3 +1,4 @@
+import { GridBounds } from "@/components/grid-bounds";
 import type { UserWorld } from "@repo/engine";
 import { Color, Shape, Transform2D } from "@repo/engine/components";
 import { RenderVisibility, type RenderVisibilityRole } from "../components/render-visibility";
@@ -10,6 +11,7 @@ type SpawnBackgroundOptions = {
   strokeWidth?: number;
   role?: RenderVisibilityRole;
   baseAlpha?: number;
+  gridBounds?: boolean;
 };
 
 export function spawnBackground(world: UserWorld, opts: SpawnBackgroundOptions): number {
@@ -29,5 +31,10 @@ export function spawnBackground(world: UserWorld, opts: SpawnBackgroundOptions):
     ),
   );
   world.add(entity, new RenderVisibility(opts.role ?? "outside", opts.baseAlpha ?? 1));
+
+  if (opts.gridBounds) {
+    world.add(entity, new GridBounds());
+  }
+
   return entity;
 }

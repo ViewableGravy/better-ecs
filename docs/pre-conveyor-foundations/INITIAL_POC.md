@@ -136,3 +136,6 @@ This gives the same functional result (infinite visual grid + camera coherence) 
 
 ## Open decisions (to answer before coding)
 - None for initial POC slice; remaining implementation questions should be tracked as code-level TODOs.
+
+## Follow-up backlog
+- Engine API proposal: provide centralized DOM listener hooks (e.g. `useCanvasEvent()` / `useWindowEvent()`) so gameplay systems do not query DOM nodes directly and can remain canvas-target agnostic.

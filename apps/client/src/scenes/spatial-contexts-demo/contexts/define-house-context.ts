@@ -36,6 +36,7 @@ export function defineHouseContext(options: HouseContextOptions) {
         stroke: new Color(0.18, 0.1, 0.07, 1),
         strokeWidth: 6,
         role: "house-interior",
+        gridBounds: true,
       });
 
       for (const segment of houseLayout.wallSegments) {
