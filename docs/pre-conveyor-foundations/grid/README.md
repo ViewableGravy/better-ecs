@@ -6,6 +6,11 @@ Purpose
 - Provide snap/quantization rules for placement.
 
 Initial constraints
+- Cell size defaults to `1` world unit.
+- Grid origin is fixed at `(0,0)`.
+- Grid is enabled by default.
+- Toggle via modifier + `G` (`Cmd` on macOS, `Ctrl` elsewhere).
+- Feature scope is demo scene only.
 - Coordinates are integers only.
 - Footprints are >= 1x1.
 - Footprint width/height must be whole numbers.
