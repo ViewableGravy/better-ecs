@@ -33,7 +33,6 @@ The architecture folder contains:
 | [README](./architecture/README.md) | Complete documentation index |
 | [00-ARCHITECTURE](./architecture/00-SPATIAL-CONTEXTS-ARCHITECTURE.md) | Core architecture |
 | [01-ROADMAP](./architecture/01-IMPLEMENTATION-ROADMAP.md) | Implementation plan |
-| [05-RENDERING](./architecture/05-RENDERING-CONCEPTS.md) | Rendering design |
 | [09-CONCERNS](./architecture/09-CONCERNS-AND-CONSIDERATIONS.md) | Risk assessment |
 
 ---

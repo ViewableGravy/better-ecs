@@ -33,7 +33,7 @@ export const createScene = <TName extends string>(name: TName) => {
       /* no-op */
     };
 
-    return {
+    const definition: SceneDefinition<TName, TSystems> = {
       name,
       // TypeScript cannot prove that the fallback `[]` matches the inferred
       // `TSystems` (especially when `systems` is omitted and `TSystems` defaults).
@@ -45,5 +45,15 @@ export const createScene = <TName extends string>(name: TName) => {
       sceneTeardown: config.sceneTeardown ?? defaultSceneHook,
       [SCENE_BRAND]: true as const,
     };
+
+    // Notify HMR runtime so scene definitions can be hot-swapped without a full reload.
+    // The cast through `unknown` is required because SceneDefinition includes a symbol key
+    // ([SCENE_BRAND]) that doesn't satisfy Record<string, unknown>.
+    const hmr = globalThis.__ENGINE_HMR__;
+    if (hmr?.onSceneCreated) {
+      hmr.onSceneCreated(definition as unknown as Record<string, unknown>);
+    }
+
+    return definition;
   };
 };

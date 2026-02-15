@@ -41,16 +41,40 @@ export function engineHmr(): Plugin {
 globalThis.__ENGINE_HMR__ = (() => {
   const runtime = {
     systems: null,
+    callbacks: null,
     register(s) { runtime.systems = s; },
+    registerCallbacks(cb) { runtime.callbacks = cb; },
     onSystemCreated(fresh) {
       if (!runtime.systems) return false;
       const existing = runtime.systems[fresh.name];
       if (!existing) return false;
+
+      // Run previous cleanup before swapping lifecycle behaviour
+      if (runtime.callbacks) {
+        runtime.callbacks.executeSystemCleanup(existing);
+      }
+
+      // Swap behaviour, preserve state (data/schema)
       existing.system = fresh.system;
       existing.initialize = fresh.initialize;
+      existing.react = undefined;
       existing.priority = fresh.priority;
       existing.enabled = fresh.enabled;
+
+      // Re-initialize with new behaviour
+      if (runtime.callbacks) {
+        runtime.callbacks.executeSystemInitialize(existing);
+      }
+
       return true;
+    },
+    onSceneCreated(fresh) {
+      if (!runtime.callbacks) return false;
+      const isActive = runtime.callbacks.updateSceneDefinition(fresh);
+      if (isActive) {
+        runtime.callbacks.reloadActiveScene();
+      }
+      return isActive;
     },
   };
   return runtime;
@@ -67,7 +91,10 @@ globalThis.__ENGINE_HMR__ = (() => {
       const isSystemModule =
         code.includes("createSystem(") || code.includes("createRenderPipeline(");
 
-      if (!isSystemModule) return;
+      const isSceneModule =
+        code.includes("createScene(") || code.includes("createContextScene(");
+
+      if (!isSystemModule && !isSceneModule) return;
 
       // Make this module an HMR boundary. When it (or any dependency)
       // changes, Vite re-executes just this module. The engine's

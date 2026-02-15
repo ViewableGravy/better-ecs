@@ -95,7 +95,7 @@ function Initialize() {
   const eventPool = new EventPool();
 
   // Browser event listeners: buffer events using physical key (code) instead of character (key)
-  window.addEventListener("keydown", (event) => {
+  const keydownHandler = (event: KeyboardEvent) => {
     // Ignore auto-repeat keydown events to prevent unbounded buffering on long key holds.
     if (event.repeat) return;
 
@@ -109,9 +109,9 @@ function Initialize() {
         event.metaKey,
       ),
     );
-  });
+  };
 
-  window.addEventListener("keyup", (event) => {
+  const keyupHandler = (event: KeyboardEvent) => {
     data.eventBuffer.push(
       eventPool.press(
         "keyup",
@@ -122,5 +122,13 @@ function Initialize() {
         event.metaKey,
       ),
     );
-  });
+  };
+
+  window.addEventListener("keydown", keydownHandler);
+  window.addEventListener("keyup", keyupHandler);
+
+  return () => {
+    window.removeEventListener("keydown", keydownHandler);
+    window.removeEventListener("keyup", keyupHandler);
+  };
 }

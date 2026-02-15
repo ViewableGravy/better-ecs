@@ -7,6 +7,7 @@ import { SceneManager } from "../scene/scene-manager";
 import type { SceneDefinition, SceneDefinitionTuple, SceneName } from "../scene/scene.types";
 import type { EngineFrame, EngineUpdate, FrameStats } from "../types";
 import type { EngineInitializationSystem, EngineSystem, SystemFactoryTuple } from "./system";
+import { executeSystemInitialize } from "./system";
 
 /***** TYPE DEFINITIONS *****/
 type StartEngineOpts = {
@@ -41,9 +42,12 @@ type SceneSystemFactories<T extends SceneDefinitionTuple> =
 
 /** Combines engine/global systems, active-scene systems, and built-in engine systems */
 type AllSystems<
-  T extends SystemFactoryTuple,
+  TSystems extends SystemFactoryTuple,
   TScenes extends SceneDefinitionTuple,
-> = SystemsTupleToRecord<T> & FactoriesToRecord<SceneSystemFactories<TScenes>> & EngineSystemTypes;
+> = 
+  & SystemsTupleToRecord<TSystems> 
+  & FactoriesToRecord<SceneSystemFactories<TScenes>> 
+  & EngineSystemTypes;
 
 /** Converts scene tuple to a record of scene names to scene definitions */
 type ScenesTupleToRecord<T extends SceneDefinitionTuple> = {
@@ -161,9 +165,7 @@ export class EngineClass<
 
       // Initialize all systems
       for (const system of Object.values(this.#systems)) {
-        if (system.initialize) {
-          system.initialize();
-        }
+        executeSystemInitialize(system);
       }
 
       this.#renderPipeline?.initialize();

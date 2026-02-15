@@ -4,7 +4,9 @@ import { installSpatialContexts } from "./install";
 /**
  * Creates a scene-scoped runtime system that binds `engine.world` to the focused context.
  */
-export function createSpatialContextsRuntimeSystem(sceneName: string) {
+export function createSpatialContextsRuntimeSystem<const TSceneName extends string>(
+  sceneName: TSceneName,
+) {
   return createSystem(`plugin:spatial-contexts-runtime:${sceneName}`)({
     priority: 100_000,
     system() {

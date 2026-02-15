@@ -14,7 +14,7 @@ This document provides a **high-level, step-by-step roadmap** for implementing t
 
 #### Tasks
 1. **Define rendering primitives**
-   - Research patterns from Unity, Godot, Three.js (see [05-RENDERING-CONCEPTS.md](./05-RENDERING-CONCEPTS.md))
+   - Research patterns from Unity, Godot, Three.js, Bevy (captured in implemented engine rendering APIs)
    - Define core types: Transform, Camera, Mesh, Texture, Sprite
    - Create component definitions
 
@@ -49,7 +49,7 @@ be necessary for playing around with this.
 
 **Goal:** Investigate and design entity streaming system for open-world gameplay.
 
-**Note:** This is a **discussion and exploration phase**. See [02-DISCUSSION-WORLD-PARTITIONING-STREAMING.md](./02-DISCUSSION-WORLD-PARTITIONING-STREAMING.md) for full architectural options and open questions.
+**Note:** This is a **discussion and exploration phase**. Recreate focused notes only if/when open-world streaming is prioritized again.
 
 #### Tasks
 1. **Architectural investigation**

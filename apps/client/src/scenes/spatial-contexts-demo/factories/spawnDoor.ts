@@ -11,7 +11,8 @@ type SpawnDoorOptions = {
   height?: number;
   fill: Color;
   stroke?: Color;
-  portal: PortalOpts;
+  portal?: PortalOpts;
+  hasCollider?: boolean;
   role?: RenderVisibilityRole;
   baseAlpha?: number;
 };
@@ -36,15 +37,20 @@ export function spawnDoor(world: UserWorld, opts: SpawnDoorOptions): number {
     ),
   );
 
-  const halfWidth = width * 0.5;
-  const halfHeight = height * 0.5;
+  if (opts.hasCollider ?? true) {
+    const halfWidth = width * 0.5;
+    const halfHeight = height * 0.5;
 
-  world.add(
-    entity,
-    new RectangleCollider(new Vec2(-halfWidth, -halfHeight), new Vec2(width, height)),
-  );
+    world.add(
+      entity,
+      new RectangleCollider(new Vec2(-halfWidth, -halfHeight), new Vec2(width, height)),
+    );
+  }
 
-  world.add(entity, new Portal(opts.portal));
+  if (opts.portal) {
+    world.add(entity, new Portal(opts.portal));
+  }
+
   world.add(entity, new RenderVisibility(opts.role ?? "outside", opts.baseAlpha ?? 1));
 
   return entity;

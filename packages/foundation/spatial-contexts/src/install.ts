@@ -28,6 +28,17 @@ export function installSpatialContexts(
   return manager;
 }
 
-export function getSpatialContextManager(scene: SceneContext): SpatialContextManager | undefined {
+export function getManager(scene: SceneContext): SpatialContextManager | undefined {
   return STORE.get(scene);
+}
+
+export function ensureManager(scene: SceneContext): SpatialContextManager {
+  const manager = getManager(scene);
+  if (!manager) {
+    throw new Error(
+      "Spatial contexts not installed for active scene. Use createContextScene(...) or call installSpatialContexts(scene) in sceneSetup().",
+    );
+  }
+
+  return manager;
 }

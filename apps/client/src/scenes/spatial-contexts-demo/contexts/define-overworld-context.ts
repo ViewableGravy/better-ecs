@@ -1,10 +1,11 @@
 import { Color } from "@repo/engine/components";
 import { defineContext, type ContextId } from "@repo/spatial-contexts";
-import { spawnBackground } from "../factories/spawnBackground";
 import { spawnContextEntryRegion } from "../factories/spawnContextEntryRegion";
 import { spawnDoor } from "../factories/spawnDoor";
 import { spawnHouse } from "../factories/spawnHouse";
 import { spawnTree } from "../factories/spawnTree";
+import { spawnWall } from "../factories/spawnWall";
+import { createHouseLayout } from "../utilities/house-layout";
 import { setupContextPlayer } from "./shared";
 
 type OverworldContextOptions = {
@@ -25,12 +26,8 @@ export function defineOverworldContext(options: OverworldContextOptions) {
     setup(world) {
       setupContextPlayer(world, -320, 0);
 
-      spawnBackground(world, {
-        width: 1200,
-        height: 800,
-        color: new Color(0.15, 0.2, 0.25, 1),
-        role: "outside",
-      });
+      const houseLayout = createHouseLayout(options.houseHalfWidth, options.houseHalfHeight);
+
 
       spawnHouse(world, {
         x: 0,
@@ -38,6 +35,27 @@ export function defineOverworldContext(options: OverworldContextOptions) {
         width: options.houseHalfWidth * 2,
         height: options.houseHalfHeight * 2,
         contextId: options.houseId,
+      });
+
+      for (const segment of houseLayout.wallSegments) {
+        spawnWall(world, {
+          x: segment.x,
+          y: segment.y,
+          width: segment.width,
+          height: segment.height,
+          visible: false,
+        });
+      }
+
+      spawnDoor(world, {
+        x: houseLayout.doorway.x,
+        y: houseLayout.doorway.y,
+        width: houseLayout.doorway.width,
+        height: houseLayout.doorway.height,
+        fill: new Color(0.25, 0.55, 0.95, 1),
+        stroke: new Color(0.08, 0.2, 0.42, 1),
+        hasCollider: false,
+        role: "outside",
       });
 
       spawnContextEntryRegion(world, {

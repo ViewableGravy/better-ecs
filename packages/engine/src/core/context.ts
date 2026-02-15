@@ -1,5 +1,11 @@
 import type { UserWorld } from "../ecs/world";
-import type { AllSceneNames, RegisteredAssetManager, RegisteredEngine } from "./engine-types";
+import type {
+  AllSceneNames,
+  RegisteredAssetManager,
+  RegisteredEngine,
+  RegisteredSystems,
+  SystemNames,
+} from "./engine-types";
 import type { EngineClass } from "./register/internal";
 import type { EngineSystem } from "./register/system";
 import type { SceneContext } from "./scene/scene-context";
@@ -68,6 +74,8 @@ export function useDelta(): [updateDelta: number, frameDelta: number, updateProg
   return [engine.frame.updateDelta, engine.frame.frameDelta, engine.frame.updateProgress];
 }
 
+type RegisteredSystemNames = Extract<SystemNames, keyof RegisteredSystems>;
+
 /**
  * Use a system by name with automatic type inference from the registered engine.
  * This hook uses the global Register interface to infer the system type.
@@ -75,11 +83,11 @@ export function useDelta(): [updateDelta: number, frameDelta: number, updateProg
  * For plugins that need to manually specify types (because they don't have access
  * to the global Register), use `useOverloadedSystem` instead.
  */
-export function useSystem<TSystem extends keyof RegisteredEngine["systems"]>(
+export function useSystem<TSystem extends RegisteredSystemNames>(
   system: TSystem,
-): RegisteredEngine["systems"][TSystem] {
+): RegisteredSystems[TSystem] {
   const engine = useEngine();
-  return (engine.systems as any)[system];
+  return engine.systems[system];
 }
 
 /**

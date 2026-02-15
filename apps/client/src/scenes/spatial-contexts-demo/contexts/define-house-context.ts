@@ -4,6 +4,8 @@ import { spawnBackground } from "../factories/spawnBackground";
 import { spawnChair } from "../factories/spawnChair";
 import { spawnDoor } from "../factories/spawnDoor";
 import { spawnTable } from "../factories/spawnTable";
+import { spawnWall } from "../factories/spawnWall";
+import { createHouseLayout } from "../utilities/house-layout";
 import { setupContextPlayer } from "./shared";
 
 type HouseContextOptions = {
@@ -25,12 +27,35 @@ export function defineHouseContext(options: HouseContextOptions) {
     setup(world) {
       setupContextPlayer(world, 0, 0);
 
+      const houseLayout = createHouseLayout(options.houseHalfWidth, options.houseHalfHeight);
+
       spawnBackground(world, {
         width: options.houseHalfWidth * 2,
         height: options.houseHalfHeight * 2,
         color: new Color(0.4, 0.3, 0.2, 1),
         stroke: new Color(0.18, 0.1, 0.07, 1),
         strokeWidth: 6,
+        role: "house-interior",
+      });
+
+      for (const segment of houseLayout.wallSegments) {
+        spawnWall(world, {
+          x: segment.x,
+          y: segment.y,
+          width: segment.width,
+          height: segment.height,
+          role: "house-interior",
+        });
+      }
+
+      spawnDoor(world, {
+        x: houseLayout.doorway.x,
+        y: houseLayout.doorway.y,
+        width: houseLayout.doorway.width,
+        height: houseLayout.doorway.height,
+        fill: new Color(0.25, 0.55, 0.95, 1),
+        stroke: new Color(0.08, 0.2, 0.42, 1),
+        hasCollider: false,
         role: "house-interior",
       });
 

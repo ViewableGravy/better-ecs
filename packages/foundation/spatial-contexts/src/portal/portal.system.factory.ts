@@ -3,8 +3,14 @@ import { useContextManager } from "../hooks";
 import { Portal } from "./portal.component";
 import type { PortalSystemOptions } from "./portal.types";
 
-export const createPortalSystem = (opts: PortalSystemOptions) => {
-  return createSystem(opts.name ?? "plugin:spatial-contexts-portals")({
+export const createPortalSystem = <const TName extends string = "plugin:spatial-contexts-portals">(
+  opts: PortalSystemOptions<TName>,
+) => {
+  // `opts.name` is optional, so this local fallback is required to pass a concrete string.
+  // The cast keeps the literal type when a name is provided and defaults to the built-in literal.
+  const systemName = (opts.name ?? "plugin:spatial-contexts-portals") as TName;
+
+  return createSystem(systemName)({
     priority: 50_000,
     system() {
       const engine = useEngine();

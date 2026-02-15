@@ -10,7 +10,7 @@ import { ActiveWorldProvider } from "./world-provider";
 
 export const Render = createRenderPipeline({
   initializeContext() {
-    const canvas = getResizeableCanvas();
+    const canvas = getResizableCanvas();
     const renderer = new Canvas2DRenderer();
 
     const assets = useAssets();
@@ -32,7 +32,7 @@ export const Render = createRenderPipeline({
 });
 
 // Utility function to get the canvas and handle resizing
-function getResizeableCanvas(): HTMLCanvasElement {
+function getResizableCanvas(): HTMLCanvasElement {
   const canvas = invariantById<HTMLCanvasElement>("game");
 
   // Handle canvas resize

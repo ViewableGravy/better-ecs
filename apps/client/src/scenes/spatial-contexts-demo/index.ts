@@ -13,7 +13,6 @@ import { defineHouseContext } from "./contexts/define-house-context";
 import { defineOverworldContext } from "./contexts/define-overworld-context";
 import { DebugOverlaySystem } from "./systems/debug-overlay.system";
 import { HouseContextSystem } from "./systems/house-context.system";
-import { SceneCollisionSystem } from "./systems/scene-collision.system";
 
 const sceneConfig = {
   contextIds: {
@@ -78,7 +77,7 @@ const PortalsSystem = createPortalSystem({
 });
 
 export const Scene = createContextScene("SpatialContextsDemo")({
-  systems: [SceneCollisionSystem, HouseContextSystem, PortalsSystem, DebugOverlaySystem],
+  systems: [HouseContextSystem, PortalsSystem, DebugOverlaySystem],
   contexts: [
     defineOverworldContext({
       overworldId: sceneConfig.contextIds.overworld,

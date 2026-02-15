@@ -9,9 +9,9 @@ export type PortalActivationArgs = {
   focusedContextId: ContextId;
 };
 
-export type PortalSystemOptions = {
+export type PortalSystemOptions<TName extends string> = {
   /** Optional system name override. */
-  name?: string;
+  name?: TName;
 
   /**
    * Return true to activate a portal. The plugin does not enforce any trigger shape in v1.
