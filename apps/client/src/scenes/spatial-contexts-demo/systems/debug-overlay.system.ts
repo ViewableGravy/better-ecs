@@ -5,9 +5,35 @@ import { useContextManager } from "@repo/spatial-contexts";
 import { RenderVisibility } from "../components/render-visibility";
 
 const OVERLAY_ID = "spatial-contexts-overlay";
-const OVERLAY_CONTENT_ID = "spatial-contexts-overlay-content";
 
 let overlayClosed = false;
+let overlayRefs: OverlayRefs | undefined;
+
+type OverlayKey =
+  | "focused"
+  | "stack"
+  | "visible"
+  | "player"
+  | "outsideAlpha"
+  | "roofAlpha"
+  | "interiorAlpha";
+
+type OverlayRefs = {
+  node: HTMLElement;
+  values: Record<OverlayKey, HTMLSpanElement>;
+};
+
+const overlayState = {
+  focused: "",
+  stack: [] as string[],
+  visible: [] as string[],
+  playerMissing: true,
+  playerX: Number.NaN,
+  playerY: Number.NaN,
+  outsideAlpha: Number.NaN,
+  roofAlpha: Number.NaN,
+  interiorAlpha: Number.NaN,
+};
 
 export const DebugOverlaySystem = createSystem("demo:spatial-contexts-debug")({
   system() {
@@ -17,13 +43,8 @@ export const DebugOverlaySystem = createSystem("demo:spatial-contexts-debug")({
 
     const manager = useContextManager();
 
-    const node = getOrCreateOverlayWindow();
-    if (!node) {
-      return;
-    }
-
-    const content = document.getElementById(OVERLAY_CONTENT_ID);
-    if (!content) {
+    const refs = getOrCreateOverlayWindow();
+    if (!refs) {
       return;
     }
 
@@ -39,22 +60,66 @@ export const DebugOverlaySystem = createSystem("demo:spatial-contexts-debug")({
 
     const alphaState = getAlphaState(manager);
 
-    content.textContent = [
-      `focused: ${focused}`,
-      `stack: ${stack.join(" -> ")}`,
-      `visible: ${visible.join(" -> ")}`,
-      `player: ${playerPosition}`,
-      `outsideAlpha: ${alphaState.outside.toFixed(2)}`,
-      `roofAlpha: ${alphaState.roof.toFixed(2)}`,
-      `interiorAlpha: ${alphaState.interior.toFixed(2)}`,
-    ].join("\n");
+    setTextIfChanged(refs.values.focused, "focused", focused);
+
+    if (hasSequenceChanged(overlayState.stack, stack)) {
+      copySequence(overlayState.stack, stack);
+      setTextIfChanged(refs.values.stack, "stack", stack.join(" -> "));
+    }
+
+    if (hasSequenceChanged(overlayState.visible, visible)) {
+      copySequence(overlayState.visible, visible);
+      setTextIfChanged(refs.values.visible, "visible", visible.join(" -> "));
+    }
+
+    if (player) {
+      const playerX = player.curr.pos.x;
+      const playerY = player.curr.pos.y;
+      if (
+        overlayState.playerMissing ||
+        playerX !== overlayState.playerX ||
+        playerY !== overlayState.playerY
+      ) {
+        overlayState.playerMissing = false;
+        overlayState.playerX = playerX;
+        overlayState.playerY = playerY;
+        setTextIfChanged(refs.values.player, "player", playerPosition);
+      }
+    } else if (!overlayState.playerMissing) {
+      overlayState.playerMissing = true;
+      overlayState.playerX = Number.NaN;
+      overlayState.playerY = Number.NaN;
+      setTextIfChanged(refs.values.player, "player", "missing");
+    }
+
+    if (alphaState.outside !== overlayState.outsideAlpha) {
+      overlayState.outsideAlpha = alphaState.outside;
+      setTextIfChanged(
+        refs.values.outsideAlpha,
+        "outsideAlpha",
+        alphaState.outside.toFixed(2),
+      );
+    }
+
+    if (alphaState.roof !== overlayState.roofAlpha) {
+      overlayState.roofAlpha = alphaState.roof;
+      setTextIfChanged(refs.values.roofAlpha, "roofAlpha", alphaState.roof.toFixed(2));
+    }
+
+    if (alphaState.interior !== overlayState.interiorAlpha) {
+      overlayState.interiorAlpha = alphaState.interior;
+      setTextIfChanged(
+        refs.values.interiorAlpha,
+        "interiorAlpha",
+        alphaState.interior.toFixed(2),
+      );
+    }
   },
 });
 
 function getOrCreateOverlayWindow() {
-  const existing = document.getElementById(OVERLAY_ID);
-  if (existing) {
-    return existing;
+  if (overlayRefs?.node.isConnected) {
+    return overlayRefs;
   }
 
   const node = document.createElement("div");
@@ -101,22 +166,90 @@ function getOrCreateOverlayWindow() {
   minimizeButton.addEventListener("click", (event) => {
     event.stopPropagation();
     overlayClosed = true;
+    overlayRefs = undefined;
     node.remove();
   });
 
-  const content = document.createElement("pre");
-  content.id = OVERLAY_CONTENT_ID;
+  const content = document.createElement("div");
   content.style.margin = "0";
   content.style.padding = "8px 10px";
-  content.style.whiteSpace = "pre-wrap";
-  content.style.wordBreak = "break-word";
+  content.style.display = "grid";
+  content.style.gridTemplateColumns = "auto 1fr";
+  content.style.columnGap = "8px";
+  content.style.rowGap = "4px";
+
+  const values: Record<OverlayKey, HTMLSpanElement> = {
+    focused: createOverlayRow(content, "focused"),
+    stack: createOverlayRow(content, "stack"),
+    visible: createOverlayRow(content, "visible"),
+    player: createOverlayRow(content, "player"),
+    outsideAlpha: createOverlayRow(content, "outsideAlpha"),
+    roofAlpha: createOverlayRow(content, "roofAlpha"),
+    interiorAlpha: createOverlayRow(content, "interiorAlpha"),
+  };
 
   topBar.append(title, minimizeButton);
   node.append(topBar, content);
   setupDrag(node, topBar);
   document.body.appendChild(node);
 
-  return node;
+  overlayRefs = {
+    node,
+    values,
+  };
+
+  return overlayRefs;
+}
+
+function createOverlayRow(container: HTMLElement, label: string): HTMLSpanElement {
+  const labelNode = document.createElement("span");
+  labelNode.textContent = `${label}:`;
+  labelNode.style.opacity = "0.8";
+
+  const valueNode = document.createElement("span");
+  valueNode.textContent = "-";
+  valueNode.style.wordBreak = "break-word";
+
+  container.append(labelNode, valueNode);
+
+  return valueNode;
+}
+
+function setTextIfChanged(node: HTMLSpanElement, key: OverlayKey, value: string) {
+  if (key === "focused" && overlayState.focused === value) {
+    return;
+  }
+
+  if (key === "focused") {
+    overlayState.focused = value;
+  }
+
+  if (node.textContent === value) {
+    return;
+  }
+
+  node.textContent = value;
+}
+
+function hasSequenceChanged(previous: string[], current: readonly string[]) {
+  if (previous.length !== current.length) {
+    return true;
+  }
+
+  for (let i = 0; i < current.length; i += 1) {
+    if (previous[i] !== current[i]) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function copySequence(target: string[], source: readonly string[]) {
+  target.length = source.length;
+  for (let i = 0; i < source.length; i += 1) {
+    target[i] = source[i];
+  }
 }
 
 function setupDrag(windowNode: HTMLElement, topBarNode: HTMLElement) {
