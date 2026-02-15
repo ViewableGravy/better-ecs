@@ -3,6 +3,7 @@ import { Loader } from "./assets";
 import { FPSSystem } from "./plugins/fps";
 import { Scene as RenderingDemoScene } from "./scenes/rendering-demo";
 import { Scene as SpatialContextsDemoScene } from "./scenes/spatial-contexts-demo";
+import { System as Collision } from "./scenes/spatial-contexts-demo/systems/scene-collision.system";
 import { Scene as TestScene } from "./scenes/test";
 import { System as CameraFollow } from "./systems/camera-follow";
 import { System as Initialize } from "./systems/initialisation";
@@ -19,6 +20,7 @@ export const createAppEngine = () => {
       FPSSystem,
       // Update systems
       Movement,
+      Collision,
       CameraFollow,
     ],
     render: Render,

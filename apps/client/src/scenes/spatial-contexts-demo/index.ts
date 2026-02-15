@@ -3,17 +3,16 @@ import { ensurePlayer } from "@/entities/player";
 import { Transform2D } from "@repo/engine/components";
 import { collides, getEntityCollider } from "@repo/physics";
 import {
-    contextId,
-    createContextScene,
-    createPortalSystem,
-    type PortalActivationArgs,
+  contextId,
+  createContextScene,
+  createPortalSystem,
+  type PortalActivationArgs,
 } from "@repo/spatial-contexts";
 import { defineDungeonContext } from "./contexts/define-dungeon-context";
 import { defineHouseContext } from "./contexts/define-house-context";
 import { defineOverworldContext } from "./contexts/define-overworld-context";
 import { DebugOverlaySystem } from "./systems/debug-overlay.system";
 import { HouseContextSystem } from "./systems/house-context.system";
-import { SceneCollisionSystem } from "./systems/scene-collision.system";
 
 const sceneConfig = {
   contextIds: {
@@ -78,7 +77,7 @@ const PortalsSystem = createPortalSystem({
 });
 
 export const Scene = createContextScene("SpatialContextsDemo")({
-  systems: [SceneCollisionSystem, HouseContextSystem, PortalsSystem, DebugOverlaySystem],
+  systems: [HouseContextSystem, PortalsSystem, DebugOverlaySystem],
   contexts: [
     defineOverworldContext({
       overworldId: sceneConfig.contextIds.overworld,
