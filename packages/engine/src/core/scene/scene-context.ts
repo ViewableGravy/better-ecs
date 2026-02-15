@@ -48,8 +48,8 @@ export class SceneContext<TName extends string = string> {
   }
 
   /** Returns all loaded worlds for this scene. */
-  getAllWorlds(): ReadonlyMap<string, UserWorld> {
-    return this.#userWorlds;
+  get worlds() {
+    return this.#userWorlds.values();
   }
 
   /** Returns whether a world id is currently loaded. */
