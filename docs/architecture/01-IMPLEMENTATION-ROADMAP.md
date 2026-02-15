@@ -49,7 +49,7 @@ be necessary for playing around with this.
 
 **Goal:** Investigate and design entity streaming system for open-world gameplay.
 
-**Note:** This is a **discussion and exploration phase**. See [02-DISCUSSION-WORLD-PARTITIONING-STREAMING.md](./02-DISCUSSION-WORLD-PARTITIONING-STREAMING.md) for full architectural options and open questions.
+**Note:** This is a **discussion and exploration phase**. Recreate focused notes only if/when open-world streaming is prioritized again.
 
 #### Tasks
 1. **Architectural investigation**

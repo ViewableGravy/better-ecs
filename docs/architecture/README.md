@@ -159,10 +159,6 @@ The implementation is complete and available in:
 
 ### Phase 4: Spatial Contexts Plugin
 
-#### [04-FEATURE-SPATIAL-CONTEXTS-PLUGIN/README.md](./04-FEATURE-SPATIAL-CONTEXTS-PLUGIN/README.md)
-
-**Core plugin implementation breakdown.**
-
 Spatial contexts implementation is active in:
 
 - `packages/foundation/spatial-contexts/src/`
@@ -172,7 +168,7 @@ Spatial contexts implementation is active in:
 
 ### Phase 5-6: Transitions and Rendering
 
-**Note:** Context transitions and rendering are covered in the spatial contexts plugin document (04). Key features:
+**Note:** Context transitions and rendering are implemented in the spatial-contexts package and demo scene. Key features:
 
 - Portal collision detection
 - Context transition orchestration
@@ -314,7 +310,6 @@ Each implementation story follows this structure:
 ### Engine Core Docs
 
 - `docs/conveyor-system-design.md` - Example of engine/game responsibility split
-- `docs/OPTIMIZATIONS.md` - Performance patterns
 - `AGENTS.md` - Project overview and conventions
 
 ### Package READMEs
@@ -387,8 +382,8 @@ When updating this documentation:
 | 1     | Rendering Foundations   | 2-3   | Engine render/components code                                                    |
 | 2     | Scene-Level Systems     | 1     | Engine scene/context code                                                        |
 | 3     | Multi-World Support     | 1     | Inline in Phase 2/4 docs                                                       |
-| 4     | Plugin Core             | 2     | [04 subdocs](./04-FEATURE-SPATIAL-CONTEXTS-PLUGIN/README.md)                   |
-| 5-6   | Transitions & Rendering | 2-3   | [04 subdocs](./04-FEATURE-SPATIAL-CONTEXTS-PLUGIN/README.md)                   |
+| 4     | Plugin Core             | 2     | `packages/foundation/spatial-contexts/src/`                                    |
+| 5-6   | Transitions & Rendering | 2-3   | `packages/foundation/spatial-contexts/src/` + demo scene code                  |
 | 7     | Persistence             | 2     | [07](./07-FEATURE-PERSISTENCE.md)                                              |
 | 8     | Visual Editor           | 6-7   | [06](./06-FEATURE-VISUAL-EDITOR.md)                                            |
 

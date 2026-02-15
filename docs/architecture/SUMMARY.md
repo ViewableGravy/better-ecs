@@ -59,7 +59,7 @@ Each context is a complete, isolated simulation boundary:
 
 ### Feature Implementation (Read During Development)
 
-5. **04-FEATURE-SPATIAL-CONTEXTS-PLUGIN/README.md** - Spatial contexts implementation breakdown
+5. **Spatial contexts package code** - `packages/foundation/spatial-contexts/src/`
 6. **07-FEATURE-PERSISTENCE.md** - Save/load system for contexts
 7. **06-FEATURE-VISUAL-EDITOR.md** - Visual authoring tool
 
@@ -85,7 +85,7 @@ Provides:
 
 ### 2. Individual Feature Documents ✅
 
-**Documents:** 02, 03, 04, 06, 07
+**Documents:** 06, 07 (+ implemented spatial contexts in package source)
 
 Each contains:
 - **Part 1:** Public API and user experience
@@ -261,8 +261,8 @@ This architecture follows established Better ECS patterns:
 
 ### Documentation Quality ✅
 
-- ✅ 12 comprehensive documents
-- ✅ 7,000+ lines of documentation
+- ✅ Core architecture docs consolidated
+- ✅ Implementation-focused docs retained
 - ✅ Every feature has API + implementation
 - ✅ All concerns documented
 - ✅ Clear examples throughout

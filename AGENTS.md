@@ -165,7 +165,6 @@ This ensures the codebase stays clean, maintainable, and doesn't accumulate tech
 
 - **Core Engine**: `packages/engine/`
 - **Design Docs**: `docs/conveyor-system-design.md`
-- **Optimization Strategy**: `docs/OPTIMIZATIONS.md`
 
 <!-- nx configuration start-->
 <!-- Leave the start & end comments to automatically receive updates. -->
