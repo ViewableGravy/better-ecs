@@ -1,6 +1,6 @@
 import { ContextEntryRegion } from "@/scenes/spatial-contexts-demo/components/context-entry-region";
-import type { MousePoint, UserWorld } from "@repo/engine";
-import { Vec2, type SceneContext } from "@repo/engine";
+import type { MousePoint } from "@repo/engine";
+import { useEngine, Vec2, type SceneContext } from "@repo/engine";
 import type { ContextId, ContextRelationship, SpatialContextManager } from "@repo/spatial-contexts";
 import { ensureManager } from "@repo/spatial-contexts";
 
@@ -13,14 +13,8 @@ type PlacementWorldResolution = {
   hoveredContextId?: ContextId;
   contextId?: ContextId;
   relationship?: ContextRelationship;
-  world?: UserWorld;
+  world?: ReturnType<SpatialContextManager["getWorld"]>;
   blocked: boolean;
-};
-
-type BuildModeEngine = {
-  scene: {
-    context: SceneContext;
-  };
 };
 
 /**********************************************************************************************************
@@ -28,7 +22,7 @@ type BuildModeEngine = {
  **********************************************************************************************************/
 
 export function resolvePlacementWorld(
-  engine: BuildModeEngine,
+  engine: ReturnType<typeof useEngine>,
   worldPointer: MousePoint,
 ): PlacementWorldResolution {
   const manager = ensureManager(engine.scene.context);

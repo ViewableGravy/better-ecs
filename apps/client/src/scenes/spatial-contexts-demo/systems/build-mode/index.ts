@@ -25,12 +25,12 @@ export const System = createSystem("main:build-mode")({
       throw new Error("Engine canvas is required before build-mode initialization");
     }
 
-    HUD.create();
+    const unbindHud = HUD.create();
     const unbindDomEvents = bindBuildModeDomEvents(canvas);
 
     return () => {
       unbindDomEvents();
-      HUD.remove();
+      unbindHud();
     };
   },
   system() {

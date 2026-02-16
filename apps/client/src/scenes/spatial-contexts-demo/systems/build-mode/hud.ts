@@ -11,13 +11,12 @@ type Destroy = () => void;
  *   COMPONENT START
  **********************************************************************************************************/
 export class HUD {
-  static #destroyHotbarIndicator: Destroy | null = null;
   static #node: HTMLDivElement | null = null;
 
-  public static create() {
+  public static create(): Destroy {
     if (document.getElementById(HOTBAR_INDICATOR_ID)) {
       console.warn("Hotbar indicator already exists");
-      return;
+      return () => {}; // no-op cleanup
     }
 
     HUD.node = document.createElement("div");
@@ -38,12 +37,14 @@ export class HUD {
     HUD.node.style.display = "none";
     HUD.node.innerText = "Selected: none";
     document.body.appendChild(HUD.node);
+
+    return () => HUD.remove();
   }
 
-  public static remove() {
-    if (HUD.#destroyHotbarIndicator) {
-      HUD.#destroyHotbarIndicator();
-      HUD.#destroyHotbarIndicator = null;
+  private static remove() {
+    if (HUD.#node) {
+      HUD.#node.remove();
+      HUD.#node = null;
     }
   }
 
