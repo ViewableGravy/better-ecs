@@ -5,13 +5,13 @@ import { createSystem, useEngine, useSystem } from "@repo/engine";
 import { ensureManager, type ContextId } from "@repo/spatial-contexts";
 import { syncColliderDebugWorld } from "./collider-debug";
 import { ColliderDebugProxy, GhostPreview } from "./components";
+import { buildModeStateDefault, buildModeStateSchema } from "./const";
 import { bindBuildModeDomEvents } from "./events";
 import { syncPlacementGhost } from "./ghost";
 import { ensureHotbarIndicator, removeHotbarIndicator, updateHotbarIndicator } from "./hud";
 import { handleBuildModeKeybinds } from "./input";
 import { Placement } from "./placement";
 import { resolvePlacementWorld } from "./placement-target";
-import { buildModeStateDefault, buildModeStateSchema } from "./state";
 
 export const System = createSystem("demo:build-mode")({
   schema: {
