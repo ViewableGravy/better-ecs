@@ -7,7 +7,7 @@ import { ensureManager, resolveDeepestContextAtPoint } from "@repo/spatial-conte
  *   TYPE DEFINITIONS
  **********************************************************************************************************/
 
-type PlacementWorldResolution = {
+export type PlacementWorldResolution = {
   focusedContextId?: ContextId;
   hoveredContextId?: ContextId;
   contextId?: ContextId;

@@ -1,7 +1,7 @@
 import type { RenderVisibilityRole } from "@/scenes/spatial-contexts-demo/components/render-visibility";
 import { HOUSE_INTERIOR, OUTSIDE } from "@/scenes/spatial-contexts-demo/components/render-visibility";
 import { spawnBox } from "@/scenes/spatial-contexts-demo/factories/spawnBox";
-import { createSystem, useEngine, useMouse, useSystem, type RegisteredEngine } from "@repo/engine";
+import { createSystem, useEngine, useMouse, useSystem, type RegisteredEngine, type RegisteredSystems } from "@repo/engine";
 import { resolveCameraView } from "@repo/engine/components";
 import { ensureManager, type ContextId } from "@repo/spatial-contexts";
 import { GhostPreview } from "./components";
@@ -10,7 +10,7 @@ import { bindBuildModeDomEvents } from "./events";
 import { HUD } from "./hud";
 import * as Keybinds from './input';
 import { Placement } from "./placement";
-import { resolvePlacementWorld } from "./placement-target";
+import { resolvePlacementWorld, type PlacementWorldResolution } from "./placement-target";
 
 export const System = createSystem("main:build-mode")({
   schema: {
@@ -80,25 +80,55 @@ export const System = createSystem("main:build-mode")({
       Placement.deleteAt(placementWorld, worldPointer);
     }
 
-    if (!shouldPlace || data.selectedItem !== "box" || placementTarget.blocked) {
-      return;
+    if (placementTarget.world) {
+      if (shouldSpawnBox(shouldPlace, placementTarget, data, snappedX, snappedY)) {
+        spawnBox(placementTarget.world, {
+          snappedX,
+          snappedY,
+          renderVisibilityRole: resolvePlacementRenderVisibilityRole(
+            engine, 
+            placementTarget.contextId
+          ),
+        });
+      }
     }
-
-    if (!placementWorld) {
-      return;
-    }
-
-    if (!Placement.canSpawnBox(placementWorld, snappedX, snappedY)) {
-      return;
-    }
-
-    spawnBox(placementWorld, {
-      snappedX,
-      snappedY,
-      renderVisibilityRole: resolvePlacementRenderVisibilityRole(engine, placementTarget.contextId),
-    });
   },
 });
+
+function shouldSpawnBox(
+  shouldPlace: boolean,
+  placementTarget: PlacementWorldResolution,
+  data: RegisteredSystems["main:build-mode"]["data"],
+  snappedX: number,
+  snappedY: number,
+): boolean {
+  // Early exit if the place action wasn't triggered to avoid unnecessary checks
+  if (!shouldPlace) {
+    return false;
+  }
+
+  // User must have selected a box to place from the hotbar (1)
+  if (data.selectedItem !== "box") {
+    return false;
+  }
+
+  // Placement must not be blocked (e.g. by UI or invalid world) (2)
+  if (placementTarget.blocked) {
+    return false;
+  }
+
+  // There must be a valid world to place into (3)
+  if (!placementTarget.world) {
+    return false;
+  }
+
+  // The box must not collide with anything in the world (4)
+  if (!Placement.canSpawnBox(placementTarget.world, snappedX, snappedY)) {
+    return false;
+  }
+
+  return true;
+}
 
 function resolvePlacementRenderVisibilityRole(
   engine: RegisteredEngine,
