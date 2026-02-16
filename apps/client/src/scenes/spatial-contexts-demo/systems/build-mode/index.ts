@@ -8,7 +8,6 @@ import { syncColliderDebugWorld } from "./collider-debug";
 import { ColliderDebugProxy, GhostPreview } from "./components";
 import { buildModeStateDefault, buildModeStateSchema } from "./const";
 import { bindBuildModeDomEvents } from "./events";
-import { syncPlacementGhost } from "./ghost";
 import { HUD } from "./hud";
 import * as Keybinds from './input';
 import { Placement } from "./placement";
@@ -65,7 +64,7 @@ export const System = createSystem("main:build-mode")({
       focusedWorld.destroy(GhostPreview);
       data.ghostEntityId = null;
     } else {
-      data.ghostEntityId = syncPlacementGhost(
+      data.ghostEntityId = GhostPreview.sync(
         focusedWorld,
         data.ghostEntityId,
         snappedX,
