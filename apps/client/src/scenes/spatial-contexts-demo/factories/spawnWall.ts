@@ -1,7 +1,7 @@
 import { Vec2, type UserWorld } from "@repo/engine";
 import { Color, Shape, Transform2D } from "@repo/engine/components";
 import { RectangleCollider } from "@repo/physics";
-import { RenderVisibility, type RenderVisibilityRole } from "../components/render-visibility";
+import { RenderVisibility, type RenderVisibilityRole, HOUSE_INTERIOR } from "../components/render-visibility";
 
 type SpawnWallOptions = {
   x: number;
@@ -37,7 +37,7 @@ export function spawnWall(world: UserWorld, opts: SpawnWallOptions): number {
         opts.renderOrder ?? 0,
       ),
     );
-    world.add(entity, new RenderVisibility(opts.role ?? "house-interior", opts.baseAlpha ?? 1));
+    world.add(entity, new RenderVisibility(opts.role ?? HOUSE_INTERIOR, opts.baseAlpha ?? 1));
   }
 
   const halfWidth = opts.width * 0.5;

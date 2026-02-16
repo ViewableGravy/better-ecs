@@ -1,7 +1,5 @@
 import { useSystem } from "@repo/engine";
 import {
-  COLLIDER_TOGGLE_CTRL,
-  COLLIDER_TOGGLE_META,
   GRID_TOGGLE_CTRL,
   GRID_TOGGLE_META,
   HOTBAR_SLOT_BOX,
@@ -25,9 +23,5 @@ export function matchKeybinds(): void {
 
   if (input.matchKeybind(GRID_TOGGLE_CTRL) || input.matchKeybind(GRID_TOGGLE_META)) {
     data.gridVisible = !data.gridVisible;
-  }
-
-  if (input.matchKeybind(COLLIDER_TOGGLE_CTRL) || input.matchKeybind(COLLIDER_TOGGLE_META)) {
-    data.colliderDebugVisible = !data.colliderDebugVisible;
   }
 }

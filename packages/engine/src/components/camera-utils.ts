@@ -1,5 +1,6 @@
-import { useEngine, type EntityId, type UserWorld } from "@repo/engine";
-import { Camera, Transform2D } from "@repo/engine/components";
+import { useEngine, type EntityId, type UserWorld } from "../index";
+import { Camera } from "./camera";
+import { Transform2D } from "./transform";
 
 export type CameraView = {
   x: number;

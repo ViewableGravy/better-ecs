@@ -1,8 +1,7 @@
 import type { EntityId, UserWorld } from "@repo/engine";
 import { Vec2 } from "@repo/engine";
 import { Transform2D } from "@repo/engine/components";
-import type { ContextId } from "@repo/spatial-contexts";
-import { ContextEntryRegion } from "../components/context-entry-region";
+import { type ContextId, ContextEntryRegion } from "@repo/spatial-contexts";
 
 export type ContextRegionMatch = {
   regionEntityId: EntityId;

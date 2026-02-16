@@ -29,28 +29,12 @@ export const GRID_TOGGLE_META: KeyBind = {
   modifiers: { meta: true },
 };
 
-export const COLLIDER_TOGGLE_CTRL: KeyBind = {
-  code: "KeyH",
-  modifiers: { ctrl: true },
-};
-
-export const COLLIDER_TOGGLE_META: KeyBind = {
-  code: "KeyH",
-  modifiers: { meta: true },
-};
-
-export const GRID_OR_COLLIDER_CODES = new Set(["KeyG", "KeyH"]);
+export const GRID_CODE = "KeyG";
 
 export const GHOST_FILL = new Color(1, 0.1, 0.7, 0.25);
 export const GHOST_STROKE = new Color(1, 0.35, 0.85, 0.95);
 export const PLACED_FILL = new Color(1, 0.2, 0.8, 1);
 export const PLACED_STROKE = new Color(1, 1, 1, 1);
-
-export const COLLIDER_DEBUG_STYLE = {
-  fill: new Color(0, 0, 0, 0),
-  stroke: new Color(0.2, 1, 0.8, 1),
-  strokeWidth: 1,
-};
 
 export const DELETE_POINT_RADIUS = 0.001;
 export const HOTBAR_INDICATOR_ID = "build-hotbar-indicator";
@@ -63,7 +47,6 @@ export type BuildItemType = "box";
 export type BuildModeState = {
   selectedItem: BuildItemType | null;
   gridVisible: boolean;
-  colliderDebugVisible: boolean;
   pendingPlace: boolean;
   pendingDelete: boolean;
   ghostEntityId: EntityId | null;
@@ -72,7 +55,6 @@ export type BuildModeState = {
 export const buildModeStateDefault: BuildModeState = {
   selectedItem: null,
   gridVisible: true,
-  colliderDebugVisible: false,
   pendingPlace: false,
   pendingDelete: false,
   ghostEntityId: null,
@@ -81,7 +63,6 @@ export const buildModeStateDefault: BuildModeState = {
 export const buildModeStateSchema = z.object({
   selectedItem: z.literal("box").nullable(),
   gridVisible: z.boolean(),
-  colliderDebugVisible: z.boolean(),
   pendingPlace: z.boolean(),
   pendingDelete: z.boolean(),
   ghostEntityId: z

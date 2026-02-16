@@ -1,12 +1,12 @@
 import type { RenderVisibilityRole } from "@/scenes/spatial-contexts-demo/components/render-visibility";
-import { resolveCameraView } from "@/utilities/world-camera";
-import { createSystem, useEngine, useMouse, useSystem } from "@repo/engine";
+import { HOUSE_INTERIOR, OUTSIDE } from "@/scenes/spatial-contexts-demo/components/render-visibility";
+import { spawnBox } from "@/scenes/spatial-contexts-demo/factories/spawnBox";
+import { createSystem, useEngine, useMouse, useSystem, type RegisteredEngine } from "@repo/engine";
+import { resolveCameraView } from "@repo/engine/components";
 import { ensureManager, type ContextId } from "@repo/spatial-contexts";
-import { syncColliderDebugWorld } from "./collider-debug";
-import { ColliderDebugProxy, GhostPreview } from "./components";
+import { GhostPreview } from "./components";
 import { buildModeStateDefault, buildModeStateSchema } from "./const";
 import { bindBuildModeDomEvents } from "./events";
-import { syncPlacementGhost } from "./ghost";
 import { HUD } from "./hud";
 import * as Keybinds from './input';
 import { Placement } from "./placement";
@@ -23,12 +23,12 @@ export const System = createSystem("main:build-mode")({
       throw new Error("Engine canvas is required before build-mode initialization");
     }
 
-    HUD.create();
+    const unbindHud = HUD.create();
     const unbindDomEvents = bindBuildModeDomEvents(canvas);
 
     return () => {
       unbindDomEvents();
-      HUD.remove();
+      unbindHud();
     };
   },
   system() {
@@ -63,20 +63,12 @@ export const System = createSystem("main:build-mode")({
       focusedWorld.destroy(GhostPreview);
       data.ghostEntityId = null;
     } else {
-      data.ghostEntityId = syncPlacementGhost(
+      data.ghostEntityId = GhostPreview.sync(
         focusedWorld,
         data.ghostEntityId,
         snappedX,
         snappedY,
       );
-    }
-
-    for (const sceneWorld of sceneWorlds) {
-      if (!data.colliderDebugVisible) {
-        sceneWorld.destroy(ColliderDebugProxy);
-      } else {
-        syncColliderDebugWorld(sceneWorld);
-      }
     }
 
     const shouldDelete = data.pendingDelete;
@@ -96,31 +88,34 @@ export const System = createSystem("main:build-mode")({
       return;
     }
 
-    Placement.spawnBox(
-      placementWorld,
+    if (!Placement.canSpawnBox(placementWorld, snappedX, snappedY)) {
+      return;
+    }
+
+    spawnBox(placementWorld, {
       snappedX,
       snappedY,
-      resolvePlacementRenderVisibilityRole(engine, placementTarget.contextId),
-    );
+      renderVisibilityRole: resolvePlacementRenderVisibilityRole(engine, placementTarget.contextId),
+    });
   },
 });
 
 function resolvePlacementRenderVisibilityRole(
-  engine: ReturnType<typeof useEngine>,
+  engine: RegisteredEngine,
   placementContextId: ContextId | undefined,
 ): RenderVisibilityRole {
   const manager = ensureManager(engine.scene.context);
 
   const focusedContextId = manager.focusedContextId;
   if (!placementContextId || placementContextId !== focusedContextId) {
-    return "outside";
+    return OUTSIDE;
   }
 
   const rootContextId = manager.rootContextId;
 
   if (focusedContextId === rootContextId) {
-    return "outside";
+    return OUTSIDE;
   }
 
-  return "house-interior";
+  return HOUSE_INTERIOR;
 }

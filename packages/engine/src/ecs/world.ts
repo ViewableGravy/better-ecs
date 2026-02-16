@@ -13,6 +13,7 @@ export interface IUserWorld {
   add<T>(entityId: EntityId, componentType: Class<T>, component: T): void;
   add<T>(entityId: EntityId, component: T): void;
   get<T>(entityId: EntityId, componentType: Class<T>): T | undefined;
+  require<T>(entityId: EntityId, componentType: Class<T>): T;
   all(): EntityId[];
   has(entityId: EntityId, componentType: Class<any>): boolean;
   remove(entityId: EntityId, componentType: Class<any>): void;
@@ -53,6 +54,21 @@ export class UserWorld implements IUserWorld {
 
   get<T>(entityId: EntityId, componentType: Class<T>): T | undefined {
     return this.world.getComponent<T>(entityId, componentType);
+  }
+
+  /**
+   * Gets a component from an entity, throwing an error if it doesn't exist.
+   * 
+   * @throws {Error} If the component does not exist on the entity
+   */
+  require<T>(entityId: EntityId, componentType: Class<T>): T {
+    const component = this.world.getComponent<T>(entityId, componentType);
+    if (component === undefined) {
+      throw new Error(
+        `Component ${componentType.name} does not exist on entity ${entityId}`,
+      );
+    }
+    return component;
   }
 
   all(): EntityId[] {

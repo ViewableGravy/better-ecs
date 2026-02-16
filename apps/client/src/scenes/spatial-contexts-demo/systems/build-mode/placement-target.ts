@@ -1,8 +1,7 @@
-import { ContextEntryRegion } from "@/scenes/spatial-contexts-demo/components/context-entry-region";
-import type { MousePoint, UserWorld } from "@repo/engine";
-import { Vec2, type SceneContext } from "@repo/engine";
+import type { MousePoint } from "@repo/engine";
+import { useEngine } from "@repo/engine";
 import type { ContextId, ContextRelationship, SpatialContextManager } from "@repo/spatial-contexts";
-import { ensureManager } from "@repo/spatial-contexts";
+import { ensureManager, resolveDeepestContextAtPoint } from "@repo/spatial-contexts";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -13,14 +12,8 @@ type PlacementWorldResolution = {
   hoveredContextId?: ContextId;
   contextId?: ContextId;
   relationship?: ContextRelationship;
-  world?: UserWorld;
+  world?: ReturnType<SpatialContextManager["getWorld"]>;
   blocked: boolean;
-};
-
-type BuildModeEngine = {
-  scene: {
-    context: SceneContext;
-  };
 };
 
 /**********************************************************************************************************
@@ -28,7 +21,7 @@ type BuildModeEngine = {
  **********************************************************************************************************/
 
 export function resolvePlacementWorld(
-  engine: BuildModeEngine,
+  engine: ReturnType<typeof useEngine>,
   worldPointer: MousePoint,
 ): PlacementWorldResolution {
   const manager = ensureManager(engine.scene.context);
@@ -48,58 +41,3 @@ export function resolvePlacementWorld(
     blocked: !canPlaceInHoveredWorld || !placementWorld,
   };
 }
-
-function resolveDeepestContextAtPoint(
-  manager: SpatialContextManager,
-  worldPointer: MousePoint,
-): ContextId {
-  const rootContextId = manager.rootContextId;
-
-  let deepestContextId = rootContextId;
-  let deepestDepth = 0;
-
-  const walk = (parentContextId: ContextId, depth: number): void => {
-    const parentWorld = manager.getWorld(parentContextId);
-    if (!parentWorld) {
-      return;
-    }
-
-    for (const regionEntityId of parentWorld.query(ContextEntryRegion)) {
-      const region = parentWorld.get(regionEntityId, ContextEntryRegion);
-      if (!region) {
-        continue;
-      }
-
-      if (!RegionUtils.pointInsideRegion(region, worldPointer)) {
-        continue;
-      }
-
-      if (manager.getParentContextId(region.targetContextId) !== parentContextId) {
-        continue;
-      }
-
-      const childDepth = depth + 1;
-      if (childDepth > deepestDepth) {
-        deepestDepth = childDepth;
-        deepestContextId = region.targetContextId;
-      }
-
-      walk(region.targetContextId, childDepth);
-    }
-  };
-
-  walk(rootContextId, 0);
-
-  return deepestContextId;
-}
-
-
-class RegionUtils {
-  private static pointBuffer = new Vec2();
-
-  public static pointInsideRegion(region: ContextEntryRegion, worldPointer: MousePoint): boolean {
-    RegionUtils.pointBuffer.set(worldPointer.x, worldPointer.y);
-    return region.bounds.containsPoint(RegionUtils.pointBuffer);
-  }
-}
-
