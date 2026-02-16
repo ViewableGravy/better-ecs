@@ -1,6 +1,6 @@
 import { GridBounds } from "@/components/grid-bounds";
-import { GRID_CELL_SIZE } from "@/systems/build-mode/const";
-import { buildModeState } from "@/systems/build-mode/state";
+import { GRID_CELL_SIZE } from "@/scenes/spatial-contexts-demo/build-mode/const";
+import { buildModeState } from "@/scenes/spatial-contexts-demo/build-mode/state";
 import type { UserWorld } from "@repo/engine";
 import { Color, Shape, Transform2D } from "@repo/engine/components";
 import type { Renderer } from "@repo/engine/render";
