@@ -23,3 +23,6 @@ packages/*/src/**/*.d.ts.map
 # But allow spec/test JS files if any exist
 !packages/*/src/**/*.spec.*
 !packages/*/src/**/*.test.*
+
+# Ignore playwright last run json files
+.last-run.json
