@@ -3,11 +3,10 @@ import { HOUSE_INTERIOR, OUTSIDE } from "@/scenes/spatial-contexts-demo/componen
 import { spawnBox } from "@/scenes/spatial-contexts-demo/factories/spawnBox";
 import { createSystem, useEngine, useMouse, useSystem, type RegisteredEngine, type RegisteredSystems } from "@repo/engine";
 import { resolveCameraView } from "@repo/engine/components";
-import { ensureManager, type ContextId } from "@repo/spatial-contexts";
+import { requireManager, type ContextId } from "@repo/spatial-contexts";
 import { GhostPreview } from "./components";
 import { buildModeStateDefault, buildModeStateSchema } from "./const";
-import { bindBuildModeDomEvents } from "./events";
-import { HUD } from "./hud";
+import { BuildModeDomEvents, HUD } from "./dom";
 import * as Keybinds from './input';
 import { Placement } from "./placement";
 import { resolvePlacementWorld, type PlacementWorldResolution } from "./placement-target";
@@ -24,7 +23,7 @@ export const System = createSystem("main:build-mode")({
     }
 
     const unbindHud = HUD.create();
-    const unbindDomEvents = bindBuildModeDomEvents(canvas);
+    const unbindDomEvents = BuildModeDomEvents.create();
 
     return () => {
       unbindDomEvents();
@@ -36,7 +35,7 @@ export const System = createSystem("main:build-mode")({
     const engine = useEngine();
     const mouse = useMouse();
 
-    const manager = ensureManager(engine.scene.context);
+    const manager = requireManager(engine.scene.context);
     const focusedWorld = manager.focusedWorld;
     const sceneWorlds = engine.scene.context.worlds;
 
@@ -134,7 +133,7 @@ function resolvePlacementRenderVisibilityRole(
   engine: RegisteredEngine,
   placementContextId: ContextId | undefined,
 ): RenderVisibilityRole {
-  const manager = ensureManager(engine.scene.context);
+  const manager = requireManager(engine.scene.context);
 
   const focusedContextId = manager.focusedContextId;
   if (!placementContextId || placementContextId !== focusedContextId) {

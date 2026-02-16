@@ -1,6 +1,6 @@
 import { invariantReturn } from "@/utilities/invariantReturn";
 import { useSystem } from "@repo/engine";
-import { HOTBAR_INDICATOR_ID } from "./const";
+import { HOTBAR_INDICATOR_ID } from "../const";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -16,7 +16,9 @@ export class HUD {
   public static create(): Destroy {
     if (document.getElementById(HOTBAR_INDICATOR_ID)) {
       console.warn("Hotbar indicator already exists");
-      return () => { /* noop */ }; // no-op cleanup
+      return () => {
+        /* noop */
+      };
     }
 
     HUD.node = document.createElement("div");
@@ -53,7 +55,7 @@ export class HUD {
 
     this.node.style.display = "block";
     this.node.style.background = data.selectedItem ? "#5a125699" : "#00000066";
-    
+
     this.node.innerText = `Selected: ${data.selectedItem ?? "none"}`;
   }
 

@@ -29,8 +29,6 @@ export const GRID_TOGGLE_META: KeyBind = {
   modifiers: { meta: true },
 };
 
-export const GRID_CODE = "KeyG";
-
 export const GHOST_FILL = new Color(1, 0.1, 0.7, 0.25);
 export const GHOST_STROKE = new Color(1, 0.35, 0.85, 0.95);
 export const PLACED_FILL = new Color(1, 0.2, 0.8, 1);

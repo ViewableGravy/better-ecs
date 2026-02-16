@@ -32,7 +32,10 @@ export function getManager(scene: SceneContext): SpatialContextManager | undefin
   return STORE.get(scene);
 }
 
-export function ensureManager(scene: SceneContext): SpatialContextManager {
+/**
+ * Asserts a spatial context manager is installed for the given scene, returning it if so. Throws an error if not, with instructions for installation.
+ */
+export function requireManager(scene: SceneContext): SpatialContextManager {
   const manager = getManager(scene);
   if (!manager) {
     throw new Error(

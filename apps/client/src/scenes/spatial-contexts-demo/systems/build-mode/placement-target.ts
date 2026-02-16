@@ -1,30 +1,27 @@
-import type { MousePoint } from "@repo/engine";
-import { useEngine } from "@repo/engine";
-import type { ContextId, ContextRelationship, SpatialContextManager } from "@repo/spatial-contexts";
-import { ensureManager, resolveDeepestContextAtPoint } from "@repo/spatial-contexts";
+import type { MousePoint, RegisteredEngine, UserWorld } from "@repo/engine";
+import type { ContextId, ContextRelationship } from "@repo/spatial-contexts";
+import { requireManager, resolveDeepestContextAtPoint } from "@repo/spatial-contexts";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
  **********************************************************************************************************/
-
 export type PlacementWorldResolution = {
   focusedContextId?: ContextId;
   hoveredContextId?: ContextId;
   contextId?: ContextId;
   relationship?: ContextRelationship;
-  world?: ReturnType<SpatialContextManager["getWorld"]>;
+  world?: UserWorld | undefined;
   blocked: boolean;
 };
 
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
-
 export function resolvePlacementWorld(
-  engine: ReturnType<typeof useEngine>,
+  engine: RegisteredEngine,
   worldPointer: MousePoint,
 ): PlacementWorldResolution {
-  const manager = ensureManager(engine.scene.context);
+  const manager = requireManager(engine.scene.context);
 
   const focusedContextId = manager.focusedContextId;
   const hoveredContextId = resolveDeepestContextAtPoint(manager, worldPointer);
