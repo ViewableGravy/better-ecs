@@ -25,12 +25,14 @@ export const createAppEngine = () => {
     systems: [
       // Plugins
       FPSSystem,
-      PhysicsDebugSystem,
       // Update systems
       Movement,
       Collision,
       CameraFollow,
-      CameraZoom
+      CameraZoom,
+
+      // Keep collider proxy sync after movement/collision so prev/curr are interpolation-ready.
+      PhysicsDebugSystem,
     ],
     render: Render,
     scenes: [

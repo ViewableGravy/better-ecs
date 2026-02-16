@@ -1,9 +1,9 @@
-import type { SystemFactory, StandardSchema } from "@repo/engine";
+import type { SystemFactoryTuple } from "@repo/engine";
 import { createDebugSystem } from "./debug-system";
 import type { PhysicsOpts } from "./types";
 
 export function createPhysics(opts: PhysicsOpts = {}) {
-  const systems: SystemFactory<string, StandardSchema, Record<string, never>>[] = [];
+  const systems: SystemFactoryTuple = [];
 
   if (opts.debug) {
     systems.push(createDebugSystem(opts.debug));
@@ -12,5 +12,6 @@ export function createPhysics(opts: PhysicsOpts = {}) {
   return { systems };
 }
 
-export type { PhysicsOpts };
 export { ColliderDebugProxy } from "./components/collider-debug-proxy";
+export type { PhysicsOpts };
+

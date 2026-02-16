@@ -1,12 +1,12 @@
 import type { EntityId, UserWorld } from "@repo/engine";
 import { createSystem, useEngine, useSystem } from "@repo/engine";
-import { Shape, Sprite, Transform2D, Color } from "@repo/engine/components";
+import { Color, Shape, Sprite, Transform2D } from "@repo/engine/components";
 import { CircleCollider } from "../colliders/circle";
 import { CompoundCollider } from "../colliders/compound";
 import { RectangleCollider } from "../colliders/rectangle";
 import { getEntityCollider } from "../entity/get";
 import { ColliderDebugProxy } from "./components/collider-debug-proxy";
-import { debugStateSchema, type PhysicsOpts } from "./types";
+import { debugStateSchema, type PhysicsDebugOpts } from "./types";
 
 const COLLIDER_DEBUG_STYLE = {
   fill: new Color(0, 0, 0, 0),
@@ -14,7 +14,7 @@ const COLLIDER_DEBUG_STYLE = {
   strokeWidth: 1,
 };
 
-export function createDebugSystem(opts: Exclude<PhysicsOpts["debug"], false>) {
+export function createDebugSystem(opts: PhysicsDebugOpts) {
   return createSystem("plugin:physics:debug")({
     schema: {
       default: { visible: false },
