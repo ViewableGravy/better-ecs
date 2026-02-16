@@ -1,5 +1,6 @@
 import { Color } from "@repo/engine/components";
 import { defineContext, type ContextId } from "@repo/spatial-contexts";
+import { OUTSIDE } from "../components/render-visibility";
 import { spawnDoor } from "../factories/spawnDoor";
 import { spawnDungeon } from "../factories/spawnDungeon";
 import { setupContextPlayer } from "./shared";
@@ -25,7 +26,7 @@ export function defineDungeonContext(options: DungeonContextOptions) {
         x: 50,
         y: 220,
         fill: new Color(0.95, 0.4, 0.35, 1),
-        role: "outside",
+        role: OUTSIDE,
         portal: {
           mode: "teleport",
           targetContextId: options.overworldId,

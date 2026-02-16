@@ -3,7 +3,7 @@ import { Placeable } from "@/scenes/spatial-contexts-demo/systems/build-mode/com
 import { createSystem } from "@repo/engine";
 import { Shape, Transform2D } from "@repo/engine/components";
 import { useContextManager } from "@repo/spatial-contexts";
-import { RenderVisibility } from "../components/render-visibility";
+import { RenderVisibility, OUTSIDE, HOUSE_ROOF, HOUSE_INTERIOR } from "../components/render-visibility";
 
 const OVERLAY_ID = "spatial-contexts-overlay";
 
@@ -342,15 +342,15 @@ function getAlphaState(manager: ReturnType<typeof useContextManager>) {
       const visibility = world.get(entityId, RenderVisibility);
       if (!shape || !visibility) continue;
 
-      if (visibility.role === "outside") {
+      if (visibility.role === OUTSIDE) {
         sample.outside = shape.fill.a;
       }
 
-      if (visibility.role === "house-roof") {
+      if (visibility.role === HOUSE_ROOF) {
         sample.roof = shape.fill.a;
       }
 
-      if (visibility.role === "house-interior") {
+      if (visibility.role === HOUSE_INTERIOR) {
         sample.interior = shape.fill.a;
       }
     }

@@ -2,7 +2,7 @@ import { Vec2, type UserWorld } from "@repo/engine";
 import { Color, Shape, Transform2D } from "@repo/engine/components";
 import { RectangleCollider } from "@repo/physics";
 import { Portal, type PortalOpts } from "@repo/spatial-contexts";
-import { RenderVisibility, type RenderVisibilityRole } from "../components/render-visibility";
+import { RenderVisibility, type RenderVisibilityRole, OUTSIDE } from "../components/render-visibility";
 
 type SpawnDoorOptions = {
   x: number;
@@ -51,7 +51,7 @@ export function spawnDoor(world: UserWorld, opts: SpawnDoorOptions): number {
     world.add(entity, new Portal(opts.portal));
   }
 
-  world.add(entity, new RenderVisibility(opts.role ?? "outside", opts.baseAlpha ?? 1));
+  world.add(entity, new RenderVisibility(opts.role ?? OUTSIDE, opts.baseAlpha ?? 1));
 
   return entity;
 }

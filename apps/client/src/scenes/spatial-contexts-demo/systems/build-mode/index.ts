@@ -1,4 +1,5 @@
 import type { RenderVisibilityRole } from "@/scenes/spatial-contexts-demo/components/render-visibility";
+import { OUTSIDE, HOUSE_INTERIOR } from "@/scenes/spatial-contexts-demo/components/render-visibility";
 import { spawnBox } from "@/scenes/spatial-contexts-demo/factories/spawnBox";
 import { createSystem, useEngine, useMouse, useSystem } from "@repo/engine";
 import { resolveCameraView } from "@repo/engine/components";
@@ -117,14 +118,14 @@ function resolvePlacementRenderVisibilityRole(
 
   const focusedContextId = manager.focusedContextId;
   if (!placementContextId || placementContextId !== focusedContextId) {
-    return "outside";
+    return OUTSIDE;
   }
 
   const rootContextId = manager.rootContextId;
 
   if (focusedContextId === rootContextId) {
-    return "outside";
+    return OUTSIDE;
   }
 
-  return "house-interior";
+  return HOUSE_INTERIOR;
 }
