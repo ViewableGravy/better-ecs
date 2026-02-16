@@ -9,6 +9,34 @@ const GRID_FILL = new Color(0, 0, 0, 0);
 const GRID_LINE_WIDTH = 1;
 const MAX_LINES_PER_AXIS = 600;
 
+const lineX = {
+  type: "line" as const,
+  x: 0,
+  y: 0,
+  width: 0,
+  height: 1,
+  rotation: Math.PI / 2,
+  scaleX: 1,
+  scaleY: 1,
+  fill: GRID_FILL,
+  stroke: GRID_COLOR,
+  strokeWidth: GRID_LINE_WIDTH,
+};
+
+const lineY = {
+  type: "line" as const,
+  x: 0,
+  y: 0,
+  width: 0,
+  height: 1,
+  rotation: 0,
+  scaleX: 1,
+  scaleY: 1,
+  fill: GRID_FILL,
+  stroke: GRID_COLOR,
+  strokeWidth: GRID_LINE_WIDTH,
+};
+
 export function drawGrid(world: UserWorld, renderer: Renderer): void {
   const buildMode = useSystem("main:build-mode");
 
@@ -60,35 +88,17 @@ export function drawGrid(world: UserWorld, renderer: Renderer): void {
   const lineCenterY = (minY + maxY) * 0.5;
 
   for (let x = minX; x <= maxX; x += xStep) {
-    renderer.low.drawShape({
-      type: "line",
-      x,
-      y: lineCenterY,
-      width: worldHeight,
-      height: 1,
-      rotation: Math.PI / 2,
-      scaleX: 1,
-      scaleY: 1,
-      fill: GRID_FILL,
-      stroke: GRID_COLOR,
-      strokeWidth: GRID_LINE_WIDTH,
-    });
+    lineX.x = x;
+    lineX.y = lineCenterY;
+    lineX.width = worldHeight;
+    renderer.low.drawShape(lineX);
   }
 
   for (let y = minY; y <= maxY; y += yStep) {
-    renderer.low.drawShape({
-      type: "line",
-      x: lineCenterX,
-      y,
-      width: worldWidth,
-      height: 1,
-      rotation: 0,
-      scaleX: 1,
-      scaleY: 1,
-      fill: GRID_FILL,
-      stroke: GRID_COLOR,
-      strokeWidth: GRID_LINE_WIDTH,
-    });
+    lineY.x = lineCenterX;
+    lineY.y = y;
+    lineY.width = worldWidth;
+    renderer.low.drawShape(lineY);
   }
 }
 

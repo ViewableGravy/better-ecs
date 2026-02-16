@@ -42,12 +42,10 @@ export class Placement {
         continue;
       }
 
-      if (!collides(Placement.deletePointCollider, Placement.deletePointTransform, collider, transform)) {
-        continue;
+      if (collides(Placement.deletePointCollider, Placement.deletePointTransform, collider, transform)) {
+        world.destroy(entityId);
+        return;
       }
-
-      world.destroy(entityId);
-      return;
     }
   }
 
@@ -69,8 +67,8 @@ export class Placement {
         "rectangle",
         BOX_SIZE,
         BOX_SIZE,
-        cloneColor(PLACED_FILL),
-        cloneColor(PLACED_STROKE),
+        Placement.cloneColor(PLACED_FILL),
+        Placement.cloneColor(PLACED_STROKE),
         1,
       ),
     );
@@ -106,8 +104,8 @@ export class Placement {
 
     return true;
   }
-}
 
-function cloneColor(source: Color): Color {
-  return new Color(source.r, source.g, source.b, source.a);
+  private static cloneColor(source: Color): Color {
+    return new Color(source.r, source.g, source.b, source.a);
+  }
 }

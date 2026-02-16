@@ -15,7 +15,6 @@
     "typecheck": "nx run-many --target=typecheck",
     "test": "nx run-many --target=test",
     "e2e": "bun x playwright test --config=apps/client/playwright.config.ts",
-    "verify:placement-context": "bun run e2e apps/client/e2e/placement-context.spec.ts",
     "clean": "nx run-many --target=clean",
     "clean:all": "rm -rf dist .nx/cache && nx run-many --target=clean"
   },
