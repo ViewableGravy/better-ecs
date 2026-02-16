@@ -8,7 +8,7 @@ import { ColliderDebugProxy, GhostPreview } from "./components";
 import { buildModeStateDefault, buildModeStateSchema } from "./const";
 import { bindBuildModeDomEvents } from "./events";
 import { syncPlacementGhost } from "./ghost";
-import { ensureHotbarIndicator, removeHotbarIndicator, updateHotbarIndicator } from "./hud";
+import { HUD } from "./hud";
 import { handleBuildModeKeybinds } from "./input";
 import { Placement } from "./placement";
 import { resolvePlacementWorld } from "./placement-target";
@@ -21,12 +21,12 @@ export const System = createSystem("demo:build-mode")({
   initialize() {
     const canvas = invariantById<HTMLCanvasElement>("game");
 
-    ensureHotbarIndicator();
+    HUD.create();
     const unbindDomEvents = bindBuildModeDomEvents(canvas);
 
     return () => {
       unbindDomEvents();
-      removeHotbarIndicator();
+      HUD.remove();
     };
   },
   system() {
@@ -39,7 +39,7 @@ export const System = createSystem("demo:build-mode")({
     const sceneWorlds = engine.scene.context.worlds;
 
     handleBuildModeKeybinds(input.matchKeybind);
-    updateHotbarIndicator();
+    HUD.update();
 
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
