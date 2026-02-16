@@ -2,8 +2,7 @@ import { PlayerComponent } from "@/components/player";
 import { ensurePlayer } from "@/entities/player";
 import { createSystem, type EntityId, useDelta, useEngine, useWorld } from "@repo/engine";
 import { Transform2D } from "@repo/engine/components";
-import { type ContextId, useContextManager } from "@repo/spatial-contexts";
-import { ContextEntryRegion } from "../components/context-entry-region";
+import { type ContextId, useContextManager, ContextEntryRegion } from "@repo/spatial-contexts";
 import { InsideContext } from "../components/inside-context";
 import {
   findContainingContextRegion,
