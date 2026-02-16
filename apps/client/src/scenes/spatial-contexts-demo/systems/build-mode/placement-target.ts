@@ -1,6 +1,6 @@
 import type { MousePoint, RegisteredEngine, UserWorld } from "@repo/engine";
 import type { ContextId, ContextRelationship } from "@repo/spatial-contexts";
-import { requireManager, resolveDeepestContextAtPoint } from "@repo/spatial-contexts";
+import { resolveDeepestContextAtPoint, SpatialContexts } from "@repo/spatial-contexts";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -21,7 +21,7 @@ export function resolvePlacementWorld(
   engine: RegisteredEngine,
   worldPointer: MousePoint,
 ): PlacementWorldResolution {
-  const manager = requireManager(engine.scene.context);
+  const manager = SpatialContexts.requireManager(engine.scene.context);
 
   const focusedContextId = manager.focusedContextId;
   const hoveredContextId = resolveDeepestContextAtPoint(manager, worldPointer);

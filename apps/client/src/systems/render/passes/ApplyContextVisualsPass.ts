@@ -12,7 +12,7 @@ import { lerp } from "@/utilities/math";
 import { createRenderPass, useEngine } from "@repo/engine";
 import { Shape, Sprite } from "@repo/engine/components";
 import {
-  getManager,
+  SpatialContexts,
   type ContextId,
   type SpatialContextManager,
 } from "@repo/spatial-contexts";
@@ -22,7 +22,7 @@ const INSIDE_OUTSIDE_ALPHA = 0.5;
 export const ApplyContextVisualsPass = createRenderPass("apply-context-visuals")({
   execute() {
     const engine = useEngine();
-    const manager = getManager(engine.scene.context);
+    const manager = SpatialContexts.getManager(engine.scene.context);
     if (!manager) {
       return;
     }

@@ -1,7 +1,7 @@
 import { useEngine, type UserWorld } from "@repo/engine";
 import { Camera, Shape, Sprite, Transform2D } from "@repo/engine/components";
 import type { RenderQueue, Renderer } from "@repo/engine/render";
-import { getManager } from "@repo/spatial-contexts";
+import { SpatialContexts } from "@repo/spatial-contexts";
 import { drawGrid } from "./DrawGrid";
 
 const BACKGROUND_LAYER_MAX = -1;
@@ -48,7 +48,7 @@ export function commitWorld(
 
   // 2. Grid overlay (above floor/background, below entities)
   const engine = useEngine();
-  const manager = getManager(engine.scene.context);
+  const manager = SpatialContexts.getManager(engine.scene.context);
   const focusedWorld = manager ? manager.focusedWorld : engine.world;
 
   if (focusedWorld === world) {

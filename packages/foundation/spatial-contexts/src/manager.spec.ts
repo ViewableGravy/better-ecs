@@ -4,7 +4,7 @@ import { SceneContext, World } from "@repo/engine";
 
 import { contextId } from "./context-id";
 import { defineContext } from "./definition";
-import { installSpatialContexts } from "./install";
+import { SpatialContexts } from "./install";
 
 describe("spatial-contexts/SpatialContextManager", () => {
   it("runs root setup even though default world already exists", () => {
@@ -15,7 +15,7 @@ describe("spatial-contexts/SpatialContextManager", () => {
 
     let ran = 0;
 
-    const manager = installSpatialContexts(scene, {
+    const manager = SpatialContexts.install(scene, {
       definitions: [
         defineContext({
           id: ROOT,
@@ -39,7 +39,7 @@ describe("spatial-contexts/SpatialContextManager", () => {
     const ROOT = contextId("default");
     const HOUSE = contextId("house");
 
-    const manager = installSpatialContexts(scene, {
+    const manager = SpatialContexts.install(scene, {
       definitions: [defineContext({ id: ROOT }), defineContext({ id: HOUSE, parentId: ROOT })],
     });
 
@@ -56,7 +56,7 @@ describe("spatial-contexts/SpatialContextManager", () => {
     const ROOT = contextId("default");
     const HOUSE = contextId("house");
 
-    const manager = installSpatialContexts(scene, {
+    const manager = SpatialContexts.install(scene, {
       definitions: [
         defineContext({
           id: ROOT,
@@ -83,7 +83,7 @@ describe("spatial-contexts/SpatialContextManager", () => {
     const ROOT = contextId("default");
     const HOUSE = contextId("house");
 
-    const manager = installSpatialContexts(scene, {
+    const manager = SpatialContexts.install(scene, {
       definitions: [defineContext({ id: ROOT }), defineContext({ id: HOUSE, parentId: ROOT })],
     });
 
@@ -102,7 +102,7 @@ describe("spatial-contexts/SpatialContextManager", () => {
     const BASEMENT = contextId("basement");
     const DUNGEON = contextId("dungeon");
 
-    const manager = installSpatialContexts(scene, {
+    const manager = SpatialContexts.install(scene, {
       definitions: [
         defineContext({ id: ROOT }),
         defineContext({ id: HOUSE, parentId: ROOT }),

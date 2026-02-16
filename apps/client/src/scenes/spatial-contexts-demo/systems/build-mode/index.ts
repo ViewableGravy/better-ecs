@@ -3,7 +3,7 @@ import { HOUSE_INTERIOR, OUTSIDE } from "@/scenes/spatial-contexts-demo/componen
 import { spawnBox } from "@/scenes/spatial-contexts-demo/factories/spawnBox";
 import { createSystem, useEngine, useMouse, useSystem, type RegisteredEngine, type RegisteredSystems } from "@repo/engine";
 import { resolveCameraView } from "@repo/engine/components";
-import { requireManager, type ContextId } from "@repo/spatial-contexts";
+import { SpatialContexts, type ContextId } from "@repo/spatial-contexts";
 import { GhostPreview } from "./components";
 import { buildModeStateDefault, buildModeStateSchema } from "./const";
 import { BuildModeDomEvents, HUD } from "./dom";
@@ -35,7 +35,7 @@ export const System = createSystem("main:build-mode")({
     const engine = useEngine();
     const mouse = useMouse();
 
-    const manager = requireManager(engine.scene.context);
+    const manager = SpatialContexts.requireManager(engine.scene.context);
     const focusedWorld = manager.focusedWorld;
     const sceneWorlds = engine.scene.context.worlds;
 
@@ -133,7 +133,7 @@ function resolvePlacementRenderVisibilityRole(
   engine: RegisteredEngine,
   placementContextId: ContextId | undefined,
 ): RenderVisibilityRole {
-  const manager = requireManager(engine.scene.context);
+  const manager = SpatialContexts.requireManager(engine.scene.context);
 
   const focusedContextId = manager.focusedContextId;
   if (!placementContextId || placementContextId !== focusedContextId) {
