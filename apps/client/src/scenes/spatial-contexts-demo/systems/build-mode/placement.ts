@@ -3,7 +3,7 @@ import { Vec2, type MousePoint, type UserWorld } from "@repo/engine";
 import { Color, Shape, Transform2D } from "@repo/engine/components";
 import { CircleCollider, RectangleCollider, collides, getEntityCollider } from "@repo/physics";
 import { GridFootprint, GridPosition, Placeable } from "./components";
-import { BOX_SIZE, DELETE_POINT_RADIUS, GRID_CELL_SIZE, HALF_BOX_SIZE, PLACED_FILL, PLACED_STROKE } from "./const";
+import { BOX_SIZE, DELETE_POINT_RADIUS, GRID_CELL_SIZE, HALF_BOX_SIZE } from "./const";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -45,40 +45,7 @@ export class Placement {
     }
   }
 
-  public static spawnBox(
-    world: UserWorld,
-    snappedX: number,
-    snappedY: number,
-    renderVisibilityRole: RenderVisibilityRole,
-  ): void {
-    if (!Placement.canSpawnBox(world, snappedX, snappedY)) {
-      return;
-    }
-
-    const placed = world.create();
-    world.add(placed, new Transform2D(snappedX + HALF_BOX_SIZE, snappedY + HALF_BOX_SIZE));
-    world.add(
-      placed,
-      new Shape(
-        "rectangle",
-        BOX_SIZE,
-        BOX_SIZE,
-        Placement.cloneColor(PLACED_FILL),
-        Placement.cloneColor(PLACED_STROKE),
-        1,
-      ),
-    );
-    world.add(
-      placed,
-      new RectangleCollider(new Vec2(-HALF_BOX_SIZE, -HALF_BOX_SIZE), new Vec2(BOX_SIZE, BOX_SIZE)),
-    );
-    world.add(placed, new GridPosition(snappedX, snappedY));
-    world.add(placed, new GridFootprint(BOX_SIZE, BOX_SIZE));
-    world.add(placed, new Placeable("box"));
-    world.add(placed, new RenderVisibility(renderVisibilityRole, 1));
-  }
-
-  private static canSpawnBox(world: UserWorld, snappedX: number, snappedY: number): boolean {
+  public static canSpawnBox(world: UserWorld, snappedX: number, snappedY: number): boolean {
     Placement.placementTransform.curr.pos.set(snappedX + HALF_BOX_SIZE, snappedY + HALF_BOX_SIZE);
     Placement.placementTransform.prev.pos.set(snappedX + HALF_BOX_SIZE, snappedY + HALF_BOX_SIZE);
 
@@ -96,8 +63,5 @@ export class Placement {
 
     return true;
   }
-
-  private static cloneColor(source: Color): Color {
-    return new Color(source.r, source.g, source.b, source.a);
-  }
 }
+

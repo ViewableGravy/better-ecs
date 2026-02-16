@@ -1,4 +1,5 @@
 import type { RenderVisibilityRole } from "@/scenes/spatial-contexts-demo/components/render-visibility";
+import { spawnBox } from "@/scenes/spatial-contexts-demo/factories/spawnBox";
 import { createSystem, useEngine, useMouse, useSystem } from "@repo/engine";
 import { resolveCameraView } from "@repo/engine/components";
 import { ensureManager, type ContextId } from "@repo/spatial-contexts";
@@ -96,12 +97,15 @@ export const System = createSystem("main:build-mode")({
       return;
     }
 
-    Placement.spawnBox(
-      placementWorld,
+    if (!Placement.canSpawnBox(placementWorld, snappedX, snappedY)) {
+      return;
+    }
+
+    spawnBox(placementWorld, {
       snappedX,
       snappedY,
-      resolvePlacementRenderVisibilityRole(engine, placementTarget.contextId),
-    );
+      renderVisibilityRole: resolvePlacementRenderVisibilityRole(engine, placementTarget.contextId),
+    });
   },
 });
 
