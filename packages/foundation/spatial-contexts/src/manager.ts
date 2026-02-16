@@ -5,6 +5,8 @@ import { deriveSetsFromPolicy } from "./derive";
 import { mergePolicy } from "./policy";
 import { computeContextStack } from "./stack";
 
+export type ContextRelationship = "self" | "ancestor" | "descendant" | "unrelated";
+
 export class SpatialContextManager {
   readonly #scene: SceneContext;
   readonly #definitions = new Map<ContextId, ContextDefinition>();
@@ -20,6 +22,10 @@ export class SpatialContextManager {
 
   getRootContextId(): ContextId {
     return this.#scene.defaultWorldId as ContextId;
+  }
+
+  getRootWorld(): UserWorld {
+    return this.getWorldOrThrow(this.getRootContextId());
   }
 
   registerDefinition(def: ContextDefinition): void {
@@ -40,8 +46,54 @@ export class SpatialContextManager {
     return [...this.#definitions.values()];
   }
 
+  getDefinition(id: ContextId): ContextDefinition | undefined {
+    return this.#definitions.get(id);
+  }
+
+  getParentContextId(id: ContextId): ContextId | undefined {
+    if (id === this.getRootContextId()) {
+      return undefined;
+    }
+
+    return this.#definitions.get(id)?.parentId;
+  }
+
   getFocusedContextId(): ContextId {
     return this.#focusedId;
+  }
+
+  getFocusedWorld(): UserWorld {
+    return this.getWorldOrThrow(this.#focusedId);
+  }
+
+  isAncestorContext(ancestorId: ContextId, descendantId: ContextId): boolean {
+    let current = this.getParentContextId(descendantId);
+
+    while (current) {
+      if (current === ancestorId) {
+        return true;
+      }
+
+      current = this.getParentContextId(current);
+    }
+
+    return false;
+  }
+
+  getContextRelationship(sourceId: ContextId, targetId: ContextId): ContextRelationship {
+    if (sourceId === targetId) {
+      return "self";
+    }
+
+    if (this.isAncestorContext(targetId, sourceId)) {
+      return "ancestor";
+    }
+
+    if (this.isAncestorContext(sourceId, targetId)) {
+      return "descendant";
+    }
+
+    return "unrelated";
   }
 
   setFocusedContextId(id: ContextId): void {
@@ -103,9 +155,7 @@ export class SpatialContextManager {
 
   getContextStack(): readonly ContextId[] {
     const parentResolver = (id: ContextId): ContextId | undefined => {
-      // Root has no parent.
-      if (id === (this.#scene.defaultWorldId as ContextId)) return undefined;
-      return this.#definitions.get(id)?.parentId;
+      return this.getParentContextId(id);
     };
 
     return computeContextStack(this.#focusedId, parentResolver).stack;

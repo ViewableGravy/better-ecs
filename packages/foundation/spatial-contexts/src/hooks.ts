@@ -20,6 +20,14 @@ export function useFocusedContextId(): ContextId {
   return useContextManager().getFocusedContextId();
 }
 
+export function useFocusedContextWorld(): UserWorld {
+  return useContextManager().getFocusedWorld();
+}
+
+export function useRootContextWorld(): UserWorld {
+  return useContextManager().getRootWorld();
+}
+
 export function useContextWorld(id: ContextId): UserWorld {
   return useContextManager().getWorldOrThrow(id);
 }

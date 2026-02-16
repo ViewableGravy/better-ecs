@@ -1,8 +1,8 @@
 import type { RenderVisibilityRole } from "@/scenes/spatial-contexts-demo/components/render-visibility";
 import { invariantById } from "@/utilities/selectors";
 import { resolveCameraView, screenToWorld } from "@/utilities/world-camera";
-import { createSystem, useEngine, useSystem, useWorld, type UserWorld } from "@repo/engine";
-import { getManager } from "@repo/spatial-contexts";
+import { createSystem, useEngine, useSystem } from "@repo/engine";
+import { ensureManager, type ContextId } from "@repo/spatial-contexts";
 import { syncColliderDebugWorld } from "./collider-debug";
 import { ColliderDebugProxy, GhostPreview } from "./components";
 import { bindBuildModeDomEvents } from "./events";
@@ -27,9 +27,11 @@ export const System = createSystem("demo:build-mode")({
     };
   },
   system() {
-    const engine = useEngine();
-    const world = useWorld();
     const input = useSystem("engine:input");
+    const engine = useEngine();
+
+    const manager = ensureManager(engine.scene.context);
+    const focusedWorld = manager.getFocusedWorld();
     const sceneWorlds = engine.scene.context.worlds;
 
     handleBuildModeKeybinds(buildModeState, input.matchKeybind);
@@ -37,7 +39,7 @@ export const System = createSystem("demo:build-mode")({
 
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
-    const camera = resolveCameraView(world, viewportHeight);
+    const camera = resolveCameraView(focusedWorld, viewportHeight);
     const worldPointerX = screenToWorld(
       buildModeState.mouseScreenX,
       viewportWidth,
@@ -53,23 +55,23 @@ export const System = createSystem("demo:build-mode")({
 
     const snappedX = Placement.snapToGrid(worldPointerX);
     const snappedY = Placement.snapToGrid(worldPointerY);
-    const placementTarget = resolvePlacementWorld(engine, world, worldPointerX, worldPointerY);
-    const placementWorld = placementTarget.world ?? world;
+    const placementTarget = resolvePlacementWorld(engine, worldPointerX, worldPointerY);
+    const placementWorld = placementTarget.world;
 
     // Keep ghosts scoped to the active world only.
     // This avoids leaked transient entities during world/context transitions.
     for (const sceneWorld of sceneWorlds) {
-      if (sceneWorld !== world) {
+      if (sceneWorld !== focusedWorld) {
         destroyEntitiesWithComponentInWorld(sceneWorld, GhostPreview);
       }
     }
 
     if (buildModeState.selectedItem === null || placementTarget.blocked) {
-      destroyEntitiesWithComponentInWorld(world, GhostPreview);
+      destroyEntitiesWithComponentInWorld(focusedWorld, GhostPreview);
       buildModeState.ghostEntityId = null;
     } else {
       buildModeState.ghostEntityId = syncPlacementGhost(
-        world,
+        focusedWorld,
         buildModeState.ghostEntityId,
         snappedX,
         snappedY,
@@ -89,7 +91,7 @@ export const System = createSystem("demo:build-mode")({
     buildModeState.pendingDelete = false;
     buildModeState.pendingPlace = false;
 
-    if (shouldDelete && !placementTarget.blocked) {
+    if (shouldDelete && !placementTarget.blocked && placementWorld) {
       Placement.deleteAt(placementWorld, worldPointerX, worldPointerY);
     }
 
@@ -97,30 +99,30 @@ export const System = createSystem("demo:build-mode")({
       return;
     }
 
+    if (!placementWorld) {
+      return;
+    }
+
     Placement.spawnBox(
       placementWorld,
       snappedX,
       snappedY,
-      resolvePlacementRenderVisibilityRole(engine, world, placementWorld),
+      resolvePlacementRenderVisibilityRole(engine, placementTarget.contextId),
     );
   },
 });
 
 function resolvePlacementRenderVisibilityRole(
   engine: ReturnType<typeof useEngine>,
-  activeWorld: UserWorld,
-  placementWorld: UserWorld,
+  placementContextId: ContextId | undefined,
 ): RenderVisibilityRole {
-  const manager = getManager(engine.scene.context);
-  if (!manager) {
-    return "outside";
-  }
-
-  if (placementWorld !== activeWorld) {
-    return "outside";
-  }
+  const manager = ensureManager(engine.scene.context);
 
   const focusedContextId = manager.getFocusedContextId();
+  if (!placementContextId || placementContextId !== focusedContextId) {
+    return "outside";
+  }
+
   const rootContextId = manager.getRootContextId();
 
   if (focusedContextId === rootContextId) {

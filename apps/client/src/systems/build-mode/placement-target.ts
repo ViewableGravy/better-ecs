@@ -1,14 +1,18 @@
 import { ContextEntryRegion } from "@/scenes/spatial-contexts-demo/components/context-entry-region";
-import { Vec2, type SceneContext, type UserWorld } from "@repo/engine";
-import type { ContextId } from "@repo/spatial-contexts";
-import { getManager } from "@repo/spatial-contexts";
+import type { UserWorld } from "@repo/engine";
+import { Vec2, type SceneContext } from "@repo/engine";
+import type { ContextId, ContextRelationship, SpatialContextManager } from "@repo/spatial-contexts";
+import { ensureManager } from "@repo/spatial-contexts";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
  **********************************************************************************************************/
 
 type PlacementWorldResolution = {
+  focusedContextId?: ContextId;
+  hoveredContextId?: ContextId;
   contextId?: ContextId;
+  relationship?: ContextRelationship;
   world?: UserWorld;
   blocked: boolean;
 };
@@ -24,104 +28,72 @@ type BuildModeEngine = {
  **********************************************************************************************************/
 
 const pointBuffer = new Vec2();
-const placementWorldResolutionBuffer: PlacementWorldResolution = {
-  contextId: undefined,
-  world: undefined,
-  blocked: false,
-};
 
 export function resolvePlacementWorld(
   engine: BuildModeEngine,
-  activeWorld: UserWorld,
   worldX: number,
   worldY: number,
 ): PlacementWorldResolution {
-  const result = placementWorldResolutionBuffer;
-  const manager = getManager(engine.scene.context);
-  if (!manager) {
-    result.contextId = undefined;
-    result.world = activeWorld;
-    result.blocked = false;
-    return result;
-  }
+  const manager = ensureManager(engine.scene.context);
 
   const focusedContextId = manager.getFocusedContextId();
+  const hoveredContextId = resolveDeepestContextAtPoint(manager, worldX, worldY);
+  const relationship = manager.getContextRelationship(focusedContextId, hoveredContextId);
+  const canPlaceInHoveredWorld = relationship === "self" || relationship === "ancestor";
+  const placementWorld = canPlaceInHoveredWorld ? manager.getWorld(hoveredContextId) : undefined;
+
+  return {
+    focusedContextId,
+    hoveredContextId,
+    contextId: canPlaceInHoveredWorld ? hoveredContextId : undefined,
+    relationship,
+    world: placementWorld,
+    blocked: !canPlaceInHoveredWorld || !placementWorld,
+  };
+}
+
+function resolveDeepestContextAtPoint(
+  manager: SpatialContextManager,
+  worldX: number,
+  worldY: number,
+): ContextId {
   const rootContextId = manager.getRootContextId();
+  let deepestContextId = rootContextId;
+  let deepestDepth = 0;
 
-  if (focusedContextId === rootContextId) {
-    const rootWorld = manager.getWorld(rootContextId) ?? activeWorld;
-    const blocked = containsAnyContextRegion(rootWorld, worldX, worldY);
-
-    result.contextId = rootContextId;
-    result.world = rootWorld;
-    result.blocked = blocked;
-    return result;
-  }
-
-  const focusedWorld = manager.getWorld(focusedContextId) ?? activeWorld;
-  const focusedDefinition = manager.listDefinitions().find((definition) => definition.id === focusedContextId);
-
-  if (!focusedDefinition?.parentId) {
-    result.contextId = focusedContextId;
-    result.world = focusedWorld;
-    result.blocked = false;
-    return result;
-  }
-
-  const parentWorld = manager.getWorld(focusedDefinition.parentId);
-  if (!parentWorld) {
-    result.contextId = focusedContextId;
-    result.world = focusedWorld;
-    result.blocked = false;
-    return result;
-  }
-
-  const sourceRegion = findRegionForContext(parentWorld, focusedContextId);
-  if (!sourceRegion) {
-    result.contextId = focusedContextId;
-    result.world = focusedWorld;
-    result.blocked = false;
-    return result;
-  }
-
-  const insideFocusedRegion = pointInsideRegion(sourceRegion, worldX, worldY);
-
-  result.contextId = insideFocusedRegion ? focusedContextId : focusedDefinition.parentId;
-  result.world = insideFocusedRegion ? focusedWorld : parentWorld;
-  result.blocked = false;
-  return result;
-}
-
-function containsAnyContextRegion(world: UserWorld, worldX: number, worldY: number): boolean {
-  for (const regionEntityId of world.query(ContextEntryRegion)) {
-    const region = world.get(regionEntityId, ContextEntryRegion);
-    if (!region) {
-      continue;
+  const walk = (parentContextId: ContextId, depth: number): void => {
+    const parentWorld = manager.getWorld(parentContextId);
+    if (!parentWorld) {
+      return;
     }
 
-    if (pointInsideRegion(region, worldX, worldY)) {
-      return true;
+    for (const regionEntityId of parentWorld.query(ContextEntryRegion)) {
+      const region = parentWorld.get(regionEntityId, ContextEntryRegion);
+      if (!region) {
+        continue;
+      }
+
+      if (!pointInsideRegion(region, worldX, worldY)) {
+        continue;
+      }
+
+      if (manager.getParentContextId(region.targetContextId) !== parentContextId) {
+        continue;
+      }
+
+      const childDepth = depth + 1;
+      if (childDepth > deepestDepth) {
+        deepestDepth = childDepth;
+        deepestContextId = region.targetContextId;
+      }
+
+      walk(region.targetContextId, childDepth);
     }
-  }
+  };
 
-  return false;
-}
+  walk(rootContextId, 0);
 
-function findRegionForContext(world: UserWorld, contextId: ContextId): ContextEntryRegion | undefined {
-  for (const regionEntityId of world.query(ContextEntryRegion)) {
-    const region = world.get(regionEntityId, ContextEntryRegion);
-    if (!region) {
-      continue;
-    }
-
-    if (region.targetContextId !== contextId) {
-      continue;
-    }
-
-    return region;
-  }
-
-  return undefined;
+  return deepestContextId;
 }
 
 function pointInsideRegion(region: ContextEntryRegion, worldX: number, worldY: number): boolean {

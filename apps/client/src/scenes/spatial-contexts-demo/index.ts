@@ -1,5 +1,6 @@
 import { PlayerComponent } from "@/components/player";
 import { ensurePlayer } from "@/entities/player";
+import { System as BuildModeSystem } from "@/systems/build-mode";
 import { Transform2D } from "@repo/engine/components";
 import { collides, getEntityCollider } from "@repo/physics";
 import {
@@ -77,7 +78,7 @@ const PortalsSystem = createPortalSystem({
 });
 
 export const Scene = createContextScene("SpatialContextsDemo")({
-  systems: [HouseContextSystem, PortalsSystem, DebugOverlaySystem],
+  systems: [HouseContextSystem, PortalsSystem, BuildModeSystem, DebugOverlaySystem],
   contexts: [
     defineOverworldContext({
       overworldId: sceneConfig.contextIds.overworld,

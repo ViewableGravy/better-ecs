@@ -1,4 +1,5 @@
 import { PlayerComponent } from "@/components/player";
+import { Placeable } from "@/systems/build-mode/components";
 import { createSystem } from "@repo/engine";
 import { Shape, Transform2D } from "@repo/engine/components";
 import { useContextManager } from "@repo/spatial-contexts";
@@ -14,6 +15,7 @@ type OverlayKey =
   | "stack"
   | "visible"
   | "player"
+  | "placeables"
   | "outsideAlpha"
   | "roofAlpha"
   | "interiorAlpha";
@@ -30,6 +32,7 @@ const overlayState = {
   playerMissing: true,
   playerX: Number.NaN,
   playerY: Number.NaN,
+  placeables: "",
   outsideAlpha: Number.NaN,
   roofAlpha: Number.NaN,
   interiorAlpha: Number.NaN,
@@ -59,6 +62,7 @@ export const DebugOverlaySystem = createSystem("demo:spatial-contexts-debug")({
       : "missing";
 
     const alphaState = getAlphaState(manager);
+    const placeableState = getPlaceableState(manager);
 
     setTextIfChanged(refs.values.focused, "focused", focused);
 
@@ -90,6 +94,11 @@ export const DebugOverlaySystem = createSystem("demo:spatial-contexts-debug")({
       overlayState.playerX = Number.NaN;
       overlayState.playerY = Number.NaN;
       setTextIfChanged(refs.values.player, "player", "missing");
+    }
+
+    if (overlayState.placeables !== placeableState) {
+      overlayState.placeables = placeableState;
+      setTextIfChanged(refs.values.placeables, "placeables", placeableState);
     }
 
     if (alphaState.outside !== overlayState.outsideAlpha) {
@@ -183,6 +192,7 @@ function getOrCreateOverlayWindow() {
     stack: createOverlayRow(content, "stack"),
     visible: createOverlayRow(content, "visible"),
     player: createOverlayRow(content, "player"),
+    placeables: createOverlayRow(content, "placeables"),
     outsideAlpha: createOverlayRow(content, "outsideAlpha"),
     roofAlpha: createOverlayRow(content, "roofAlpha"),
     interiorAlpha: createOverlayRow(content, "interiorAlpha"),
@@ -347,4 +357,19 @@ function getAlphaState(manager: ReturnType<typeof useContextManager>) {
   }
 
   return sample;
+}
+
+function getPlaceableState(manager: ReturnType<typeof useContextManager>): string {
+  const parts: string[] = [];
+
+  for (const { id } of manager.listDefinitions()) {
+    const world = manager.getWorld(id);
+    if (!world) {
+      continue;
+    }
+
+    parts.push(`${id}:${world.query(Placeable).length}`);
+  }
+
+  return parts.join(" | ");
 }

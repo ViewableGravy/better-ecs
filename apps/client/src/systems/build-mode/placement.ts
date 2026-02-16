@@ -1,6 +1,6 @@
 import { RenderVisibility, type RenderVisibilityRole } from "@/scenes/spatial-contexts-demo/components/render-visibility";
 import { Vec2, type UserWorld } from "@repo/engine";
-import { Shape, Transform2D } from "@repo/engine/components";
+import { Color, Shape, Transform2D } from "@repo/engine/components";
 import { CircleCollider, RectangleCollider, collides, getEntityCollider } from "@repo/physics";
 import { GridFootprint, GridPosition, Placeable } from "./components";
 import { BOX_SIZE, DELETE_POINT_RADIUS, GRID_CELL_SIZE, HALF_BOX_SIZE, PLACED_FILL, PLACED_STROKE } from "./const";
@@ -63,7 +63,17 @@ export class Placement {
 
     const placed = world.create();
     world.add(placed, new Transform2D(snappedX + HALF_BOX_SIZE, snappedY + HALF_BOX_SIZE));
-    world.add(placed, new Shape("rectangle", BOX_SIZE, BOX_SIZE, PLACED_FILL, PLACED_STROKE, 1));
+    world.add(
+      placed,
+      new Shape(
+        "rectangle",
+        BOX_SIZE,
+        BOX_SIZE,
+        cloneColor(PLACED_FILL),
+        cloneColor(PLACED_STROKE),
+        1,
+      ),
+    );
     world.add(
       placed,
       new RectangleCollider(new Vec2(-HALF_BOX_SIZE, -HALF_BOX_SIZE), new Vec2(BOX_SIZE, BOX_SIZE)),
@@ -96,4 +106,8 @@ export class Placement {
 
     return true;
   }
+}
+
+function cloneColor(source: Color): Color {
+  return new Color(source.r, source.g, source.b, source.a);
 }
