@@ -1,6 +1,5 @@
 import { FPSPass } from "@/plugins/fps";
-import { invariantById } from "@/utilities/selectors";
-import { createRenderPipeline, useAssets } from "@repo/engine";
+import { createRenderPipeline, useAssets, useEngine } from "@repo/engine";
 import { Canvas2DRenderer, FrameAllocator } from "@repo/engine/render";
 import { ApplyContextVisualsPass } from "./passes/ApplyContextVisualsPass";
 import { BeginFramePass } from "./passes/BeginFramePass";
@@ -33,10 +32,13 @@ export const Render = createRenderPipeline({
 
 // Utility function to get the canvas and handle resizing
 function getResizableCanvas(): HTMLCanvasElement {
-  const canvas = invariantById<HTMLCanvasElement>("game");
+  const { canvas } = useEngine();
+  if (!canvas) {
+    throw new Error("Engine canvas is required before renderer initialization");
+  }
 
   // Handle canvas resize
-  function resizeCanvas(): void {
+  const resizeCanvas = (): void => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
   }

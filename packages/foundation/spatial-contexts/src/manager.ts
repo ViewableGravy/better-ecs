@@ -20,12 +20,12 @@ export class SpatialContextManager {
     this.#focusedId = scene.defaultWorldId as ContextId;
   }
 
-  getRootContextId(): ContextId {
+  get rootContextId(): ContextId {
     return this.#scene.defaultWorldId as ContextId;
   }
 
   getRootWorld(): UserWorld {
-    return this.getWorldOrThrow(this.getRootContextId());
+    return this.getWorldOrThrow(this.rootContextId);
   }
 
   registerDefinition(def: ContextDefinition): void {
@@ -51,18 +51,18 @@ export class SpatialContextManager {
   }
 
   getParentContextId(id: ContextId): ContextId | undefined {
-    if (id === this.getRootContextId()) {
+    if (id === this.rootContextId) {
       return undefined;
     }
 
     return this.#definitions.get(id)?.parentId;
   }
 
-  getFocusedContextId(): ContextId {
+  get focusedContextId(): ContextId {
     return this.#focusedId;
   }
 
-  getFocusedWorld(): UserWorld {
+  get focusedWorld(): UserWorld {
     return this.getWorldOrThrow(this.#focusedId);
   }
 

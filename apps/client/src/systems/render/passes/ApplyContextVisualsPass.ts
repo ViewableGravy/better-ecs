@@ -22,8 +22,8 @@ export const ApplyContextVisualsPass = createRenderPass("apply-context-visuals")
       return;
     }
 
-    const rootContextId = manager.getRootContextId();
-    const focused = manager.getFocusedContextId();
+    const rootContextId = manager.rootContextId;
+    const focused = manager.focusedContextId;
     const activeInteriorContextId = getActiveInteriorContextId(manager, focused, rootContextId);
     const blend = getHouseBlend(engine.frame.updateProgress);
 

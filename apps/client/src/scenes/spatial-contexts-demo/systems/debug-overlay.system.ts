@@ -51,7 +51,7 @@ export const DebugOverlaySystem = createSystem("demo:spatial-contexts-debug")({
       return;
     }
 
-    const focused = manager.getFocusedContextId();
+    const focused = manager.focusedContextId;
     const stack = manager.getContextStack();
     const visible = manager.getVisibleContextIds();
     const world = manager.getWorldOrThrow(focused);

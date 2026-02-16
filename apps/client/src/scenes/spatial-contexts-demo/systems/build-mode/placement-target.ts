@@ -1,5 +1,5 @@
 import { ContextEntryRegion } from "@/scenes/spatial-contexts-demo/components/context-entry-region";
-import type { UserWorld } from "@repo/engine";
+import type { MousePoint, UserWorld } from "@repo/engine";
 import { Vec2, type SceneContext } from "@repo/engine";
 import type { ContextId, ContextRelationship, SpatialContextManager } from "@repo/spatial-contexts";
 import { ensureManager } from "@repo/spatial-contexts";
@@ -29,13 +29,12 @@ type BuildModeEngine = {
 
 export function resolvePlacementWorld(
   engine: BuildModeEngine,
-  worldX: number,
-  worldY: number,
+  worldPointer: MousePoint,
 ): PlacementWorldResolution {
   const manager = ensureManager(engine.scene.context);
 
-  const focusedContextId = manager.getFocusedContextId();
-  const hoveredContextId = resolveDeepestContextAtPoint(manager, worldX, worldY);
+  const focusedContextId = manager.focusedContextId;
+  const hoveredContextId = resolveDeepestContextAtPoint(manager, worldPointer);
   const relationship = manager.getContextRelationship(focusedContextId, hoveredContextId);
   const canPlaceInHoveredWorld = relationship === "self" || relationship === "ancestor";
   const placementWorld = canPlaceInHoveredWorld ? manager.getWorld(hoveredContextId) : undefined;
@@ -52,10 +51,9 @@ export function resolvePlacementWorld(
 
 function resolveDeepestContextAtPoint(
   manager: SpatialContextManager,
-  worldX: number,
-  worldY: number,
+  worldPointer: MousePoint,
 ): ContextId {
-  const rootContextId = manager.getRootContextId();
+  const rootContextId = manager.rootContextId;
 
   let deepestContextId = rootContextId;
   let deepestDepth = 0;
@@ -72,7 +70,7 @@ function resolveDeepestContextAtPoint(
         continue;
       }
 
-      if (!RegionUtils.pointInsideRegion(region, worldX, worldY)) {
+      if (!RegionUtils.pointInsideRegion(region, worldPointer)) {
         continue;
       }
 
@@ -99,8 +97,8 @@ function resolveDeepestContextAtPoint(
 class RegionUtils {
   private static pointBuffer = new Vec2();
 
-  public static pointInsideRegion(region: ContextEntryRegion, worldX: number, worldY: number): boolean {
-    RegionUtils.pointBuffer.set(worldX, worldY);
+  public static pointInsideRegion(region: ContextEntryRegion, worldPointer: MousePoint): boolean {
+    RegionUtils.pointBuffer.set(worldPointer.x, worldPointer.y);
     return region.bounds.containsPoint(RegionUtils.pointBuffer);
   }
 }

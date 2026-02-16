@@ -10,10 +10,14 @@ import { System as CameraZoom } from "./systems/camera-zoom";
 import { System as Initialize } from "./systems/initialisation";
 import { System as Movement } from "./systems/movement";
 import { Render } from "./systems/render";
+import { invariantById } from "./utilities/selectors";
 
 export const createAppEngine = () => {
+  const canvas = invariantById<HTMLCanvasElement>("game");
+
   // prettier-ignore
   return Engine.createEngine({
+    canvas,
     assetLoader: Loader,
     initialization: Initialize,
     systems: [

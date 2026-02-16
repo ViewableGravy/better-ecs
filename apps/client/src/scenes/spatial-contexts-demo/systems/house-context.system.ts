@@ -21,7 +21,7 @@ export const HouseContextSystem = createSystem("demo:context-focus")({
     const manager = useContextManager();
     const world = useWorld();
     const [updateDelta] = useDelta();
-    const rootContextId = manager.getRootContextId();
+    const rootContextId = manager.rootContextId;
 
     tickHouseTransition(updateDelta);
 
@@ -31,7 +31,7 @@ export const HouseContextSystem = createSystem("demo:context-focus")({
     const transform = world.get(playerId, Transform2D);
     if (!transform) return;
 
-    const focused = manager.getFocusedContextId();
+    const focused = manager.focusedContextId;
     if (focused === rootContextId) {
       const region = findContainingContextRegion(world, transform);
       if (!region) {

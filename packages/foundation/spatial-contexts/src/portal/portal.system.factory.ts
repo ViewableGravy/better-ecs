@@ -16,7 +16,7 @@ export const createPortalSystem = <const TName extends string = "plugin:spatial-
       const engine = useEngine();
       const manager = useContextManager();
       const world = useWorld();
-      const focusedContextId = manager.getFocusedContextId();
+      const focusedContextId = manager.focusedContextId;
 
       // `useWorld()` is already bound to the focused context world by the runtime system.
       // Do not compare wrapper object identity here: SceneManager and SceneContext use

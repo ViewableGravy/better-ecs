@@ -1,4 +1,4 @@
-import type { EntityId, UserWorld } from "@repo/engine";
+import { useEngine, type EntityId, type UserWorld } from "@repo/engine";
 import { Camera, Transform2D } from "@repo/engine/components";
 
 export type CameraView = {
@@ -47,7 +47,6 @@ export function resolveCameraSelection(
 
 export function resolveCameraView(
   world: UserWorld,
-  viewportHeight: number,
   cameraEntityId?: EntityId,
 ): CameraView {
   const selection = resolveCameraSelection(world, cameraEntityId);
@@ -60,6 +59,7 @@ export function resolveCameraView(
   }
 
   const { camera, transform } = selection;
+  const viewportHeight = resolveViewportHeight();
   const zoom = camera.orthoSize > 0 ? viewportHeight / (camera.orthoSize * 2) : 1;
 
   cameraViewBuffer.x = transform.curr.pos.x;
@@ -76,4 +76,17 @@ export function screenToWorld(
   cameraZoom: number,
 ): number {
   return (screenValue - viewportSize / 2) / cameraZoom + cameraAxis;
+}
+
+function resolveViewportHeight(): number {
+  const canvas = useEngine().canvas;
+  if (canvas) {
+    return canvas.getBoundingClientRect().height;
+  }
+
+  if (typeof window !== "undefined") {
+    return window.innerHeight;
+  }
+
+  return 0;
 }

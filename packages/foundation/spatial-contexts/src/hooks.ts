@@ -17,11 +17,11 @@ export function useContextManager(): SpatialContextManager {
 }
 
 export function useFocusedContextId(): ContextId {
-  return useContextManager().getFocusedContextId();
+  return useContextManager().focusedContextId;
 }
 
 export function useFocusedContextWorld(): UserWorld {
-  return useContextManager().getFocusedWorld();
+  return useContextManager().focusedWorld;
 }
 
 export function useRootContextWorld(): UserWorld {

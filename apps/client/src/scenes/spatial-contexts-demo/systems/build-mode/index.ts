@@ -1,7 +1,6 @@
 import type { RenderVisibilityRole } from "@/scenes/spatial-contexts-demo/components/render-visibility";
-import { invariantById } from "@/utilities/selectors";
-import { resolveCameraView, screenToWorld } from "@/utilities/world-camera";
-import { createSystem, useEngine, useSystem } from "@repo/engine";
+import { resolveCameraView } from "@/utilities/world-camera";
+import { createSystem, useEngine, useMouse, useSystem } from "@repo/engine";
 import { ensureManager, type ContextId } from "@repo/spatial-contexts";
 import { syncColliderDebugWorld } from "./collider-debug";
 import { ColliderDebugProxy, GhostPreview } from "./components";
@@ -19,7 +18,10 @@ export const System = createSystem("demo:build-mode")({
     schema: buildModeStateSchema,
   },
   initialize() {
-    const canvas = invariantById<HTMLCanvasElement>("game");
+    const canvas = useEngine().canvas;
+    if (!canvas) {
+      throw new Error("Engine canvas is required before build-mode initialization");
+    }
 
     HUD.create();
     const unbindDomEvents = bindBuildModeDomEvents(canvas);
@@ -32,34 +34,21 @@ export const System = createSystem("demo:build-mode")({
   system() {
     const { data } = useSystem("demo:build-mode");
     const engine = useEngine();
+    const mouse = useMouse();
 
     const manager = ensureManager(engine.scene.context);
-    const focusedWorld = manager.getFocusedWorld();
+    const focusedWorld = manager.focusedWorld;
     const sceneWorlds = engine.scene.context.worlds;
 
     Keybinds.matchKeybinds();
     HUD.update();
 
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    const camera = resolveCameraView(focusedWorld, viewportHeight);
-    
-    const worldPointerX = screenToWorld(
-      data.mouseScreenX,
-      viewportWidth,
-      camera.x,
-      camera.zoom,
-    );
-    const worldPointerY = screenToWorld(
-      data.mouseScreenY,
-      viewportHeight,
-      camera.y,
-      camera.zoom,
-    );
+    const camera = resolveCameraView(focusedWorld);
+    const worldPointer = mouse.world(camera);
 
-    const snappedX = Placement.snapToGrid(worldPointerX);
-    const snappedY = Placement.snapToGrid(worldPointerY);
-    const placementTarget = resolvePlacementWorld(engine, worldPointerX, worldPointerY);
+    const snappedX = Placement.snapToGrid(worldPointer.x);
+    const snappedY = Placement.snapToGrid(worldPointer.y);
+    const placementTarget = resolvePlacementWorld(engine, worldPointer);
     const placementWorld = placementTarget.world;
 
     // Keep ghosts scoped to the active world only.
@@ -96,7 +85,7 @@ export const System = createSystem("demo:build-mode")({
     data.pendingPlace = false;
 
     if (shouldDelete && !placementTarget.blocked && placementWorld) {
-      Placement.deleteAt(placementWorld, worldPointerX, worldPointerY);
+      Placement.deleteAt(placementWorld, worldPointer);
     }
 
     if (!shouldPlace || data.selectedItem !== "box" || placementTarget.blocked) {
@@ -122,12 +111,12 @@ function resolvePlacementRenderVisibilityRole(
 ): RenderVisibilityRole {
   const manager = ensureManager(engine.scene.context);
 
-  const focusedContextId = manager.getFocusedContextId();
+  const focusedContextId = manager.focusedContextId;
   if (!placementContextId || placementContextId !== focusedContextId) {
     return "outside";
   }
 
-  const rootContextId = manager.getRootContextId();
+  const rootContextId = manager.rootContextId;
 
   if (focusedContextId === rootContextId) {
     return "outside";

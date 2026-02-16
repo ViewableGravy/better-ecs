@@ -23,8 +23,8 @@ export class ActiveWorldProvider implements WorldProvider {
   }
 
   private static getTransitionWorld(manager: SpatialContextManager): UserWorld | undefined {
-    const rootContextId = manager.getRootContextId();
-    if (manager.getFocusedContextId() !== rootContextId) {
+    const rootContextId = manager.rootContextId;
+    if (manager.focusedContextId !== rootContextId) {
       return undefined;
     }
 

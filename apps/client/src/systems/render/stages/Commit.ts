@@ -49,7 +49,7 @@ export function commitWorld(
   // 2. Grid overlay (above floor/background, below entities)
   const engine = useEngine();
   const manager = getManager(engine.scene.context);
-  const focusedWorld = manager ? manager.getFocusedWorld() : engine.world;
+  const focusedWorld = manager ? manager.focusedWorld : engine.world;
 
   if (focusedWorld === world) {
     drawGrid(world, renderer);

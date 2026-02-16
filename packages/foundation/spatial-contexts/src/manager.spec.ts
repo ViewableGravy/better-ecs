@@ -90,7 +90,7 @@ describe("spatial-contexts/SpatialContextManager", () => {
     manager.ensureWorldLoaded(HOUSE);
     manager.setFocusedContextId(HOUSE);
 
-    expect(manager.getFocusedWorld()).toBe(manager.getWorldOrThrow(HOUSE));
+    expect(manager.focusedWorld).toBe(manager.getWorldOrThrow(HOUSE));
   });
 
   it("resolves context relationships relative to focused/player world", () => {

@@ -62,6 +62,7 @@ export class EngineClass<
 > {
   #systems: Record<string, EngineSystem<any>>;
   #systemsView: Record<string, EngineSystem<any>>;
+  #canvas: HTMLCanvasElement | null;
 
   // Cached sorted list for update phase systems
   #updateSystems: EngineSystem<any>[] = [];
@@ -104,12 +105,14 @@ export class EngineClass<
     scenes: SceneDefinitionTuple = [],
     assets: AssetManager<TAssets>,
     renderPipeline: RenderPipeline | null,
+    canvas: HTMLCanvasElement | null,
   ) {
     this.#systems = systems;
     this.scene = new SceneManager<TScenes>(scenes);
     this.scene.setEngineRef(this);
     this.assets = assets;
     this.#renderPipeline = renderPipeline;
+    this.#canvas = canvas;
     this.render = renderPipeline;
 
     this.frame.phase = this.#phaseFn;
@@ -152,6 +155,11 @@ export class EngineClass<
   /** Prefer `useWorld()` in systems instead. Returns the active scene's world. */
   public get world(): UserWorld {
     return this.scene.world;
+  }
+
+  /** Active render canvas used by pointer/canvas-space engine utilities. */
+  public get canvas(): HTMLCanvasElement | null {
+    return this.#canvas;
   }
 
   public async initialize(): Promise<void> {

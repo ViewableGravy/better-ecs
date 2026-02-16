@@ -19,6 +19,7 @@ type CreateEngineOptions<
   TScenes extends SceneDefinitionTuple,
   TAssets extends Record<string, unknown>,
 > = {
+  canvas?: HTMLCanvasElement | null;
   systems: TSystems;
   scenes?: TScenes;
   initialScene?: SceneName<TScenes[number]>;
@@ -57,6 +58,7 @@ export function createEngine<
     scenes,
     assets,
     opts.render ?? null,
+    opts.canvas ?? null,
   );
 
   // Register with HMR runtime if present (set up by @repo/hmr Vite plugin)

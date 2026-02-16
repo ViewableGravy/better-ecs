@@ -12,6 +12,8 @@ function createMockInputState(options: {
   releasedThisTick?: string[];
 } = {}): InputState {
   return {
+    mouseClientX: 0,
+    mouseClientY: 0,
     keysDown: new Set(options.keysDown ?? []),
     pressedThisTick: new Set(options.pressedThisTick ?? []),
     releasedThisTick: new Set(options.releasedThisTick ?? []),

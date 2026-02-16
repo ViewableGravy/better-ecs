@@ -1,5 +1,5 @@
 import { RenderVisibility, type RenderVisibilityRole } from "@/scenes/spatial-contexts-demo/components/render-visibility";
-import { Vec2, type UserWorld } from "@repo/engine";
+import { Vec2, type MousePoint, type UserWorld } from "@repo/engine";
 import { Color, Shape, Transform2D } from "@repo/engine/components";
 import { CircleCollider, RectangleCollider, collides, getEntityCollider } from "@repo/physics";
 import { GridFootprint, GridPosition, Placeable } from "./components";
@@ -27,9 +27,9 @@ export class Placement {
     return Math.floor(value / GRID_CELL_SIZE) * GRID_CELL_SIZE;
   }
 
-  public static deleteAt(world: UserWorld, worldX: number, worldY: number): void {
-    Placement.deletePointTransform.curr.pos.set(worldX, worldY);
-    Placement.deletePointTransform.prev.pos.set(worldX, worldY);
+  public static deleteAt(world: UserWorld, worldPointer: MousePoint): void {
+    Placement.deletePointTransform.curr.pos.set(worldPointer.x, worldPointer.y);
+    Placement.deletePointTransform.prev.pos.set(worldPointer.x, worldPointer.y);
 
     for (const entityId of world.query(Transform2D)) {
       const transform = world.get(entityId, Transform2D);
