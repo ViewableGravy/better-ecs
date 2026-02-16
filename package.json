@@ -14,7 +14,6 @@
     "lint": "nx run-many --target=lint",
     "typecheck": "nx run-many --target=typecheck",
     "test": "nx run-many --target=test",
-    "verify:projects": "bun .github/skills/nx-verify/scripts/verify-projects.mjs",
     "e2e": "bun x playwright test --config=apps/client/playwright.config.ts",
     "verify:placement-context": "bun run e2e apps/client/e2e/placement-context.spec.ts",
     "clean": "nx run-many --target=clean",

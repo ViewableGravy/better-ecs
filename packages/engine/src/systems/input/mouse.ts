@@ -134,12 +134,12 @@ function updateCanvasPointer(
   canvasPointer.x = mouseClientX;
   canvasPointer.y = mouseClientY;
 
-  if (typeof window !== "undefined") {
-    canvasViewport.width = window.innerWidth;
-    canvasViewport.height = window.innerHeight;
+  if (typeof window === "undefined") {
+    canvasViewport.width = 0;
+    canvasViewport.height = 0;
     return;
   }
 
-  canvasViewport.width = 0;
-  canvasViewport.height = 0;
+  canvasViewport.width = window.innerWidth;
+  canvasViewport.height = window.innerHeight;
 }

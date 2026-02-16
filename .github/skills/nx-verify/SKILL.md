@@ -17,12 +17,11 @@ Use this skill at the end of implementation to run a consistent verification flo
 
 Run:
 
-- [verify-projects.mjs](./scripts/verify-projects.mjs)
+- [verify-projects.ts](./scripts/verify-projects.ts)
 
 Example:
 
-- `bun .github/skills/nx-verify/scripts/verify-projects.mjs engine client`
-- `bun run verify:projects -- engine client`
+- `bun .github/skills/nx-verify/scripts/verify-projects.ts engine client`
 
 ## Behavior
 
