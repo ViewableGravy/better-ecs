@@ -46,37 +46,62 @@ const canvasViewport = {
   height: 0,
 };
 
+let lastScreenUpdateTime = -1;
+let lastCanvasUpdateTime = -1;
+let lastWorldUpdateTime = -1;
+
 /**********************************************************************************************************
 *   CONSTS
 **********************************************************************************************************/
 const mouseApi: Mouse = {
   get screen(): MousePoint {
-    const { data } = useSystem("engine:input");
-    screenPointer.x = data.mouseClientX;
-    screenPointer.y = data.mouseClientY;
+    const engine = useEngine();
+    const currentTime = engine.frame.lastUpdateTime;
+    
+    if (lastScreenUpdateTime !== currentTime) {
+      const { data } = useSystem("engine:input");
+      screenPointer.x = data.mouseClientX;
+      screenPointer.y = data.mouseClientY;
+      lastScreenUpdateTime = currentTime;
+    }
+    
     return screenPointer;
   },
   get canvas(): MousePoint {
     const engine = useEngine();
-    const { data } = useSystem("engine:input");
+    const currentTime = engine.frame.lastUpdateTime;
+    
+    if (lastCanvasUpdateTime !== currentTime) {
+      const { data } = useSystem("engine:input");
 
-    updateCanvasPointer(
-      engine.canvas, 
-      data.mouseClientX, 
-      data.mouseClientY
-    );
+      updateCanvasPointer(
+        engine.canvas, 
+        data.mouseClientX, 
+        data.mouseClientY
+      );
+      
+      lastCanvasUpdateTime = currentTime;
+    }
 
     return canvasPointer;
   },
   world(cameraOrX: MouseCameraView | number, y?: number, zoom?: number): MousePoint {
     const engine = useEngine();
-    const { data } = useSystem("engine:input");
-
-    updateCanvasPointer(
-      engine.canvas, 
-      data.mouseClientX, 
-      data.mouseClientY
-    );
+    const currentTime = engine.frame.lastUpdateTime;
+    
+    // Note: We can't memoize world pointer based on just time since camera parameters change
+    // However, we can still avoid re-computing canvas pointer if it was already computed this frame
+    if (lastCanvasUpdateTime !== currentTime) {
+      const { data } = useSystem("engine:input");
+      
+      updateCanvasPointer(
+        engine.canvas, 
+        data.mouseClientX, 
+        data.mouseClientY
+      );
+      
+      lastCanvasUpdateTime = currentTime;
+    }
 
     let cameraX: number;
     let cameraY: number;
