@@ -1,6 +1,6 @@
 import { GridBounds } from "@/components/grid-bounds";
 import { GRID_CELL_SIZE } from "@/scenes/spatial-contexts-demo/systems/build-mode/const";
-import { useEngine, type UserWorld } from "@repo/engine";
+import { useSystem, type UserWorld } from "@repo/engine";
 import { Color, Shape, Transform2D } from "@repo/engine/components";
 import type { Renderer } from "@repo/engine/render";
 
@@ -10,7 +10,7 @@ const GRID_LINE_WIDTH = 1;
 const MAX_LINES_PER_AXIS = 600;
 
 export function drawGrid(world: UserWorld, renderer: Renderer): void {
-  const buildMode = useEngine().systems["demo:build-mode"];
+  const buildMode = useSystem("demo:build-mode");
 
   if (buildMode && !buildMode.data.gridVisible) {
     return;
