@@ -9,7 +9,7 @@ import { buildModeStateDefault, buildModeStateSchema } from "./const";
 import { bindBuildModeDomEvents } from "./events";
 import { syncPlacementGhost } from "./ghost";
 import { HUD } from "./hud";
-import { handleBuildModeKeybinds } from "./input";
+import * as Keybinds from './input';
 import { Placement } from "./placement";
 import { resolvePlacementWorld } from "./placement-target";
 
@@ -30,7 +30,6 @@ export const System = createSystem("demo:build-mode")({
     };
   },
   system() {
-    const input = useSystem("engine:input");
     const { data } = useSystem("demo:build-mode");
     const engine = useEngine();
 
@@ -38,12 +37,13 @@ export const System = createSystem("demo:build-mode")({
     const focusedWorld = manager.getFocusedWorld();
     const sceneWorlds = engine.scene.context.worlds;
 
-    handleBuildModeKeybinds(input.matchKeybind);
+    Keybinds.matchKeybinds();
     HUD.update();
 
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
     const camera = resolveCameraView(focusedWorld, viewportHeight);
+    
     const worldPointerX = screenToWorld(
       data.mouseScreenX,
       viewportWidth,
