@@ -1,5 +1,5 @@
+import { useSystem } from "@repo/engine";
 import { HOTBAR_INDICATOR_ID } from "./const";
-import type { BuildModeState } from "./state";
 
 export function ensureHotbarIndicator(): void {
   const existing = document.getElementById(HOTBAR_INDICATOR_ID);
@@ -32,14 +32,16 @@ export function removeHotbarIndicator(): void {
   node?.remove();
 }
 
-export function updateHotbarIndicator(state: BuildModeState): void {
+export function updateHotbarIndicator(): void {
+  const { data } = useSystem("demo:build-mode");
+
   const node = document.getElementById(HOTBAR_INDICATOR_ID);
   if (!(node instanceof HTMLDivElement)) {
     return;
   }
 
   node.style.display = "block";
-  const selectedText = state.selectedItem ?? "none";
+  const selectedText = data.selectedItem ?? "none";
   node.innerText = `Selected: ${selectedText}`;
-  node.style.background = state.selectedItem ? "#5a125699" : "#00000066";
+  node.style.background = data.selectedItem ? "#5a125699" : "#00000066";
 }

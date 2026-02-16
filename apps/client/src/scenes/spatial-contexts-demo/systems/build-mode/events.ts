@@ -1,11 +1,13 @@
+import { useSystem } from "@repo/engine";
 import { GRID_OR_COLLIDER_CODES } from "./const";
-import type { BuildModeState } from "./state";
 
-export function bindBuildModeDomEvents(canvas: HTMLCanvasElement, state: BuildModeState): () => void {
+export function bindBuildModeDomEvents(canvas: HTMLCanvasElement): () => void {
+  const { data } = useSystem("demo:build-mode");
+
   const updatePointer = (event: PointerEvent | MouseEvent) => {
     const rect = canvas.getBoundingClientRect();
-    state.mouseScreenX = event.clientX - rect.left;
-    state.mouseScreenY = event.clientY - rect.top;
+    data.mouseScreenX = event.clientX - rect.left;
+    data.mouseScreenY = event.clientY - rect.top;
   };
 
   const onPointerMove = (event: PointerEvent) => {
@@ -16,11 +18,11 @@ export function bindBuildModeDomEvents(canvas: HTMLCanvasElement, state: BuildMo
     updatePointer(event);
 
     if (event.button === 0) {
-      state.pendingPlace = true;
+      data.pendingPlace = true;
     }
 
     if (event.button === 2) {
-      state.pendingDelete = true;
+      data.pendingDelete = true;
       event.preventDefault();
     }
   };

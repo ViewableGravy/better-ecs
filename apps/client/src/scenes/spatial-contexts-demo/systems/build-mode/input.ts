@@ -1,3 +1,4 @@
+import { useSystem } from "@repo/engine";
 import {
   COLLIDER_TOGGLE_CTRL,
   COLLIDER_TOGGLE_META,
@@ -6,7 +7,6 @@ import {
   HOTBAR_SLOT_BOX,
   HOTBAR_SLOT_EMPTY,
 } from "./const";
-import type { BuildModeState } from "./state";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -30,20 +30,22 @@ type MatchKeybind = (bind: MatchKeybindArgs) => boolean;
  *   COMPONENT START
  **********************************************************************************************************/
 
-export function handleBuildModeKeybinds(state: BuildModeState, matchKeybind: MatchKeybind): void {
+export function handleBuildModeKeybinds(matchKeybind: MatchKeybind): void {
+  const { data } = useSystem("demo:build-mode");
+
   if (matchKeybind(HOTBAR_SLOT_BOX)) {
-    state.selectedItem = "box";
+    data.selectedItem = "box";
   }
 
   if (matchKeybind(HOTBAR_SLOT_EMPTY)) {
-    state.selectedItem = null;
+    data.selectedItem = null;
   }
 
   if (matchKeybind(GRID_TOGGLE_CTRL) || matchKeybind(GRID_TOGGLE_META)) {
-    state.gridVisible = !state.gridVisible;
+    data.gridVisible = !data.gridVisible;
   }
 
   if (matchKeybind(COLLIDER_TOGGLE_CTRL) || matchKeybind(COLLIDER_TOGGLE_META)) {
-    state.colliderDebugVisible = !state.colliderDebugVisible;
+    data.colliderDebugVisible = !data.colliderDebugVisible;
   }
 }

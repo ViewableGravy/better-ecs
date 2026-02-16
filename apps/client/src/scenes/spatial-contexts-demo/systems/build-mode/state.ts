@@ -1,4 +1,5 @@
 import type { EntityId } from "@repo/engine";
+import z from "zod";
 
 export type BuildItemType = "box";
 
@@ -13,7 +14,7 @@ export type BuildModeState = {
   ghostEntityId: EntityId | null;
 };
 
-export const buildModeState: BuildModeState = {
+export const buildModeStateDefault: BuildModeState = {
   selectedItem: null,
   gridVisible: true,
   colliderDebugVisible: false,
@@ -23,3 +24,16 @@ export const buildModeState: BuildModeState = {
   pendingDelete: false,
   ghostEntityId: null,
 };
+
+export const buildModeStateSchema = z.object({
+  selectedItem: z.literal("box").nullable(),
+  gridVisible: z.boolean(),
+  colliderDebugVisible: z.boolean(),
+  mouseScreenX: z.number(),
+  mouseScreenY: z.number(),
+  pendingPlace: z.boolean(),
+  pendingDelete: z.boolean(),
+  ghostEntityId: z
+    .custom<EntityId>((value) => typeof value === "number" && Number.isInteger(value))
+    .nullable(),
+});
