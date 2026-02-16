@@ -12,7 +12,6 @@ import { handleBuildModeKeybinds } from "./input";
 import { Placement } from "./placement";
 import { resolvePlacementWorld } from "./placement-target";
 import { buildModeState } from "./state";
-import { destroyEntitiesWithComponent, destroyEntitiesWithComponentInWorld } from "./transient";
 
 export const System = createSystem("demo:build-mode")({
   initialize() {
@@ -62,12 +61,12 @@ export const System = createSystem("demo:build-mode")({
     // This avoids leaked transient entities during world/context transitions.
     for (const sceneWorld of sceneWorlds) {
       if (sceneWorld !== focusedWorld) {
-        destroyEntitiesWithComponentInWorld(sceneWorld, GhostPreview);
+        sceneWorld.destroy(GhostPreview);
       }
     }
 
     if (buildModeState.selectedItem === null || placementTarget.blocked) {
-      destroyEntitiesWithComponentInWorld(focusedWorld, GhostPreview);
+      focusedWorld.destroy(GhostPreview);
       buildModeState.ghostEntityId = null;
     } else {
       buildModeState.ghostEntityId = syncPlacementGhost(
@@ -78,10 +77,10 @@ export const System = createSystem("demo:build-mode")({
       );
     }
 
-    if (!buildModeState.colliderDebugVisible) {
-      destroyEntitiesWithComponent(sceneWorlds, ColliderDebugProxy);
-    } else {
-      for (const sceneWorld of sceneWorlds) {
+    for (const sceneWorld of sceneWorlds) {
+      if (!buildModeState.colliderDebugVisible) {
+        sceneWorld.destroy(ColliderDebugProxy);
+      } else {
         syncColliderDebugWorld(sceneWorld);
       }
     }

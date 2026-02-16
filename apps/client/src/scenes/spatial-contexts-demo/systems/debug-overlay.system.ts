@@ -1,5 +1,5 @@
 import { PlayerComponent } from "@/components/player";
-import { Placeable } from "@/scenes/spatial-contexts-demo/build-mode/components";
+import { Placeable } from "@/scenes/spatial-contexts-demo/systems/build-mode/components";
 import { createSystem } from "@repo/engine";
 import { Shape, Transform2D } from "@repo/engine/components";
 import { useContextManager } from "@repo/spatial-contexts";

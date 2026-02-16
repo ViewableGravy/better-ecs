@@ -6,6 +6,8 @@ import { ComponentStore } from "./storage";
 
 export interface IUserWorld {
   create(): EntityId;
+
+  destroy(...componentTypes: Function[]): void;
   destroy(entityId: EntityId): void;
 
   add<T>(entityId: EntityId, componentType: Class<T>, component: T): void;
@@ -30,8 +32,17 @@ export class UserWorld implements IUserWorld {
     return this.world.createEntity();
   }
 
-  destroy(entityId: EntityId): void {
-    this.world.destroyEntity(entityId);
+  destroy(...componentTypes: Function[]): void;
+  destroy(entityId: EntityId): void;
+  destroy(arg: EntityId | Function, ...componentTypes: Function[]): void {
+    if (typeof arg === "number") {
+      this.world.destroyEntity(arg);
+    } else {
+      const entities = this.world.query(arg, ...componentTypes);
+      for (const entityId of entities) {
+        this.world.destroyEntity(entityId);
+      }
+    }
   }
 
   add<T>(entityId: EntityId, componentType: Class<T>, component: T): void;
