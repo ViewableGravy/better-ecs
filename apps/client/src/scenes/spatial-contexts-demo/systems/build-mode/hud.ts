@@ -16,7 +16,7 @@ export class HUD {
   public static create(): Destroy {
     if (document.getElementById(HOTBAR_INDICATOR_ID)) {
       console.warn("Hotbar indicator already exists");
-      return () => {}; // no-op cleanup
+      return () => { /* noop */ }; // no-op cleanup
     }
 
     HUD.node = document.createElement("div");
