@@ -1,6 +1,6 @@
 import type { RenderVisibilityRole } from "@/scenes/spatial-contexts-demo/components/render-visibility";
-import { resolveCameraView } from "@/utilities/world-camera";
 import { createSystem, useEngine, useMouse, useSystem } from "@repo/engine";
+import { resolveCameraView } from "@repo/engine/components";
 import { ensureManager, type ContextId } from "@repo/spatial-contexts";
 import { syncColliderDebugWorld } from "./collider-debug";
 import { ColliderDebugProxy, GhostPreview } from "./components";
