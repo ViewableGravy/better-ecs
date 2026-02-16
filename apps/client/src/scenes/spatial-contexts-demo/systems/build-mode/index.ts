@@ -1,7 +1,7 @@
 import type { RenderVisibilityRole } from "@/scenes/spatial-contexts-demo/components/render-visibility";
-import { OUTSIDE, HOUSE_INTERIOR } from "@/scenes/spatial-contexts-demo/components/render-visibility";
+import { HOUSE_INTERIOR, OUTSIDE } from "@/scenes/spatial-contexts-demo/components/render-visibility";
 import { spawnBox } from "@/scenes/spatial-contexts-demo/factories/spawnBox";
-import { createSystem, useEngine, useMouse, useSystem } from "@repo/engine";
+import { createSystem, useEngine, useMouse, useSystem, type RegisteredEngine } from "@repo/engine";
 import { resolveCameraView } from "@repo/engine/components";
 import { ensureManager, type ContextId } from "@repo/spatial-contexts";
 import { GhostPreview } from "./components";
@@ -101,7 +101,7 @@ export const System = createSystem("main:build-mode")({
 });
 
 function resolvePlacementRenderVisibilityRole(
-  engine: ReturnType<typeof useEngine>,
+  engine: RegisteredEngine,
   placementContextId: ContextId | undefined,
 ): RenderVisibilityRole {
   const manager = ensureManager(engine.scene.context);

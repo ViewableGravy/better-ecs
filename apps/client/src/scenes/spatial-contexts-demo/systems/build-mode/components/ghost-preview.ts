@@ -2,6 +2,9 @@ import type { EntityId, UserWorld } from "@repo/engine";
 import { Shape, Transform2D } from "@repo/engine/components";
 import { BOX_SIZE, GHOST_FILL, GHOST_STROKE, HALF_BOX_SIZE } from "../const";
 
+/**********************************************************************************************************
+ *   COMPONENT START
+ **********************************************************************************************************/
 export class GhostPreview {
   /**
    * Spawns a new ghost preview entity at the specified position

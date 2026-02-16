@@ -9,9 +9,4 @@ const physics = createPhysics({
   },
 });
 
-const [PhysicsDebugSystem] = physics.systems;
-if (!PhysicsDebugSystem) {
-  throw new Error("Physics debug system not initialized");
-}
-
-export { PhysicsDebugSystem };
+export const [PhysicsDebugSystem] = physics.systems;
