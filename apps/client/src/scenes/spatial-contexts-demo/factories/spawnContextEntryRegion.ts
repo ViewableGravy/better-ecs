@@ -1,7 +1,6 @@
 import type { UserWorld } from "@repo/engine";
 import { Rectangle, Vec2 } from "@repo/engine";
-import type { ContextId } from "@repo/spatial-contexts";
-import { ContextEntryRegion } from "../components/context-entry-region";
+import { type ContextId, ContextEntryRegion } from "@repo/spatial-contexts";
 
 type SpawnContextEntryRegionOptions = {
   topLeftX: number;

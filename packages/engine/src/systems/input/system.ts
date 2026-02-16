@@ -11,6 +11,8 @@ export const inputSystem = createSystem("engine:input")({
   enabled: true,
   schema: {
     default: {
+      mouseClientX: 0,
+      mouseClientY: 0,
       keysDown: new Set<string>(),
       pressedThisTick: new Set<string>(),
       releasedThisTick: new Set<string>(),
@@ -124,11 +126,25 @@ function Initialize() {
     );
   };
 
+  const pointerMoveHandler = (event: PointerEvent) => {
+    data.mouseClientX = event.clientX;
+    data.mouseClientY = event.clientY;
+  };
+
+  const pointerDownHandler = (event: PointerEvent) => {
+    data.mouseClientX = event.clientX;
+    data.mouseClientY = event.clientY;
+  };
+
   window.addEventListener("keydown", keydownHandler);
   window.addEventListener("keyup", keyupHandler);
+  window.addEventListener("pointermove", pointerMoveHandler, { passive: true });
+  window.addEventListener("pointerdown", pointerDownHandler, { passive: true });
 
   return () => {
     window.removeEventListener("keydown", keydownHandler);
     window.removeEventListener("keyup", keyupHandler);
+    window.removeEventListener("pointermove", pointerMoveHandler);
+    window.removeEventListener("pointerdown", pointerDownHandler);
   };
 }

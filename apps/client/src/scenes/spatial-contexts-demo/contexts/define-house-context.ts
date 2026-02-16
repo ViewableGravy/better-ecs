@@ -1,5 +1,6 @@
 import { Color } from "@repo/engine/components";
 import { defineContext, type ContextId } from "@repo/spatial-contexts";
+import { HOUSE_INTERIOR } from "../components/render-visibility";
 import { spawnBackground } from "../factories/spawnBackground";
 import { spawnChair } from "../factories/spawnChair";
 import { spawnDoor } from "../factories/spawnDoor";
@@ -35,7 +36,8 @@ export function defineHouseContext(options: HouseContextOptions) {
         color: new Color(0.4, 0.3, 0.2, 1),
         stroke: new Color(0.18, 0.1, 0.07, 1),
         strokeWidth: 6,
-        role: "house-interior",
+        role: HOUSE_INTERIOR,
+        gridBounds: true,
       });
 
       for (const segment of houseLayout.wallSegments) {
@@ -44,7 +46,7 @@ export function defineHouseContext(options: HouseContextOptions) {
           y: segment.y,
           width: segment.width,
           height: segment.height,
-          role: "house-interior",
+          role: HOUSE_INTERIOR,
         });
       }
 
@@ -56,7 +58,7 @@ export function defineHouseContext(options: HouseContextOptions) {
         fill: new Color(0.25, 0.55, 0.95, 1),
         stroke: new Color(0.08, 0.2, 0.42, 1),
         hasCollider: false,
-        role: "house-interior",
+        role: HOUSE_INTERIOR,
       });
 
       spawnTable(world, { x: -60, y: -30, radius: 28 });
@@ -70,7 +72,7 @@ export function defineHouseContext(options: HouseContextOptions) {
         x: 120,
         y: 0,
         fill: new Color(0.85, 0.85, 0.85, 1),
-        role: "house-interior",
+        role: HOUSE_INTERIOR,
         portal: {
           mode: "teleport",
           targetContextId: options.dungeonId,

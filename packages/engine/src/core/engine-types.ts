@@ -27,6 +27,7 @@ export type AnyEngine = {
   scene: SceneManager<any>;
   assets: AssetManager<any>;
   render: RenderPipeline | null;
+  canvas: HTMLCanvasElement | null;
 };
 
 export type RegisteredEngine<TRegister = Register> = TRegister extends {
@@ -100,7 +101,7 @@ export type InferSystemData<TSystem extends AnySystemFactory> =
  * Methods attached to the system by the factory `methods` option.
  */
 export type InferSystemMethods<TSystem extends AnySystemFactory> =
-  TSystem extends SystemFactory<string, infer TSchema extends StandardSchema, infer TMethods>
+  TSystem extends SystemFactory<string, any, infer TMethods>
     ? TMethods
     : TSystem extends { (): infer TResult }
       ? Omit<TResult, keyof EngineSystem<TSystem["~types"]["schema"]>>

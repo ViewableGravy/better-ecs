@@ -1,8 +1,9 @@
 import { PlayerComponent } from "@/components/player";
+import { Placeable } from "@/scenes/spatial-contexts-demo/systems/build-mode/components";
 import { createSystem } from "@repo/engine";
 import { Shape, Transform2D } from "@repo/engine/components";
 import { useContextManager } from "@repo/spatial-contexts";
-import { RenderVisibility } from "../components/render-visibility";
+import { RenderVisibility, OUTSIDE, HOUSE_ROOF, HOUSE_INTERIOR } from "../components/render-visibility";
 
 const OVERLAY_ID = "spatial-contexts-overlay";
 
@@ -14,6 +15,7 @@ type OverlayKey =
   | "stack"
   | "visible"
   | "player"
+  | "placeables"
   | "outsideAlpha"
   | "roofAlpha"
   | "interiorAlpha";
@@ -30,12 +32,13 @@ const overlayState = {
   playerMissing: true,
   playerX: Number.NaN,
   playerY: Number.NaN,
+  placeables: "",
   outsideAlpha: Number.NaN,
   roofAlpha: Number.NaN,
   interiorAlpha: Number.NaN,
 };
 
-export const DebugOverlaySystem = createSystem("demo:spatial-contexts-debug")({
+export const DebugOverlaySystem = createSystem("main:spatial-contexts-debug")({
   system() {
     if (overlayClosed) {
       return;
@@ -48,7 +51,7 @@ export const DebugOverlaySystem = createSystem("demo:spatial-contexts-debug")({
       return;
     }
 
-    const focused = manager.getFocusedContextId();
+    const focused = manager.focusedContextId;
     const stack = manager.getContextStack();
     const visible = manager.getVisibleContextIds();
     const world = manager.getWorldOrThrow(focused);
@@ -59,6 +62,7 @@ export const DebugOverlaySystem = createSystem("demo:spatial-contexts-debug")({
       : "missing";
 
     const alphaState = getAlphaState(manager);
+    const placeableState = getPlaceableState(manager);
 
     setTextIfChanged(refs.values.focused, "focused", focused);
 
@@ -90,6 +94,11 @@ export const DebugOverlaySystem = createSystem("demo:spatial-contexts-debug")({
       overlayState.playerX = Number.NaN;
       overlayState.playerY = Number.NaN;
       setTextIfChanged(refs.values.player, "player", "missing");
+    }
+
+    if (overlayState.placeables !== placeableState) {
+      overlayState.placeables = placeableState;
+      setTextIfChanged(refs.values.placeables, "placeables", placeableState);
     }
 
     if (alphaState.outside !== overlayState.outsideAlpha) {
@@ -183,6 +192,7 @@ function getOrCreateOverlayWindow() {
     stack: createOverlayRow(content, "stack"),
     visible: createOverlayRow(content, "visible"),
     player: createOverlayRow(content, "player"),
+    placeables: createOverlayRow(content, "placeables"),
     outsideAlpha: createOverlayRow(content, "outsideAlpha"),
     roofAlpha: createOverlayRow(content, "roofAlpha"),
     interiorAlpha: createOverlayRow(content, "interiorAlpha"),
@@ -332,19 +342,34 @@ function getAlphaState(manager: ReturnType<typeof useContextManager>) {
       const visibility = world.get(entityId, RenderVisibility);
       if (!shape || !visibility) continue;
 
-      if (visibility.role === "outside") {
+      if (visibility.role === OUTSIDE) {
         sample.outside = shape.fill.a;
       }
 
-      if (visibility.role === "house-roof") {
+      if (visibility.role === HOUSE_ROOF) {
         sample.roof = shape.fill.a;
       }
 
-      if (visibility.role === "house-interior") {
+      if (visibility.role === HOUSE_INTERIOR) {
         sample.interior = shape.fill.a;
       }
     }
   }
 
   return sample;
+}
+
+function getPlaceableState(manager: ReturnType<typeof useContextManager>): string {
+  const parts: string[] = [];
+
+  for (const { id } of manager.listDefinitions()) {
+    const world = manager.getWorld(id);
+    if (!world) {
+      continue;
+    }
+
+    parts.push(`${id}:${world.query(Placeable).length}`);
+  }
+
+  return parts.join(" | ");
 }

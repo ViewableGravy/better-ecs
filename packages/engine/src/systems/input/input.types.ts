@@ -2,6 +2,12 @@ import { z } from "zod";
 
 /***** SYSTEM SCHEMA START *****/
 export const InputStateSchema = z.object({
+  /** @public Latest pointer X in viewport/client space (`event.clientX`). */
+  mouseClientX: z.number(),
+
+  /** @public Latest pointer Y in viewport/client space (`event.clientY`). */
+  mouseClientY: z.number(),
+
   /** @public Set of physical keys currently held across frames (stores `code` values like "Digit1", "KeyA"). */
   keysDown: z.set(z.string()),
 

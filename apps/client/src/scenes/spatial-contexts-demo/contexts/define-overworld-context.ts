@@ -1,5 +1,6 @@
 import { Color } from "@repo/engine/components";
 import { defineContext, type ContextId } from "@repo/spatial-contexts";
+import { OUTSIDE } from "../components/render-visibility";
 import { spawnContextEntryRegion } from "../factories/spawnContextEntryRegion";
 import { spawnDoor } from "../factories/spawnDoor";
 import { spawnHouse } from "../factories/spawnHouse";
@@ -55,7 +56,7 @@ export function defineOverworldContext(options: OverworldContextOptions) {
         fill: new Color(0.25, 0.55, 0.95, 1),
         stroke: new Color(0.08, 0.2, 0.42, 1),
         hasCollider: false,
-        role: "outside",
+        role: OUTSIDE,
       });
 
       spawnContextEntryRegion(world, {
@@ -78,7 +79,7 @@ export function defineOverworldContext(options: OverworldContextOptions) {
         x: 0,
         y: -220,
         fill: new Color(0.5, 0.65, 1, 1),
-        role: "outside",
+        role: OUTSIDE,
         portal: {
           mode: "teleport",
           targetContextId: options.dungeonId,

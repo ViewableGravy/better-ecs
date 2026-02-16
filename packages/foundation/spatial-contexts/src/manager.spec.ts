@@ -4,7 +4,7 @@ import { SceneContext, World } from "@repo/engine";
 
 import { contextId } from "./context-id";
 import { defineContext } from "./definition";
-import { installSpatialContexts } from "./install";
+import { SpatialContexts } from "./install";
 
 describe("spatial-contexts/SpatialContextManager", () => {
   it("runs root setup even though default world already exists", () => {
@@ -15,7 +15,7 @@ describe("spatial-contexts/SpatialContextManager", () => {
 
     let ran = 0;
 
-    const manager = installSpatialContexts(scene, {
+    const manager = SpatialContexts.install(scene, {
       definitions: [
         defineContext({
           id: ROOT,
@@ -39,7 +39,7 @@ describe("spatial-contexts/SpatialContextManager", () => {
     const ROOT = contextId("default");
     const HOUSE = contextId("house");
 
-    const manager = installSpatialContexts(scene, {
+    const manager = SpatialContexts.install(scene, {
       definitions: [defineContext({ id: ROOT }), defineContext({ id: HOUSE, parentId: ROOT })],
     });
 
@@ -56,7 +56,7 @@ describe("spatial-contexts/SpatialContextManager", () => {
     const ROOT = contextId("default");
     const HOUSE = contextId("house");
 
-    const manager = installSpatialContexts(scene, {
+    const manager = SpatialContexts.install(scene, {
       definitions: [
         defineContext({
           id: ROOT,
@@ -74,5 +74,46 @@ describe("spatial-contexts/SpatialContextManager", () => {
     manager.setFocusedContextId(HOUSE);
 
     expect(manager.getVisibleContextIds()).toEqual([ROOT, HOUSE]);
+  });
+
+  it("returns focused world via manager accessor", () => {
+    const internal = new World("scene");
+    const scene = new SceneContext("scene", internal);
+
+    const ROOT = contextId("default");
+    const HOUSE = contextId("house");
+
+    const manager = SpatialContexts.install(scene, {
+      definitions: [defineContext({ id: ROOT }), defineContext({ id: HOUSE, parentId: ROOT })],
+    });
+
+    manager.ensureWorldLoaded(HOUSE);
+    manager.setFocusedContextId(HOUSE);
+
+    expect(manager.focusedWorld).toBe(manager.getWorldOrThrow(HOUSE));
+  });
+
+  it("resolves context relationships relative to focused/player world", () => {
+    const internal = new World("scene");
+    const scene = new SceneContext("scene", internal);
+
+    const ROOT = contextId("default");
+    const HOUSE = contextId("house");
+    const BASEMENT = contextId("basement");
+    const DUNGEON = contextId("dungeon");
+
+    const manager = SpatialContexts.install(scene, {
+      definitions: [
+        defineContext({ id: ROOT }),
+        defineContext({ id: HOUSE, parentId: ROOT }),
+        defineContext({ id: BASEMENT, parentId: HOUSE }),
+        defineContext({ id: DUNGEON, parentId: ROOT }),
+      ],
+    });
+
+    expect(manager.getContextRelationship(HOUSE, HOUSE)).toBe("self");
+    expect(manager.getContextRelationship(HOUSE, ROOT)).toBe("ancestor");
+    expect(manager.getContextRelationship(HOUSE, BASEMENT)).toBe("descendant");
+    expect(manager.getContextRelationship(HOUSE, DUNGEON)).toBe("unrelated");
   });
 });

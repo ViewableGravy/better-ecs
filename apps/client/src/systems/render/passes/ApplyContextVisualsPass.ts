@@ -1,15 +1,20 @@
 import { PlayerComponent } from "@/components/player";
 import { ContextVisualBinding } from "@/scenes/spatial-contexts-demo/components/context-visual-binding";
 import { InsideContext } from "@/scenes/spatial-contexts-demo/components/inside-context";
-import { RenderVisibility } from "@/scenes/spatial-contexts-demo/components/render-visibility";
+import {
+  HOUSE_INTERIOR,
+  HOUSE_ROOF,
+  OUTSIDE,
+  RenderVisibility,
+} from "@/scenes/spatial-contexts-demo/components/render-visibility";
 import { getHouseBlend } from "@/scenes/spatial-contexts-demo/systems/house-transition.state";
 import { lerp } from "@/utilities/math";
 import { createRenderPass, useEngine } from "@repo/engine";
 import { Shape, Sprite } from "@repo/engine/components";
 import {
-    getManager,
-    type ContextId,
-    type SpatialContextManager,
+  SpatialContexts,
+  type ContextId,
+  type SpatialContextManager,
 } from "@repo/spatial-contexts";
 
 const INSIDE_OUTSIDE_ALPHA = 0.5;
@@ -17,13 +22,13 @@ const INSIDE_OUTSIDE_ALPHA = 0.5;
 export const ApplyContextVisualsPass = createRenderPass("apply-context-visuals")({
   execute() {
     const engine = useEngine();
-    const manager = getManager(engine.scene.context);
+    const manager = SpatialContexts.getManager(engine.scene.context);
     if (!manager) {
       return;
     }
 
-    const rootContextId = manager.getRootContextId();
-    const focused = manager.getFocusedContextId();
+    const rootContextId = manager.rootContextId;
+    const focused = manager.focusedContextId;
     const activeInteriorContextId = getActiveInteriorContextId(manager, focused, rootContextId);
     const blend = getHouseBlend(engine.frame.updateProgress);
 
@@ -129,11 +134,11 @@ function getAlphaMultiplier(args: {
 }): number {
   const { role, blend, worldContextId, activeInteriorContextId, visualContextId } = args;
 
-  if (role === "outside") {
+  if (role === OUTSIDE) {
     return lerp(1, INSIDE_OUTSIDE_ALPHA, blend);
   }
 
-  if (role === "house-roof") {
+  if (role === HOUSE_ROOF) {
     if (activeInteriorContextId && visualContextId === activeInteriorContextId) {
       return 1 - blend;
     }
@@ -141,7 +146,7 @@ function getAlphaMultiplier(args: {
     return 1;
   }
 
-  if (role === "house-interior") {
+  if (role === HOUSE_INTERIOR) {
     if (!activeInteriorContextId) {
       return 0;
     }

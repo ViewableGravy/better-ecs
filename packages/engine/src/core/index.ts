@@ -17,3 +17,5 @@ export {
   useWorld
 } from "./context";
 
+export { useMouse, type Mouse, type MouseCameraView, type MousePoint } from "../systems/input/mouse";
+

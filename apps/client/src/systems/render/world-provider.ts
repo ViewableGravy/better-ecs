@@ -1,11 +1,11 @@
 import { PlayerComponent } from "@/components/player";
 import { InsideContext } from "@/scenes/spatial-contexts-demo/components/inside-context";
 import { useEngine, useWorld, type UserWorld, type WorldProvider } from "@repo/engine";
-import { getManager, type SpatialContextManager } from "@repo/spatial-contexts";
+import { SpatialContexts, type SpatialContextManager } from "@repo/spatial-contexts";
 
 export class ActiveWorldProvider implements WorldProvider {
   getVisibleWorlds(): readonly UserWorld[] {
-    const manager = getManager(useEngine().scene.context);
+    const manager = SpatialContexts.getManager(useEngine().scene.context);
 
     if (!manager) {
       return [useWorld()];
@@ -23,8 +23,8 @@ export class ActiveWorldProvider implements WorldProvider {
   }
 
   private static getTransitionWorld(manager: SpatialContextManager): UserWorld | undefined {
-    const rootContextId = manager.getRootContextId();
-    if (manager.getFocusedContextId() !== rootContextId) {
+    const rootContextId = manager.rootContextId;
+    if (manager.focusedContextId !== rootContextId) {
       return undefined;
     }
 

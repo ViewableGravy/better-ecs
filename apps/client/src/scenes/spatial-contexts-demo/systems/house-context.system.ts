@@ -2,8 +2,7 @@ import { PlayerComponent } from "@/components/player";
 import { ensurePlayer } from "@/entities/player";
 import { createSystem, type EntityId, useDelta, useEngine, useWorld } from "@repo/engine";
 import { Transform2D } from "@repo/engine/components";
-import { type ContextId, useContextManager } from "@repo/spatial-contexts";
-import { ContextEntryRegion } from "../components/context-entry-region";
+import { type ContextId, useContextManager, ContextEntryRegion } from "@repo/spatial-contexts";
 import { InsideContext } from "../components/inside-context";
 import {
   findContainingContextRegion,
@@ -16,12 +15,12 @@ import {
   tickHouseTransition,
 } from "./house-transition.state";
 
-export const HouseContextSystem = createSystem("demo:context-focus")({
+export const HouseContextSystem = createSystem("main:context-focus")({
   system() {
     const manager = useContextManager();
     const world = useWorld();
     const [updateDelta] = useDelta();
-    const rootContextId = manager.getRootContextId();
+    const rootContextId = manager.rootContextId;
 
     tickHouseTransition(updateDelta);
 
@@ -31,7 +30,7 @@ export const HouseContextSystem = createSystem("demo:context-focus")({
     const transform = world.get(playerId, Transform2D);
     if (!transform) return;
 
-    const focused = manager.getFocusedContextId();
+    const focused = manager.focusedContextId;
     if (focused === rootContextId) {
       const region = findContainingContextRegion(world, transform);
       if (!region) {

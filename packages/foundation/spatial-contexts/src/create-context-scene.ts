@@ -6,7 +6,7 @@ import {
   type UserWorld,
 } from "@repo/engine";
 import type { ContextDefinition } from "./definition";
-import { installSpatialContexts } from "./install";
+import { SpatialContexts } from "./install";
 import type { SpatialContextManager } from "./manager";
 import { createSpatialContextsRuntimeSystem } from "./runtime.system.factory";
 
@@ -44,7 +44,7 @@ export const createContextScene = <TName extends string>(name: TName) => {
         await config.setup?.(world, manager);
       },
       async sceneSetup(scene) {
-        manager = installSpatialContexts(scene, {
+        manager = SpatialContexts.install(scene, {
           definitions: config.contexts,
         });
 

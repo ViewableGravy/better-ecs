@@ -14,6 +14,7 @@
     "lint": "nx run-many --target=lint",
     "typecheck": "nx run-many --target=typecheck",
     "test": "nx run-many --target=test",
+    "e2e": "bun x playwright test --config=apps/client/playwright.config.ts",
     "clean": "nx run-many --target=clean",
     "clean:all": "rm -rf dist .nx/cache && nx run-many --target=clean"
   },
@@ -26,6 +27,7 @@
     "@nx/vite": "^22.3.3",
     "@nx/vitest": "22.3.3",
     "@nx/web": "22.3.3",
+    "@playwright/test": "^1.58.2",
     "@swc-node/register": "~1.9.1",
     "@swc/core": "~1.5.7",
     "@swc/helpers": "~0.5.11",
