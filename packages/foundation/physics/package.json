@@ -19,7 +19,8 @@
     "test": "bun x vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@repo/engine": "workspace:*"
+    "@repo/engine": "workspace:*",
+    "zod": "^4.3.4"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

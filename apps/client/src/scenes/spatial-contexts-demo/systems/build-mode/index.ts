@@ -4,8 +4,7 @@ import { spawnBox } from "@/scenes/spatial-contexts-demo/factories/spawnBox";
 import { createSystem, useEngine, useMouse, useSystem } from "@repo/engine";
 import { resolveCameraView } from "@repo/engine/components";
 import { ensureManager, type ContextId } from "@repo/spatial-contexts";
-import { syncColliderDebugWorld } from "./collider-debug";
-import { ColliderDebugProxy, GhostPreview } from "./components";
+import { GhostPreview } from "./components";
 import { buildModeStateDefault, buildModeStateSchema } from "./const";
 import { bindBuildModeDomEvents } from "./events";
 import { HUD } from "./hud";
@@ -70,14 +69,6 @@ export const System = createSystem("main:build-mode")({
         snappedX,
         snappedY,
       );
-    }
-
-    for (const sceneWorld of sceneWorlds) {
-      if (!data.colliderDebugVisible) {
-        sceneWorld.destroy(ColliderDebugProxy);
-      } else {
-        syncColliderDebugWorld(sceneWorld);
-      }
     }
 
     const shouldDelete = data.pendingDelete;

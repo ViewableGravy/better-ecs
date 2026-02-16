@@ -1,6 +1,7 @@
 import * as Engine from "@repo/engine";
 import { Loader } from "./assets";
 import { FPSSystem } from "./plugins/fps";
+import { PhysicsDebugSystem } from "./plugins/physics";
 import { Scene as E2eScene } from "./scenes/e2e";
 import { Scene as RenderingDemoScene } from "./scenes/rendering-demo";
 import { Scene as MainScene } from "./scenes/spatial-contexts-demo";
@@ -24,6 +25,7 @@ export const createAppEngine = () => {
     systems: [
       // Plugins
       FPSSystem,
+      PhysicsDebugSystem,
       // Update systems
       Movement,
       Collision,

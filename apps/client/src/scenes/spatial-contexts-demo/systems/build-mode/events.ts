@@ -1,5 +1,5 @@
 import { useSystem } from "@repo/engine";
-import { GRID_OR_COLLIDER_CODES } from "./const";
+import { GRID_CODE } from "./const";
 
 export function bindBuildModeDomEvents(canvas: HTMLCanvasElement): () => void {
   const { data } = useSystem("main:build-mode");
@@ -25,7 +25,7 @@ export function bindBuildModeDomEvents(canvas: HTMLCanvasElement): () => void {
       return;
     }
 
-    if (GRID_OR_COLLIDER_CODES.has(event.code)) {
+    if (event.code === GRID_CODE) {
       event.preventDefault();
     }
   };

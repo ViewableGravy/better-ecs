@@ -6,4 +6,5 @@ export { getEntityCollider } from "./entity/get";
 export { PhysicsWorld } from "./physics-world";
 export { resolve } from "./resolve";
 export type { Collider, PrimitiveCollider } from "./types";
+export { createPhysics, type PhysicsOpts, ColliderDebugProxy } from "./plugin";
 

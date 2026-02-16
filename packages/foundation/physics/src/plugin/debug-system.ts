@@ -1,10 +1,47 @@
 import type { EntityId, UserWorld } from "@repo/engine";
-import { Shape, Sprite, Transform2D } from "@repo/engine/components";
-import { CircleCollider, CompoundCollider, RectangleCollider, getEntityCollider } from "@repo/physics";
-import { ColliderDebugProxy } from "./components";
-import { COLLIDER_DEBUG_STYLE } from "./const";
+import { createSystem, useEngine, useSystem } from "@repo/engine";
+import { Shape, Sprite, Transform2D, Color } from "@repo/engine/components";
+import { CircleCollider } from "../colliders/circle";
+import { CompoundCollider } from "../colliders/compound";
+import { RectangleCollider } from "../colliders/rectangle";
+import { getEntityCollider } from "../entity/get";
+import { ColliderDebugProxy } from "./components/collider-debug-proxy";
+import { debugStateSchema, type PhysicsOpts } from "./types";
 
-export function syncColliderDebugWorld(world: UserWorld): void {
+const COLLIDER_DEBUG_STYLE = {
+  fill: new Color(0, 0, 0, 0),
+  stroke: new Color(0.2, 1, 0.8, 1),
+  strokeWidth: 1,
+};
+
+export function createDebugSystem(opts: Exclude<PhysicsOpts["debug"], false>) {
+  return createSystem("plugin:physics:debug")({
+    schema: {
+      default: { visible: false },
+      schema: debugStateSchema,
+    },
+    system() {
+      const { data } = useSystem("plugin:physics:debug");
+      const engine = useEngine();
+      const input = useSystem("engine:input");
+
+      if (input.matchKeybind(opts.keybind)) {
+        data.visible = !data.visible;
+      }
+
+      const sceneWorlds = engine.scene.context.worlds;
+      for (const sceneWorld of sceneWorlds) {
+        if (!data.visible) {
+          sceneWorld.destroy(ColliderDebugProxy);
+        } else {
+          syncColliderDebugWorld(sceneWorld);
+        }
+      }
+    },
+  });
+}
+
+function syncColliderDebugWorld(world: UserWorld): void {
   const debugByTarget = new Map<EntityId, EntityId>();
 
   for (const debugEntityId of world.query(ColliderDebugProxy)) {
