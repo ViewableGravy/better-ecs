@@ -48,7 +48,7 @@ export class HUD {
   }
 
   public static update() {
-    const { data } = useSystem("demo:build-mode");
+    const { data } = useSystem("main:build-mode");
 
     this.node.style.display = "block";
     this.node.style.background = data.selectedItem ? "#5a125699" : "#00000066";

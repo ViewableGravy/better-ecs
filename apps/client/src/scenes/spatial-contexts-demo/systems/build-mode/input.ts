@@ -12,7 +12,7 @@ import {
  *   COMPONENT START
  **********************************************************************************************************/
 export function matchKeybinds(): void {
-  const { data } = useSystem("demo:build-mode");
+  const { data } = useSystem("main:build-mode");
   const input = useSystem("engine:input");
 
   if (input.matchKeybind(HOTBAR_SLOT_BOX)) {

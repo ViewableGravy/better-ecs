@@ -13,7 +13,7 @@ const portalOccupancy = new Set<string>();
  *   COMPONENT SYSTEM START
  **********************************************************************************************************/
 export const System = createPortalSystem({
-  name: "demo:spatial-contexts-portals",
+  name: "main:spatial-contexts-portals",
   shouldActivate: shouldActivatePortal,
   onEnter({ nextWorld }) {
     ensurePlayer(nextWorld);

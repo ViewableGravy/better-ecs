@@ -4,7 +4,7 @@ import { PhysicsWorld, collides, resolve } from "@repo/physics";
 
 const physicsWorld = new PhysicsWorld();
 
-export const System = createSystem("demo:spatial-contexts-collision")({
+export const System = createSystem("main:spatial-contexts-collision")({
   system() {
     const world = useWorld();
 

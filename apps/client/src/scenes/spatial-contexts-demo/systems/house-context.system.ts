@@ -16,7 +16,7 @@ import {
   tickHouseTransition,
 } from "./house-transition.state";
 
-export const HouseContextSystem = createSystem("demo:context-focus")({
+export const HouseContextSystem = createSystem("main:context-focus")({
   system() {
     const manager = useContextManager();
     const world = useWorld();

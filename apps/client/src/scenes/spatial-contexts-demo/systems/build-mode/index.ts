@@ -12,7 +12,7 @@ import * as Keybinds from './input';
 import { Placement } from "./placement";
 import { resolvePlacementWorld } from "./placement-target";
 
-export const System = createSystem("demo:build-mode")({
+export const System = createSystem("main:build-mode")({
   schema: {
     default: buildModeStateDefault,
     schema: buildModeStateSchema,
@@ -32,7 +32,7 @@ export const System = createSystem("demo:build-mode")({
     };
   },
   system() {
-    const { data } = useSystem("demo:build-mode");
+    const { data } = useSystem("main:build-mode");
     const engine = useEngine();
     const mouse = useMouse();
 

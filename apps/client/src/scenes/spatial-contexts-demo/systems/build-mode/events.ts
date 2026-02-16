@@ -2,7 +2,7 @@ import { useSystem } from "@repo/engine";
 import { GRID_OR_COLLIDER_CODES } from "./const";
 
 export function bindBuildModeDomEvents(canvas: HTMLCanvasElement): () => void {
-  const { data } = useSystem("demo:build-mode");
+  const { data } = useSystem("main:build-mode");
 
   const onPointerDown = (event: PointerEvent) => {
     if (event.button === 0) {

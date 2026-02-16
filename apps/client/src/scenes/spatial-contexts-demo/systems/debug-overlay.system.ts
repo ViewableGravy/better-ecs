@@ -38,7 +38,7 @@ const overlayState = {
   interiorAlpha: Number.NaN,
 };
 
-export const DebugOverlaySystem = createSystem("demo:spatial-contexts-debug")({
+export const DebugOverlaySystem = createSystem("main:spatial-contexts-debug")({
   system() {
     if (overlayClosed) {
       return;

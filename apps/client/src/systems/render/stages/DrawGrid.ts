@@ -10,7 +10,7 @@ const GRID_LINE_WIDTH = 1;
 const MAX_LINES_PER_AXIS = 600;
 
 export function drawGrid(world: UserWorld, renderer: Renderer): void {
-  const buildMode = useSystem("demo:build-mode");
+  const buildMode = useSystem("main:build-mode");
 
   if (buildMode && !buildMode.data.gridVisible) {
     return;
