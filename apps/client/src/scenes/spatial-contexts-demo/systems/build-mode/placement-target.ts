@@ -27,8 +27,6 @@ type BuildModeEngine = {
  *   COMPONENT START
  **********************************************************************************************************/
 
-const pointBuffer = new Vec2();
-
 export function resolvePlacementWorld(
   engine: BuildModeEngine,
   worldX: number,
@@ -58,6 +56,7 @@ function resolveDeepestContextAtPoint(
   worldY: number,
 ): ContextId {
   const rootContextId = manager.getRootContextId();
+
   let deepestContextId = rootContextId;
   let deepestDepth = 0;
 
@@ -73,7 +72,7 @@ function resolveDeepestContextAtPoint(
         continue;
       }
 
-      if (!pointInsideRegion(region, worldX, worldY)) {
+      if (!RegionUtils.pointInsideRegion(region, worldX, worldY)) {
         continue;
       }
 
@@ -96,7 +95,13 @@ function resolveDeepestContextAtPoint(
   return deepestContextId;
 }
 
-function pointInsideRegion(region: ContextEntryRegion, worldX: number, worldY: number): boolean {
-  pointBuffer.set(worldX, worldY);
-  return region.bounds.containsPoint(pointBuffer);
+
+class RegionUtils {
+  private static pointBuffer = new Vec2();
+
+  public static pointInsideRegion(region: ContextEntryRegion, worldX: number, worldY: number): boolean {
+    RegionUtils.pointBuffer.set(worldX, worldY);
+    return region.bounds.containsPoint(RegionUtils.pointBuffer);
+  }
 }
+
