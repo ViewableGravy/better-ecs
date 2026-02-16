@@ -15,11 +15,8 @@ export function syncPlacementGhost(world: UserWorld, ghostEntityId: EntityId | n
     return ghost;
   }
 
-  const transform = world.get(ghostEntityId, Transform2D);
-  if (!transform) {
-    return ghostEntityId;
-  }
-
+  const transform = world.require(ghostEntityId, Transform2D);
+  // Set both curr and prev to prevent interpolation between grid squares
   transform.curr.pos.set(x + HALF_BOX_SIZE, y + HALF_BOX_SIZE);
   transform.prev.pos.set(x + HALF_BOX_SIZE, y + HALF_BOX_SIZE);
   return ghostEntityId;

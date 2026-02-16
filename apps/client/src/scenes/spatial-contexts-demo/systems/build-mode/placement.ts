@@ -32,11 +32,7 @@ export class Placement {
     Placement.deletePointTransform.prev.pos.set(worldPointer.x, worldPointer.y);
 
     for (const entityId of world.query(Transform2D)) {
-      const transform = world.get(entityId, Transform2D);
-      if (!transform) {
-        continue;
-      }
-
+      const transform = world.require(entityId, Transform2D);
       const collider = getEntityCollider(world, entityId);
       if (!collider) {
         continue;
@@ -87,11 +83,7 @@ export class Placement {
     Placement.placementTransform.prev.pos.set(snappedX + HALF_BOX_SIZE, snappedY + HALF_BOX_SIZE);
 
     for (const entityId of world.query(Transform2D)) {
-      const transform = world.get(entityId, Transform2D);
-      if (!transform) {
-        continue;
-      }
-
+      const transform = world.require(entityId, Transform2D);
       const collider = getEntityCollider(world, entityId);
       if (!collider) {
         continue;
