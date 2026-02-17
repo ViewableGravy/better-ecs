@@ -4,6 +4,7 @@ import { EngineEditorLayout } from "./engine-editor-layout";
 import { PreviewMode } from "./previewMode";
 import { QuickActions } from "./quickActions";
 import styles from "./styles.module.css";
+import { WorldsEntitiesPanel } from "./worlds-entities-panel";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -30,7 +31,9 @@ export const DefaultEngineEditorView: React.FC<DefaultEngineEditorViewProps> = (
             <PreviewMode.Disabled>
               <EngineEditorLayout.LeftSidebar>
                 <EngineEditorLayout.PanelTitle>Worlds / Entities</EngineEditorLayout.PanelTitle>
-                <EngineEditorLayout.PanelContent>Left sidebar placeholder</EngineEditorLayout.PanelContent>
+                <EngineEditorLayout.PanelContent>
+                  <WorldsEntitiesPanel />
+                </EngineEditorLayout.PanelContent>
               </EngineEditorLayout.LeftSidebar>
             </PreviewMode.Disabled>
 

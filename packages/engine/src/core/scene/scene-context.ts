@@ -52,6 +52,11 @@ export class SceneContext<TName extends string = string> {
     return this.#userWorlds.values();
   }
 
+  /** Returns world id + world entries for this scene. */
+  get worldEntries(): IterableIterator<[string, UserWorld]> {
+    return this.#userWorlds.entries();
+  }
+
   /** Returns whether a world id is currently loaded. */
   hasWorld(id: string): boolean {
     return this.#worlds.has(id);

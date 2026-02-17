@@ -134,6 +134,69 @@
   padding: 12px;
 }
 
+.worldsEntitiesPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.worldsEntitiesWorldSection {
+  border: 1px solid #2e323d;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #141821;
+}
+
+.worldsEntitiesWorldButton {
+  width: 100%;
+  border: none;
+  background: #1a1f2a;
+  color: #d8e0f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  font-size: 12px;
+  text-align: left;
+}
+
+.worldsEntitiesWorldButton:hover {
+  background: #222938;
+}
+
+.worldsEntitiesWorldLabel {
+  font-weight: 600;
+}
+
+.worldsEntitiesWorldChevron {
+  color: #9aa8c5;
+  transform: rotate(-90deg);
+  transition: transform 120ms ease;
+}
+
+.worldsEntitiesWorldChevronExpanded {
+  transform: rotate(0deg);
+}
+
+.worldsEntitiesEntityList {
+  list-style: none;
+  margin: 0;
+  padding: 6px 10px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-top: 1px solid #2e323d;
+}
+
+.worldsEntitiesEntityItem {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 12px;
+  color: #c8d2e8;
+  padding: 2px 0;
+}
+
 .engineCanvasViewportWrapper {
   border: 1px solid #353943;
   border-radius: 8px;
