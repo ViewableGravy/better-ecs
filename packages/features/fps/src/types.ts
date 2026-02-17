@@ -13,7 +13,7 @@ export const schema = z.object({
     start: z.number().nullable(),
     updates: z.number(),
   }),
-  mode: z.enum(["simple", "default", "advanced"]),
+  mode: z.enum(["disabled", "simple", "default", "advanced"]),
   customFps: z.number().nullable(),
   customUps: z.number().nullable(),
 });
@@ -21,7 +21,7 @@ export const schema = z.object({
 export type FPSCounterData = z.infer<typeof schema>;
 
 /***** TYPE DEFINITIONS *****/
-export type DisplayMode = "simple" | "default" | "advanced";
+export type DisplayMode = "disabled" | "simple" | "default" | "advanced";
 
 export type Opts = {
   element: HTMLElement;

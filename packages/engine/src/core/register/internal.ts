@@ -54,6 +54,66 @@ type ScenesTupleToRecord<T extends SceneDefinitionTuple> = {
   [Scene in T[number] as SceneName<Scene>]: Scene;
 };
 
+class CanvasManager {
+  #canvas: HTMLCanvasElement | null;
+  #isCanvasReady: boolean;
+  #awaitCanvasBeforeStart: boolean;
+  #canvasReadyPromise: Promise<void>;
+  #resolveCanvasReady: (() => void) | null = null;
+
+  public constructor(canvas: HTMLCanvasElement | null, awaitCanvasBeforeStart: boolean) {
+    this.#canvas = canvas;
+    this.#isCanvasReady = canvas !== null;
+    this.#awaitCanvasBeforeStart = awaitCanvasBeforeStart;
+
+    this.#canvasReadyPromise = new Promise<void>((resolve) => {
+      this.#resolveCanvasReady = resolve;
+    });
+
+    if (this.#isCanvasReady) {
+      this.#resolveCanvasReady?.();
+      this.#resolveCanvasReady = null;
+    }
+  }
+
+  public getCanvas(): HTMLCanvasElement {
+    if (this.#canvas !== null) {
+      return this.#canvas;
+    }
+
+    throw new Error("Engine canvas is not ready yet. Call startEngine() after canvas registration.");
+  }
+
+  public setCanvas(canvas: HTMLCanvasElement): void {
+    this.#canvas = canvas;
+    this.#isCanvasReady = true;
+
+    this.#resolveCanvasReady?.();
+    this.#resolveCanvasReady = null;
+  }
+
+  public removeCanvas(canvas: HTMLCanvasElement): void {
+    if (this.#canvas !== canvas) {
+      return;
+    }
+
+    this.#canvas = null;
+    this.#isCanvasReady = false;
+  }
+
+  public async waitForCanvasReady(): Promise<void> {
+    if (!this.#awaitCanvasBeforeStart) {
+      return;
+    }
+
+    if (this.#isCanvasReady) {
+      return;
+    }
+
+    await this.#canvasReadyPromise;
+  }
+}
+
 /***** COMPONENT START *****/
 export class EngineClass<
   TSystems extends SystemFactoryTuple,
@@ -62,7 +122,7 @@ export class EngineClass<
 > {
   #systems: Record<string, EngineSystem<any>>;
   #systemsView: Record<string, EngineSystem<any>>;
-  #canvas: HTMLCanvasElement | null;
+  #canvasManager: CanvasManager;
 
   // Cached sorted list for update phase systems
   #updateSystems: EngineSystem<any>[] = [];
@@ -106,13 +166,14 @@ export class EngineClass<
     assets: AssetManager<TAssets>,
     renderPipeline: RenderPipeline | null,
     canvas: HTMLCanvasElement | null,
+    awaitCanvasBeforeStart = false,
   ) {
     this.#systems = systems;
     this.scene = new SceneManager<TScenes>(scenes);
     this.scene.setEngineRef(this);
     this.assets = assets;
     this.#renderPipeline = renderPipeline;
-    this.#canvas = canvas;
+    this.#canvasManager = new CanvasManager(canvas, awaitCanvasBeforeStart);
     this.render = renderPipeline;
 
     this.frame.phase = this.#phaseFn;
@@ -158,8 +219,20 @@ export class EngineClass<
   }
 
   /** Active render canvas used by pointer/canvas-space engine utilities. */
-  public get canvas(): HTMLCanvasElement | null {
-    return this.#canvas;
+  public get canvas(): HTMLCanvasElement {
+    return this.#canvasManager.getCanvas();
+  }
+
+  public setCanvas(canvas: HTMLCanvasElement): void {
+    this.#canvasManager.setCanvas(canvas);
+  }
+
+  public removeCanvas(canvas: HTMLCanvasElement): void {
+    this.#canvasManager.removeCanvas(canvas);
+  }
+
+  private async waitForCanvasReady(): Promise<void> {
+    await this.#canvasManager.waitForCanvasReady();
   }
 
   public async initialize(): Promise<void> {
@@ -183,6 +256,8 @@ export class EngineClass<
   }
 
   public async *startEngine(opts?: StartEngineOpts): StartEngineGenerator {
+    await this.waitForCanvasReady();
+
     // Run initialization system and system initializations if not already initialized
     await this.initialize();
 

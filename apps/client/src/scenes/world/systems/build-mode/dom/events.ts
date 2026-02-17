@@ -1,4 +1,3 @@
-import { invariantReturn } from "@/utilities/invariantReturn";
 import { useEngine, useSystem, type RegisteredSystems } from "@repo/engine";
 
 /**********************************************************************************************************
@@ -16,7 +15,7 @@ export class BuildModeDomEvents {
   private readonly data: RegisteredSystems['main:build-mode']["data"];
 
   private constructor() {
-    this.canvas = invariantReturn(useEngine().canvas);
+    this.canvas = useEngine().canvas;
     this.data = useSystem("main:build-mode").data;
   }
 

@@ -4,11 +4,13 @@
     "strict": true,
     "noEmit": true,
     "rootDir": "../../../../../",
-    "lib": ["ESNext", "DOM"]
+    "lib": ["ESNext", "DOM"],
+    "jsx": "react-jsx"
   },
   "include": [
     "./**/*.ts",
     "./**/*.test-d.ts",
-    "../../../**/*.ts"
+    "../../../**/*.ts",
+    "../../../**/*.tsx"
   ]
 }

@@ -17,11 +17,6 @@ export const System = createSystem("main:build-mode")({
     schema: buildModeStateSchema,
   },
   initialize() {
-    const canvas = useEngine().canvas;
-    if (!canvas) {
-      throw new Error("Engine canvas is required before build-mode initialization");
-    }
-
     const unbindHud = HUD.create();
     const unbindDomEvents = BuildModeDomEvents.create();
 

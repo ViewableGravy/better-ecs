@@ -1,10 +1,10 @@
-import { useOverloadedSystem } from "@repo/engine";
 import type { EngineSystem } from "@repo/engine";
+import { useOverloadedSystem } from "@repo/engine";
 import { schema } from "./types";
 
 export function initialize(element: HTMLElement) {
   element.innerHTML = /* html */`
-    <aside class="fixed top-2.5 right-2.5 flex flex-col gap-2 p-2.5 rounded-lg font-mono text-xs select-none pointer-events-none z-9999 bg-black/90 text-white w-[300px] data-[mode=simple]:w-auto data-[mode=simple]:flex-row data-[mode=simple]:items-center data-[mode=simple]:gap-1 data-[mode=simple]:px-2 data-[mode=simple]:py-0.5 data-[mode=simple]:h-5" data-mode="default">
+    <aside class="fixed top-2.5 right-2.5 flex flex-col gap-2 p-2.5 rounded-lg font-mono text-xs select-none pointer-events-none z-9999 bg-black/90 text-white w-[300px] data-[mode=simple]:w-auto data-[mode=simple]:flex-row data-[mode=simple]:items-center data-[mode=simple]:gap-1 data-[mode=simple]:px-2 data-[mode=simple]:py-0.5 data-[mode=simple]:h-5 data-[mode=disabled]:hidden" data-mode="disabled">
       
       <!-- Simple Mode View -->
       <div class="hidden data-[mode=simple]:flex items-center gap-1" data-mode-view="simple">
@@ -103,7 +103,9 @@ function updateModeVisibility(container: Element, mode: string) {
   const simpleView = container.querySelector('[data-mode-view="simple"]');
   const defaultView = container.querySelector('[data-mode-view="default"]');
   const advancedView = container.querySelector('[data-mode-view="advanced"]');
+  const isDisabled = mode === "disabled";
   
+  container.classList.toggle("!hidden", isDisabled);
   if (simpleView) simpleView.classList.toggle('!flex', mode === 'simple');
   if (defaultView) defaultView.classList.toggle('!hidden', mode === 'simple');
   if (advancedView) advancedView.classList.toggle('!flex', mode === 'advanced');

@@ -81,13 +81,5 @@ export function screenToWorld(
 
 function resolveViewportHeight(): number {
   const canvas = useEngine().canvas;
-  if (canvas) {
-    return canvas.getBoundingClientRect().height;
-  }
-
-  if (typeof window !== "undefined") {
-    return window.innerHeight;
-  }
-
-  return 0;
+  return canvas.getBoundingClientRect().height;
 }

@@ -1,4 +1,4 @@
-import { createSystem, useEngine, useSystem } from "@repo/engine";
+import { clamp, createSystem, useEngine, useSystem } from "@repo/engine";
 import { Camera } from "@repo/engine/components";
 import z from "zod";
 
@@ -65,19 +65,6 @@ export const System = createSystem("camera-zoom")({
     }
   },
 });
-
-// TODO: move to engine/maths package and reuse in all places
-function clamp(value: number, min: number, max: number): number {
-  if (value < min) {
-    return min;
-  }
-
-  if (value > max) {
-    return max;
-  }
-
-  return value;
-}
 
 function normalizeWheelDelta(event: WheelEvent): number {
   if (event.deltaMode === WheelEvent.DOM_DELTA_LINE) {

@@ -33,18 +33,5 @@ export const Render = createRenderPipeline({
 // Utility function to get the canvas and handle resizing
 function getResizableCanvas(): HTMLCanvasElement {
   const { canvas } = useEngine();
-  if (!canvas) {
-    throw new Error("Engine canvas is required before renderer initialization");
-  }
-
-  // Handle canvas resize
-  const resizeCanvas = (): void => {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-  }
-
-  resizeCanvas();
-  window.addEventListener("resize", resizeCanvas);
-
   return canvas;
 }

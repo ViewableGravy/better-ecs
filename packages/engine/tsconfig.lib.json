@@ -3,6 +3,7 @@
   "compilerOptions": {
     "outDir": "./dist",
     "lib": ["DOM", "ES2022"],
+    "jsx": "react-jsx",
     "skipLibCheck": true,
     "composite": true,
     "declaration": true,

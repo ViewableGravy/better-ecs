@@ -13,11 +13,11 @@ import { Render } from "./systems/render";
 import { invariantById } from "./utilities/selectors";
 
 export const createAppEngine = () => {
-  const canvas = invariantById<HTMLCanvasElement>("game");
+  const rootElement = invariantById<HTMLDivElement>("game");
 
   // prettier-ignore
   return Engine.createEngine({
-    canvas,
+    rootElement,
     assetLoader: Loader,
     initialization: Initialize,
     systems: [

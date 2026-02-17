@@ -1,6 +1,10 @@
+/// <reference types="vite/client" />
+
 import { AssetManager } from "../../asset/AssetManager";
 import { inputSystem } from "../../systems/input";
 import { transformSnapshotSystem } from "../../systems/transformSnapshot";
+import { attachCanvas } from "../../ui/utilities/attach-canvas";
+import type { EngineUiContextValue } from "../../ui/utilities/engine-context";
 import { executeWithContext } from "../context";
 import type { RenderPipeline } from "../render-pipeline";
 import type { SceneDefinition, SceneDefinitionTuple, SceneName } from "../scene/scene.types";
@@ -19,7 +23,7 @@ type CreateEngineOptions<
   TScenes extends SceneDefinitionTuple,
   TAssets extends Record<string, unknown>,
 > = {
-  canvas?: HTMLCanvasElement | null;
+  rootElement?: HTMLElement | null;
   systems: TSystems;
   scenes?: TScenes;
   initialScene?: SceneName<TScenes[number]>;
@@ -53,13 +57,38 @@ export function createEngine<
   // Create and return engine instance with scenes
   const scenes = opts.scenes ?? ([] as unknown as TScenes);
   const assets = opts.assetLoader ?? new AssetManager<TAssets>();
+  const rootElement = opts.rootElement ?? null;
+  const shouldBootstrapCanvasFromRoot = rootElement !== null;
+
   const engine = new EngineClass<TSystems, TScenes, TAssets>(
     systemsRecord,
     scenes,
     assets,
     opts.render ?? null,
-    opts.canvas ?? null,
+    null,
+    shouldBootstrapCanvasFromRoot,
   );
+
+  if (rootElement) {
+    const engineUiContextValue: EngineUiContextValue = engine;
+
+    if (import.meta.env.DEV) {
+      void import("../../ui").then((uiModule) => {
+        uiModule.mountEngineEditorUi({
+          rootElement,
+          engine: engineUiContextValue,
+        });
+      });
+    } else {
+      const attached = attachCanvas(rootElement, {
+        onCanvasReady: (canvas) => {
+          engine.setCanvas(canvas);
+        },
+      });
+
+      engine.setCanvas(attached.canvas);
+    }
+  }
 
   // Register with HMR runtime if present (set up by @repo/hmr Vite plugin)
   const hmr = globalThis.__ENGINE_HMR__;
