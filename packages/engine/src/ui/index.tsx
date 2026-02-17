@@ -31,6 +31,7 @@ export function mountEngineCanvasOnly(rootElement: HTMLElement, options?: Attach
   return attachCanvas(rootElement, options);
 }
 
+export { DefaultEngineEditorView } from "./components/default-engine-editor-view";
 export { EngineCanvas } from "./components/engine-canvas";
 export { EngineEditorLayout } from "./components/engine-editor-layout";
 export { PreviewMode } from "./components/previewMode";

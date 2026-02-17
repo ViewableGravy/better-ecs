@@ -41,6 +41,7 @@ const QuickActions: QuickActionsComponent = ({ children }) => {
   const quickActionsClassName = [
     styles.engineEditorLayoutQuickActionsBase,
     isPreviewMode ? styles.engineEditorLayoutQuickActionsCompact : styles.engineEditorLayoutQuickActionsGrid,
+    isPreviewMode ? styles.engineEditorLayoutQuickActionsFloating : "",
   ].join(" ");
 
   return <section className={quickActionsClassName}>{children}</section>;

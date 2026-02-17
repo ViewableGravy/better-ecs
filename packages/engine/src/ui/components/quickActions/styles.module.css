@@ -1,22 +1,36 @@
-.previewModeToggle {
+.quickActionButton {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
   border: 1px solid #3a3f4c;
-  background: #202532;
+  background: #1f2636;
   color: #d7deee;
-  min-height: 44px;
-  padding: 0 14px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  padding: 0;
   cursor: pointer;
   user-select: none;
+  transition: background 160ms ease, border-color 160ms ease, transform 120ms ease;
 }
 
-.previewModeToggleActive {
-  border-color: #5f78ff;
-  background: #28345f;
+.quickActionButton:hover {
+  border-color: #5e7aff;
+  background: #28314a;
+}
+
+.quickActionButton:active {
+  transform: translateY(1px);
+}
+
+.quickActionButtonActive {
+  border-color: #6a84ff;
+  background: #2e3b66;
   color: #e6ecff;
+}
+
+.quickActionIcon {
+  width: 22px;
+  height: 22px;
+  display: block;
 }
