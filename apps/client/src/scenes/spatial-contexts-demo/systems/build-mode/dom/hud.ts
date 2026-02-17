@@ -25,7 +25,7 @@ export class HUD {
     HUD.node.id = HOTBAR_INDICATOR_ID;
     HUD.node.style.position = "fixed";
     HUD.node.style.right = "12px";
-    HUD.node.style.top = "12px";
+    HUD.node.style.top = "140px";
     HUD.node.style.zIndex = "1200";
     HUD.node.style.padding = "6px 10px";
     HUD.node.style.borderRadius = "6px";
