@@ -14,9 +14,13 @@ export interface IUserWorld {
   add<T>(entityId: EntityId, component: T): void;
   get<T>(entityId: EntityId, componentType: Class<T>): T | undefined;
   require<T>(entityId: EntityId, componentType: Class<T>): T;
+
   all(): EntityId[];
   has(entityId: EntityId, componentType: Class<any>): boolean;
   remove(entityId: EntityId, componentType: Class<any>): void;
+
+  // TODO: Moves an entity from this world to another world, keeping all components intact.
+  // move(entityId: EntityId, world: UserWorld): void;
 
   query(...componentTypes: Function[]): EntityId[];
 }
