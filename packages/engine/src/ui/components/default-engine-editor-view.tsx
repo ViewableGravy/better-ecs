@@ -23,6 +23,8 @@ export const DefaultEngineEditorView: React.FC<DefaultEngineEditorViewProps> = (
           <EngineEditorLayout.Root>
             <EngineEditorLayout.QuickActions>
               <QuickActions.PreviewModeToggle />
+              <QuickActions.ReloadCanvas />
+              <QuickActions.ReloadEngine />
             </EngineEditorLayout.QuickActions>
 
             <PreviewMode.Disabled>

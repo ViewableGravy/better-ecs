@@ -23,6 +23,11 @@
   transform: translateY(1px);
 }
 
+.quickActionButton:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
 .quickActionButtonActive {
   border-color: #6a84ff;
   background: #2e3b66;
