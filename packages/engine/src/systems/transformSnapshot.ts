@@ -1,4 +1,3 @@
-import { LocalTransform2D } from "../components/hierarchy";
 import { Transform2D, Transform3D } from "../components/transform";
 import { useWorld } from "../core/context";
 import { createSystem } from "../core/register/system";
@@ -20,14 +19,6 @@ export const transformSnapshotSystem = createSystem("engine:transformSnapshot")(
       const transform = world.get(entityId, Transform3D);
       if (transform) {
         transform.prev.copyFrom(transform.curr);
-      }
-    }
-
-    // Snapshot LocalTransform2D
-    for (const entityId of world.query(LocalTransform2D)) {
-      const localTransform = world.get(entityId, LocalTransform2D);
-      if (localTransform) {
-        localTransform.prev.copyFrom(localTransform.curr);
       }
     }
   },

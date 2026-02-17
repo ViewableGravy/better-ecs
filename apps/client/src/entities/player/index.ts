@@ -3,7 +3,6 @@ import { PlayerComponent } from "@/components/player";
 import type { EntityId, UserWorld } from "@repo/engine";
 import {
   Color,
-  LocalTransform2D,
   Parent,
   Shape,
   Sprite,
@@ -37,11 +36,11 @@ export function spawnPlayer(world: UserWorld): EntityId {
 
   const orbitAnchor = world.create();
   world.add(orbitAnchor, new Parent(player));
-  world.add(orbitAnchor, new LocalTransform2D(0, 0));
+  world.add(orbitAnchor, new Transform2D(0, 0));
 
   const orbitingCircle = world.create();
   world.add(orbitingCircle, new Parent(orbitAnchor));
-  world.add(orbitingCircle, new LocalTransform2D(36, 0));
+  world.add(orbitingCircle, new Transform2D(36, 0));
   world.add(orbitingCircle, new OrbitMotion(36, Math.PI));
   world.add(
     orbitingCircle,

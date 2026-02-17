@@ -1,6 +1,6 @@
 import { OrbitMotion } from "@/components/orbit-motion";
 import { createSystem, useDelta, useWorld } from "@repo/engine";
-import { LocalTransform2D } from "@repo/engine/components";
+import { Parent, Transform2D } from "@repo/engine/components";
 
 export const PlayerOrbitSystem = createSystem("main:player-orbit")({
   system() {
@@ -8,9 +8,9 @@ export const PlayerOrbitSystem = createSystem("main:player-orbit")({
     const [updateDelta] = useDelta();
     const seconds = updateDelta / 1000;
 
-    for (const entityId of world.query(OrbitMotion, LocalTransform2D)) {
+    for (const entityId of world.query(OrbitMotion, Parent, Transform2D)) {
       const orbit = world.get(entityId, OrbitMotion);
-      const localTransform = world.get(entityId, LocalTransform2D);
+      const localTransform = world.get(entityId, Transform2D);
 
       if (!orbit || !localTransform) {
         continue;

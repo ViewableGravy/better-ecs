@@ -1,16 +1,16 @@
-import { LocalTransform2D, Parent, Transform2D } from "../components";
+import { Parent, Transform2D } from "../components";
 import type { EntityId } from "./entity";
 import type { IUserWorld } from "./world";
 
 const MAX_HIERARCHY_DEPTH = 64;
-const LOCAL_STACK: Array<LocalTransform2D | undefined> = new Array(MAX_HIERARCHY_DEPTH);
+const LOCAL_STACK: Array<Transform2D | undefined> = new Array(MAX_HIERARCHY_DEPTH);
 
 /**
  * Resolves world-space transform for an entity, supporting parent-child hierarchies.
  *
  * Rules:
  * - Root entities are read from their `Transform2D`.
- * - Child entities are composed from `Parent` + `LocalTransform2D` recursively.
+ * - Child entities are composed from `Parent` + `Transform2D` recursively.
  * - The result includes both `curr` and `prev` to preserve interpolation behavior.
  */
 export function resolveWorldTransform2D(
@@ -23,30 +23,27 @@ export function resolveWorldTransform2D(
 
   while (true) {
     const parent = world.get(currentEntityId, Parent);
-    const localTransform = world.get(currentEntityId, LocalTransform2D);
+    const transform = world.get(currentEntityId, Transform2D);
 
-    if (parent || localTransform) {
-      if (!parent || !localTransform) {
-        return false;
-      }
+    if (!transform) {
+      return false;
+    }
 
+    if (parent) {
+      // Child transform is interpreted as local when Parent is present.
       if (depth >= MAX_HIERARCHY_DEPTH) {
         return false;
       }
 
-      LOCAL_STACK[depth] = localTransform;
+      LOCAL_STACK[depth] = transform;
       depth += 1;
       currentEntityId = parent.entityId;
       continue;
     }
 
-    const worldTransform = world.get(currentEntityId, Transform2D);
-    if (!worldTransform) {
-      return false;
-    }
-
-    out.curr.copyFrom(worldTransform.curr);
-    out.prev.copyFrom(worldTransform.prev);
+    // Root transform (no Parent) is world-space.
+    out.curr.copyFrom(transform.curr);
+    out.prev.copyFrom(transform.prev);
     break;
   }
 
