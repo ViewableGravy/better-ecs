@@ -11,7 +11,12 @@ import { HouseContextSystem } from "./systems/house-context.system";
 import { System as PortalSystem } from "./systems/portal";
 
 export const Scene = createContextScene("MainScene")({
-  systems: [HouseContextSystem, PortalSystem, BuildModeSystem, DebugOverlaySystem],
+  systems: [
+    HouseContextSystem, 
+    PortalSystem, 
+    BuildModeSystem, 
+    DebugOverlaySystem
+  ],
   contexts: [
     defineOverworldContext({
       overworldId: sceneConfig.contextIds.overworld,

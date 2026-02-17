@@ -52,7 +52,7 @@ export type BuildModeState = {
 
 export const buildModeStateDefault: BuildModeState = {
   selectedItem: null,
-  gridVisible: true,
+  gridVisible: false,
   pendingPlace: false,
   pendingDelete: false,
   ghostEntityId: null,

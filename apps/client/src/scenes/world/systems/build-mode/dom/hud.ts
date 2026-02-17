@@ -11,6 +11,7 @@ type Destroy = () => void;
  *   COMPONENT START
  **********************************************************************************************************/
 export class HUD {
+  static #previouslySelectedItem: string | null = null;
   static #node: HTMLDivElement | null = null;
 
   public static create(): Destroy {
@@ -36,7 +37,7 @@ export class HUD {
     HUD.node.style.background = "#00000066";
     HUD.node.style.userSelect = "none";
     HUD.node.style.pointerEvents = "none";
-    HUD.node.style.display = "none";
+    HUD.node.style.display = "block";
     HUD.node.innerText = "Selected: none";
     document.body.appendChild(HUD.node);
 
@@ -53,10 +54,12 @@ export class HUD {
   public static update() {
     const { data } = useSystem("main:build-mode");
 
-    this.node.style.display = "block";
-    this.node.style.background = data.selectedItem ? "#5a125699" : "#00000066";
+    if (data.selectedItem !== HUD.#previouslySelectedItem) {
+      this.node.style.background = data.selectedItem ? "#5a125699" : "#00000066";
+      this.node.innerText = `Selected: ${data.selectedItem ?? "none"}`;
+    }
 
-    this.node.innerText = `Selected: ${data.selectedItem ?? "none"}`;
+    this.#previouslySelectedItem = data.selectedItem;
   }
 
   private static get node(): HTMLDivElement {
