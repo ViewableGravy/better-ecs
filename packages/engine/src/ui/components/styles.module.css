@@ -34,15 +34,14 @@
   background: #171a21;
   border: 1px solid #2e323d;
   border-radius: 8px;
-  padding: 12px;
+  padding: 8px;
   min-width: 0;
   min-height: 0;
   box-sizing: border-box;
 }
 
 .engineEditorLayoutQuickActionsGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  display: flex;
   gap: 8px;
   align-content: start;
 }
