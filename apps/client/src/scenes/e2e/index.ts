@@ -1,8 +1,8 @@
 import { ensurePlayer } from "@/entities/player";
-import { setupContextPlayer } from "@/scenes/spatial-contexts-demo/contexts/shared";
-import { System as BuildModeSystem } from "@/scenes/spatial-contexts-demo/systems/build-mode";
-import { Placeable } from "@/scenes/spatial-contexts-demo/systems/build-mode/components";
-import { DebugOverlaySystem } from "@/scenes/spatial-contexts-demo/systems/debug-overlay.system";
+import { setupContextPlayer } from "@/scenes/world/contexts/shared";
+import { System as BuildModeSystem } from "@/scenes/world/systems/build-mode";
+import { Placeable } from "@/scenes/world/systems/build-mode/components";
+import { DebugOverlaySystem } from "@/scenes/world/systems/debug-overlay.system";
 import type { UserWorld } from "@repo/engine";
 import { Transform2D } from "@repo/engine/components";
 import { contextId, createContextScene, defineContext } from "@repo/spatial-contexts";

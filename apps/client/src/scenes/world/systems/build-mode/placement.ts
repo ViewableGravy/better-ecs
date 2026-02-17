@@ -1,8 +1,6 @@
-import { RenderVisibility, type RenderVisibilityRole } from "@/scenes/spatial-contexts-demo/components/render-visibility";
 import { Vec2, type MousePoint, type UserWorld } from "@repo/engine";
-import { Color, Shape, Transform2D } from "@repo/engine/components";
+import { Transform2D } from "@repo/engine/components";
 import { CircleCollider, RectangleCollider, collides, getEntityCollider } from "@repo/physics";
-import { GridFootprint, GridPosition, Placeable } from "./components";
 import { BOX_SIZE, DELETE_POINT_RADIUS, GRID_CELL_SIZE, HALF_BOX_SIZE } from "./const";
 
 /**********************************************************************************************************

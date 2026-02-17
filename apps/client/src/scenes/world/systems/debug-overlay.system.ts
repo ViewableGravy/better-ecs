@@ -1,9 +1,9 @@
 import { PlayerComponent } from "@/components/player";
-import { Placeable } from "@/scenes/spatial-contexts-demo/systems/build-mode/components";
+import { Placeable } from "@/scenes/world/systems/build-mode/components";
 import { createSystem } from "@repo/engine";
 import { Shape, Transform2D } from "@repo/engine/components";
 import { useContextManager } from "@repo/spatial-contexts";
-import { RenderVisibility, OUTSIDE, HOUSE_ROOF, HOUSE_INTERIOR } from "../components/render-visibility";
+import { HOUSE_INTERIOR, HOUSE_ROOF, OUTSIDE, RenderVisibility } from "../components/render-visibility";
 
 const OVERLAY_ID = "spatial-contexts-overlay";
 

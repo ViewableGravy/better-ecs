@@ -1,6 +1,6 @@
-import type { RenderVisibilityRole } from "@/scenes/spatial-contexts-demo/components/render-visibility";
-import { HOUSE_INTERIOR, OUTSIDE } from "@/scenes/spatial-contexts-demo/components/render-visibility";
-import { spawnBox } from "@/scenes/spatial-contexts-demo/factories/spawnBox";
+import type { RenderVisibilityRole } from "@/scenes/world/components/render-visibility";
+import { HOUSE_INTERIOR, OUTSIDE } from "@/scenes/world/components/render-visibility";
+import { spawnBox } from "@/scenes/world/factories/spawnBox";
 import { createSystem, useEngine, useMouse, useSystem, type RegisteredEngine, type RegisteredSystems } from "@repo/engine";
 import { resolveCameraView } from "@repo/engine/components";
 import { SpatialContexts, type ContextId } from "@repo/spatial-contexts";

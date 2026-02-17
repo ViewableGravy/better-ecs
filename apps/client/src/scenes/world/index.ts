@@ -1,5 +1,5 @@
-import { sceneConfig } from "@/scenes/spatial-contexts-demo/const";
-import { System as BuildModeSystem } from "@/scenes/spatial-contexts-demo/systems/build-mode";
+import { sceneConfig } from "@/scenes/world/const";
+import { System as BuildModeSystem } from "@/scenes/world/systems/build-mode";
 import {
   createContextScene
 } from "@repo/spatial-contexts";

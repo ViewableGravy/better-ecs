@@ -1,13 +1,13 @@
 import { PlayerComponent } from "@/components/player";
-import { ContextVisualBinding } from "@/scenes/spatial-contexts-demo/components/context-visual-binding";
-import { InsideContext } from "@/scenes/spatial-contexts-demo/components/inside-context";
+import { ContextVisualBinding } from "@/scenes/world/components/context-visual-binding";
+import { InsideContext } from "@/scenes/world/components/inside-context";
 import {
   HOUSE_INTERIOR,
   HOUSE_ROOF,
   OUTSIDE,
   RenderVisibility,
-} from "@/scenes/spatial-contexts-demo/components/render-visibility";
-import { getHouseBlend } from "@/scenes/spatial-contexts-demo/systems/house-transition.state";
+} from "@/scenes/world/components/render-visibility";
+import { getHouseBlend } from "@/scenes/world/systems/house-transition.state";
 import { lerp } from "@/utilities/math";
 import { createRenderPass, useEngine } from "@repo/engine";
 import { Shape, Sprite } from "@repo/engine/components";

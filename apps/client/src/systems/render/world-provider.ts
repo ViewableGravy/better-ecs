@@ -1,5 +1,5 @@
 import { PlayerComponent } from "@/components/player";
-import { InsideContext } from "@/scenes/spatial-contexts-demo/components/inside-context";
+import { InsideContext } from "@/scenes/world/components/inside-context";
 import { useEngine, useWorld, type UserWorld, type WorldProvider } from "@repo/engine";
 import { SpatialContexts, type SpatialContextManager } from "@repo/spatial-contexts";
 
