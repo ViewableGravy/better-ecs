@@ -2,7 +2,8 @@ import { EngineUiContext } from "../utilities/engine-context";
 import { useIntervalState } from "../utilities/hooks/use-interval-state";
 import { useInvariantContext } from "../utilities/hooks/use-invariant-context";
 import styles from "./styles.module.css";
-import { WorldEntitiesItem } from "./world-entities-item";
+import { WorldDropdownButton } from "./world-entities-item";
+import { WorldIdContext } from "./worldViewer/context";
 
 export const WorldsEntitiesPanel: React.FC = () => {
   const engine = useInvariantContext(EngineUiContext);
@@ -20,7 +21,9 @@ export const WorldsEntitiesPanel: React.FC = () => {
   return (
     <div className={styles.worldsEntitiesPanel}>
       {worldIds.map((worldId) => (
-        <WorldEntitiesItem key={worldId} worldId={worldId} />
+        <WorldIdContext value={worldId} key={worldId}>
+          <WorldDropdownButton key={worldId} />
+        </WorldIdContext>
       ))}
     </div>
   );

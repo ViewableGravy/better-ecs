@@ -1,22 +1,23 @@
-import styles from "./styles.module.css";
+import type React from "react";
+import { useInvariantContext } from "../../utilities/hooks/use-invariant-context";
+import styles from "../styles.module.css";
+import { WorldIdContext } from "./context";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
  **********************************************************************************************************/
-type WorldEntitiesButtonProps = {
-  worldId: string;
+type WorldEntitiesButton = React.FC<{
   isExpanded: boolean;
   onToggle: () => void;
-};
+}>;
 
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
-export const WorldEntitiesButton: React.FC<WorldEntitiesButtonProps> = ({
-  worldId,
-  isExpanded,
-  onToggle,
-}) => {
+export const WorldEntitiesButton: WorldEntitiesButton = ({ isExpanded, onToggle }) => {
+  const worldId = useInvariantContext(WorldIdContext);
+
+  /***** RENDER *****/
   return (
     <button
       aria-expanded={isExpanded}

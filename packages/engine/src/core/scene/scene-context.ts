@@ -42,6 +42,14 @@ export class SceneContext<TName extends string = string> {
     return this.#userWorlds.get(id);
   }
 
+  requireWorld(id: string): UserWorld {
+    const world = this.getWorld(id);
+    if (!world) {
+      throw new Error(`World with id "${id}" not found in scene "${this.name}"`);
+    }
+    return world;
+  }
+
   /** Returns the internal `World` by id for engine / low-level callers. */
   getInternalWorld(id: string): World | undefined {
     return this.#worlds.get(id);

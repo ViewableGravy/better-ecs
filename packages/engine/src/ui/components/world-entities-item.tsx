@@ -1,32 +1,22 @@
-import { Activity, memo, useState } from "react";
+import React, { Activity, useState } from "react";
 import styles from "./styles.module.css";
-import { WorldEntitiesButton } from "./world-entities-button";
-import { WorldEntitiesDropdown } from "./world-entities-dropdown";
+import { WorldEntitiesDropdown } from "./worldViewer/entityItemList";
+import { WorldEntitiesButton } from "./worldViewer/worldButton";
 
 /**********************************************************************************************************
- *   TYPE DEFINITIONS
+ *   COMPONENT START
  **********************************************************************************************************/
-type WorldEntitiesItemProps = {
-  worldId: string;
-};
-
-const WorldEntitiesItemBase: React.FC<WorldEntitiesItemProps> = ({ worldId }) => {
+export const WorldDropdownButton = React.memo(() => {
+  /***** STATE *****/
   const [isExpanded, setIsExpanded] = useState(false);
 
+  /***** RENDER *****/
   return (
     <section className={styles.worldsEntitiesWorldSection}>
-      <WorldEntitiesButton
-        worldId={worldId}
-        isExpanded={isExpanded}
-        onToggle={() => {
-          setIsExpanded((previousValue) => !previousValue);
-        }}
-      />
+      <WorldEntitiesButton isExpanded={isExpanded} onToggle={() => setIsExpanded(!isExpanded)} />
       <Activity mode={isExpanded ? "visible" : "hidden"} >
-        <WorldEntitiesDropdown worldId={worldId} />
+        <WorldEntitiesDropdown />
       </Activity>
     </section>
   );
-};
-
-export const WorldEntitiesItem = memo(WorldEntitiesItemBase);
+});
