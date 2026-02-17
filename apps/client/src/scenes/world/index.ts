@@ -8,10 +8,12 @@ import { defineHouseContext } from "./contexts/define-house-context";
 import { defineOverworldContext } from "./contexts/define-overworld-context";
 import { DebugOverlaySystem } from "./systems/debug-overlay.system";
 import { HouseContextSystem } from "./systems/house-context.system";
+import { PlayerOrbitSystem } from "./systems/player-orbit.system";
 import { System as PortalSystem } from "./systems/portal";
 
 export const Scene = createContextScene("MainScene")({
   systems: [
+    PlayerOrbitSystem,
     HouseContextSystem, 
     PortalSystem, 
     BuildModeSystem, 

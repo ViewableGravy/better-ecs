@@ -1,10 +1,11 @@
-import { useEngine, type UserWorld } from "@repo/engine";
+import { resolveWorldTransform2D, useEngine, type UserWorld } from "@repo/engine";
 import { Camera, Shape, Sprite, Transform2D } from "@repo/engine/components";
 import type { RenderQueue, Renderer } from "@repo/engine/render";
 import { SpatialContexts } from "@repo/spatial-contexts";
 import { drawGrid } from "./DrawGrid";
 
 const BACKGROUND_LAYER_MAX = -1;
+const SHARED_RENDER_TRANSFORM = new Transform2D();
 
 export function commitWorld(
   world: UserWorld,
@@ -34,8 +35,11 @@ export function commitWorld(
   // 1. Background shapes
   for (const id of queue.shapes) {
     const shape = world.get(id, Shape);
-    const transform = world.get(id, Transform2D);
-    if (!shape || !transform) {
+    if (!shape) {
+      continue;
+    }
+
+    if (!resolveWorldTransform2D(world, id, SHARED_RENDER_TRANSFORM)) {
       continue;
     }
 
@@ -43,7 +47,7 @@ export function commitWorld(
       continue;
     }
 
-    renderer.high.render(shape, transform, alpha);
+    renderer.high.render(shape, SHARED_RENDER_TRANSFORM, alpha);
   }
 
   // 2. Grid overlay (above floor/background, below entities)
@@ -58,8 +62,11 @@ export function commitWorld(
   // 3. Foreground shapes
   for (const id of queue.shapes) {
     const shape = world.get(id, Shape);
-    const transform = world.get(id, Transform2D);
-    if (!shape || !transform) {
+    if (!shape) {
+      continue;
+    }
+
+    if (!resolveWorldTransform2D(world, id, SHARED_RENDER_TRANSFORM)) {
       continue;
     }
 
@@ -67,15 +74,18 @@ export function commitWorld(
       continue;
     }
 
-    renderer.high.render(shape, transform, alpha);
+    renderer.high.render(shape, SHARED_RENDER_TRANSFORM, alpha);
   }
 
   // 4. Sprites
   for (const id of queue.sprites) {
     const sprite = world.get(id, Sprite);
-    const transform = world.get(id, Transform2D);
-    if (sprite && transform) {
-      renderer.high.render(sprite, transform, alpha);
+    if (!sprite) {
+      continue;
+    }
+
+    if (resolveWorldTransform2D(world, id, SHARED_RENDER_TRANSFORM)) {
+      renderer.high.render(sprite, SHARED_RENDER_TRANSFORM, alpha);
     }
   }
 }
