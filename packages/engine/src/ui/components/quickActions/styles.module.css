@@ -1,0 +1,22 @@
+.previewModeToggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid #3a3f4c;
+  background: #202532;
+  color: #d7deee;
+  min-height: 44px;
+  padding: 0 14px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  user-select: none;
+}
+
+.previewModeToggleActive {
+  border-color: #5f78ff;
+  background: #28345f;
+  color: #e6ecff;
+}
