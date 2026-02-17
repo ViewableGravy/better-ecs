@@ -23,6 +23,7 @@ const ROOT_STYLE: CSSProperties = {
   width: "100%",
   height: "100%",
   minHeight: "100%",
+  maxHeight: "100%",
   background: "#0f1117",
   color: "#e8edf7",
   padding: "8px",
@@ -36,7 +37,9 @@ const LEFT_SIDEBAR_STYLE: CSSProperties = {
   background: "#171a21",
   border: "1px solid #2e323d",
   borderRadius: "8px",
-  overflow: "auto"
+  overflow: "auto",
+  minWidth: 0,
+  minHeight: 0
 };
 
 const CENTER_STYLE: CSSProperties = {
@@ -49,7 +52,10 @@ const CENTER_STYLE: CSSProperties = {
   flexDirection: "column",
   alignItems: "stretch",
   gap: "8px",
-  boxSizing: "border-box"
+  boxSizing: "border-box",
+  minWidth: 0,
+  minHeight: 0,
+  overflow: "hidden"
 };
 
 const RIGHT_SIDEBAR_STYLE: CSSProperties = {
@@ -58,7 +64,9 @@ const RIGHT_SIDEBAR_STYLE: CSSProperties = {
   background: "#171a21",
   border: "1px solid #2e323d",
   borderRadius: "8px",
-  overflow: "auto"
+  overflow: "auto",
+  minWidth: 0,
+  minHeight: 0
 };
 
 const BOTTOM_BAR_STYLE: CSSProperties = {
@@ -67,7 +75,9 @@ const BOTTOM_BAR_STYLE: CSSProperties = {
   background: "#171a21",
   border: "1px solid #2e323d",
   borderRadius: "8px",
-  overflow: "auto"
+  overflow: "auto",
+  minWidth: 0,
+  minHeight: 0
 };
 
 const PANEL_TITLE_STYLE: CSSProperties = {

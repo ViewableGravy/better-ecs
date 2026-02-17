@@ -18,8 +18,9 @@ const VIEWPORT_WRAPPER_STYLE: CSSProperties = {
   border: "1px solid #353943",
   borderRadius: "8px",
   background: "#1a1d24",
-  width: "100%",
-  height: "100%",
+  flex: 1,
+  minWidth: 0,
+  minHeight: 0,
   overflow: "hidden",
   boxShadow: "inset 0 0 0 1px rgba(255, 255, 255, 0.03)"
 };
