@@ -43,18 +43,22 @@ export const EntityTreeNodes: EntityTreeNodes = ({ nodes, depth = 0 }) => {
                 </EntityRow.DropdownButton>
                 <Dropdown.Content>
                   <EntityTreeNodes depth={depth + 1} nodes={node.children} />
-                  {node.components?.map((component) => (
-                    <li className={styles.worldsEntitiesEntityItem} key={component.key}>
-                      <Dropdown.Manager>
-                        <EntityRow.DropdownButton depth={depth + 1} hasContent={false}>
-                          <EntityRow.Root>
-                            <EntityRow.Icon.Component />
-                            <span className={styles.worldsEntitiesEntityName}>{component.name}</span>
-                          </EntityRow.Root>
-                        </EntityRow.DropdownButton>
-                      </Dropdown.Manager>
-                    </li>
-                  ))}
+                  {node.components && node.components.length > 0 && (
+                    <ul className={styles.worldsEntitiesNestedEntityList}>
+                      {node.components.map((component) => (
+                        <li className={styles.worldsEntitiesEntityItem} key={component.key}>
+                          <Dropdown.Manager>
+                            <EntityRow.DropdownButton depth={depth + 1} hasContent={false}>
+                              <EntityRow.Root>
+                                <EntityRow.Icon.Component />
+                                <span className={styles.worldsEntitiesEntityName}>{component.name}</span>
+                              </EntityRow.Root>
+                            </EntityRow.DropdownButton>
+                          </Dropdown.Manager>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </Dropdown.Content>
               </Dropdown.Manager>
             </DebugHover>
