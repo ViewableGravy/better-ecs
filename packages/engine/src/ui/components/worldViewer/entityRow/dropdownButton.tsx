@@ -27,7 +27,7 @@ export const DropdownButton: React.FC<DropdownButtonProps> = ({ children, depth,
       ariaExpanded={hasContent ? isExpanded : undefined}
       className={className}
       disabled={!hasContent}
-      style={{ paddingLeft: `${8 + depth * 12}px` }}
+      style={{ paddingLeft: `${8 + depth * 8}px` }}
     >
       <Chevron direction={isExpanded ? "down" : "right"} isHidden={!hasContent} />
       {children}
