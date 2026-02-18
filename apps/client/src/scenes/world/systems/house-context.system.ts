@@ -1,27 +1,41 @@
 import { PlayerComponent } from "@/components/player";
-import { createSystem, type EntityId, useDelta, useEngine, useWorld } from "@repo/engine";
+import {
+  createSystem,
+  type EntityId,
+  useDelta,
+  useEngine,
+  useSystem,
+  useWorld,
+} from "@repo/engine";
 import { Transform2D } from "@repo/engine/components";
 import { ContextEntryRegion, type ContextId, useContextManager } from "@repo/spatial-contexts";
+import z from "zod";
 import { InsideContext } from "../components/inside-context";
 import {
   findContainingContextRegion,
   findRegionByContextId,
   isInsideContextRegion,
 } from "../utilities/context-collision";
-import {
-  isHouseBlendOutsideComplete,
-  setHouseInsideTarget,
-  tickHouseTransition,
-} from "./house-transition.state";
+import { BlendTransition } from "./house-transition.state";
 
 export const HouseContextSystem = createSystem("main:context-focus")({
+  schema: {
+    default: {
+      transition: new BlendTransition(1000),
+    },
+    schema: z.object({
+      transition: z.instanceof(BlendTransition),
+    }),
+  },
   system() {
+    const { data } = useSystem("main:context-focus");
     const manager = useContextManager();
     const world = useWorld();
     const [updateDelta] = useDelta();
     const rootContextId = manager.rootContextId;
+    const transition = data.transition;
 
-    tickHouseTransition(updateDelta);
+    transition.tick(updateDelta);
 
     const [playerId] = world.query(PlayerComponent);
     if (!playerId) return;
@@ -33,55 +47,55 @@ export const HouseContextSystem = createSystem("main:context-focus")({
     if (focused === rootContextId) {
       const region = findContainingContextRegion(world, transform);
       if (!region) {
-        setHouseInsideTarget(false);
-        if (isHouseBlendOutsideComplete()) {
+        transition.target = 0;
+        if (transition.complete) {
           world.remove(playerId, InsideContext);
         }
         return;
       }
 
       setInsideContext(world, playerId, region.contextId, region.regionEntityId);
-      setHouseInsideTarget(true);
+      transition.target = 1;
       switchContext(manager, world, playerId, region.contextId);
       return;
     }
 
     const definition = manager.listDefinitions().find((item) => item.id === focused);
     if (!definition?.parentId) {
-      world.remove(playerId, InsideContext)
-      setHouseInsideTarget(false);
+      world.remove(playerId, InsideContext);
+      transition.target = 0;
       return;
     }
 
     const parentWorld = manager.getWorld(definition.parentId);
     if (!parentWorld) {
-      world.remove(playerId, InsideContext)
-      setHouseInsideTarget(false);
+      world.remove(playerId, InsideContext);
+      transition.target = 0;
       return;
     }
 
     const sourceRegion = findRegionByContextId(parentWorld, focused);
     if (!sourceRegion) {
-      world.remove(playerId, InsideContext)
-      setHouseInsideTarget(false);
+      world.remove(playerId, InsideContext);
+      transition.target = 0;
       return;
     }
 
     const sourceRegionBounds = parentWorld.get(sourceRegion.regionEntityId, ContextEntryRegion);
     if (!sourceRegionBounds) {
-      world.remove(playerId, InsideContext)
-      setHouseInsideTarget(false);
+      world.remove(playerId, InsideContext);
+      transition.target = 0;
       return;
     }
 
     const isInsideSourceRegion = isInsideContextRegion(transform, sourceRegionBounds);
     if (isInsideSourceRegion) {
       setInsideContext(world, playerId, focused, sourceRegion.regionEntityId);
-      setHouseInsideTarget(true);
+      transition.target = 1;
       return;
     }
 
-    setHouseInsideTarget(false);
+    transition.target = 0;
     switchContext(manager, world, playerId, definition.parentId);
   },
 });

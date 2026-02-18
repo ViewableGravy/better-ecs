@@ -7,9 +7,8 @@ import {
   OUTSIDE,
   RenderVisibility,
 } from "@/scenes/world/components/render-visibility";
-import { getHouseBlend } from "@/scenes/world/systems/house-transition.state";
 import { lerp } from "@/utilities/math";
-import { createRenderPass, useEngine } from "@repo/engine";
+import { createRenderPass, useEngine, useSystem } from "@repo/engine";
 import { Shape, Sprite } from "@repo/engine/components";
 import {
   SpatialContexts,
@@ -30,7 +29,8 @@ export const ApplyContextVisualsPass = createRenderPass("apply-context-visuals")
     const rootContextId = manager.rootContextId;
     const focused = manager.focusedContextId;
     const activeInteriorContextId = getActiveInteriorContextId(manager, focused, rootContextId);
-    const blend = getHouseBlend(engine.frame.updateProgress);
+    const { data } = useSystem("main:context-focus");
+    const blend = data.transition.blend;
 
     for (const { id: contextId } of manager.listDefinitions()) {
       const world = manager.getWorld(contextId);
