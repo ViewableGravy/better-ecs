@@ -1,35 +1,31 @@
 import React, { useRef } from "react";
-import { Debug, Parent, Shape, Transform2D } from "../../../components";
+import { Parent, Shape, Transform2D } from "../../../components";
 import type { EntityId } from "../../../ecs/entity";
 import { EngineUiContext } from "../../utilities/engine-context";
 import { useInvariantContext } from "../../utilities/hooks/use-invariant-context";
-import styles from "../styles.module.css";
 import { EntityIdContext, WorldIdContext } from "./context";
 import { EditorDebugEntity } from "./editorDebugEntity";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
  **********************************************************************************************************/
-type EntityItemProps = {
-  children?: React.ReactNode;
+type DebugHoverProps = {
+  children: React.ReactNode;
 };
 
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
-export const EntityItem = React.memo<EntityItemProps>(({ children }) => {
-  /***** STATE *****/
-  const debugEntityId = useRef<EntityId | null>(null);
-
+export const DebugHover: React.FC<DebugHoverProps> = ({ children }) => {
   /***** HOOKS *****/
+  const debugEntityId = useRef<EntityId | null>(null);
   const engine = useInvariantContext(EngineUiContext);
   const worldId = useInvariantContext(WorldIdContext);
   const entityId = useInvariantContext(EntityIdContext);
-  const world = engine.scene.context.requireWorld(worldId);
-  const debug = world.get(entityId, Debug);
 
   /***** FUNCTIONS *****/
   const onMouseEnter = () => {
+    const world = engine.scene.context.requireWorld(worldId);
     debugEntityId.current = world.create();
 
     world.add(debugEntityId.current, Transform2D, new Transform2D(0, 0));
@@ -40,22 +36,16 @@ export const EntityItem = React.memo<EntityItemProps>(({ children }) => {
 
   const onMouseLeave = () => {
     if (debugEntityId.current) {
+      const world = engine.scene.context.requireWorld(worldId);
       world.destroy(debugEntityId.current);
       debugEntityId.current = null;
     }
-  }
+  };
 
   /***** RENDER *****/
   return (
-    <li 
-      onMouseEnter={onMouseEnter} 
-      onMouseLeave={onMouseLeave} 
-      key={`${worldId}-${entityId.toString()}`} 
-      className={styles.worldsEntitiesEntityItem}
-    >
-      {entityId}
-      {debug && ` ${debug.name}`}
+    <div onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave} style={{ width: "100%" }}>
       {children}
-    </li>
-  )
-});
+    </div>
+  );
+};

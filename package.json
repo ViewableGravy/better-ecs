@@ -60,6 +60,7 @@
     "vitest": "^4.0.0"
   },
   "dependencies": {
-    "@nx/js": "^22.3.3"
+    "@nx/js": "^22.3.3",
+    "classnames": "^2.5.1"
   }
 }

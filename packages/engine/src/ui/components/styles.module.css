@@ -183,29 +183,120 @@
 .worldsEntitiesEntityList {
   list-style: none;
   margin: 0;
-  padding: 6px 10px 8px;
+  padding: 6px 0 8px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 0;
   border-top: 1px solid #2e323d;
 }
 
 .worldsEntitiesEntityItem {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.worldsEntitiesEntityRow {
+  width: 100%;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 0;
+  min-height: 24px;
+}
+
+.worldsEntitiesEntityToggleButton {
+  border: none;
+  background: transparent;
+  color: #c8d2e8;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 3px 0;
+  text-align: left;
+  cursor: pointer;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   font-size: 12px;
-  color: #c8d2e8;
-  padding: 2px 0 0;
-  margin-top: 2px;
+}
+
+.worldsEntitiesEntityToggleButton:hover {
+  background: #222938;
+}
+
+.worldsEntitiesEntityChevron {
+  color: #9aa8c5;
+  width: 10px;
+  flex: 0 0 10px;
+  transform: rotate(-90deg);
+  transition: transform 120ms ease;
+}
+
+.worldsEntitiesEntityChevronExpanded {
+  transform: rotate(0deg);
+}
+
+.worldsEntitiesEntityChevronHidden {
+  opacity: 0;
+}
+
+.worldsEntitiesEntityTypeIcon {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 12px;
+  color: #9aa8c5;
+}
+
+.worldsEntitiesEntityName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.worldsEntitiesEntityActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+
+.worldsEntitiesDeleteEntityButton {
+  border: none;
+  background: transparent;
+  color: #91a1c4;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 4px;
+  margin-right: 6px;
+  flex: 0 0 auto;
+}
+
+.worldsEntitiesDeleteEntityButton:hover {
+  color: #f6a5a5;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.worldsEntitiesDeleteEntityIcon {
+  width: 14px;
+  height: 14px;
 }
 
 .worldsEntitiesNestedEntityList {
   list-style: none;
   margin: 0;
   padding: 0;
-  padding-left: 12px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 0;
 }
 
 .engineCanvasViewportWrapper {
