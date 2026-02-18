@@ -12,7 +12,7 @@ type ManagerProps = {
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
-export const Manager: React.FC<ManagerProps> = ({ children, defaultExpanded = true }) => {
+export const Manager: React.FC<ManagerProps> = ({ children, defaultExpanded = false }) => {
   /***** STATE *****/
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 

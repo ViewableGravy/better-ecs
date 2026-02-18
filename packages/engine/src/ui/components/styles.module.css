@@ -163,7 +163,7 @@
   justify-content: flex-start;
   gap: 3px;
   padding: 0;
-  min-height: 24px;
+  min-height: 22px;
 }
 
 .worldsEntitiesEntityToggleButton {
@@ -188,7 +188,13 @@
 .worldsEntitiesEntityChevron {
   color: #9aa8c5;
   width: 10px;
+  height: 10px;
   flex: 0 0 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transform-origin: center;
   transform: rotate(-90deg);
   transition: transform 120ms ease;
 }
