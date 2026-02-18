@@ -29,5 +29,5 @@ export function useRootContextWorld(): UserWorld {
 }
 
 export function useContextWorld(id: ContextId): UserWorld {
-  return useContextManager().getWorldOrThrow(id);
+  return useContextManager().requireWorld(id);
 }

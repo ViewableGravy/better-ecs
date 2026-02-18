@@ -25,7 +25,7 @@ export class SpatialContextManager {
   }
 
   getRootWorld(): UserWorld {
-    return this.getWorldOrThrow(this.rootContextId);
+    return this.requireWorld(this.rootContextId);
   }
 
   registerDefinition(def: ContextDefinition): void {
@@ -63,7 +63,7 @@ export class SpatialContextManager {
   }
 
   get focusedWorld(): UserWorld {
-    return this.getWorldOrThrow(this.#focusedId);
+    return this.requireWorld(this.#focusedId);
   }
 
   isAncestorContext(ancestorId: ContextId, descendantId: ContextId): boolean {
@@ -109,7 +109,7 @@ export class SpatialContextManager {
     return this.#scene.getWorld(id);
   }
 
-  getWorldOrThrow(id: ContextId): UserWorld {
+  requireWorld(id: ContextId): UserWorld {
     const world = this.getWorld(id);
     if (!world) {
       throw new Error(`World for context "${id}" is not loaded`);
@@ -176,10 +176,10 @@ export class SpatialContextManager {
   }
 
   getVisibleWorlds(): readonly UserWorld[] {
-    return this.getVisibleContextIds().map((id) => this.getWorldOrThrow(id));
+    return this.getVisibleContextIds().map((id) => this.requireWorld(id));
   }
 
   getSimulatedWorlds(): readonly UserWorld[] {
-    return this.getSimulatedContextIds().map((id) => this.getWorldOrThrow(id));
+    return this.getSimulatedContextIds().map((id) => this.requireWorld(id));
   }
 }

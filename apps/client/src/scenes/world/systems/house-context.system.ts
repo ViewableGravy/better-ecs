@@ -93,7 +93,7 @@ function switchContext(
   next: ContextId,
 ): void {
   const engine = useEngine();
-  const target = manager.getWorldOrThrow(next);
+  const target = manager.requireWorld(next);
 
   const [targetPlayerId] = target.query(PlayerComponent);
   if (targetPlayerId && targetPlayerId !== sourcePlayerId) {
@@ -113,7 +113,7 @@ function setInsideContext(
   sourceRegionEntity: EntityId,
 ): void {
   const insideContext = world.get(playerId, InsideContext);
-  
+
   if (insideContext) {
     insideContext.contextId = contextId;
     insideContext.sourceRegionEntity = sourceRegionEntity;

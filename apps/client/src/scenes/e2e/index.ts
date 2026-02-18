@@ -42,7 +42,7 @@ export const Scene = createContextScene("E2EScene")({
     manager.ensureWorldLoaded(ROOT_CONTEXT_ID);
     manager.setFocusedContextId(ROOT_CONTEXT_ID);
 
-    const rootWorld = manager.getWorldOrThrow(ROOT_CONTEXT_ID);
+    const rootWorld = manager.requireWorld(ROOT_CONTEXT_ID);
 
     window.__BETTER_ECS_E2E__ = {
       world: rootWorld,

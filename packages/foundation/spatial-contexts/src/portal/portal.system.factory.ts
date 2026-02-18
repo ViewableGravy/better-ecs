@@ -33,7 +33,7 @@ export const createPortalSystem = <const TName extends string = "plugin:spatial-
         const nextFocusedContextId = portal.targetContextId;
         manager.setFocusedContextId(nextFocusedContextId);
         engine.scene.setActiveWorld(nextFocusedContextId);
-        const nextWorld = manager.getWorldOrThrow(nextFocusedContextId);
+        const nextWorld = manager.requireWorld(nextFocusedContextId);
 
         opts.onEnter?.({ ...args, nextFocusedContextId, nextWorld });
 
