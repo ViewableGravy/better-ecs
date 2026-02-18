@@ -24,7 +24,7 @@ export class SpatialContextManager {
     return this.#scene.defaultWorldId as ContextId;
   }
 
-  getRootWorld(): UserWorld {
+  get rootWorld(): UserWorld {
     return this.requireWorld(this.rootContextId);
   }
 
@@ -181,5 +181,9 @@ export class SpatialContextManager {
 
   getSimulatedWorlds(): readonly UserWorld[] {
     return this.getSimulatedContextIds().map((id) => this.requireWorld(id));
+  }
+
+  get isRootFocused(): boolean {
+    return this.#focusedId === this.rootContextId;
   }
 }

@@ -25,7 +25,7 @@ export function useFocusedContextWorld(): UserWorld {
 }
 
 export function useRootContextWorld(): UserWorld {
-  return useContextManager().getRootWorld();
+  return useContextManager().rootWorld;
 }
 
 export function useContextWorld(id: ContextId): UserWorld {

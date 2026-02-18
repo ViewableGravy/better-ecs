@@ -7,8 +7,12 @@ import {
   OUTSIDE,
   RenderVisibility,
 } from "@/scenes/world/components/render-visibility";
+import {
+  BlendTransition,
+  BlendTransitionMutator,
+} from "@/scenes/world/systems/houseTransition/transitionMutator";
 import { lerp } from "@/utilities/math";
-import { createRenderPass, useEngine, useSystem } from "@repo/engine";
+import { createRenderPass, useEngine } from "@repo/engine";
 import { Shape, Sprite } from "@repo/engine/components";
 import {
   SpatialContexts,
@@ -17,6 +21,7 @@ import {
 } from "@repo/spatial-contexts";
 
 const INSIDE_OUTSIDE_ALPHA = 0.5;
+const transitionMutator = new BlendTransitionMutator();
 
 export const ApplyContextVisualsPass = createRenderPass("apply-context-visuals")({
   execute() {
@@ -29,8 +34,11 @@ export const ApplyContextVisualsPass = createRenderPass("apply-context-visuals")
     const rootContextId = manager.rootContextId;
     const focused = manager.focusedContextId;
     const activeInteriorContextId = getActiveInteriorContextId(manager, focused, rootContextId);
-    const { data } = useSystem("main:context-focus");
-    const blend = data.transition.blend;
+    const blendByContext = getRoofBlendByContext(manager, engine.frame.updateProgress);
+    const activeInteriorBlend =
+      activeInteriorContextId === undefined
+        ? 0
+        : (blendByContext.get(activeInteriorContextId) ?? 0);
 
     for (const { id: contextId } of manager.listDefinitions()) {
       const world = manager.getWorld(contextId);
@@ -64,7 +72,8 @@ export const ApplyContextVisualsPass = createRenderPass("apply-context-visuals")
         const visualBinding = world.get(entityId, ContextVisualBinding);
         const alphaMultiplier = getAlphaMultiplier({
           role: visibility.role,
-          blend,
+          blendByContext,
+          activeInteriorBlend,
           worldContextId: contextId,
           activeInteriorContextId,
           visualContextId: visualBinding?.contextId,
@@ -127,20 +136,28 @@ function getPlayerAlpha(args: {
 
 function getAlphaMultiplier(args: {
   role: RenderVisibility["role"];
-  blend: number;
+  blendByContext: ReadonlyMap<ContextId, number>;
+  activeInteriorBlend: number;
   worldContextId: ContextId;
   activeInteriorContextId?: ContextId;
   visualContextId?: ContextId;
 }): number {
-  const { role, blend, worldContextId, activeInteriorContextId, visualContextId } = args;
+  const {
+    role,
+    blendByContext,
+    activeInteriorBlend,
+    worldContextId,
+    activeInteriorContextId,
+    visualContextId,
+  } = args;
 
   if (role === OUTSIDE) {
-    return lerp(1, INSIDE_OUTSIDE_ALPHA, blend);
+    return lerp(1, INSIDE_OUTSIDE_ALPHA, activeInteriorBlend);
   }
 
   if (role === HOUSE_ROOF) {
     if (activeInteriorContextId && visualContextId === activeInteriorContextId) {
-      return 1 - blend;
+      return 1 - (blendByContext.get(activeInteriorContextId) ?? 0);
     }
 
     return 1;
@@ -155,8 +172,33 @@ function getAlphaMultiplier(args: {
       return 0;
     }
 
-    return blend;
+    return blendByContext.get(worldContextId) ?? 0;
   }
 
   return 1;
+}
+
+function getRoofBlendByContext(
+  manager: SpatialContextManager,
+  alpha: number,
+): ReadonlyMap<ContextId, number> {
+  const blendByContext = new Map<ContextId, number>();
+
+  const rootWorld = manager.getWorld(manager.rootContextId);
+  if (!rootWorld) {
+    return blendByContext;
+  }
+
+  for (const entityId of rootWorld.query(ContextVisualBinding, BlendTransition)) {
+    const visualBinding = rootWorld.get(entityId, ContextVisualBinding);
+    const transition = rootWorld.get(entityId, BlendTransition);
+    if (!visualBinding || !transition) {
+      continue;
+    }
+
+    transitionMutator.set(transition);
+    blendByContext.set(visualBinding.contextId, transitionMutator.sample(alpha));
+  }
+
+  return blendByContext;
 }

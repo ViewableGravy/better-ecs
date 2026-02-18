@@ -3,6 +3,7 @@ import { Color, Debug, Shape, Transform2D } from "@repo/engine/components";
 import type { ContextId } from "@repo/spatial-contexts";
 import { ContextVisualBinding } from "../components/context-visual-binding";
 import { HOUSE_ROOF, RenderVisibility } from "../components/render-visibility";
+import { BlendTransition } from "../systems/houseTransition/transitionMutator";
 
 type SpawnHouseOptions = {
   x: number;
@@ -31,6 +32,7 @@ export function spawnHouse(world: UserWorld, opts: SpawnHouseOptions): number {
   );
   world.add(entity, new RenderVisibility(HOUSE_ROOF, 1));
   world.add(entity, new ContextVisualBinding(opts.contextId));
+  world.add(entity, new BlendTransition(0, 0, 0, 1000, "linear"));
   world.add(entity, new Debug("house"));
 
   return entity;
