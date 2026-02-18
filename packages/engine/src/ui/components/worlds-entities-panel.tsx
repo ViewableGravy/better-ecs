@@ -19,12 +19,12 @@ export const WorldsEntitiesPanel: React.FC = () => {
   });
 
   return (
-    <div className={styles.worldsEntitiesPanel}>
+    <ul className={styles.worldsEntitiesPanel}>
       {worldIds.map((worldId) => (
         <WorldIdContext value={worldId} key={worldId}>
           <WorldDropdownButton key={worldId} />
         </WorldIdContext>
       ))}
-    </div>
+    </ul>
   );
 };

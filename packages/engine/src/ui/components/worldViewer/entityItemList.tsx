@@ -86,5 +86,5 @@ export const WorldEntitiesDropdown = () => {
   });
 
   /***** RENDER *****/
-  return <EntityTreeNodes nodes={entityTree} />;
+  return <EntityTreeNodes depth={1} nodes={entityTree} />;
 };

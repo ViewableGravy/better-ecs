@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React from "react";
 import styles from "./styles.module.css";
+import { Dropdown } from "./worldViewer/dropdown";
 import { WorldEntitiesDropdown } from "./worldViewer/entityItemList";
 import { WorldEntitiesButton } from "./worldViewer/worldButton";
 
@@ -7,14 +8,15 @@ import { WorldEntitiesButton } from "./worldViewer/worldButton";
  *   COMPONENT START
  **********************************************************************************************************/
 export const WorldDropdownButton = React.memo(() => {
-  /***** STATE *****/
-  const [isExpanded, setIsExpanded] = useState(false);
-
   /***** RENDER *****/
   return (
-    <section className={styles.worldsEntitiesWorldSection}>
-      <WorldEntitiesButton isExpanded={isExpanded} onToggle={() => setIsExpanded(!isExpanded)} />
-      {isExpanded && <WorldEntitiesDropdown />}
-    </section>
+    <li className={styles.worldsEntitiesEntityItem}>
+      <Dropdown.Manager>
+        <WorldEntitiesButton />
+        <Dropdown.Content>
+          <WorldEntitiesDropdown />
+        </Dropdown.Content>
+      </Dropdown.Manager>
+    </li>
   );
 });
