@@ -4,7 +4,6 @@ import {
   createSystem,
   type EntityId,
   useDelta,
-  useEngine,
   useWorld,
 } from "@repo/engine";
 import { Transform2D } from "@repo/engine/components";
@@ -114,13 +113,11 @@ function switchContext(
   sourcePlayerId: EntityId,
   next: ContextId,
 ): void {
-  const engine = useEngine();
   const target = manager.requireWorld(next);
 
   sourceWorld.move(sourcePlayerId, target);
 
   manager.setFocusedContextId(next);
-  engine.scene.setActiveWorld(next);
 }
 
 function setInsideContext(

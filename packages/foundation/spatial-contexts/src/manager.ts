@@ -7,10 +7,16 @@ import { computeContextStack } from "./stack";
 
 export type ContextRelationship = "self" | "ancestor" | "descendant" | "unrelated";
 
+type ActiveWorldController = {
+  readonly activeWorldId: string;
+  setActiveWorld(id: string): void;
+};
+
 export class SpatialContextManager {
   readonly #scene: SceneContext;
   readonly #definitions = new Map<ContextId, ContextDefinition>();
   readonly #setupCompleted = new Set<ContextId>();
+  #activeWorldController?: ActiveWorldController;
 
   #focusedId: ContextId;
 
@@ -96,9 +102,22 @@ export class SpatialContextManager {
     return "unrelated";
   }
 
+  setActiveWorldController(controller: ActiveWorldController): void {
+    this.#activeWorldController = controller;
+
+    if (controller.activeWorldId !== this.#focusedId) {
+      controller.setActiveWorld(this.#focusedId);
+    }
+  }
+
   setFocusedContextId(id: ContextId): void {
     this.ensureWorldLoaded(id);
     this.#focusedId = id;
+
+    const controller = this.#activeWorldController;
+    if (controller && controller.activeWorldId !== id) {
+      controller.setActiveWorld(id);
+    }
   }
 
   getWorld(id: ContextId): UserWorld | undefined {

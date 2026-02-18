@@ -13,8 +13,12 @@ export function createSpatialContextsRuntimeSystem<const TSceneName extends stri
       const engine = useEngine();
       const scene = useScene();
       const manager = SpatialContexts.install(scene);
+      manager.setActiveWorldController(engine.scene);
+
       const focused = manager.focusedContextId;
-      engine.scene.setActiveWorld(focused);
+      if (engine.scene.activeWorldId !== focused) {
+        engine.scene.setActiveWorld(focused);
+      }
     },
   });
 }
