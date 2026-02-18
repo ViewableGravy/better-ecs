@@ -1,5 +1,6 @@
 // packages/engine/src/ecs/world.ts
 import type { Class } from "type-fest";
+import { Parent } from "../components";
 import type { EntityId } from "./entity";
 import { createEntityId, invalidateEntity } from "./entity";
 import { ComponentStore } from "./storage";
@@ -131,6 +132,18 @@ export class World {
   destroyEntity(entityId: EntityId): void {
     if (!this.entities.has(entityId)) return;
 
+    const descendants = this.collectDescendants(entityId);
+
+    for (let i = descendants.length - 1; i >= 0; i -= 1) {
+      this.destroyEntityShallow(descendants[i]);
+    }
+
+    this.destroyEntityShallow(entityId);
+  }
+
+  private destroyEntityShallow(entityId: EntityId): void {
+    if (!this.entities.has(entityId)) return;
+
     // Remove from all component stores
     for (const store of this.componentStores.values()) {
       store.remove(entityId);
@@ -138,6 +151,57 @@ export class World {
 
     invalidateEntity(entityId);
     this.entities.delete(entityId);
+  }
+
+  private collectDescendants(entityId: EntityId): EntityId[] {
+    const parentStore = this.componentStores.get(Parent) as ComponentStore<Parent> | undefined;
+    if (!parentStore) {
+      return [];
+    }
+
+    const childrenByParent = new Map<EntityId, EntityId[]>();
+
+    for (const [childEntityId, parent] of parentStore) {
+      if (!this.entities.has(childEntityId) || !this.entities.has(parent.entityId)) {
+        continue;
+      }
+
+      const children = childrenByParent.get(parent.entityId);
+      if (children) {
+        children.push(childEntityId);
+        continue;
+      }
+
+      childrenByParent.set(parent.entityId, [childEntityId]);
+    }
+
+    const descendants: EntityId[] = [];
+    const stack: EntityId[] = [entityId];
+    const visited = new Set<EntityId>();
+
+    while (stack.length > 0) {
+      const current = stack.pop();
+      if (current === undefined) {
+        continue;
+      }
+
+      const children = childrenByParent.get(current);
+      if (!children) {
+        continue;
+      }
+
+      for (const childEntityId of children) {
+        if (visited.has(childEntityId)) {
+          continue;
+        }
+
+        visited.add(childEntityId);
+        descendants.push(childEntityId);
+        stack.push(childEntityId);
+      }
+    }
+
+    return descendants;
   }
 
   /**
@@ -194,7 +258,7 @@ export class World {
   }
 
   /**
-   * Moves an entity and all of its components to another world.
+   * Moves an entity and all of its descendants to another world.
    */
   moveEntityTo(entityId: EntityId, targetWorld: World): void {
     if (this === targetWorld) {
@@ -205,8 +269,23 @@ export class World {
       throw new Error(`Entity ${entityId} does not exist`);
     }
 
-    if (targetWorld.entities.has(entityId)) {
-      throw new Error(`Entity ${entityId} already exists in target world`);
+    const descendants = this.collectDescendants(entityId);
+    const entitiesToMove: EntityId[] = [entityId, ...descendants];
+
+    for (const movingEntityId of entitiesToMove) {
+      if (targetWorld.entities.has(movingEntityId)) {
+        throw new Error(`Entity ${movingEntityId} already exists in target world`);
+      }
+    }
+
+    for (const movingEntityId of entitiesToMove) {
+      this.moveEntityShallowTo(movingEntityId, targetWorld);
+    }
+  }
+
+  private moveEntityShallowTo(entityId: EntityId, targetWorld: World): void {
+    if (!this.entities.has(entityId)) {
+      throw new Error(`Entity ${entityId} does not exist`);
     }
 
     targetWorld.entities.add(entityId);

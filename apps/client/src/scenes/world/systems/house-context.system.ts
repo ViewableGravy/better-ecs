@@ -1,8 +1,7 @@
 import { PlayerComponent } from "@/components/player";
-import { ensurePlayer } from "@/entities/player";
 import { createSystem, type EntityId, useDelta, useEngine, useWorld } from "@repo/engine";
 import { Transform2D } from "@repo/engine/components";
-import { type ContextId, useContextManager, ContextEntryRegion } from "@repo/spatial-contexts";
+import { ContextEntryRegion, type ContextId, useContextManager } from "@repo/spatial-contexts";
 import { InsideContext } from "../components/inside-context";
 import {
   findContainingContextRegion,
@@ -35,46 +34,42 @@ export const HouseContextSystem = createSystem("main:context-focus")({
       const region = findContainingContextRegion(world, transform);
       if (!region) {
         setHouseInsideTarget(false);
-        const insideContext = world.get(playerId, InsideContext);
-        if (insideContext) {
-          syncPlayerToContext(manager, insideContext.contextId, transform);
-        }
         if (isHouseBlendOutsideComplete()) {
-          clearInsideContext(world, playerId);
+          world.remove(playerId, InsideContext);
         }
         return;
       }
 
       setInsideContext(world, playerId, region.contextId, region.regionEntityId);
       setHouseInsideTarget(true);
-      switchContext(manager, region.contextId, transform);
+      switchContext(manager, world, playerId, region.contextId);
       return;
     }
 
     const definition = manager.listDefinitions().find((item) => item.id === focused);
     if (!definition?.parentId) {
-      clearInsideContext(world, playerId);
+      world.remove(playerId, InsideContext)
       setHouseInsideTarget(false);
       return;
     }
 
     const parentWorld = manager.getWorld(definition.parentId);
     if (!parentWorld) {
-      clearInsideContext(world, playerId);
+      world.remove(playerId, InsideContext)
       setHouseInsideTarget(false);
       return;
     }
 
     const sourceRegion = findRegionByContextId(parentWorld, focused);
     if (!sourceRegion) {
-      clearInsideContext(world, playerId);
+      world.remove(playerId, InsideContext)
       setHouseInsideTarget(false);
       return;
     }
 
     const sourceRegionBounds = parentWorld.get(sourceRegion.regionEntityId, ContextEntryRegion);
     if (!sourceRegionBounds) {
-      clearInsideContext(world, playerId);
+      world.remove(playerId, InsideContext)
       setHouseInsideTarget(false);
       return;
     }
@@ -83,32 +78,29 @@ export const HouseContextSystem = createSystem("main:context-focus")({
     if (isInsideSourceRegion) {
       setInsideContext(world, playerId, focused, sourceRegion.regionEntityId);
       setHouseInsideTarget(true);
-      syncPlayerToContext(manager, definition.parentId, transform);
       return;
     }
 
     setHouseInsideTarget(false);
-    const parentPlayerId = ensurePlayer(parentWorld);
-    setInsideContext(parentWorld, parentPlayerId, focused, sourceRegion.regionEntityId);
-    clearInsideContext(world, playerId);
-
-    switchContext(manager, definition.parentId, transform);
+    switchContext(manager, world, playerId, definition.parentId);
   },
 });
 
 function switchContext(
   manager: ReturnType<typeof useContextManager>,
+  sourceWorld: ReturnType<typeof useWorld>,
+  sourcePlayerId: EntityId,
   next: ContextId,
-  sourceTransform: Transform2D,
 ): void {
   const engine = useEngine();
   const target = manager.getWorldOrThrow(next);
-  const targetPlayer = ensurePlayer(target);
-  const targetTransform = target.get(targetPlayer, Transform2D);
-  if (!targetTransform) return;
 
-  targetTransform.curr.copyFrom(sourceTransform.curr);
-  targetTransform.prev.copyFrom(sourceTransform.prev);
+  const [targetPlayerId] = target.query(PlayerComponent);
+  if (targetPlayerId && targetPlayerId !== sourcePlayerId) {
+    target.destroy(targetPlayerId);
+  }
+
+  sourceWorld.move(sourcePlayerId, target);
 
   manager.setFocusedContextId(next);
   engine.scene.setActiveWorld(next);
@@ -121,6 +113,7 @@ function setInsideContext(
   sourceRegionEntity: EntityId,
 ): void {
   const insideContext = world.get(playerId, InsideContext);
+  
   if (insideContext) {
     insideContext.contextId = contextId;
     insideContext.sourceRegionEntity = sourceRegionEntity;
@@ -128,32 +121,4 @@ function setInsideContext(
   }
 
   world.add(playerId, new InsideContext(contextId, sourceRegionEntity));
-}
-
-function clearInsideContext(world: ReturnType<typeof useWorld>, playerId: EntityId): void {
-  if (!world.has(playerId, InsideContext)) {
-    return;
-  }
-
-  world.remove(playerId, InsideContext);
-}
-
-function syncPlayerToContext(
-  manager: ReturnType<typeof useContextManager>,
-  contextId: ContextId,
-  sourceTransform: Transform2D,
-): void {
-  const targetWorld = manager.getWorld(contextId);
-  if (!targetWorld) {
-    return;
-  }
-
-  const targetPlayerId = ensurePlayer(targetWorld);
-  const targetTransform = targetWorld.get(targetPlayerId, Transform2D);
-  if (!targetTransform) {
-    return;
-  }
-
-  targetTransform.curr.copyFrom(sourceTransform.curr);
-  targetTransform.prev.copyFrom(sourceTransform.prev);
 }
