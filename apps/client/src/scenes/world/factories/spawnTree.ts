@@ -1,7 +1,7 @@
 import type { UserWorld } from "@repo/engine";
-import { Color, Shape, Transform2D } from "@repo/engine/components";
+import { Color, Debug, Shape, Transform2D } from "@repo/engine/components";
 import { CircleCollider } from "@repo/physics";
-import { RenderVisibility, OUTSIDE } from "../components/render-visibility";
+import { OUTSIDE, RenderVisibility } from "../components/render-visibility";
 
 type SpawnTreeOptions = {
   x: number;
@@ -20,6 +20,7 @@ export function spawnTree(world: UserWorld, opts: SpawnTreeOptions): number {
   );
   world.add(entity, new CircleCollider(radius));
   world.add(entity, new RenderVisibility(OUTSIDE, 1));
+  world.add(entity, new Debug("tree"));
 
   return entity;
 }

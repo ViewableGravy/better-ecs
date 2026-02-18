@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { Parent, Shape, Transform2D } from "../../../components";
+import { Debug, Parent, Shape, Transform2D } from "../../../components";
 import type { EntityId } from "../../../ecs/entity";
 import { EngineUiContext } from "../../utilities/engine-context";
 import { useInvariantContext } from "../../utilities/hooks/use-invariant-context";
@@ -18,6 +18,7 @@ export const EntityItem = React.memo(() => {
   const worldId = useInvariantContext(WorldIdContext);
   const entityId = useInvariantContext(EntityIdContext);
   const world = engine.scene.context.requireWorld(worldId);
+  const debug = world.get(entityId, Debug);
 
   /***** FUNCTIONS *****/
   const onMouseEnter = () => {
@@ -44,6 +45,7 @@ export const EntityItem = React.memo(() => {
       className={styles.worldsEntitiesEntityItem}
     >
       {entityId}
+      {debug && ` ${debug.name}`}
     </li>
   )
 });

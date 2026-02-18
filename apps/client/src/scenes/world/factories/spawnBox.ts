@@ -1,5 +1,5 @@
 import { Vec2, type UserWorld } from "@repo/engine";
-import { Color, Shape, Transform2D } from "@repo/engine/components";
+import { Color, Debug, Shape, Transform2D } from "@repo/engine/components";
 import { RectangleCollider } from "@repo/physics";
 import { RenderVisibility, type RenderVisibilityRole } from "../components/render-visibility";
 import { GridFootprint } from "../systems/build-mode/components/grid-footprint";
@@ -39,5 +39,6 @@ export function spawnBox(world: UserWorld, opts: SpawnBoxOptions): number {
   world.add(placed, new GridFootprint(BOX_SIZE, BOX_SIZE));
   world.add(placed, new Placeable("box"));
   world.add(placed, new RenderVisibility(opts.renderVisibilityRole, 1));
+  world.add(placed, new Debug("box"));
   return placed;
 }

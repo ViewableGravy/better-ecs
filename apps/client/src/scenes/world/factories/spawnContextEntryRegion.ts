@@ -1,5 +1,6 @@
 import type { UserWorld } from "@repo/engine";
 import { Rectangle, Vec2 } from "@repo/engine";
+import { Debug } from "@repo/engine/components";
 import { type ContextId, ContextEntryRegion } from "@repo/spatial-contexts";
 
 type SpawnContextEntryRegionOptions = {
@@ -26,6 +27,7 @@ export function spawnContextEntryRegion(
       ),
     ),
   );
+  world.add(entity, new Debug("context-entry-region"));
 
   return entity;
 }

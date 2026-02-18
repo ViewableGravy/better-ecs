@@ -1,7 +1,7 @@
 import { GridBounds } from "@/components/grid-bounds";
 import type { UserWorld } from "@repo/engine";
-import { Color, Shape, Transform2D } from "@repo/engine/components";
-import { RenderVisibility, HOUSE_INTERIOR } from "../components/render-visibility";
+import { Color, Debug, Shape, Transform2D } from "@repo/engine/components";
+import { HOUSE_INTERIOR, RenderVisibility } from "../components/render-visibility";
 
 export function spawnDungeon(world: UserWorld): number {
   const entity = world.create();
@@ -22,6 +22,7 @@ export function spawnDungeon(world: UserWorld): number {
   );
   world.add(entity, new RenderVisibility(HOUSE_INTERIOR, 1));
   world.add(entity, new GridBounds());
+  world.add(entity, new Debug("dungeon"));
 
   return entity;
 }

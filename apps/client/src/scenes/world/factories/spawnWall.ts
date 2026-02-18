@@ -1,7 +1,7 @@
 import { Vec2, type UserWorld } from "@repo/engine";
-import { Color, Shape, Transform2D } from "@repo/engine/components";
+import { Color, Debug, Shape, Transform2D } from "@repo/engine/components";
 import { RectangleCollider } from "@repo/physics";
-import { RenderVisibility, type RenderVisibilityRole, HOUSE_INTERIOR } from "../components/render-visibility";
+import { HOUSE_INTERIOR, RenderVisibility, type RenderVisibilityRole } from "../components/render-visibility";
 
 type SpawnWallOptions = {
   x: number;
@@ -47,6 +47,7 @@ export function spawnWall(world: UserWorld, opts: SpawnWallOptions): number {
     entity,
     new RectangleCollider(new Vec2(-halfWidth, -halfHeight), new Vec2(opts.width, opts.height)),
   );
+  world.add(entity, new Debug("wall"));
 
   return entity;
 }

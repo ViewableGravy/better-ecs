@@ -3,6 +3,7 @@ import { PlayerComponent } from "@/components/player";
 import type { EntityId, UserWorld } from "@repo/engine";
 import {
   Color,
+  Debug,
   Parent,
   Shape,
   Sprite,
@@ -33,15 +34,18 @@ export function spawnPlayer(world: UserWorld): EntityId {
   world.add(player, playerComponent);
   world.add(player, sprite);
   world.add(player, collider);
+  world.add(player, new Debug("player"));
 
   const orbitAnchor = world.create();
   world.add(orbitAnchor, new Parent(player));
   world.add(orbitAnchor, new Transform2D(0, 0));
+  world.add(orbitAnchor, new Debug("player-orbit-anchor"));
 
   const orbitingCircle = world.create();
   world.add(orbitingCircle, new Parent(orbitAnchor));
   world.add(orbitingCircle, new Transform2D(36, 0));
   world.add(orbitingCircle, new OrbitMotion(36, Math.PI));
+  world.add(orbitingCircle, new Debug("player-orbit-circle"));
   world.add(
     orbitingCircle,
     new Shape(

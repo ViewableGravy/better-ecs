@@ -1,7 +1,7 @@
 import type { UserWorld } from "@repo/engine";
-import { Color, Shape, Transform2D } from "@repo/engine/components";
+import { Color, Debug, Shape, Transform2D } from "@repo/engine/components";
 import { CircleCollider } from "@repo/physics";
-import { RenderVisibility, HOUSE_INTERIOR } from "../components/render-visibility";
+import { HOUSE_INTERIOR, RenderVisibility } from "../components/render-visibility";
 
 type SpawnTableOptions = {
   x: number;
@@ -20,6 +20,7 @@ export function spawnTable(world: UserWorld, opts: SpawnTableOptions): number {
   );
   world.add(entity, new CircleCollider(radius));
   world.add(entity, new RenderVisibility(HOUSE_INTERIOR, 1));
+  world.add(entity, new Debug("table"));
 
   return entity;
 }
