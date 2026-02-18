@@ -131,8 +131,7 @@ function setInsideContext(
   if (insideContext) {
     insideContext.contextId = contextId;
     insideContext.sourceRegionEntity = sourceRegionEntity;
-    return;
+  } else {
+    world.add(playerId, new InsideContext(contextId, sourceRegionEntity));
   }
-
-  world.add(playerId, new InsideContext(contextId, sourceRegionEntity));
 }
