@@ -31,7 +31,7 @@ export const DefaultEngineEditorView: React.FC<DefaultEngineEditorViewProps> = (
             <PreviewMode.Disabled>
               <EngineEditorLayout.LeftSidebar>
                 <EngineEditorLayout.PanelTitle>Worlds / Entities</EngineEditorLayout.PanelTitle>
-                <EngineEditorLayout.PanelContent>
+                <EngineEditorLayout.PanelContent className={styles.worldsEntitiesPanelContent}>
                   <WorldsEntitiesPanel />
                 </EngineEditorLayout.PanelContent>
               </EngineEditorLayout.LeftSidebar>

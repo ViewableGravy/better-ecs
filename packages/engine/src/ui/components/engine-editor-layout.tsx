@@ -8,6 +8,7 @@ import styles from "./styles.module.css";
  **********************************************************************************************************/
 type RegionProps = {
   children?: ReactNode;
+  className?: string;
 };
 
 export type EngineEditorLayoutRootProps = {
@@ -77,8 +78,12 @@ const PanelTitle: RegionComponent = ({ children }) => {
   return <h3 className={styles.engineEditorLayoutPanelTitle}>{children}</h3>;
 };
 
-const PanelContent: RegionComponent = ({ children }) => {
-  return <div className={styles.engineEditorLayoutPanelContent}>{children}</div>;
+const PanelContent: RegionComponent = ({ children, className }) => {
+  const panelContentClassName = [styles.engineEditorLayoutPanelContent, className]
+    .filter((value) => value !== undefined && value !== "")
+    .join(" ");
+
+  return <div className={panelContentClassName}>{children}</div>;
 };
 
 export const EngineEditorLayout = {
