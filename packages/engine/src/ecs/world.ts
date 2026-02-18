@@ -19,8 +19,7 @@ export interface IUserWorld {
   has(entityId: EntityId, componentType: Class<any>): boolean;
   remove(entityId: EntityId, componentType: Class<any>): void;
 
-  // TODO: Moves an entity from this world to another world, keeping all components intact.
-  // move(entityId: EntityId, world: UserWorld): void;
+  move(entityId: EntityId, world: UserWorld): void;
 
   query(...componentTypes: Function[]): EntityId[];
 }
@@ -85,6 +84,10 @@ export class UserWorld implements IUserWorld {
 
   remove(entityId: EntityId, componentType: Class<any>): void {
     this.world.removeComponent(entityId, componentType);
+  }
+
+  move(entityId: EntityId, world: UserWorld): void {
+    this.world.moveEntityTo(entityId, world.world);
   }
 
   query(...componentTypes: Function[]): EntityId[] {
@@ -188,6 +191,43 @@ export class World {
     if (store) {
       store.remove(entityId);
     }
+  }
+
+  /**
+   * Moves an entity and all of its components to another world.
+   */
+  moveEntityTo(entityId: EntityId, targetWorld: World): void {
+    if (this === targetWorld) {
+      return;
+    }
+
+    if (!this.entities.has(entityId)) {
+      throw new Error(`Entity ${entityId} does not exist`);
+    }
+
+    if (targetWorld.entities.has(entityId)) {
+      throw new Error(`Entity ${entityId} already exists in target world`);
+    }
+
+    targetWorld.entities.add(entityId);
+
+    for (const [componentType, sourceStore] of this.componentStores) {
+      const component = sourceStore.get(entityId);
+      if (component === undefined) {
+        continue;
+      }
+
+      let targetStore = targetWorld.componentStores.get(componentType);
+      if (!targetStore) {
+        targetStore = new ComponentStore<unknown>();
+        targetWorld.componentStores.set(componentType, targetStore);
+      }
+
+      targetStore.add(entityId, component);
+      sourceStore.remove(entityId);
+    }
+
+    this.entities.delete(entityId);
   }
 
   /**
