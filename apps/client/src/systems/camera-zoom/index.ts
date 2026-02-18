@@ -21,6 +21,7 @@ export const System = createSystem("camera-zoom")({
     })
   },
   initialize() {
+    const { canvas } = useEngine()
     const { data } = useSystem("camera-zoom");
 
     data.wheelHandler = (event: WheelEvent) => {
@@ -28,14 +29,14 @@ export const System = createSystem("camera-zoom")({
       event.preventDefault();
     };
 
-    window.addEventListener("wheel", data.wheelHandler, { passive: false });
+    canvas.addEventListener("wheel", data.wheelHandler, { passive: false });
 
     return () => {
       if (!data.wheelHandler) {
         return;
       }
 
-      window.removeEventListener("wheel", data.wheelHandler);
+      canvas.removeEventListener("wheel", data.wheelHandler);
       data.wheelHandler = null;
     };
   },
