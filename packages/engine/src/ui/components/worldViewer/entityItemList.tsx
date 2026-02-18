@@ -1,33 +1,77 @@
+import { Parent } from "../../../components";
+import type { EntityId } from "../../../ecs/entity";
 import { EngineUiContext } from "../../utilities/engine-context";
 import { useIntervalState } from "../../utilities/hooks/use-interval-state";
 import { useInvariantContext } from "../../utilities/hooks/use-invariant-context";
-import styles from "../styles.module.css";
-import { EntityIdContext, WorldIdContext } from "./context";
-import { EntityItem } from "./entityItem";
+import { WorldIdContext } from "./context";
+import { EditorDebugEntity } from "./editorDebugEntity";
+import { EntityTreeNodes } from "./entityTreeNodes";
+
+/**********************************************************************************************************
+ *   TYPE DEFINITIONS
+ **********************************************************************************************************/
+export type EntityTreeNode = {
+  entityId: EntityId;
+  children: EntityTreeNode[];
+};
 
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
 export const WorldEntitiesDropdown = () => {
+  /***** HOOKS *****/
   const engine = useInvariantContext(EngineUiContext);
   const worldId = useInvariantContext(WorldIdContext);
   
-  const entityIds = useIntervalState(250, () => {
+  /***** HOOKS *****/
+  const entityTree = useIntervalState(500, () => {
+    // Retrieve the world, and sort numerically
     const world = engine.scene.context.requireWorld(worldId);
-    return world
+    const entityIds = world
       .all()
       .slice()
       .sort((left, right) => left - right);
+
+    const nodesById = new Map<EntityId, EntityTreeNode>();
+    const roots: EntityTreeNode[] = [];
+
+    // 1. Add all entities to the node map
+    for (const entityId of entityIds) {
+      // skip debug entity
+      if (world.has(entityId, EditorDebugEntity))
+        continue;
+
+      nodesById.set(entityId, {
+        entityId,
+        children: [],
+      });
+    }
+
+    // 2. Link entities to parents and identify roots
+    for (const entityId of entityIds) {
+      const node = nodesById.get(entityId);
+      if (!node) {
+        continue;
+      }
+
+      const parentId = world.get(entityId, Parent)?.entityId;
+      if (parentId === undefined || parentId === entityId) {
+        roots.push(node);
+        continue;
+      }
+
+      const parent = nodesById.get(parentId);
+      if (!parent) {
+        roots.push(node);
+        continue;
+      }
+
+      parent.children.push(node);
+    }
+
+    return roots;
   });
 
   /***** RENDER *****/
-  return (
-    <ul className={styles.worldsEntitiesEntityList}>
-      {entityIds.map((entityId) => (
-        <EntityIdContext value={entityId} key={entityId.toString()}>
-          <EntityItem />
-        </EntityIdContext>
-      ))}
-    </ul>
-  );
+  return <EntityTreeNodes nodes={entityTree} />;
 };

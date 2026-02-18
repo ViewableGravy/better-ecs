@@ -5,11 +5,19 @@ import { EngineUiContext } from "../../utilities/engine-context";
 import { useInvariantContext } from "../../utilities/hooks/use-invariant-context";
 import styles from "../styles.module.css";
 import { EntityIdContext, WorldIdContext } from "./context";
+import { EditorDebugEntity } from "./editorDebugEntity";
+
+/**********************************************************************************************************
+ *   TYPE DEFINITIONS
+ **********************************************************************************************************/
+type EntityItemProps = {
+  children?: React.ReactNode;
+};
 
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
-export const EntityItem = React.memo(() => {
+export const EntityItem = React.memo<EntityItemProps>(({ children }) => {
   /***** STATE *****/
   const debugEntityId = useRef<EntityId | null>(null);
 
@@ -27,6 +35,7 @@ export const EntityItem = React.memo(() => {
     world.add(debugEntityId.current, Transform2D, new Transform2D(0, 0));
     world.add(debugEntityId.current, Shape, new Shape("circle", 75, 75));
     world.add(debugEntityId.current, Parent, new Parent(entityId));
+    world.add(debugEntityId.current, EditorDebugEntity, new EditorDebugEntity());
   };
 
   const onMouseLeave = () => {
@@ -46,6 +55,7 @@ export const EntityItem = React.memo(() => {
     >
       {entityId}
       {debug && ` ${debug.name}`}
+      {children}
     </li>
   )
 });
