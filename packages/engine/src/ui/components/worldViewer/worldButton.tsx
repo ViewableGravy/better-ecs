@@ -19,7 +19,7 @@ export const WorldEntitiesButton: WorldEntitiesButton = () => {
   return (
     <EntityRow.DropdownButton depth={0} hasContent>
       <EntityRow.Root>
-        <EntityRow.TypeIcon kind="world" />
+        <EntityRow.Icon.World />
         <span className={styles.worldsEntitiesEntityName}>{worldId}</span>
       </EntityRow.Root>
     </EntityRow.DropdownButton>

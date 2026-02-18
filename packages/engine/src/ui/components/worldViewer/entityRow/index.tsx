@@ -3,12 +3,12 @@ import { DebugName } from "./debugName";
 import { Delete } from "./delete";
 import { DropdownButton } from "./dropdownButton";
 import { Root } from "./root";
-import { TypeIcon } from "./typeIcon";
+import { Icon } from "./typeIcon";
 
 export const EntityRow = {
   Root,
   DropdownButton,
-  TypeIcon,
+  Icon,
   DebugName,
   Actions,
   Delete,

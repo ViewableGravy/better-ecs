@@ -27,7 +27,7 @@ export const EntityTreeNodes: EntityTreeNodes = ({ nodes, depth = 0 }) => {
         <Dropdown.Manager>
           <EntityRow.DropdownButton depth={depth + 1} hasContent={false}>
             <EntityRow.Root>
-              <EntityRow.TypeIcon kind="component" />
+              <EntityRow.Icon.Component />
               <span className={styles.worldsEntitiesEntityName}>{component.name}</span>
             </EntityRow.Root>
           </EntityRow.DropdownButton>
@@ -53,7 +53,7 @@ export const EntityTreeNodes: EntityTreeNodes = ({ nodes, depth = 0 }) => {
                   hasContent={node.children.length > 0 || node.components.length > 0}
                 >
                   <EntityRow.Root>
-                    <EntityRow.TypeIcon />
+                    <EntityRow.Icon.Entity />
                     <EntityRow.DebugName />
                     <EntityRow.Actions>
                       <EntityRow.Delete />
