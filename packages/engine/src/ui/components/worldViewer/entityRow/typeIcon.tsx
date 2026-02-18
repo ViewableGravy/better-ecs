@@ -1,3 +1,4 @@
+import { JigsawIcon } from "../../icons/jigsawIcon";
 import styles from "../../styles.module.css";
 
 /**********************************************************************************************************
@@ -5,12 +6,17 @@ import styles from "../../styles.module.css";
  **********************************************************************************************************/
 type TypeIconProps = {
   className?: string;
+  kind?: "entity" | "component";
 };
 
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
-export const TypeIcon: React.FC<TypeIconProps> = ({ className }) => {
+export const TypeIcon: React.FC<TypeIconProps> = ({ className, kind = "entity" }) => {
+  if (kind === "component") {
+    return <JigsawIcon className={className ?? styles.worldsEntitiesEntityTypeIcon} />;
+  }
+
   return (
     <svg
       aria-hidden="true"

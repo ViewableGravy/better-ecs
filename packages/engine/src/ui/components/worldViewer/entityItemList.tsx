@@ -13,6 +13,12 @@ import { EntityTreeNodes } from "./entityTreeNodes";
 export type EntityTreeNode = {
   entityId: EntityId;
   children: EntityTreeNode[];
+  components: ComponentTreeNode[];
+};
+
+export type ComponentTreeNode = {
+  key: string;
+  name: string;
 };
 
 /**********************************************************************************************************
@@ -44,6 +50,13 @@ export const WorldEntitiesDropdown = () => {
       nodesById.set(entityId, {
         entityId,
         children: [],
+        components: world
+          .getComponentTypes(entityId)
+          .map((componentType) => ({
+            key: `${entityId}:${componentType.name}`,
+            name: componentType.name,
+          }))
+          .sort((left, right) => left.name.localeCompare(right.name)),
       });
     }
 

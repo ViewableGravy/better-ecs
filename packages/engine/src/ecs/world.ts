@@ -17,6 +17,7 @@ export interface IUserWorld {
   require<T>(entityId: EntityId, componentType: Class<T>): T;
 
   all(): EntityId[];
+  getComponentTypes(entityId: EntityId): Function[];
   has(entityId: EntityId, componentType: Class<any>): boolean;
   remove(entityId: EntityId, componentType: Class<any>): void;
 
@@ -77,6 +78,10 @@ export class UserWorld implements IUserWorld {
 
   all(): EntityId[] {
     return this.world.getEntities();
+  }
+
+  getComponentTypes(entityId: EntityId): Function[] {
+    return this.world.getComponentTypes(entityId);
   }
 
   has(entityId: EntityId, componentType: Class<any>): boolean {
@@ -366,6 +371,27 @@ export class World {
    */
   getEntities(): EntityId[] {
     return Array.from(this.entities);
+  }
+
+  /**
+   * Gets all component types currently attached to an entity.
+   */
+  getComponentTypes(entityId: EntityId): Function[] {
+    if (!this.entities.has(entityId)) {
+      return [];
+    }
+
+    const componentTypes: Function[] = [];
+
+    for (const [componentType, store] of this.componentStores) {
+      if (!store.has(entityId)) {
+        continue;
+      }
+
+      componentTypes.push(componentType);
+    }
+
+    return componentTypes;
   }
 
   /**
