@@ -2,7 +2,7 @@ import styles from "../styles.module.css";
 import { EntityIdContext } from "./context";
 import { DebugHover } from "./debugHover";
 import { Dropdown } from "./dropdown";
-import type { ComponentTreeNode, EntityTreeNode } from "./entityItemList";
+import type { EntityTreeNode } from "./entityItemList";
 import { EntityRow } from "./entityRow";
 
 /**********************************************************************************************************
@@ -17,25 +17,6 @@ type EntityTreeNodes = React.FC<{
  *   COMPONENT START
  **********************************************************************************************************/
 export const EntityTreeNodes: EntityTreeNodes = ({ nodes, depth = 0 }) => {
-  const renderComponentNodes = (components: ComponentTreeNode[]) => {
-    if (components.length === 0) {
-      return null;
-    }
-
-    return components.map((component) => (
-      <li className={styles.worldsEntitiesEntityItem} key={component.key}>
-        <Dropdown.Manager>
-          <EntityRow.DropdownButton depth={depth + 1} hasContent={false}>
-            <EntityRow.Root>
-              <EntityRow.Icon.Component />
-              <span className={styles.worldsEntitiesEntityName}>{component.name}</span>
-            </EntityRow.Root>
-          </EntityRow.DropdownButton>
-        </Dropdown.Manager>
-      </li>
-    ));
-  };
-
   /***** RENDER *****/
   if (!nodes.length) {
     return null;
@@ -61,8 +42,19 @@ export const EntityTreeNodes: EntityTreeNodes = ({ nodes, depth = 0 }) => {
                   </EntityRow.Root>
                 </EntityRow.DropdownButton>
                 <Dropdown.Content>
-                  {renderComponentNodes(node.components)}
                   <EntityTreeNodes depth={depth + 1} nodes={node.children} />
+                  {node.components?.map((component) => (
+                    <li className={styles.worldsEntitiesEntityItem} key={component.key}>
+                      <Dropdown.Manager>
+                        <EntityRow.DropdownButton depth={depth + 1} hasContent={false}>
+                          <EntityRow.Root>
+                            <EntityRow.Icon.Component />
+                            <span className={styles.worldsEntitiesEntityName}>{component.name}</span>
+                          </EntityRow.Root>
+                        </EntityRow.DropdownButton>
+                      </Dropdown.Manager>
+                    </li>
+                  ))}
                 </Dropdown.Content>
               </Dropdown.Manager>
             </DebugHover>

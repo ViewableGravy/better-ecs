@@ -243,6 +243,12 @@
   border-radius: 4px;
   margin-right: 6px;
   flex: 0 0 auto;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.worldsEntitiesEntityToggleButton:hover .worldsEntitiesDeleteEntityButton {
+  opacity: 1;
 }
 
 .worldsEntitiesDeleteEntityButton:hover {
