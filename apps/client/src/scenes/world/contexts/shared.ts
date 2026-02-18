@@ -4,8 +4,12 @@ import type { UserWorld } from "@repo/engine";
 import { Transform2D } from "@repo/engine/components";
 import { CircleCollider } from "@repo/physics";
 
-export function setupContextPlayer(world: UserWorld, x: number, y: number): void {
+export function setupContextCamera(world: UserWorld): void {
   spawnCamera(world);
+}
+
+export function setupContextPlayer(world: UserWorld, x: number, y: number): void {
+  setupContextCamera(world);
 
   const playerId = ensurePlayer(world);
   if (!world.get(playerId, CircleCollider)) {

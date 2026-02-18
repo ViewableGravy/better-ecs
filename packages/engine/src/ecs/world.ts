@@ -288,6 +288,10 @@ export class World {
       throw new Error(`Entity ${entityId} does not exist`);
     }
 
+    if (targetWorld.entities.has(entityId)) {
+      throw new Error(`Entity ${entityId} already exists in target world`);
+    }
+
     targetWorld.entities.add(entityId);
 
     for (const [componentType, sourceStore] of this.componentStores) {

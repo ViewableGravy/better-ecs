@@ -95,11 +95,6 @@ function switchContext(
   const engine = useEngine();
   const target = manager.requireWorld(next);
 
-  const [targetPlayerId] = target.query(PlayerComponent);
-  if (targetPlayerId && targetPlayerId !== sourcePlayerId) {
-    target.destroy(targetPlayerId);
-  }
-
   sourceWorld.move(sourcePlayerId, target);
 
   manager.setFocusedContextId(next);

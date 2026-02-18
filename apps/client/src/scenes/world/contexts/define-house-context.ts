@@ -7,7 +7,7 @@ import { spawnDoor } from "../factories/spawnDoor";
 import { spawnTable } from "../factories/spawnTable";
 import { spawnWall } from "../factories/spawnWall";
 import { createHouseLayout } from "../utilities/house-layout";
-import { setupContextPlayer } from "./shared";
+import { setupContextCamera } from "./shared";
 
 type HouseContextOptions = {
   overworldId: ContextId;
@@ -26,7 +26,7 @@ export function defineHouseContext(options: HouseContextOptions) {
       simulation: "focused-only",
     },
     setup(world) {
-      setupContextPlayer(world, 0, 0);
+      setupContextCamera(world);
 
       const houseLayout = createHouseLayout(options.houseHalfWidth, options.houseHalfHeight);
 

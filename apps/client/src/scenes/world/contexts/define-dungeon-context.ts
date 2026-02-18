@@ -3,7 +3,7 @@ import { defineContext, type ContextId } from "@repo/spatial-contexts";
 import { OUTSIDE } from "../components/render-visibility";
 import { spawnDoor } from "../factories/spawnDoor";
 import { spawnDungeon } from "../factories/spawnDungeon";
-import { setupContextPlayer } from "./shared";
+import { setupContextCamera } from "./shared";
 
 type DungeonContextOptions = {
   overworldId: ContextId;
@@ -19,7 +19,7 @@ export function defineDungeonContext(options: DungeonContextOptions) {
       simulation: "focused-only",
     },
     setup(world) {
-      setupContextPlayer(world, 0, 160);
+      setupContextCamera(world);
       spawnDungeon(world);
 
       spawnDoor(world, {
