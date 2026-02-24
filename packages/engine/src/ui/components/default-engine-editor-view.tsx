@@ -1,11 +1,13 @@
+import React from "react";
 import { Cube, TreeStructure } from "@phosphor-icons/react";
 import { Tab, TabGroup, TabList, TabPanel, TabPanels } from "@headlessui/react";
+import classNames from "classnames";
 import { EngineUiContext, type EngineUiContextValue } from "../utilities/engine-context";
 import { EngineCanvas } from "./engine-canvas";
 import { EngineEditorLayout } from "./engine-editor-layout";
 import { PreviewMode } from "./previewMode";
 import { QuickActions } from "./quickActions";
-import styles from "./styles.module.css";
+import styles from "./DefaultEngineEditorView.module.scss";
 import { WorldsEntitiesPanel } from "./worlds-entities-panel";
 
 /**********************************************************************************************************
@@ -19,13 +21,10 @@ type DefaultEngineEditorViewProps = {
  *   COMPONENT START
  **********************************************************************************************************/
 export const DefaultEngineEditorView: React.FC<DefaultEngineEditorViewProps> = ({ engine }) => {
-  const inactiveIconColor = "#8c95aa";
-  const activeIconColor = "#7387ff";
-
   return (
     <EngineUiContext value={engine}>
       <PreviewMode>
-        <div className={styles.defaultEngineEditorViewRootFill}>
+        <div className={styles.defaultEngineEditorView}>
           <EngineEditorLayout.Root>
             <EngineEditorLayout.QuickActions>
               <QuickActions.PreviewModeToggle />
@@ -35,50 +34,56 @@ export const DefaultEngineEditorView: React.FC<DefaultEngineEditorViewProps> = (
 
             <PreviewMode.Disabled>
               <EngineEditorLayout.LeftSidebar>
-                <TabGroup className={styles.leftSidebarTabsRoot}>
-                  <TabPanels className={styles.leftSidebarTabPanels}>
-                    <TabPanel className={styles.leftSidebarTabPanel}>
+                <TabGroup className={styles.tabsRoot}>
+                  <TabPanels className={styles.tabPanels}>
+                    <TabPanel className={styles.tabPanel}>
                       <EngineEditorLayout.PanelTitle>Worlds / Entities</EngineEditorLayout.PanelTitle>
                       <EngineEditorLayout.PanelContent className={styles.worldsEntitiesPanelContent}>
                         <WorldsEntitiesPanel />
                       </EngineEditorLayout.PanelContent>
                     </TabPanel>
 
-                    <TabPanel className={styles.leftSidebarTabPanel}>
+                    <TabPanel className={styles.tabPanel}>
                       <EngineEditorLayout.PanelTitle>Components</EngineEditorLayout.PanelTitle>
                       <EngineEditorLayout.PanelContent>Components placeholder</EngineEditorLayout.PanelContent>
                     </TabPanel>
                   </TabPanels>
 
-                  <TabList className={styles.leftSidebarTabList}>
-                    <Tab className={styles.leftSidebarTabButton}>
-                      {({ selected }) => (
-                        <div className={styles.leftSidebarTabIconSlot}>
-                          <div
-                            className={styles.leftSidebarTabIconLayer}
-                            style={{
-                              transform: selected ? "translate(-50%, -50%) scale(1.12)" : "translate(-50%, -50%) scale(1)",
-                            }}
-                          >
-                            <TreeStructure size={18} color={selected ? activeIconColor : inactiveIconColor} weight="regular" />
-                          </div>
-                        </div>
-                      )}
+                  <TabList className={styles.tabList}>
+                    <Tab as={React.Fragment}>
+                      {({ selected }) => {
+                        const tabButtonClassName = classNames(styles.tabButton, {
+                          [styles.tabButtonSelected]: selected,
+                        });
+
+                        return (
+                          <button className={tabButtonClassName}>
+                            <div className={styles.tabIconSlot}>
+                              <div className={styles.tabIconLayer}>
+                                <TreeStructure size={18} color="currentColor" weight="regular" />
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      }}
                     </Tab>
 
-                    <Tab className={styles.leftSidebarTabButton}>
-                      {({ selected }) => (
-                        <div className={styles.leftSidebarTabIconSlot}>
-                          <div
-                            className={styles.leftSidebarTabIconLayer}
-                            style={{
-                              transform: selected ? "translate(-50%, -50%) scale(1.12)" : "translate(-50%, -50%) scale(1)",
-                            }}
-                          >
-                            <Cube size={18} color={selected ? activeIconColor : inactiveIconColor} weight="regular" />
-                          </div>
-                        </div>
-                      )}
+                    <Tab as={React.Fragment}>
+                      {({ selected }) => {
+                        const tabButtonClassName = classNames(styles.tabButton, {
+                          [styles.tabButtonSelected]: selected,
+                        });
+
+                        return (
+                          <button className={tabButtonClassName}>
+                            <div className={styles.tabIconSlot}>
+                              <div className={styles.tabIconLayer}>
+                                <Cube size={18} color="currentColor" weight="regular" />
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      }}
                     </Tab>
                   </TabList>
                 </TabGroup>
