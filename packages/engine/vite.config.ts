@@ -1,12 +1,8 @@
 import { defineConfig } from 'vitest/config';
-import { fileURLToPath } from 'node:url';
+import typescript from 'vite-tsconfig-paths';
 
 export default defineConfig({
-  resolve: {
-    alias: {
-      '@ui': fileURLToPath(new URL('./src/ui', import.meta.url)),
-    },
-  },
+  plugins: [typescript()],
   test: {
     include: ['src/**/*.spec.ts'],
     typecheck: {

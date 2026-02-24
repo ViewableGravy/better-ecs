@@ -24,6 +24,7 @@ export const DefaultEngineEditorView: React.FC<DefaultEngineEditorViewProps> = (
 				<div className={styles.defaultEngineEditorView}>
 					<EngineEditorLayout.Root>
 						<EngineEditorLayout.QuickActions>
+							<QuickActions.PauseToggle />
 							<QuickActions.PreviewModeToggle />
 							<QuickActions.ReloadCanvas />
 							<QuickActions.ReloadEngine />
@@ -38,18 +39,6 @@ export const DefaultEngineEditorView: React.FC<DefaultEngineEditorViewProps> = (
 						<EngineEditorLayout.Center>
 							<EngineCanvas />
 						</EngineEditorLayout.Center>
-
-						<PreviewMode.Disabled>
-							{/* <EngineEditorLayout.RightSidebar>
-								<EngineEditorLayout.PanelTitle>Components</EngineEditorLayout.PanelTitle>
-								<EngineEditorLayout.PanelContent>Right sidebar placeholder</EngineEditorLayout.PanelContent>
-							</EngineEditorLayout.RightSidebar> */}
-
-							{/* <EngineEditorLayout.BottomBar>
-								<EngineEditorLayout.PanelTitle>Output / Timeline</EngineEditorLayout.PanelTitle>
-								<EngineEditorLayout.PanelContent>Bottom bar placeholder</EngineEditorLayout.PanelContent>
-							</EngineEditorLayout.BottomBar> */}
-						</PreviewMode.Disabled>
 					</EngineEditorLayout.Root>
 				</div>
 			</PreviewMode>

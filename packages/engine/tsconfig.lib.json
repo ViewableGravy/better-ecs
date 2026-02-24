@@ -18,7 +18,11 @@
     }
   },
   "include": ["src/**/*"],
-  "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts"],
+  "exclude": [
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts",
+    "src/ui/layout/sidebar/panels/hierarchy/worldViewer/**/*"
+  ],
   "references": [
     {
       "path": "../utils/tsconfig.lib.json"

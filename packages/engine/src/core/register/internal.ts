@@ -1,6 +1,7 @@
 import { AssetManager } from "../../asset/AssetManager";
 import type { UserWorld } from "../../ecs/world";
 import type { EngineSystemTypes } from "../../systems/engine-system-types";
+import { createEngineRunningState, type EngineRunningState } from "../running-state";
 import { executeWithContext } from "../context";
 import type { RenderPipeline } from "../render-pipeline";
 import { SceneManager } from "../scene/scene-manager";
@@ -147,6 +148,8 @@ export class EngineClass<
 
   /** Render pipeline executed during frame ticks. */
   public readonly render: RenderPipeline | null;
+
+  public readonly runningState: EngineRunningState = createEngineRunningState();
 
   public frame: FrameStats = {
     updateDelta: 0,
@@ -324,7 +327,7 @@ export class EngineClass<
           if (frameState.shouldUpdate) {
             this.runRenderPipeline(frameState.shouldUpdate);
           }
-          if (updateState.shouldUpdate) {
+          if (updateState.shouldUpdate && !this.runningState.paused) {
             this.runUpdateSystems(updateState.shouldUpdate);
             // Update lastUpdateTime immediately to prevent double-running updates
             lastUpdateTime = now;
