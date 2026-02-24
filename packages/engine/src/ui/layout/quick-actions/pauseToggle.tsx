@@ -7,16 +7,13 @@ import { useInvariantContext } from "@ui/utilities/hooks/use-invariant-context";
 import styles from "@ui/layout/quick-actions/styles.module.css";
 
 export const PauseToggle: React.FC = () => {
-  const engine = useInvariantContext(
-    EngineUiContext,
-    "Engine UI context is missing. Wrap UI with EngineUiContext.",
-  );
-
+  const engine = useInvariantContext(EngineUiContext);
   const { paused } = useSnapshot(engine.runningState);
+  
+  const Icon = paused ? PlayIcon : PauseIcon;
   const className = classNames(styles.quickActionButton, {
     [styles.quickActionButtonActive]: paused,
   });
-  const Icon = paused ? PlayIcon : PauseIcon;
 
   return (
     <button
