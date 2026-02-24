@@ -1,5 +1,5 @@
 import { createRoot } from "react-dom/client";
-import { DefaultEngineEditorView } from "./components/default-engine-editor-view";
+import { DefaultEngineEditorView } from "./layout";
 import { attachCanvas, type AttachCanvasOptions, type AttachedCanvas } from "./utilities/attach-canvas";
 import { type EngineUiContextValue } from "./utilities/engine-context";
 
@@ -31,11 +31,11 @@ export function mountEngineCanvasOnly(rootElement: HTMLElement, options?: Attach
   return attachCanvas(rootElement, options);
 }
 
-export { DefaultEngineEditorView } from "./components/default-engine-editor-view";
-export { EngineCanvas } from "./components/engine-canvas";
-export { EngineEditorLayout } from "./components/engine-editor-layout";
+export { DefaultEngineEditorView } from "./layout";
+export { EngineCanvas } from "./layout/canvas";
+export { EngineEditorLayout } from "./layout/components/engineEditorLayout";
 export { PreviewMode } from "./components/previewMode";
-export { QuickActions } from "./components/quickActions";
+export { QuickActions } from "./layout/quick-actions";
 export { attachCanvas } from "./utilities/attach-canvas";
 export type { AttachCanvasOptions, AttachedCanvas } from "./utilities/attach-canvas";
 export { EngineUiContext } from "./utilities/engine-context";
