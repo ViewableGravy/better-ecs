@@ -2,25 +2,16 @@ import { engineHmr } from "@repo/hmr/plugin";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import { defineConfig } from "vite";
-import typescript from "vite-tsconfig-paths";
 
 export default defineConfig({
   root: __dirname,
+  plugins: [tailwindcss(), engineHmr()],
   resolve: {
     alias: {
+      "@": path.resolve(__dirname, "./src"),
       "@ui": path.resolve(__dirname, "../../packages/engine/src/ui"),
     },
   },
-  plugins: [
-    tailwindcss(),
-    engineHmr(),
-    typescript({
-      projects: [
-        path.resolve(__dirname, "./tsconfig.json"),
-        path.resolve(__dirname, "../../packages/engine/tsconfig.json"),
-      ],
-    }),
-  ],
   server: {
     port: 3000,
     host: "127.0.0.1",

@@ -12,7 +12,7 @@
     "typecheck": "npx tsc --noEmit"
   },
   "dependencies": {
-    "@repo/engine": "*"
+    "@repo/engine": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",

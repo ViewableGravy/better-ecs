@@ -13,8 +13,7 @@
     "noEmit": false,
     "typeRoots": ["../../node_modules/@types"],
     "paths": {
-      "@ui/*": ["./src/ui/*"],
-      "@repo/utils": ["../../packages/utils/src/index.ts"]
+      "@ui/*": ["./src/ui/*"]
     }
   },
   "include": ["src/**/*"],
