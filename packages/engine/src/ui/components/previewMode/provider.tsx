@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useState } from "react";
-import { PreviewModeContext } from "./context";
+import { PreviewModeContext } from "@ui/components/previewMode/context";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS

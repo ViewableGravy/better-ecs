@@ -2,7 +2,7 @@ import React from "react";
 import { Cube } from "@phosphor-icons/react";
 import { Tab } from "@headlessui/react";
 import classNames from "classnames";
-import styles from "../styles.module.css";
+import styles from "@ui/layout/sidebar/styles.module.css";
 
 export const OtherTab: React.FC = () => {
   return (

@@ -1,10 +1,10 @@
 import React, { useRef } from "react";
 import { Parent, Shape, Transform2D } from "../../../../components";
 import type { EntityId } from "../../../../ecs/entity";
-import { EngineUiContext } from "../../../utilities/engine-context";
-import { useInvariantContext } from "../../../utilities/hooks/use-invariant-context";
-import { EntityIdContext, WorldIdContext } from "./context";
-import { EditorDebugEntity } from "./editorDebugEntity";
+import { EngineUiContext } from "@ui/utilities/engine-context";
+import { useInvariantContext } from "@ui/utilities/hooks/use-invariant-context";
+import { EntityIdContext, WorldIdContext } from "@ui/layout/sidebar/worldViewer/context";
+import { EditorDebugEntity } from "@ui/layout/sidebar/worldViewer/editorDebugEntity";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS

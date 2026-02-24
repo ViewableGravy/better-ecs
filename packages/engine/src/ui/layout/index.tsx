@@ -1,11 +1,11 @@
 import React from "react";
-import { EngineUiContext, type EngineUiContextValue } from "../utilities/engine-context";
-import { PreviewMode } from "../components/previewMode";
-import { EngineCanvas } from "./canvas";
-import { EngineEditorLayout } from "./components/engineEditorLayout";
-import { QuickActions } from "./quick-actions";
-import { LeftSidebar } from "./sidebar";
-import styles from "./styles.module.css";
+import { EngineUiContext, type EngineUiContextValue } from "@ui/utilities/engine-context";
+import { PreviewMode } from "@ui/components/previewMode";
+import { EngineCanvas } from "@ui/layout/canvas";
+import { EngineEditorLayout } from "@ui/layout/components/engineEditorLayout";
+import { QuickActions } from "@ui/layout/quick-actions";
+import { LeftSidebar } from "@ui/layout/sidebar";
+import styles from "@ui/layout/styles.module.css";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS

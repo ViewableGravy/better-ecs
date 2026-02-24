@@ -1,5 +1,5 @@
-import { JigsawIcon } from "../../../../components/icons/jigsawIcon";
-import styles from "../../styles.module.css";
+import { JigsawIcon } from "@ui/layout/sidebar/components/icons/jigsawIcon";
+import styles from "@ui/layout/sidebar/panels/hierarchy/styles.module.css";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS

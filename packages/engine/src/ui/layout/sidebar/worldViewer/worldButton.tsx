@@ -1,8 +1,8 @@
 import type React from "react";
-import { useInvariantContext } from "../../../utilities/hooks/use-invariant-context";
-import styles from "../styles.module.css";
-import { WorldIdContext } from "./context";
-import { EntityRow } from "./entityRow";
+import { useInvariantContext } from "@ui/utilities/hooks/use-invariant-context";
+import styles from "@ui/layout/sidebar/styles.module.css";
+import { WorldIdContext } from "@ui/layout/sidebar/worldViewer/context";
+import { EntityRow } from "@ui/layout/sidebar/worldViewer/entityRow";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS

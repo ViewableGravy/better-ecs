@@ -1,8 +1,8 @@
 import { useCallback } from "react";
-import { registerCanvasResize } from "../../utilities/attach-canvas";
-import { EngineUiContext } from "../../utilities/engine-context";
-import { useInvariantContext } from "../../utilities/hooks/use-invariant-context";
-import styles from "./styles.module.css";
+import { registerCanvasResize } from "@ui/utilities/attach-canvas";
+import { EngineUiContext } from "@ui/utilities/engine-context";
+import { useInvariantContext } from "@ui/utilities/hooks/use-invariant-context";
+import styles from "@ui/layout/canvas/styles.module.css";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS

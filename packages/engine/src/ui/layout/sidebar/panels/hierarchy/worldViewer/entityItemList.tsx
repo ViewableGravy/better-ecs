@@ -1,11 +1,11 @@
-import { Parent } from "../../../../components";
-import type { EntityId } from "../../../../ecs/entity";
-import { EngineUiContext } from "../../../utilities/engine-context";
-import { useIntervalState } from "../../../utilities/hooks/use-interval-state";
-import { useInvariantContext } from "../../../utilities/hooks/use-invariant-context";
-import { WorldIdContext } from "./context";
-import { EditorDebugEntity } from "./editorDebugEntity";
-import { EntityTreeNodes } from "./entityTreeNodes";
+import { Parent } from "@ui/layout/components";
+import type { EntityId } from "@ui/layout/ecs/entity";
+import { EngineUiContext } from "@ui/layout/sidebar/utilities/engine-context";
+import { useIntervalState } from "@ui/layout/sidebar/utilities/hooks/use-interval-state";
+import { useInvariantContext } from "@ui/layout/sidebar/utilities/hooks/use-invariant-context";
+import { WorldIdContext } from "@ui/layout/sidebar/panels/hierarchy/worldViewer/context";
+import { EditorDebugEntity } from "@ui/layout/sidebar/panels/hierarchy/worldViewer/editorDebugEntity";
+import { EntityTreeNodes } from "@ui/layout/sidebar/panels/hierarchy/worldViewer/entityTreeNodes";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS

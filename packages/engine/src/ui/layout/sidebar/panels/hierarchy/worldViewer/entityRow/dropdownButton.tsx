@@ -1,9 +1,9 @@
 import classNames from "classnames";
-import { useInvariantContext } from "../../../../utilities/hooks/use-invariant-context";
-import { Chevron } from "../../../../components/icons/chevron";
-import styles from "../../styles.module.css";
-import { Dropdown } from "../dropdown";
-import { DropdownContext } from "../dropdown/context";
+import { useInvariantContext } from "@ui/layout/sidebar/utilities/hooks/use-invariant-context";
+import { Chevron } from "@ui/layout/sidebar/components/icons/chevron";
+import styles from "@ui/layout/sidebar/panels/hierarchy/styles.module.css";
+import { Dropdown } from "@ui/layout/sidebar/panels/hierarchy/worldViewer/dropdown";
+import { DropdownContext } from "@ui/layout/sidebar/panels/hierarchy/worldViewer/dropdown/context";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS

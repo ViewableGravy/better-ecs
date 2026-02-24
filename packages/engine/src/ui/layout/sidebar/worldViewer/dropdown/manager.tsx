@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { DropdownContext } from "./context";
+import { DropdownContext } from "@ui/layout/sidebar/worldViewer/dropdown/context";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS

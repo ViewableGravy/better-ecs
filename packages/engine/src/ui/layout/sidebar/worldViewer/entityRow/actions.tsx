@@ -1,4 +1,4 @@
-import styles from "../../styles.module.css";
+import styles from "@ui/layout/sidebar/styles.module.css";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS

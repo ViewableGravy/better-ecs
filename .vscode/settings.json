@@ -18,5 +18,8 @@
   "nxConsole.disableFileWatching": true,
   "editor.indentSize": 2,
   "typescript.tsdk": "node_modules/typescript/lib",
-  "vitest.disableWorkspaceWarning": true
+  "typescript.preferences.importModuleSpecifier": "non-relative",
+  "javascript.preferences.importModuleSpecifier": "non-relative",
+  "vitest.disableWorkspaceWarning": true,
+  "npm.packageManager": "bun"
 }

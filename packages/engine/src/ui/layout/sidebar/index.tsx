@@ -1,9 +1,9 @@
 import { TabGroup, TabList, TabPanels } from "@headlessui/react";
-import styles from "./styles.module.css";
-import { HierarchyPanel } from "./panels/hierarchy";
-import { OtherPanel } from "./panels/other";
-import { HierarchyTab } from "./tabs/hierarchy";
-import { OtherTab } from "./tabs/other";
+import styles from "@ui/layout/sidebar/styles.module.css";
+import { HierarchyPanel } from "@ui/layout/sidebar/panels/hierarchy";
+import { OtherPanel } from "@ui/layout/sidebar/panels/other";
+import { HierarchyTab } from "@ui/layout/sidebar/tabs/hierarchy";
+import { OtherTab } from "@ui/layout/sidebar/tabs/other";
 
 /***** COMPONENT START *****/
 export const LeftSidebar: React.FC = () => {

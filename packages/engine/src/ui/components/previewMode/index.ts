@@ -1,12 +1,12 @@
-import { PreviewModeActive } from "./active";
-import { PreviewModeDisabled } from "./disabled";
-import { PreviewModeProvider } from "./provider";
+import { PreviewModeActive } from "@ui/components/previewMode/active";
+import { PreviewModeDisabled } from "@ui/components/previewMode/disabled";
+import { PreviewModeProvider } from "@ui/components/previewMode/provider";
 
 export const PreviewMode = Object.assign(PreviewModeProvider, {
 	Active: PreviewModeActive,
   Disabled: PreviewModeDisabled
 });
 
-export { PreviewModeContext } from "./context";
-export type { PreviewModeContextValue } from "./context";
+export { PreviewModeContext } from "@ui/components/previewMode/context";
+export type { PreviewModeContextValue } from "@ui/components/previewMode/context";
 

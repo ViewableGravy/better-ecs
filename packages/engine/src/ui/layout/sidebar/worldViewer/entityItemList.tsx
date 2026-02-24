@@ -1,11 +1,11 @@
 import { Parent } from "../../../../components";
 import type { EntityId } from "../../../../ecs/entity";
-import { EngineUiContext } from "../../../utilities/engine-context";
-import { useIntervalState } from "../../../utilities/hooks/use-interval-state";
-import { useInvariantContext } from "../../../utilities/hooks/use-invariant-context";
-import { WorldIdContext } from "./context";
-import { EditorDebugEntity } from "./editorDebugEntity";
-import { EntityTreeNodes } from "./entityTreeNodes";
+import { EngineUiContext } from "@ui/utilities/engine-context";
+import { useIntervalState } from "@ui/utilities/hooks/use-interval-state";
+import { useInvariantContext } from "@ui/utilities/hooks/use-invariant-context";
+import { WorldIdContext } from "@ui/layout/sidebar/worldViewer/context";
+import { EditorDebugEntity } from "@ui/layout/sidebar/worldViewer/editorDebugEntity";
+import { EntityTreeNodes } from "@ui/layout/sidebar/worldViewer/entityTreeNodes";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS

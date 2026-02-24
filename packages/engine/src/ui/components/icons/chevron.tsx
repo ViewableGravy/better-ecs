@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import styles from "../../layout/sidebar/styles.module.css";
+import styles from "@ui/layout/sidebar/styles.module.css";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS

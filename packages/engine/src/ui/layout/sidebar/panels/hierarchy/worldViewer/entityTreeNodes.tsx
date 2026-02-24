@@ -1,9 +1,9 @@
-import styles from "../styles.module.css";
-import { EntityIdContext } from "./context";
-import { DebugHover } from "./debugHover";
-import { Dropdown } from "./dropdown";
-import type { EntityTreeNode } from "./entityItemList";
-import { EntityRow } from "./entityRow";
+import styles from "@ui/layout/sidebar/panels/hierarchy/styles.module.css";
+import { EntityIdContext } from "@ui/layout/sidebar/panels/hierarchy/worldViewer/context";
+import { DebugHover } from "@ui/layout/sidebar/panels/hierarchy/worldViewer/debugHover";
+import { Dropdown } from "@ui/layout/sidebar/panels/hierarchy/worldViewer/dropdown";
+import type { EntityTreeNode } from "@ui/layout/sidebar/panels/hierarchy/worldViewer/entityItemList";
+import { EntityRow } from "@ui/layout/sidebar/panels/hierarchy/worldViewer/entityRow";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS

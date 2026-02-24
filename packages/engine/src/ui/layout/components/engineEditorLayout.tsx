@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
-import { useInvariantContext } from "../../utilities/hooks/use-invariant-context";
-import { PreviewModeContext } from "../../components/previewMode";
-import styles from "./styles.module.css";
+import { useInvariantContext } from "@ui/utilities/hooks/use-invariant-context";
+import { PreviewModeContext } from "@ui/components/previewMode";
+import styles from "@ui/layout/components/styles.module.css";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS

@@ -1,8 +1,8 @@
-import { Debug } from "../../../../../components";
-import { EngineUiContext } from "../../../../utilities/engine-context";
-import { useInvariantContext } from "../../../../utilities/hooks/use-invariant-context";
-import styles from "../../styles.module.css";
-import { EntityIdContext, WorldIdContext } from "../context";
+import { Debug } from "@ui/layout/components";
+import { EngineUiContext } from "@ui/layout/sidebar/utilities/engine-context";
+import { useInvariantContext } from "@ui/layout/sidebar/utilities/hooks/use-invariant-context";
+import styles from "@ui/layout/sidebar/panels/hierarchy/styles.module.css";
+import { EntityIdContext, WorldIdContext } from "@ui/layout/sidebar/panels/hierarchy/worldViewer/context";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS

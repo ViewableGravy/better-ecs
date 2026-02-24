@@ -1,7 +1,7 @@
 import { createRoot } from "react-dom/client";
-import { DefaultEngineEditorView } from "./layout";
-import { attachCanvas, type AttachCanvasOptions, type AttachedCanvas } from "./utilities/attach-canvas";
-import { type EngineUiContextValue } from "./utilities/engine-context";
+import { DefaultEngineEditorView } from "@ui/layout";
+import { attachCanvas, type AttachCanvasOptions, type AttachedCanvas } from "@ui/utilities/attach-canvas";
+import { type EngineUiContextValue } from "@ui/utilities/engine-context";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -31,14 +31,14 @@ export function mountEngineCanvasOnly(rootElement: HTMLElement, options?: Attach
   return attachCanvas(rootElement, options);
 }
 
-export { DefaultEngineEditorView } from "./layout";
-export { EngineCanvas } from "./layout/canvas";
-export { EngineEditorLayout } from "./layout/components/engineEditorLayout";
-export { PreviewMode } from "./components/previewMode";
-export { QuickActions } from "./layout/quick-actions";
-export { attachCanvas } from "./utilities/attach-canvas";
-export type { AttachCanvasOptions, AttachedCanvas } from "./utilities/attach-canvas";
-export { EngineUiContext } from "./utilities/engine-context";
-export type { EngineUiContextValue } from "./utilities/engine-context";
+export { DefaultEngineEditorView } from "@ui/layout";
+export { EngineCanvas } from "@ui/layout/canvas";
+export { EngineEditorLayout } from "@ui/layout/components/engineEditorLayout";
+export { PreviewMode } from "@ui/components/previewMode";
+export { QuickActions } from "@ui/layout/quick-actions";
+export { attachCanvas } from "@ui/utilities/attach-canvas";
+export type { AttachCanvasOptions, AttachedCanvas } from "@ui/utilities/attach-canvas";
+export { EngineUiContext } from "@ui/utilities/engine-context";
+export type { EngineUiContextValue } from "@ui/utilities/engine-context";
 
 

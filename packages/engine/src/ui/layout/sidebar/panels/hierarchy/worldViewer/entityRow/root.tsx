@@ -1,4 +1,4 @@
-import styles from "../../styles.module.css";
+import styles from "@ui/layout/sidebar/panels/hierarchy/styles.module.css";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS

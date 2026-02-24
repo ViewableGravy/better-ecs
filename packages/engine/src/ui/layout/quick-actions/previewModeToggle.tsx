@@ -1,8 +1,8 @@
-import { useInvariantContext } from "../../utilities/hooks/use-invariant-context";
-import { PreviewCloseIcon } from "../../components/icons/previewCloseIcon";
-import { PreviewOpenIcon } from "../../components/icons/previewOpenIcon";
-import { PreviewModeContext } from "../../components/previewMode";
-import styles from "./styles.module.css";
+import { useInvariantContext } from "@ui/utilities/hooks/use-invariant-context";
+import { PreviewCloseIcon } from "@ui/components/icons/previewCloseIcon";
+import { PreviewOpenIcon } from "@ui/components/icons/previewOpenIcon";
+import { PreviewModeContext } from "@ui/components/previewMode";
+import styles from "@ui/layout/quick-actions/styles.module.css";
 
 export const PreviewModeToggle: React.FC = () => {
   const [isPreviewMode, setIsPreviewMode] = useInvariantContext(PreviewModeContext);

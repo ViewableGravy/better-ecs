@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { EngineUiContext } from "../../utilities/engine-context";
-import { useInvariantContext } from "../../utilities/hooks/use-invariant-context";
-import { ReloadCanvasIcon } from "../../components/icons/reloadCanvasIcon";
-import styles from "./styles.module.css";
+import { EngineUiContext } from "@ui/utilities/engine-context";
+import { useInvariantContext } from "@ui/utilities/hooks/use-invariant-context";
+import { ReloadCanvasIcon } from "@ui/components/icons/reloadCanvasIcon";
+import styles from "@ui/layout/quick-actions/styles.module.css";
 
 const RELOAD_CANVAS_LABEL = "reload-canvas-systems";
 

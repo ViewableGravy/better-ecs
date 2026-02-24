@@ -1,13 +1,13 @@
 import { TabPanel } from "@headlessui/react";
-import { EngineEditorLayout } from "../../../components/engineEditorLayout";
-import { EngineUiContext } from "../../../utilities/engine-context";
-import { useIntervalState } from "../../../utilities/hooks/use-interval-state";
-import { useInvariantContext } from "../../../utilities/hooks/use-invariant-context";
-import styles from "../../styles.module.css";
-import { WorldIdContext } from "../../worldViewer/context";
-import { Dropdown } from "../../worldViewer/dropdown";
-import { WorldEntitiesDropdown } from "../../worldViewer/entityItemList";
-import { WorldEntitiesButton } from "../../worldViewer/worldButton";
+import { EngineEditorLayout } from "@ui/layout/components/engineEditorLayout";
+import { EngineUiContext } from "@ui/utilities/engine-context";
+import { useIntervalState } from "@ui/utilities/hooks/use-interval-state";
+import { useInvariantContext } from "@ui/utilities/hooks/use-invariant-context";
+import styles from "@ui/layout/sidebar/styles.module.css";
+import { WorldIdContext } from "@ui/layout/sidebar/worldViewer/context";
+import { Dropdown } from "@ui/layout/sidebar/worldViewer/dropdown";
+import { WorldEntitiesDropdown } from "@ui/layout/sidebar/worldViewer/entityItemList";
+import { WorldEntitiesButton } from "@ui/layout/sidebar/worldViewer/worldButton";
 
 export const HierarchyPanel: React.FC = () => {
   const engine = useInvariantContext(EngineUiContext);

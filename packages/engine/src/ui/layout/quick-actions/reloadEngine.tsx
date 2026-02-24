@@ -1,5 +1,5 @@
-import { ReloadEngineIcon } from "../../components/icons/reloadEngineIcon";
-import styles from "./styles.module.css";
+import { ReloadEngineIcon } from "@ui/components/icons/reloadEngineIcon";
+import styles from "@ui/layout/quick-actions/styles.module.css";
 
 const RELOAD_ENGINE_LABEL = "full-reload";
 

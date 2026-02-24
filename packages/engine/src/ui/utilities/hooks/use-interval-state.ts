@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { shallow } from "../shallow";
-import { useInterval } from "./use-interval";
+import { shallow } from "@ui/utilities/shallow";
+import { useInterval } from "@ui/utilities/hooks/use-interval";
 
 /**********************************************************************************************************
  *   COMPONENT START

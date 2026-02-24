@@ -1,6 +1,6 @@
 import { TabPanel } from "@headlessui/react";
-import { EngineEditorLayout } from "../../../components/engineEditorLayout";
-import styles from "../../styles.module.css";
+import { EngineEditorLayout } from "@ui/layout/components/engineEditorLayout";
+import styles from "@ui/layout/sidebar/styles.module.css";
 
 export const OtherPanel: React.FC = () => {
   return (

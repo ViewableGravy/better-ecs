@@ -1,6 +1,6 @@
 import type { CSSProperties, KeyboardEvent } from "react";
-import { useInvariantContext } from "../../../../utilities/hooks/use-invariant-context";
-import { DropdownContext } from "./context";
+import { useInvariantContext } from "@ui/layout/sidebar/utilities/hooks/use-invariant-context";
+import { DropdownContext } from "@ui/layout/sidebar/panels/hierarchy/worldViewer/dropdown/context";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
