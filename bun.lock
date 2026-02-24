@@ -111,6 +111,7 @@
       "version": "0.0.1",
       "dependencies": {
         "@repo/engine": "workspace:*",
+        "zod": "^4.3.4",
       },
       "devDependencies": {
         "typescript": "^5.9.3",
