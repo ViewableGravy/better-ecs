@@ -1,11 +1,12 @@
 import {
-  createRenderPass,
-  createSystem,
-  useEngine,
-  useOverloadedSystem,
-  type EngineSystem,
-  type StandardSchema,
-  type SystemFactory,
+    createRenderPass,
+    createSystem,
+    useEngine,
+    useOverloadedSystem,
+    type EngineSystem,
+    type RenderPass,
+    type StandardSchema,
+    type SystemFactory,
 } from "@repo/engine";
 import { initialize } from "./initialize";
 import { render } from "./render";
@@ -59,7 +60,12 @@ export const System = (
   }
 };
 
-export function createFPS(opts: Opts) {
+export type FPSPlugin = {
+  system: SystemFactory<"plugin:fps-counter", StandardSchema, Record<string, never>>;
+  pass: RenderPass;
+};
+
+export function createFPS(opts: Opts): FPSPlugin {
   return {
     system: System(opts),
     pass: createRenderPass("plugin:fps-counter:ui")({

@@ -48,7 +48,6 @@ const canvasViewport = {
 
 let lastScreenUpdateTime = -1;
 let lastCanvasUpdateTime = -1;
-let lastWorldUpdateTime = -1;
 
 /**********************************************************************************************************
 *   CONSTS
