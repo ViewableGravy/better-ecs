@@ -16,8 +16,12 @@ export function update(opts: Opts) {
   if (opts.modeToggleKey) {
     const input = useSystem("engine:input");
     if (input.matchKeybind({ state: "pressed" })(opts.modeToggleKey)) {
-      // Cycle: simple -> default -> advanced -> simple
-      const modes: Array<"simple" | "default" | "advanced"> = ["simple", "default", "advanced"];
+      const modes: Array<"disabled" | "simple" | "default" | "advanced"> = [
+        "disabled",
+        "simple",
+        "default",
+        "advanced",
+      ];
       const currentIndex = modes.indexOf(data.mode);
       const nextIndex = (currentIndex + 1) % modes.length;
       data.mode = modes[nextIndex];

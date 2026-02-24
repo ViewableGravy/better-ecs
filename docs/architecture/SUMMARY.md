@@ -62,11 +62,13 @@ Each context is a complete, isolated simulation boundary:
 5. **Spatial contexts package code** - `packages/foundation/spatial-contexts/src/`
 6. **07-FEATURE-PERSISTENCE.md** - Save/load system for contexts
 7. **06-FEATURE-VISUAL-EDITOR.md** - Visual authoring tool
+8. **11-FEATURE-ENGINE-PLACEMENT-UI.md** - Modular engine placement UI architecture
+9. **12-ROADMAP-ENGINE-GAME-PLACEMENT-AND-WORLD-IO.md** - 3-phase execution roadmap
 
 ### Reference (As Needed)
 
-11. **08-PLUGIN-BASED-IMPLEMENTATION.md** - Detailed plugin design (original)
-12. **README.md** - Complete index and usage guide
+10. **08-PLUGIN-BASED-IMPLEMENTATION.md** - Detailed plugin design (original)
+11. **README.md** - Complete index and usage guide
 
 ---
 

@@ -225,6 +225,38 @@ Spatial contexts implementation is active in:
 
 ---
 
+### Engine/Game Authoring Placement Foundation
+
+#### [11-FEATURE-ENGINE-PLACEMENT-UI.md](./11-FEATURE-ENGINE-PLACEMENT-UI.md)
+
+**Modular engine-level placement UI foundation.**
+
+Defines the first implementation slice for authoring:
+
+- Engine shell layout (left/center/right/bottom)
+- Worlds panel
+- Engine component catalog panel
+- Entity creation in selected world
+- Drag/drop component attachment
+
+Includes strict module boundaries under `packages/engine/src/ui/*` to keep UI swappable (DOM now, React-ready later).
+
+---
+
+#### [12-ROADMAP-ENGINE-GAME-PLACEMENT-AND-WORLD-IO.md](./12-ROADMAP-ENGINE-GAME-PLACEMENT-AND-WORLD-IO.md)
+
+**Three-phase roadmap for your current goals.**
+
+Sequences delivery as:
+
+1. Engine placement foundation
+2. Game placement workflow integration
+3. World serialization/deserialization
+
+Includes milestones, cross-phase constraints, and modular folder ownership guidance.
+
+---
+
 ## How to Use This Documentation
 
 ### For Project Planning

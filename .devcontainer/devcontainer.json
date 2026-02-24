@@ -19,10 +19,28 @@
   ],
 
   // Use 'postCreateCommand' to run commands after the container is created.
-  "postCreateCommand": "bun install"
+  "postCreateCommand": "bun install",
 
   // Configure tool-specific properties.
-  // "customizations": {},
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "PKief.material-icon-theme",
+        "Catppuccin.catppuccin-vsc",
+        "ahmadawais.shades-of-purple",
+        "oven.bun-vscode",
+        "anseki.vscode-color",
+        "WallabyJs.console-ninja",
+        "oderwat.indent-rainbow",
+        "ms-vscode.vscode-typescript-next",
+        "nrwl.angular-console",
+        "YoavBls.pretty-ts-errors",
+        "Orta.vscode-twoslash-queries",
+        "TypeScriptTeam.native-preview",
+        "vitest.explorer"
+      ]
+    }
+  }
 
   // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
   // "remoteUser": "root"

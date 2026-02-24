@@ -1,5 +1,6 @@
 // packages/engine/src/ecs/world.ts
 import type { Class } from "type-fest";
+import { Parent } from "../components";
 import type { EntityId } from "./entity";
 import { createEntityId, invalidateEntity } from "./entity";
 import { ComponentStore } from "./storage";
@@ -14,9 +15,13 @@ export interface IUserWorld {
   add<T>(entityId: EntityId, component: T): void;
   get<T>(entityId: EntityId, componentType: Class<T>): T | undefined;
   require<T>(entityId: EntityId, componentType: Class<T>): T;
+
   all(): EntityId[];
+  getComponentTypes(entityId: EntityId): Function[];
   has(entityId: EntityId, componentType: Class<any>): boolean;
   remove(entityId: EntityId, componentType: Class<any>): void;
+
+  move(entityId: EntityId, world: UserWorld): void;
 
   query(...componentTypes: Function[]): EntityId[];
 }
@@ -75,12 +80,20 @@ export class UserWorld implements IUserWorld {
     return this.world.getEntities();
   }
 
+  getComponentTypes(entityId: EntityId): Function[] {
+    return this.world.getComponentTypes(entityId);
+  }
+
   has(entityId: EntityId, componentType: Class<any>): boolean {
     return this.world.hasComponent(entityId, componentType);
   }
 
   remove(entityId: EntityId, componentType: Class<any>): void {
     this.world.removeComponent(entityId, componentType);
+  }
+
+  move(entityId: EntityId, world: UserWorld): void {
+    this.world.moveEntityTo(entityId, world.world);
   }
 
   query(...componentTypes: Function[]): EntityId[] {
@@ -124,6 +137,18 @@ export class World {
   destroyEntity(entityId: EntityId): void {
     if (!this.entities.has(entityId)) return;
 
+    const descendants = this.collectDescendants(entityId);
+
+    for (let i = descendants.length - 1; i >= 0; i -= 1) {
+      this.destroyEntityShallow(descendants[i]);
+    }
+
+    this.destroyEntityShallow(entityId);
+  }
+
+  private destroyEntityShallow(entityId: EntityId): void {
+    if (!this.entities.has(entityId)) return;
+
     // Remove from all component stores
     for (const store of this.componentStores.values()) {
       store.remove(entityId);
@@ -131,6 +156,57 @@ export class World {
 
     invalidateEntity(entityId);
     this.entities.delete(entityId);
+  }
+
+  private collectDescendants(entityId: EntityId): EntityId[] {
+    const parentStore = this.componentStores.get(Parent) as ComponentStore<Parent> | undefined;
+    if (!parentStore) {
+      return [];
+    }
+
+    const childrenByParent = new Map<EntityId, EntityId[]>();
+
+    for (const [childEntityId, parent] of parentStore) {
+      if (!this.entities.has(childEntityId) || !this.entities.has(parent.entityId)) {
+        continue;
+      }
+
+      const children = childrenByParent.get(parent.entityId);
+      if (children) {
+        children.push(childEntityId);
+        continue;
+      }
+
+      childrenByParent.set(parent.entityId, [childEntityId]);
+    }
+
+    const descendants: EntityId[] = [];
+    const stack: EntityId[] = [entityId];
+    const visited = new Set<EntityId>();
+
+    while (stack.length > 0) {
+      const current = stack.pop();
+      if (current === undefined) {
+        continue;
+      }
+
+      const children = childrenByParent.get(current);
+      if (!children) {
+        continue;
+      }
+
+      for (const childEntityId of children) {
+        if (visited.has(childEntityId)) {
+          continue;
+        }
+
+        visited.add(childEntityId);
+        descendants.push(childEntityId);
+        stack.push(childEntityId);
+      }
+    }
+
+    return descendants;
   }
 
   /**
@@ -187,6 +263,62 @@ export class World {
   }
 
   /**
+   * Moves an entity and all of its descendants to another world.
+   */
+  moveEntityTo(entityId: EntityId, targetWorld: World): void {
+    if (this === targetWorld) {
+      return;
+    }
+
+    if (!this.entities.has(entityId)) {
+      throw new Error(`Entity ${entityId} does not exist`);
+    }
+
+    const descendants = this.collectDescendants(entityId);
+    const entitiesToMove: EntityId[] = [entityId, ...descendants];
+
+    for (const movingEntityId of entitiesToMove) {
+      if (targetWorld.entities.has(movingEntityId)) {
+        throw new Error(`Entity ${movingEntityId} already exists in target world`);
+      }
+    }
+
+    for (const movingEntityId of entitiesToMove) {
+      this.moveEntityShallowTo(movingEntityId, targetWorld);
+    }
+  }
+
+  private moveEntityShallowTo(entityId: EntityId, targetWorld: World): void {
+    if (!this.entities.has(entityId)) {
+      throw new Error(`Entity ${entityId} does not exist`);
+    }
+
+    if (targetWorld.entities.has(entityId)) {
+      throw new Error(`Entity ${entityId} already exists in target world`);
+    }
+
+    targetWorld.entities.add(entityId);
+
+    for (const [componentType, sourceStore] of this.componentStores) {
+      const component = sourceStore.get(entityId);
+      if (component === undefined) {
+        continue;
+      }
+
+      let targetStore = targetWorld.componentStores.get(componentType);
+      if (!targetStore) {
+        targetStore = new ComponentStore<unknown>();
+        targetWorld.componentStores.set(componentType, targetStore);
+      }
+
+      targetStore.add(entityId, component);
+      sourceStore.remove(entityId);
+    }
+
+    this.entities.delete(entityId);
+  }
+
+  /**
    * Queries entities by component types (intersection)
    */
   query(...componentTypes: Function[]): EntityId[] {
@@ -239,6 +371,27 @@ export class World {
    */
   getEntities(): EntityId[] {
     return Array.from(this.entities);
+  }
+
+  /**
+   * Gets all component types currently attached to an entity.
+   */
+  getComponentTypes(entityId: EntityId): Function[] {
+    if (!this.entities.has(entityId)) {
+      return [];
+    }
+
+    const componentTypes: Function[] = [];
+
+    for (const [componentType, store] of this.componentStores) {
+      if (!store.has(entityId)) {
+        continue;
+      }
+
+      componentTypes.push(componentType);
+    }
+
+    return componentTypes;
   }
 
   /**

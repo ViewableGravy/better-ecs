@@ -40,6 +40,10 @@ export function render(opts: Opts) {
   const targetFps = data.customFps ?? engine.frame.fps ?? 60;
   const targetUps = data.customUps ?? engine.frame.ups ?? 60;
 
+  if (data.mode === "disabled") {
+    return;
+  }
+
   // Update based on mode
   if (data.mode === "simple") {
     setVal("#fps-simple", opts.element, currentFps);

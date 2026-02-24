@@ -1,4 +1,4 @@
-import { createSystem, useEngine, useSystem } from "@repo/engine";
+import { clamp, createSystem, useEngine, useSystem } from "@repo/engine";
 import { Camera } from "@repo/engine/components";
 import z from "zod";
 
@@ -21,6 +21,7 @@ export const System = createSystem("camera-zoom")({
     })
   },
   initialize() {
+    const { canvas } = useEngine()
     const { data } = useSystem("camera-zoom");
 
     data.wheelHandler = (event: WheelEvent) => {
@@ -28,14 +29,14 @@ export const System = createSystem("camera-zoom")({
       event.preventDefault();
     };
 
-    window.addEventListener("wheel", data.wheelHandler, { passive: false });
+    canvas.addEventListener("wheel", data.wheelHandler, { passive: false });
 
     return () => {
       if (!data.wheelHandler) {
         return;
       }
 
-      window.removeEventListener("wheel", data.wheelHandler);
+      canvas.removeEventListener("wheel", data.wheelHandler);
       data.wheelHandler = null;
     };
   },
@@ -65,19 +66,6 @@ export const System = createSystem("camera-zoom")({
     }
   },
 });
-
-// TODO: move to engine/maths package and reuse in all places
-function clamp(value: number, min: number, max: number): number {
-  if (value < min) {
-    return min;
-  }
-
-  if (value > max) {
-    return max;
-  }
-
-  return value;
-}
 
 function normalizeWheelDelta(event: WheelEvent): number {
   if (event.deltaMode === WheelEvent.DOM_DELTA_LINE) {
