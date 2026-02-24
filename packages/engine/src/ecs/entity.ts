@@ -10,7 +10,7 @@ const MAX_ENTITIES = 1 << INDEX_BITS; // 2^20 = 1,048,576 entities
 const GENERATION_MASK = (1 << GENERATION_BITS) - 1;
 const INDEX_MASK = (1 << INDEX_BITS) - 1;
 
-let nextIndex = 0;
+let nextIndex = 1;
 const generations = new Map<number, number>();
 
 /**

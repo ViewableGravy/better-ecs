@@ -27,7 +27,7 @@ export type AnyEngine = {
   scene: SceneManager<any>;
   assets: AssetManager<any>;
   render: RenderPipeline | null;
-  canvas: HTMLCanvasElement | null;
+  canvas: HTMLCanvasElement;
 };
 
 export type RegisteredEngine<TRegister = Register> = TRegister extends {

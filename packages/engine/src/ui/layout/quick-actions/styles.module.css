@@ -1,0 +1,41 @@
+.quickActionButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid #3a3f4c;
+  background: #1f2636;
+  color: #d7deee;
+  padding: 0;
+  cursor: pointer;
+  user-select: none;
+  transition: background 160ms ease, border-color 160ms ease, transform 120ms ease;
+}
+
+.quickActionButton:hover {
+  border-color: #5e7aff;
+  background: #28314a;
+}
+
+.quickActionButton:active {
+  transform: translateY(1px);
+}
+
+.quickActionButton:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.quickActionButtonActive {
+  border-color: #6a84ff;
+  background: #2e3b66;
+  color: #e6ecff;
+}
+
+.quickActionIcon {
+  width: 22px;
+  height: 22px;
+  display: block;
+}

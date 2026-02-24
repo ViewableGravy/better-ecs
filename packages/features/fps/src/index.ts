@@ -17,7 +17,7 @@ const defaultState: FPSCounterData = {
   upsBuffer: { start: null, updates: 0 },
   fps: [],
   ups: [],
-  mode: "default",
+  mode: "disabled",
   customFps: null,
   customUps: null,
 };

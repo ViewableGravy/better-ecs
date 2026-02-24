@@ -1,0 +1,202 @@
+.tabsRoot {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.tabPanels {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.tabPanel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.hierarchyPanelContent {
+  padding-inline: 0;
+  padding-block: 6px;
+}
+
+.tabList {
+  border-top: 1px solid #2e323d;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.tabButton {
+  --defaultEngineEditorView-icon-scale: 1;
+  --defaultEngineEditorView-icon-color: #8c95aa;
+
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 0;
+  color: var(--defaultEngineEditorView-icon-color);
+}
+
+.tabButton:focus-visible {
+  outline: 2px solid #5f74f4;
+  outline-offset: 2px;
+}
+
+.tabButton:hover {
+  --defaultEngineEditorView-icon-scale: 1.08;
+}
+
+.tabButtonSelected {
+  --defaultEngineEditorView-icon-scale: 1.12;
+  --defaultEngineEditorView-icon-color: #7387ff;
+}
+
+.tabIconSlot {
+  width: 30px;
+  height: 30px;
+  position: relative;
+}
+
+.tabIconLayer {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transition: transform 140ms ease;
+  transform: translate(-50%, -50%) scale(var(--defaultEngineEditorView-icon-scale));
+}
+
+.worldsEntitiesPanel {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  user-select: none;
+}
+
+.worldsEntitiesEntityItem {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.worldsEntitiesEntityRow {
+  width: 100%;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 3px;
+  padding: 0;
+  min-height: 22px;
+}
+
+.worldsEntitiesEntityToggleButton {
+  border: none;
+  background: transparent;
+  color: #c8d2e8;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  user-select: none;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 12px;
+}
+
+.worldsEntitiesEntityToggleButton:hover {
+  background: #222938;
+}
+
+.worldsEntitiesEntityChevron {
+  color: #9aa8c5;
+  width: 10px;
+  height: 10px;
+  flex: 0 0 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transform-origin: center;
+  transform: rotate(-90deg);
+  transition: transform 120ms ease;
+}
+
+.worldsEntitiesEntityChevronExpanded {
+  transform: rotate(0deg);
+}
+
+.worldsEntitiesEntityChevronHidden {
+  opacity: 0;
+}
+
+.worldsEntitiesEntityTypeIcon {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 12px;
+  color: #9aa8c5;
+}
+
+.worldsEntitiesEntityName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.worldsEntitiesEntityActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+
+.worldsEntitiesDeleteEntityButton {
+  border: none;
+  background: transparent;
+  color: #91a1c4;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 4px;
+  margin-right: 6px;
+  flex: 0 0 auto;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.worldsEntitiesEntityToggleButton:hover .worldsEntitiesDeleteEntityButton {
+  opacity: 1;
+}
+
+.worldsEntitiesDeleteEntityButton:hover {
+  color: #f6a5a5;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.worldsEntitiesDeleteEntityIcon {
+  width: 14px;
+  height: 14px;
+}
+
+.worldsEntitiesNestedEntityList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}

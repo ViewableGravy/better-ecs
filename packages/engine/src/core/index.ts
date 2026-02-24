@@ -3,6 +3,7 @@ export * from "./engine-types";
 export * from "./register/engine";
 export * from "./register/system";
 export * from "./render-pipeline";
+export * from "./running-state";
 export * from "./scene";
 export * from "./types";
 

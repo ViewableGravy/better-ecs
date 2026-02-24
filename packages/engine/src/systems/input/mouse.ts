@@ -48,7 +48,6 @@ const canvasViewport = {
 
 let lastScreenUpdateTime = -1;
 let lastCanvasUpdateTime = -1;
-let lastWorldUpdateTime = -1;
 
 /**********************************************************************************************************
 *   CONSTS
@@ -139,32 +138,16 @@ export function useMouse(): Mouse {
 }
 
 function updateCanvasPointer(
-  canvas: HTMLCanvasElement | null,
+  canvas: HTMLCanvasElement,
   mouseClientX: number,
   mouseClientY: number,
 ): void {
   screenPointer.x = mouseClientX;
   screenPointer.y = mouseClientY;
 
-  if (canvas) {
-    const rect = canvas.getBoundingClientRect();
-    canvasPointer.x = mouseClientX - rect.left;
-    canvasPointer.y = mouseClientY - rect.top;
-    canvasViewport.width = rect.width;
-    canvasViewport.height = rect.height;
-
-    return;
-  }
-
-  canvasPointer.x = mouseClientX;
-  canvasPointer.y = mouseClientY;
-
-  if (typeof window === "undefined") {
-    canvasViewport.width = 0;
-    canvasViewport.height = 0;
-    return;
-  }
-
-  canvasViewport.width = window.innerWidth;
-  canvasViewport.height = window.innerHeight;
+  const rect = canvas.getBoundingClientRect();
+  canvasPointer.x = mouseClientX - rect.left;
+  canvasPointer.y = mouseClientY - rect.top;
+  canvasViewport.width = rect.width;
+  canvasViewport.height = rect.height;
 }

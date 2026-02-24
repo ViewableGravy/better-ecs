@@ -48,6 +48,7 @@
     "nx": "^22.3.3",
     "playwright": "^1.58.1",
     "prettier": "~3.6.2",
+    "sass": "^1.97.3",
     "skott": "^0.35.7",
     "tailwindcss": "^4.1.18",
     "ts-jest": "^29.4.0",
@@ -60,6 +61,7 @@
     "vitest": "^4.0.0"
   },
   "dependencies": {
-    "@nx/js": "^22.3.3"
+    "@nx/js": "^22.3.3",
+    "classnames": "^2.5.1"
   }
 }

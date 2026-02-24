@@ -7,10 +7,16 @@ import { computeContextStack } from "./stack";
 
 export type ContextRelationship = "self" | "ancestor" | "descendant" | "unrelated";
 
+type ActiveWorldController = {
+  readonly activeWorldId: string;
+  setActiveWorld(id: string): void;
+};
+
 export class SpatialContextManager {
   readonly #scene: SceneContext;
   readonly #definitions = new Map<ContextId, ContextDefinition>();
   readonly #setupCompleted = new Set<ContextId>();
+  #activeWorldController?: ActiveWorldController;
 
   #focusedId: ContextId;
 
@@ -24,8 +30,8 @@ export class SpatialContextManager {
     return this.#scene.defaultWorldId as ContextId;
   }
 
-  getRootWorld(): UserWorld {
-    return this.getWorldOrThrow(this.rootContextId);
+  get rootWorld(): UserWorld {
+    return this.requireWorld(this.rootContextId);
   }
 
   registerDefinition(def: ContextDefinition): void {
@@ -63,7 +69,7 @@ export class SpatialContextManager {
   }
 
   get focusedWorld(): UserWorld {
-    return this.getWorldOrThrow(this.#focusedId);
+    return this.requireWorld(this.#focusedId);
   }
 
   isAncestorContext(ancestorId: ContextId, descendantId: ContextId): boolean {
@@ -96,9 +102,22 @@ export class SpatialContextManager {
     return "unrelated";
   }
 
+  setActiveWorldController(controller: ActiveWorldController): void {
+    this.#activeWorldController = controller;
+
+    if (controller.activeWorldId !== this.#focusedId) {
+      controller.setActiveWorld(this.#focusedId);
+    }
+  }
+
   setFocusedContextId(id: ContextId): void {
     this.ensureWorldLoaded(id);
     this.#focusedId = id;
+
+    const controller = this.#activeWorldController;
+    if (controller && controller.activeWorldId !== id) {
+      controller.setActiveWorld(id);
+    }
   }
 
   getWorld(id: ContextId): UserWorld | undefined {
@@ -109,7 +128,7 @@ export class SpatialContextManager {
     return this.#scene.getWorld(id);
   }
 
-  getWorldOrThrow(id: ContextId): UserWorld {
+  requireWorld(id: ContextId): UserWorld {
     const world = this.getWorld(id);
     if (!world) {
       throw new Error(`World for context "${id}" is not loaded`);
@@ -176,10 +195,14 @@ export class SpatialContextManager {
   }
 
   getVisibleWorlds(): readonly UserWorld[] {
-    return this.getVisibleContextIds().map((id) => this.getWorldOrThrow(id));
+    return this.getVisibleContextIds().map((id) => this.requireWorld(id));
   }
 
   getSimulatedWorlds(): readonly UserWorld[] {
-    return this.getSimulatedContextIds().map((id) => this.getWorldOrThrow(id));
+    return this.getSimulatedContextIds().map((id) => this.requireWorld(id));
+  }
+
+  get isRootFocused(): boolean {
+    return this.#focusedId === this.rootContextId;
   }
 }
