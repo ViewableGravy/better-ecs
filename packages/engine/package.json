@@ -42,6 +42,8 @@
     "test": "vitest --run --typecheck"
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.9",
+    "@phosphor-icons/react": "^2.1.10",
     "@repo/utils": "workspace:*",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",

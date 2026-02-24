@@ -16,7 +16,6 @@
     "@repo/fps": "*",
     "@repo/physics": "*",
     "@repo/spatial-contexts": "*",
-    "@standard-schema/spec": "^1.1.0",
     "tiny-invariant": "^1.3.3",
     "zod": "^4.3.4"
   },

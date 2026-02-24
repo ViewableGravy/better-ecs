@@ -139,6 +139,63 @@
   padding-block: 6px;
 }
 
+.leftSidebarTabsRoot {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.leftSidebarTabPanels {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.leftSidebarTabPanel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.leftSidebarTabList {
+  border-top: 1px solid #2e323d;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.leftSidebarTabButton {
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.leftSidebarTabButton:focus-visible {
+  outline: 2px solid #5f74f4;
+  outline-offset: 2px;
+}
+
+.leftSidebarTabIconSlot {
+  width: 30px;
+  height: 30px;
+  position: relative;
+}
+
+.leftSidebarTabIconLayer {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transition: transform 140ms ease;
+}
+
+.leftSidebarTabButton:hover .leftSidebarTabIconLayer {
+  transform: translate(-50%, -50%) scale(1.08);
+}
+
 .worldsEntitiesPanel {
   list-style: none;
   margin: 0;
