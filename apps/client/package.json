@@ -8,8 +8,8 @@
     "build": "vite build",
     "clean": "rm -rf dist",
     "preview": "vite preview",
-    "lint": "bun x eslint .",
-    "typecheck": "npx tsc --noEmit"
+    "lint": "bun x oxlint .",
+    "typecheck": "bun x tsgo --noEmit"
   },
   "dependencies": {
     "@repo/engine": "workspace:*",
@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "type-fest": "^5.4.4",
-    "typescript": "^5.9.3",
-    "vite": "^7.0.0"
+    "typescript": "npm:@typescript/native-preview@latest",
+    "vite": "npm:rolldown-vite@^7.0.0"
   }
 }

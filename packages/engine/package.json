@@ -35,10 +35,10 @@
     }
   },
   "scripts": {
-    "build": "npx tsc -p tsconfig.lib.json",
+    "build": "bun x tsgo -p tsconfig.lib.json",
     "clean": "rm -rf dist tsconfig.lib.tsbuildinfo",
-    "lint": "bun x eslint .",
-    "typecheck": "npx tsc --noEmit",
+    "lint": "bun x oxlint .",
+    "typecheck": "bun x tsgo --noEmit",
     "test": "vitest --run --typecheck"
   },
   "dependencies": {
@@ -57,6 +57,6 @@
     "@types/react": "^19.1.11",
     "@types/react-dom": "^19.1.7",
     "@standard-schema/spec": "^1.1.0",
-    "typescript": "^5.9.3"
+    "typescript": "npm:@typescript/native-preview@latest"
   }
 }

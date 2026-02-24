@@ -20,14 +20,14 @@
     }
   },
   "scripts": {
-    "build": "bun x tsc -p tsconfig.lib.json",
+    "build": "bun x tsgo -p tsconfig.lib.json",
     "clean": "rm -rf dist tsconfig.lib.tsbuildinfo",
-    "lint": "bun x eslint .",
-    "typecheck": "bun x tsc --noEmit"
+    "lint": "bun x oxlint .",
+    "typecheck": "bun x tsgo --noEmit"
   },
   "dependencies": {},
   "devDependencies": {
-    "typescript": "^5.9.3",
-    "vite": "^7.0.0"
+    "typescript": "npm:@typescript/native-preview@latest",
+    "vite": "npm:rolldown-vite@^7.0.0"
   }
 }

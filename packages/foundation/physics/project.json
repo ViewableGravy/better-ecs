@@ -8,7 +8,7 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "bun x tsc -p tsconfig.lib.json",
+        "command": "bun x tsgo -p tsconfig.lib.json",
         "cwd": "packages/foundation/physics"
       },
       "inputs": ["default", "^default"],
@@ -24,14 +24,14 @@
     "lint": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "bun x eslint .",
+        "command": "bun x oxlint .",
         "cwd": "packages/foundation/physics"
       }
     },
     "typecheck": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "bun x tsc --noEmit",
+        "command": "bun x tsgo --noEmit",
         "cwd": "packages/foundation/physics"
       }
     },

@@ -5,17 +5,17 @@
   "type": "module",
   "scripts": {
     "dev": "node --watch src/main.ts",
-    "build": "npx tsc",
+    "build": "bun x tsgo",
     "clean": "rm -rf dist",
     "start": "node dist/main.js",
-    "lint": "bun x eslint .",
-    "typecheck": "npx tsc --noEmit"
+    "lint": "bun x oxlint .",
+    "typecheck": "bun x tsgo --noEmit"
   },
   "dependencies": {
     "@repo/engine": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
-    "typescript": "^5.9.3"
+    "typescript": "npm:@typescript/native-preview@latest"
   }
 }

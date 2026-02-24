@@ -8,7 +8,7 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "bun x tsc -p tsconfig.lib.json",
+        "command": "bun x tsgo -p tsconfig.lib.json",
         "cwd": "packages/features/fps"
       },
       "inputs": ["default", "^default"],
@@ -24,14 +24,14 @@
     "lint": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "bun x eslint .",
+        "command": "bun x oxlint .",
         "cwd": "packages/features/fps"
       }
     },
     "typecheck": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "bun x tsc --noEmit",
+        "command": "bun x tsgo --noEmit",
         "cwd": "packages/features/fps"
       }
     },

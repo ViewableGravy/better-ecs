@@ -12,13 +12,14 @@
     }
   },
   "scripts": {
-    "build": "npx tsc -p tsconfig.lib.json",
+    "build": "bun x tsgo -p tsconfig.lib.json",
     "clean": "rm -rf dist tsconfig.lib.tsbuildinfo",
-    "lint": "bun x eslint .",
-    "typecheck": "npx tsc --noEmit"
+    "lint": "bun x oxlint .",
+    "typecheck": "bun x tsgo --noEmit"
   },
   "dependencies": {},
   "devDependencies": {
-    "typescript": "^5.9.3"
+    "typescript": "npm:@typescript/native-preview@latest",
+    "vite": "npm:rolldown-vite@^7.0.0"
   }
 }

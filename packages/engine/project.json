@@ -8,7 +8,7 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx tsc -p tsconfig.lib.json",
+        "command": "bun x tsgo -p tsconfig.lib.json",
         "cwd": "packages/engine"
       },
       "inputs": ["default", "^default"],
@@ -24,14 +24,14 @@
     "typecheck": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx tsc --noEmit",
+        "command": "bun x tsgo --noEmit",
         "cwd": "packages/engine"
       }
     },
     "lint": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "bun x eslint .",
+        "command": "bun x oxlint .",
         "cwd": "packages/engine"
       }
     },

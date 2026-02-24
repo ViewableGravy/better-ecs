@@ -12,10 +12,10 @@
     }
   },
   "scripts": {
-    "build": "bun x tsc -p tsconfig.lib.json",
+    "build": "bun x tsgo -p tsconfig.lib.json",
     "clean": "rm -rf dist tsconfig.lib.tsbuildinfo",
-    "lint": "bun x eslint .",
-    "typecheck": "bun x tsc --noEmit",
+    "lint": "bun x oxlint .",
+    "typecheck": "bun x tsgo --noEmit",
     "test": "bun x vitest run --passWithNoTests"
   },
   "dependencies": {
@@ -23,7 +23,7 @@
     "zod": "^4.3.4"
   },
   "devDependencies": {
-    "typescript": "^5.9.3",
+    "typescript": "npm:@typescript/native-preview@latest",
     "vitest": "^4.0.0"
   }
 }

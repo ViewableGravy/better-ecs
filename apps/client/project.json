@@ -38,14 +38,14 @@
     "lint": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "bun x eslint .",
+        "command": "bun x oxlint .",
         "cwd": "apps/client"
       }
     },
     "typecheck": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx tsc --noEmit",
+        "command": "bun x tsgo --noEmit",
         "cwd": "apps/client"
       }
     }

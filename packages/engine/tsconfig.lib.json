@@ -2,6 +2,10 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./dist",
+    "paths": {
+      "@ui": ["./src/ui/index.tsx"],
+      "@ui/*": ["./src/ui/*"]
+    },
     "lib": ["DOM", "ES2022"],
     "jsx": "react-jsx",
     "skipLibCheck": true,

@@ -15,7 +15,7 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx tsc",
+        "command": "bun x tsgo",
         "cwd": "apps/server"
       },
       "inputs": ["default", "^default"],
@@ -38,14 +38,14 @@
     "lint": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "bun x eslint .",
+        "command": "bun x oxlint .",
         "cwd": "apps/server"
       }
     },
     "typecheck": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx tsc --noEmit",
+        "command": "bun x tsgo --noEmit",
         "cwd": "apps/server"
       }
     }
