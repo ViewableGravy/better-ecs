@@ -3,7 +3,6 @@ import { UserWorld, World } from "../../ecs/world";
 import { executeWithContext } from "../context";
 import type { EngineClass } from "../engine";
 import { SystemsManager } from "../engine/systems";
-import type { EngineSystem } from "../system";
 import { SceneContext } from "./scene-context";
 import type { SceneDefinition, SceneDefinitionTuple, SceneName } from "./scene.types";
 
@@ -128,16 +127,6 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
     return this.#scenes.has(sceneName);
   }
 
-  /** @internal Get scene-level systems for the active scene update loop. */
-  getUpdateSystems(): EngineSystem[] {
-    return this.#systemsManager.getSceneUpdateSystems(this.#activeScene?.name ?? null);
-  }
-
-  /** @internal Get a scene-level system instance by name for the active scene. */
-  getActiveSystem(name: string): EngineSystem | undefined {
-    return this.#systemsManager.getSceneSystem(this.#activeScene?.name ?? null, name);
-  }
-
   /**
    * Transition to a new scene by name.
    */
@@ -205,15 +194,6 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
     existing.sceneTeardown = fresh.sceneTeardown;
 
     return this.#activeScene?.name === fresh.name;
-  }
-
-  /**
-   * Get all scene-level system instances across all scenes.
-   * Used by HMR to register scene systems for hot-swapping.
-   * @internal
-   */
-  getAllSceneSystems(): EngineSystem[] {
-    return this.#systemsManager.getAllSceneSystems();
   }
 
   async #teardownActiveScene(): Promise<void> {

@@ -71,7 +71,7 @@ export function createEngine<
 	const hmr = globalThis.__ENGINE_HMR__;
 	if (hmr) {
 		const allHmrSystems: Record<string, EngineSystem<any>> = { ...systemsRecord };
-		for (const system of engine.scene.getAllSceneSystems()) {
+		for (const system of engine.getAllSceneSystems()) {
 			allHmrSystems[system.name] = system;
 		}
 

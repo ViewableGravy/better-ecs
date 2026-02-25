@@ -23,13 +23,11 @@ export class EngineClass<
 	#systemsView: Record<string, EngineSystem<any>>;
 
 	#canvasManager: CanvasManager;
-	#renderPipeline: RenderPipeline | null;
 	#phase: PhaseState = new PhaseState();
 	#init: InitState = new InitState();
 	#delta: DeltaState = new DeltaState();
 
 	public readonly scene: SceneManager<TScenes>;
-	public readonly render: RenderPipeline | null;
 	public readonly runningState: EngineRunningState = createEngineRunningState();
 	public readonly meta: Meta = new Meta(this.#phase.is);
 
@@ -37,18 +35,22 @@ export class EngineClass<
 		systems: Record<string, EngineSystem<any>>,
 		scenes: SceneDefinitionTuple = [],
 		public readonly assets: AssetManager<TAssets>,
-		renderPipeline: RenderPipeline | null,
+		public readonly render: RenderPipeline | null,
 		canvas: HTMLCanvasElement | null,
 		awaitCanvasBeforeStart = false,
 	) {
 		this.#systemsManager = new SystemsManager(systems);
-		this.#renderPipeline = renderPipeline;
-		this.render = renderPipeline;
-
 		this.scene = new SceneManager<TScenes>(scenes, this.#systemsManager).setEngineRef(this);
 		this.#canvasManager = new CanvasManager(canvas, awaitCanvasBeforeStart);
 
-		this.#systemsView = this.#systemsManager.createSystemsView((name) => this.scene.getActiveSystem(name));
+		this.#systemsView = this.#systemsManager.createSystemsView((name) => {
+			return this.#systemsManager.getSceneSystem(this.scene.definition?.name ?? null, name);
+		});
+	}
+
+	/** @internal */
+	public getAllSceneSystems(): EngineSystem[] {
+		return this.#systemsManager.getAllSceneSystems();
 	}
 
 	public get systems(): AllSystems<TSystems, TScenes> {
@@ -93,7 +95,7 @@ export class EngineClass<
 
 			this.#systemsManager.initializeEngineSystems();
 
-			this.#renderPipeline?.initialize();
+			this.render?.initialize();
 		});
 
 		this.#init.markInitialized();
@@ -164,14 +166,14 @@ export class EngineClass<
 
 	private runRenderPipeline(shouldUpdate: boolean): void {
 		if (!shouldUpdate) return;
-		if (!this.#renderPipeline) return;
+		if (!this.render) return;
 
 		this.#phase.setCurrent("render");
 
 		const activeSceneContext = this.scene.context;
 
 		executeWithContext({ engine: this, scene: activeSceneContext }, () => {
-			this.#renderPipeline?.render();
+			this.render?.render();
 		});
 
 		this.#phase.clear();
@@ -184,7 +186,9 @@ export class EngineClass<
 		const systemsToRun = this.#systemsManager.getEngineUpdateSystems();
 
 		const activeSceneContext = this.scene.context;
-		const sceneSystemsToRun = this.scene.getUpdateSystems();
+		const sceneSystemsToRun = this.#systemsManager.getSceneUpdateSystems(
+			this.scene.definition?.name ?? null,
+		);
 
 		executeWithContext({ engine: this, scene: activeSceneContext }, () => {
 			for (const system of systemsToRun) {
