@@ -1,6 +1,6 @@
 // packages/engine/src/core/scene/scene.types.ts
 import type { UserWorld } from "../../ecs/world";
-import type { SystemFactoryTuple } from "../register/system";
+import type { SystemFactoryTuple } from "../system";
 import type { SceneContext } from "./scene-context";
 
 /**

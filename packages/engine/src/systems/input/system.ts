@@ -1,6 +1,6 @@
 import { EventPool } from "@repo/utils";
 import { useOverloadedSystem } from "../../core/context";
-import { createSystem, type EngineSystem } from "../../core/register/system";
+import { createSystem, type EngineSystem } from "../../core/system";
 import { InputStateSchema } from "./input.types";
 import { createMatchKeybind } from "./keybind/keybind";
 

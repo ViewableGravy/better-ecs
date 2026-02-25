@@ -1,4 +1,5 @@
 import type { UserWorld } from "../ecs/world";
+import type { EngineClass } from "./engine";
 import type {
   AllSceneNames,
   RegisteredAssetManager,
@@ -6,9 +7,8 @@ import type {
   RegisteredSystems,
   SystemNames,
 } from "./engine-types";
-import type { EngineClass } from "./register/internal";
-import type { EngineSystem } from "./register/system";
 import type { SceneContext } from "./scene/scene-context";
+import type { EngineSystem } from "./system";
 
 /***** TYPE DEFINITIONS *****/
 type Context = {

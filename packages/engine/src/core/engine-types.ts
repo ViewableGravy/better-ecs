@@ -2,10 +2,10 @@ import { SceneManager } from ".";
 import { AssetManager } from "../asset";
 import type { inputSystem } from "../systems/input";
 import type { transformSnapshotSystem } from "../systems/transformSnapshot";
-import type { EngineClass } from "./register/internal";
-import type { EngineSystem, SystemFactory, SystemFactoryTuple } from "./register/system";
+import type { EngineClass } from "./engine";
 import type { RenderPipeline } from "./render-pipeline";
 import type { SceneDefinition, SceneDefinitionTuple } from "./scene/scene.types";
+import type { EngineSystem, SystemFactory, SystemFactoryTuple } from "./system";
 import type { InferStandardSchema, StandardSchema } from "./types";
 
 // --- Type Registration (via module augmentation) ---

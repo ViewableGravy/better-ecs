@@ -1,9 +1,9 @@
 // packages/engine/src/core/scene/scene-manager.ts
 import { UserWorld, World } from "../../ecs/world";
 import { executeWithContext } from "../context";
-import type { EngineClass } from "../register/internal";
-import type { EngineSystem } from "../register/system";
-import { executeSystemCleanup, executeSystemInitialize } from "../register/system";
+import type { EngineClass } from "../engine";
+import type { EngineSystem } from "../system";
+import { executeSystemCleanup, executeSystemInitialize } from "../system";
 import { SceneContext } from "./scene-context";
 import type { SceneDefinition, SceneDefinitionTuple, SceneName } from "./scene.types";
 
