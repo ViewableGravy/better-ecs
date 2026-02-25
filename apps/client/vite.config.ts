@@ -1,7 +1,7 @@
-import { engineHmr } from "@repo/hmr/plugin";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import { defineConfig } from "vite";
+import { engineHmr } from "../../packages/tooling/hmr/src/plugin";
 
 export default defineConfig({
   root: __dirname,
