@@ -6,12 +6,12 @@ import type { RenderPipeline } from "../render-pipeline";
 import { createEngineRunningState, type EngineRunningState } from "../running-state";
 import { SceneManager } from "../scene/scene-manager";
 import type { SceneDefinitionTuple } from "../scene/scene.types";
-import { executeSystemInitialize } from "../system";
 import type { EngineInitializationSystem, EngineSystem, SystemFactoryTuple } from "../system/types";
 import { DeltaState } from "./delta";
 import { InitState } from "./init";
 import { Meta } from "./meta";
 import { PhaseState } from "./phase";
+import { SystemsManager } from "./systems";
 import type { AllSystems, ScenesTupleToRecord, StartEngineGenerator, StartEngineOpts } from "./types";
 
 export class EngineClass<
@@ -19,9 +19,8 @@ export class EngineClass<
 	TScenes extends SceneDefinitionTuple = [],
 	TAssets extends Record<string, unknown> = Record<string, unknown>,
 > {
-	#systems: Record<string, EngineSystem<any>>;
+	#systemsManager: SystemsManager;
 	#systemsView: Record<string, EngineSystem<any>>;
-	#updateSystems: EngineSystem<any>[] = [];
 
 	#canvasManager: CanvasManager;
 	#renderPipeline: RenderPipeline | null;
@@ -30,6 +29,7 @@ export class EngineClass<
 	#delta: DeltaState = new DeltaState();
 
 	public readonly scene: SceneManager<TScenes>;
+	public readonly render: RenderPipeline | null;
 	public readonly runningState: EngineRunningState = createEngineRunningState();
 	public readonly meta: Meta = new Meta(this.#phase.is);
 
@@ -41,31 +41,14 @@ export class EngineClass<
 		canvas: HTMLCanvasElement | null,
 		awaitCanvasBeforeStart = false,
 	) {
-		this.#systems = systems;
+		this.#systemsManager = new SystemsManager(systems);
 		this.#renderPipeline = renderPipeline;
+		this.render = renderPipeline;
 
-		this.scene = new SceneManager<TScenes>(scenes).setEngineRef(this);
+		this.scene = new SceneManager<TScenes>(scenes, this.#systemsManager).setEngineRef(this);
 		this.#canvasManager = new CanvasManager(canvas, awaitCanvasBeforeStart);
 
-		this.#systemsView = new Proxy(this.#systems, {
-			get: (target, prop) => {
-				if (typeof prop !== "string") return (target as any)[prop];
-				if (prop in target) return (target as any)[prop];
-				return this.scene.getActiveSystem(prop);
-			},
-			has: (target, prop) => {
-				if (typeof prop !== "string") return prop in target;
-				return prop in target || this.scene.getActiveSystem(prop) !== undefined;
-			},
-		});
-
-		this.precomputeSystemOrder();
-	}
-
-	private precomputeSystemOrder() {
-		const allSystems = Object.values(this.#systems);
-
-		this.#updateSystems = allSystems.sort((a, b) => b.priority - a.priority);
+		this.#systemsView = this.#systemsManager.createSystemsView((name) => this.scene.getActiveSystem(name));
 	}
 
 	public get systems(): AllSystems<TSystems, TScenes> {
@@ -108,9 +91,7 @@ export class EngineClass<
 				await this.#init.initializationSystem.system();
 			}
 
-			for (const system of Object.values(this.#systems)) {
-				executeSystemInitialize(system);
-			}
+			this.#systemsManager.initializeEngineSystems();
 
 			this.#renderPipeline?.initialize();
 		});
@@ -200,7 +181,7 @@ export class EngineClass<
 		if (!shouldUpdate) return;
 
 		this.#phase.setCurrent("update");
-		const systemsToRun = this.#updateSystems;
+		const systemsToRun = this.#systemsManager.getEngineUpdateSystems();
 
 		const activeSceneContext = this.scene.context;
 		const sceneSystemsToRun = this.scene.getUpdateSystems();
