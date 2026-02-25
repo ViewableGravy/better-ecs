@@ -2,6 +2,7 @@ import { AssetManager } from "../../asset/AssetManager";
 import type { UserWorld } from "../../ecs/world";
 import { CanvasManager } from "../canvas";
 import { executeWithContext } from "../context";
+import { EngineCamera } from "../engine-camera";
 import type { RenderPipeline } from "../render-pipeline";
 import { createEngineRunningState, type EngineRunningState } from "../running-state";
 import { SceneManager } from "../scene/scene-manager";
@@ -26,9 +27,14 @@ export class EngineClass<
 	#phase: PhaseState = new PhaseState();
 	#init: InitState = new InitState();
 	#delta: DeltaState = new DeltaState();
+	#previewMode = false;
 
 	public readonly scene: SceneManager<TScenes>;
 	public readonly runningState: EngineRunningState = createEngineRunningState();
+	public readonly cameraState = new EngineCamera({
+		isPaused: () => this.runningState.paused,
+		isPreviewMode: () => this.#previewMode,
+	});
 	public readonly meta: Meta = new Meta(this.#phase.is);
 
 	public constructor(
@@ -75,6 +81,10 @@ export class EngineClass<
 
 	public removeCanvas(canvas: HTMLCanvasElement): void {
 		this.#canvasManager.removeCanvas(canvas);
+	}
+
+	public setPreviewMode(previewMode: boolean): void {
+		this.#previewMode = previewMode;
 	}
 
 	private async waitForCanvasReady(): Promise<void> {

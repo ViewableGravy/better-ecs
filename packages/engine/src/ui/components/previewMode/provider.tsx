@@ -1,5 +1,7 @@
-import { ReactNode, useEffect, useState } from "react";
 import { PreviewModeContext } from "@ui/components/previewMode/context";
+import { EngineUiContext } from "@ui/utilities/engine-context";
+import { useInvariantContext } from "@ui/utilities/hooks/use-invariant-context";
+import { ReactNode, useEffect, useState, type Dispatch, type SetStateAction } from "react";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -14,7 +16,18 @@ type PreviewModeProviderProps = {
  **********************************************************************************************************/
 
 export const PreviewModeProvider: React.FC<PreviewModeProviderProps> = ({ children }) => {
+  const engine = useInvariantContext(EngineUiContext);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
+
+  const setPreviewMode: Dispatch<SetStateAction<boolean>> = (nextState) => {
+    setIsPreviewMode((currentState) => {
+      const resolvedState =
+        typeof nextState === "function" ? nextState(currentState) : nextState;
+
+      engine.setPreviewMode(resolvedState);
+      return resolvedState;
+    });
+  };
 
   useEffect(() => {
     if (!isPreviewMode) {
@@ -26,7 +39,7 @@ export const PreviewModeProvider: React.FC<PreviewModeProviderProps> = ({ childr
         return;
       }
 
-      setIsPreviewMode(false);
+      setPreviewMode(false);
     };
 
     window.addEventListener("keydown", onKeyDown);
@@ -36,5 +49,5 @@ export const PreviewModeProvider: React.FC<PreviewModeProviderProps> = ({ childr
     };
   }, [isPreviewMode]);
 
-  return <PreviewModeContext value={[isPreviewMode, setIsPreviewMode]}>{children}</PreviewModeContext>;
+  return <PreviewModeContext value={[isPreviewMode, setPreviewMode]}>{children}</PreviewModeContext>;
 };
