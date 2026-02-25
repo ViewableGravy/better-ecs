@@ -29,7 +29,7 @@
 }
 
 .quickActionButtonActive {
-  border-color: #6a84ff;
+  border-color: var(--engineEditorActiveBorderColor);
   background: #2e3b66;
   color: #e6ecff;
 }

@@ -1,4 +1,5 @@
 .engineEditorLayoutRootBase {
+  --engineEditorActiveBorderColor: #6a84ff;
   display: grid;
   gap: 8px;
   width: 100%;
@@ -90,6 +91,10 @@
 .engineEditorLayoutCenterPreview {
   grid-column: 1;
   grid-row: 1;
+}
+
+.engineEditorLayoutCenterPaused {
+  border-color: var(--engineEditorActiveBorderColor);
 }
 
 .engineEditorLayoutRightSidebar {

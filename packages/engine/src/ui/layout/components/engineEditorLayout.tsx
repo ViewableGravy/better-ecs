@@ -1,7 +1,10 @@
-import { ReactNode } from "react";
-import { useInvariantContext } from "@ui/utilities/hooks/use-invariant-context";
 import { PreviewModeContext } from "@ui/components/previewMode";
 import styles from "@ui/layout/components/styles.module.css";
+import { EngineUiContext } from "@ui/utilities/engine-context";
+import { useInvariantContext } from "@ui/utilities/hooks/use-invariant-context";
+import classNames from "classnames";
+import { ReactNode } from "react";
+import { useSnapshot } from "valtio";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -29,21 +32,21 @@ type QuickActionsComponent = React.FC<EngineEditorLayoutQuickActionsProps>;
 
 const Root: RootComponent = ({ children }) => {
   const [isPreviewMode] = useInvariantContext(PreviewModeContext);
-  const rootClassName = [
-    styles.engineEditorLayoutRootBase,
-    isPreviewMode ? styles.engineEditorLayoutRootPreview : styles.engineEditorLayoutRootDefault,
-  ].join(" ");
+  const rootClassName = classNames(styles.engineEditorLayoutRootBase, {
+    [styles.engineEditorLayoutRootPreview]: isPreviewMode,
+    [styles.engineEditorLayoutRootDefault]: !isPreviewMode,
+  });
 
   return <div className={rootClassName}>{children}</div>;
 };
 
 const QuickActions: QuickActionsComponent = ({ children }) => {
   const [isPreviewMode] = useInvariantContext(PreviewModeContext);
-  const quickActionsClassName = [
-    styles.engineEditorLayoutQuickActionsBase,
-    isPreviewMode ? styles.engineEditorLayoutQuickActionsCompact : styles.engineEditorLayoutQuickActionsGrid,
-    isPreviewMode ? styles.engineEditorLayoutQuickActionsFloating : "",
-  ].join(" ");
+  const quickActionsClassName = classNames(styles.engineEditorLayoutQuickActionsBase, {
+    [styles.engineEditorLayoutQuickActionsCompact]: isPreviewMode,
+    [styles.engineEditorLayoutQuickActionsGrid]: !isPreviewMode,
+    [styles.engineEditorLayoutQuickActionsFloating]: isPreviewMode,
+  });
 
   return <section className={quickActionsClassName}>{children}</section>;
 };
@@ -58,10 +61,12 @@ type CenterComponent = React.FC<CenterProps>;
 
 const Center: CenterComponent = ({ children }) => {
   const [isPreviewMode] = useInvariantContext(PreviewModeContext);
-  const centerClassName = [
-    styles.engineEditorLayoutCenter,
-    isPreviewMode ? styles.engineEditorLayoutCenterPreview : "",
-  ].join(" ");
+  const engine = useInvariantContext(EngineUiContext);
+  const { paused } = useSnapshot(engine.editor.runningState);
+  const centerClassName = classNames(styles.engineEditorLayoutCenter, {
+    [styles.engineEditorLayoutCenterPreview]: isPreviewMode,
+    [styles.engineEditorLayoutCenterPaused]: paused,
+  });
 
   return <main className={centerClassName}>{children}</main>;
 };
@@ -79,9 +84,7 @@ const PanelTitle: RegionComponent = ({ children }) => {
 };
 
 const PanelContent: RegionComponent = ({ children, className }) => {
-  const panelContentClassName = [styles.engineEditorLayoutPanelContent, className]
-    .filter((value) => value !== undefined && value !== "")
-    .join(" ");
+  const panelContentClassName = classNames(styles.engineEditorLayoutPanelContent, className);
 
   return <div className={panelContentClassName}>{children}</div>;
 };
