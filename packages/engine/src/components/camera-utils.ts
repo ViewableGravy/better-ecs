@@ -70,6 +70,23 @@ export function resolveCameraView(
   return cameraViewBuffer;
 }
 
+export function resolveActiveCameraView(
+  world: UserWorld,
+  cameraEntityId?: EntityId,
+): CameraView {
+  const engine = useEngine();
+  const camera = engine.editor.camera;
+
+  if (camera.mode === "engine") {
+    cameraViewBuffer.x = camera.x;
+    cameraViewBuffer.y = camera.y;
+    cameraViewBuffer.zoom = camera.zoom > 0 ? camera.zoom : 1;
+    return cameraViewBuffer;
+  }
+
+  return resolveCameraView(world, cameraEntityId);
+}
+
 export function screenToWorld(
   screenValue: number,
   viewportSize: number,

@@ -1,6 +1,6 @@
 import { Transform2D, Transform3D } from "../components/transform";
 import { useWorld } from "../core/context";
-import { createSystem } from "../core/register/system";
+import { createSystem } from "../core/system";
 
 export const transformSnapshotSystem = createSystem("engine:transformSnapshot")({
   system: () => {

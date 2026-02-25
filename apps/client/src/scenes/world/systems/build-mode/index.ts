@@ -2,7 +2,7 @@ import type { RenderVisibilityRole } from "@/scenes/world/components/render-visi
 import { HOUSE_INTERIOR, OUTSIDE } from "@/scenes/world/components/render-visibility";
 import { spawnBox } from "@/scenes/world/factories/spawnBox";
 import { createSystem, useEngine, useMouse, useSystem, type RegisteredEngine, type RegisteredSystems } from "@repo/engine";
-import { resolveCameraView } from "@repo/engine/components";
+import { resolveActiveCameraView } from "@repo/engine/components";
 import { SpatialContexts, type ContextId } from "@repo/spatial-contexts";
 import { GhostPreview } from "./components";
 import { buildModeStateDefault, buildModeStateSchema } from "./const";
@@ -37,7 +37,7 @@ export const System = createSystem("main:build-mode")({
     Keybinds.matchKeybinds();
     HUD.update();
 
-    const camera = resolveCameraView(focusedWorld);
+    const camera = resolveActiveCameraView(focusedWorld);
     const worldPointer = mouse.world(camera);
 
     const snappedX = Placement.snapToGrid(worldPointer.x);

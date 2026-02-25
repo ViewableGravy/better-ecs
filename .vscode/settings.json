@@ -24,4 +24,5 @@
   "vitest.disableWorkspaceWarning": true,
   "npm.packageManager": "bun",
   "chat.useAgentSkills": true,
+  "github.copilot.chat.agentCustomizationSkill.enabled": true
 }

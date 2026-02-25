@@ -1,5 +1,5 @@
 // packages/engine/src/core/scene/scene.ts
-import type { SystemFactoryTuple } from "../register/system";
+import type { SystemFactoryTuple } from "../system";
 import { SCENE_BRAND, type SceneConfig, type SceneDefinition } from "./scene.types";
 
 /**

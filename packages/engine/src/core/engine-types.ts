@@ -2,10 +2,11 @@ import { SceneManager } from ".";
 import { AssetManager } from "../asset";
 import type { inputSystem } from "../systems/input";
 import type { transformSnapshotSystem } from "../systems/transformSnapshot";
-import type { EngineClass } from "./register/internal";
-import type { EngineSystem, SystemFactory, SystemFactoryTuple } from "./register/system";
+import type { EngineClass } from "./engine";
+import type { EngineEditor } from "./engine-editor";
 import type { RenderPipeline } from "./render-pipeline";
 import type { SceneDefinition, SceneDefinitionTuple } from "./scene/scene.types";
+import type { EngineSystem, SystemFactory, SystemFactoryTuple } from "./system";
 import type { InferStandardSchema, StandardSchema } from "./types";
 
 // --- Type Registration (via module augmentation) ---
@@ -17,7 +18,7 @@ export interface Register {
 export type AnyEngine = {
   systems: Record<string, any>;
   world: any;
-  frame: any;
+  meta: any;
   /**
    * Record of scene names to scene definitions.
    * This is a computed property from SceneManager.
@@ -27,6 +28,7 @@ export type AnyEngine = {
   scene: SceneManager<any>;
   assets: AssetManager<any>;
   render: RenderPipeline | null;
+  editor: EngineEditor;
   canvas: HTMLCanvasElement;
 };
 

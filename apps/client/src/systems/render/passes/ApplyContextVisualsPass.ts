@@ -34,7 +34,7 @@ export const ApplyContextVisualsPass = createRenderPass("apply-context-visuals")
     const rootContextId = manager.rootContextId;
     const focused = manager.focusedContextId;
     const activeInteriorContextId = getActiveInteriorContextId(manager, focused, rootContextId);
-    const blendByContext = getRoofBlendByContext(manager, engine.frame.updateProgress);
+    const blendByContext = getRoofBlendByContext(manager, engine.meta.updateProgress);
     const activeInteriorBlend =
       activeInteriorContextId === undefined
         ? 0

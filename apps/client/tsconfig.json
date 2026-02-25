@@ -1,10 +1,9 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "target": "ES2022",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
+    "types": ["node"],
     "allowImportingTsExtensions": true,
     "noEmit": true,
     "skipLibCheck": true,
@@ -14,16 +13,19 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "vite.config.ts"],
   "references": [
     {
-      "path": "../../packages/tooling/hmr"
+      "path": "../../packages/utils"
+    },
+    {
+      "path": "../../packages/foundation/spatial-contexts"
     },
     {
       "path": "../../packages/foundation/physics"
     },
     {
-      "path": "../../packages/foundation/spatial-contexts"
+      "path": "../../packages/tooling/hmr"
     },
     {
       "path": "../../packages/features/fps"

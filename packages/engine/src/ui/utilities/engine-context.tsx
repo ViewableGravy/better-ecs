@@ -1,6 +1,5 @@
 import { createContext } from "react";
-import type { SceneDefinitionTuple, SystemFactoryTuple } from "../../core";
-import type { EngineClass } from "../../core/register/internal";
+import type { EngineClass, SceneDefinitionTuple, SystemFactoryTuple } from "../../core";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS

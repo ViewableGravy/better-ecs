@@ -1,15 +1,16 @@
+import { engineHmr } from "@repo/hmr";
 import tailwindcss from "@tailwindcss/vite";
-import path from "path";
+import { resolve } from "node:path";
 import { defineConfig } from "vite";
-import { engineHmr } from "../../packages/tooling/hmr/src/plugin";
+import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
   root: __dirname,
-  plugins: [tailwindcss(), engineHmr()],
+  plugins: [tsconfigPaths(), tailwindcss(), engineHmr()],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
-      "@ui": path.resolve(__dirname, "../../packages/engine/src/ui"),
+      "@": resolve(__dirname, "./src"),
+      "@ui": resolve(__dirname, "../../packages/engine/src/ui"),
     },
   },
   server: {
@@ -23,8 +24,8 @@ export default defineConfig({
     fs: {
       // Allow serving files from workspace packages
       allow: [
-        path.resolve(__dirname, "../../packages"),
-        path.resolve(__dirname, "../../node_modules"),
+        resolve(__dirname, "../../packages"),
+        resolve(__dirname, "../../node_modules"),
         __dirname,
       ],
     },

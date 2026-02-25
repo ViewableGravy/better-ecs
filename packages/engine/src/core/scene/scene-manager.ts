@@ -1,9 +1,8 @@
 // packages/engine/src/core/scene/scene-manager.ts
 import { UserWorld, World } from "../../ecs/world";
 import { executeWithContext } from "../context";
-import type { EngineClass } from "../register/internal";
-import type { EngineSystem } from "../register/system";
-import { executeSystemCleanup, executeSystemInitialize } from "../register/system";
+import type { EngineClass } from "../engine";
+import { SystemsManager } from "../engine/systems";
 import { SceneContext } from "./scene-context";
 import type { SceneDefinition, SceneDefinitionTuple, SceneName } from "./scene.types";
 
@@ -35,16 +34,10 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
   // Reference to engine for context execution
   #engineRef: EngineClass<any, any, any> | null = null;
 
-  #sceneSystems: Map<
-    string,
-    {
-      all: EngineSystem[];
-      update: EngineSystem[];
-    }
-  > = new Map();
-  #initializedSceneSystems: Set<string> = new Set();
+  #systemsManager: SystemsManager;
 
-  constructor(scenes: SceneDefinitionTuple = []) {
+  constructor(scenes: SceneDefinitionTuple = [], systemsManager?: SystemsManager) {
+    this.#systemsManager = systemsManager ?? new SystemsManager({});
     this.#activeWorld = new World("__default__");
     this.#userWorld = new UserWorld(this.#activeWorld);
     this.#activeSceneContext = new SceneContext(SceneManager.DEFAULT_SCENE_NAME, this.#activeWorld);
@@ -53,25 +46,18 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
     // Register all scenes and instantiate their scene-level systems (per engine instance)
     for (const scene of scenes) {
       this.#scenes.set(scene.name, scene);
-
-      const instances = scene.systems.map((factory) => factory());
-      const update = this.#sortSystemsForPhase(instances);
-      this.#sceneSystems.set(scene.name, { all: instances, update });
     }
+
+    this.#systemsManager.registerSceneSystems(scenes);
   }
 
   /**
    * Set the engine reference for context execution.
    * @internal
    */
-  setEngineRef(engine: EngineClass<any, any, any>): void {
+  setEngineRef(engine: EngineClass<any, any, any>): this {
     this.#engineRef = engine;
-  }
-
-  #sortSystemsForPhase(systems: EngineSystem[]): EngineSystem[] {
-    const getPriority = (system: EngineSystem): number => system.priority;
-
-    return systems.sort((a, b) => getPriority(b) - getPriority(a));
+    return this;
   }
 
   /** Get the currently active scene's active world (defaults to the scene default world). */
@@ -139,22 +125,6 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
   /** Check if a scene is registered. */
   has(sceneName: string): boolean {
     return this.#scenes.has(sceneName);
-  }
-
-  /** @internal Get scene-level systems for the active scene update loop. */
-  getUpdateSystems(): EngineSystem[] {
-    if (!this.#activeScene) return [];
-    const entry = this.#sceneSystems.get(this.#activeScene.name);
-    if (!entry) return [];
-    return entry.update;
-  }
-
-  /** @internal Get a scene-level system instance by name for the active scene. */
-  getActiveSystem(name: string): EngineSystem | undefined {
-    if (!this.#activeScene) return undefined;
-    const entry = this.#sceneSystems.get(this.#activeScene.name);
-    if (!entry) return undefined;
-    return entry.all.find((s) => s.name === name);
   }
 
   /**
@@ -226,26 +196,11 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
     return this.#activeScene?.name === fresh.name;
   }
 
-  /**
-   * Get all scene-level system instances across all scenes.
-   * Used by HMR to register scene systems for hot-swapping.
-   * @internal
-   */
-  getAllSceneSystems(): EngineSystem[] {
-    const all: EngineSystem[] = [];
-    for (const entry of this.#sceneSystems.values()) {
-      all.push(...entry.all);
-    }
-    return all;
-  }
-
   async #teardownActiveScene(): Promise<void> {
     const prevScene = this.#activeScene;
     const prevContext = this.#activeSceneContext;
 
     if (!prevScene) return;
-
-    const systems = this.#sceneSystems.get(prevScene.name);
 
     const prevDefault = prevContext.getInternalWorld(prevContext.defaultWorldId);
     if (prevDefault) {
@@ -256,19 +211,11 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
 
     await executeWithContext({ engine: this.#engineRef, scene: prevContext }, async () => {
       // Cleanup scene-level systems before teardown
-      if (systems) {
-        for (const system of systems.all) {
-          executeSystemCleanup(system);
-        }
-      }
+      this.#systemsManager.cleanupSceneSystems(prevScene.name);
 
       await prevScene.sceneTeardown(prevContext);
       await prevScene.teardown(this.#userWorld);
     });
-
-    if (systems) {
-      this.#initializedSceneSystems.delete(prevScene.name);
-    }
 
     prevContext.clearAllWorlds();
     this.#activeScene = null;
@@ -285,13 +232,7 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
     this.#userWorld.setWorld(newWorld);
 
     await executeWithContext({ engine: this.#engineRef, scene: newContext }, async () => {
-      const systems = this.#sceneSystems.get(scene.name);
-      if (systems && !this.#initializedSceneSystems.has(scene.name)) {
-        for (const system of systems.all) {
-          executeSystemInitialize(system);
-        }
-        this.#initializedSceneSystems.add(scene.name);
-      }
+      this.#systemsManager.initializeSceneSystems(scene.name);
 
       await scene.sceneSetup(newContext);
       await scene.setup(this.#userWorld);
