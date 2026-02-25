@@ -14,15 +14,19 @@
   "dependencies": {
     "@repo/engine": "workspace:*",
     "@repo/fps": "workspace:*",
+    "@repo/hmr": "workspace:*",
     "@repo/physics": "workspace:*",
     "@repo/spatial-contexts": "workspace:*",
+    "@repo/utils": "workspace:*",
     "@standard-schema/spec": "^1.1.0",
+    "@tailwindcss/vite": "^4.2.1",
     "tiny-invariant": "^1.3.3",
     "zod": "^4.3.4"
   },
   "devDependencies": {
     "type-fest": "^5.4.4",
     "typescript": "^5.9.3",
-    "vite": "^7.0.0"
+    "vite": "^7.0.0",
+    "vite-tsconfig-paths": "^6.1.1"
   }
 }

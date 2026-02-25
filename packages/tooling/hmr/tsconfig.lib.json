@@ -4,6 +4,8 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "lib": ["DOM", "ESNext"],
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
     "composite": true,
     "declaration": true,
     "declarationMap": true,
