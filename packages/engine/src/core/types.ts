@@ -11,8 +11,8 @@ export type EngineFrame = {
   readonly shouldUpdate: boolean;
 }
 
-// --- Frame Stats Type ---
-export type FrameStats = {
+// --- Engine Meta Type ---
+export type MetaStats = {
   /** Delta time since last update in milliseconds */
   updateDelta: number;
   /** Delta time since last frame in milliseconds */

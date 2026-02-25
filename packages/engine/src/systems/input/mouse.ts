@@ -55,7 +55,7 @@ let lastCanvasUpdateTime = -1;
 const mouseApi: Mouse = {
   get screen(): MousePoint {
     const engine = useEngine();
-    const currentTime = engine.frame.lastUpdateTime;
+    const currentTime = engine.meta.lastUpdateTime;
     
     if (lastScreenUpdateTime !== currentTime) {
       const { data } = useSystem("engine:input");
@@ -68,7 +68,7 @@ const mouseApi: Mouse = {
   },
   get canvas(): MousePoint {
     const engine = useEngine();
-    const currentTime = engine.frame.lastUpdateTime;
+    const currentTime = engine.meta.lastUpdateTime;
     
     if (lastCanvasUpdateTime !== currentTime) {
       const { data } = useSystem("engine:input");
@@ -86,7 +86,7 @@ const mouseApi: Mouse = {
   },
   world(cameraOrX: MouseCameraView | number, y?: number, zoom?: number): MousePoint {
     const engine = useEngine();
-    const currentTime = engine.frame.lastUpdateTime;
+    const currentTime = engine.meta.lastUpdateTime;
     
     // Note: We can't memoize world pointer based on just time since camera parameters change
     // However, we can still avoid re-computing canvas pointer if it was already computed this frame

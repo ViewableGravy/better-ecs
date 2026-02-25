@@ -98,7 +98,7 @@ export function createEngine<
 	}
 
 	if (opts.initialization) {
-		(engine as any).initializationSystem = opts.initialization;
+		engine.setInitializationSystem(opts.initialization);
 	}
 
 	if (opts.scenes?.length) {

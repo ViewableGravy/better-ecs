@@ -86,8 +86,8 @@ export function createRenderPipeline<
 			const passContext = getOrInitializeContext();
 			const engine = useEngine();
 
-			const updateTimeMs = 1000 / engine.frame.ups;
-			const timeSinceLastUpdate = performance.now() - engine.frame.lastUpdateTime;
+			const updateTimeMs = 1000 / engine.meta.ups;
+			const timeSinceLastUpdate = performance.now() - engine.meta.lastUpdateTime;
 			passContext.alpha = Math.min(timeSinceLastUpdate / updateTimeMs, 1);
 			passContext.visibleWorlds = passContext.worldProvider.getVisibleWorlds();
 

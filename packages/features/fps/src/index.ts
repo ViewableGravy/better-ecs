@@ -41,12 +41,12 @@ export const System = (
     const { data } = useOverloadedSystem<EngineSystem<typeof schema>>("plugin:fps-counter");
     const now = performance.now();
 
-    if (data.customFps !== null && engine.frame.fps !== data.customFps) {
-      engine.frame.fps = data.customFps;
+    if (data.customFps !== null && engine.meta.fps !== data.customFps) {
+      engine.meta.fps = data.customFps;
     }
 
-    if (data.customUps !== null && engine.frame.ups !== data.customUps) {
-      engine.frame.ups = data.customUps;
+    if (data.customUps !== null && engine.meta.ups !== data.customUps) {
+      engine.meta.ups = data.customUps;
     }
 
     if (!data.upsBuffer.start) {

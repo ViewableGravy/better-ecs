@@ -37,8 +37,8 @@ export function render(opts: Opts) {
   const currentUps = ups.length > 0 ? ups[ups.length - 1] : 0;
 
   // Use custom values if set, otherwise use engine defaults
-  const targetFps = data.customFps ?? engine.frame.fps ?? 60;
-  const targetUps = data.customUps ?? engine.frame.ups ?? 60;
+  const targetFps = data.customFps ?? engine.meta.fps ?? 60;
+  const targetUps = data.customUps ?? engine.meta.ups ?? 60;
 
   if (data.mode === "disabled") {
     return;

@@ -64,8 +64,9 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
    * Set the engine reference for context execution.
    * @internal
    */
-  setEngineRef(engine: EngineClass<any, any, any>): void {
+  setEngineRef(engine: EngineClass<any, any, any>): this {
     this.#engineRef = engine;
+    return this;
   }
 
   #sortSystemsForPhase(systems: EngineSystem[]): EngineSystem[] {

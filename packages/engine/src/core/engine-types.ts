@@ -17,7 +17,7 @@ export interface Register {
 export type AnyEngine = {
   systems: Record<string, any>;
   world: any;
-  frame: any;
+  meta: any;
   /**
    * Record of scene names to scene definitions.
    * This is a computed property from SceneManager.

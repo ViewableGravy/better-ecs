@@ -8,7 +8,10 @@ import { SceneManager } from "../scene/scene-manager";
 import type { SceneDefinitionTuple } from "../scene/scene.types";
 import { executeSystemInitialize } from "../system";
 import type { EngineInitializationSystem, EngineSystem, SystemFactoryTuple } from "../system/types";
-import type { FrameStats } from "../types";
+import { DeltaState } from "./delta";
+import { InitState } from "./init";
+import { Meta } from "./meta";
+import { PhaseState } from "./phase";
 import type { AllSystems, ScenesTupleToRecord, StartEngineGenerator, StartEngineOpts } from "./types";
 
 export class EngineClass<
@@ -18,51 +21,31 @@ export class EngineClass<
 > {
 	#systems: Record<string, EngineSystem<any>>;
 	#systemsView: Record<string, EngineSystem<any>>;
-	#canvasManager: CanvasManager;
-
 	#updateSystems: EngineSystem<any>[] = [];
+
+	#canvasManager: CanvasManager;
 	#renderPipeline: RenderPipeline | null;
-
-	#currentPhase: "update" | "render" | null = null;
-	#phaseFn = (phase: "update" | "render") => phase === this.#currentPhase;
-
-	private initializationSystem: EngineInitializationSystem | null = null;
-	private initialized = false;
+	#phase: PhaseState = new PhaseState();
+	#init: InitState = new InitState();
+	#delta: DeltaState = new DeltaState();
 
 	public readonly scene: SceneManager<TScenes>;
-	public readonly assets: AssetManager<TAssets>;
-	public readonly render: RenderPipeline | null;
 	public readonly runningState: EngineRunningState = createEngineRunningState();
-
-	public frame: FrameStats = {
-		updateDelta: 0,
-		frameDelta: 0,
-		phase: () => false,
-		fps: 60,
-		ups: 60,
-		initialFPS: 60,
-		initialUPS: 60,
-		updateProgress: 0,
-		lastUpdateTime: 0,
-	};
+	public readonly meta: Meta = new Meta(this.#phase.is);
 
 	public constructor(
 		systems: Record<string, EngineSystem<any>>,
 		scenes: SceneDefinitionTuple = [],
-		assets: AssetManager<TAssets>,
+		public readonly assets: AssetManager<TAssets>,
 		renderPipeline: RenderPipeline | null,
 		canvas: HTMLCanvasElement | null,
 		awaitCanvasBeforeStart = false,
 	) {
 		this.#systems = systems;
-		this.scene = new SceneManager<TScenes>(scenes);
-		this.scene.setEngineRef(this);
-		this.assets = assets;
 		this.#renderPipeline = renderPipeline;
-		this.#canvasManager = new CanvasManager(canvas, awaitCanvasBeforeStart);
-		this.render = renderPipeline;
 
-		this.frame.phase = this.#phaseFn;
+		this.scene = new SceneManager<TScenes>(scenes).setEngineRef(this);
+		this.#canvasManager = new CanvasManager(canvas, awaitCanvasBeforeStart);
 
 		this.#systemsView = new Proxy(this.#systems, {
 			get: (target, prop) => {
@@ -113,12 +96,16 @@ export class EngineClass<
 		await this.#canvasManager.waitForCanvasReady();
 	}
 
+	public setInitializationSystem(system: EngineInitializationSystem): void {
+		this.#init.setInitializationSystem(system);
+	}
+
 	public async initialize(): Promise<void> {
-		if (this.initialized) return;
+		if (this.#init.initialized) return;
 
 		await executeWithContext({ engine: this, scene: this.scene.context }, async () => {
-			if (this.initializationSystem) {
-				await this.initializationSystem.system();
+			if (this.#init.initializationSystem) {
+				await this.#init.initializationSystem.system();
 			}
 
 			for (const system of Object.values(this.#systems)) {
@@ -128,7 +115,7 @@ export class EngineClass<
 			this.#renderPipeline?.initialize();
 		});
 
-		this.initialized = true;
+		this.#init.markInitialized();
 	}
 
 	public async *startEngine(opts?: StartEngineOpts): StartEngineGenerator {
@@ -136,13 +123,10 @@ export class EngineClass<
 
 		await this.initialize();
 
-		this.frame.fps = opts?.fps || 60;
-		this.frame.ups = opts?.ups || 60;
-		this.frame.initialFPS = opts?.fps || 60;
-		this.frame.initialUPS = opts?.ups || 60;
+		this.meta.setTargetRates(opts?.fps || 60, opts?.ups || 60);
 
-		let lastUpdateTime = performance.now();
-		let lastFrameTime = performance.now();
+		const now = performance.now();
+		this.#delta.initialize(now);
 
 		const updateState = {
 			delta: 0,
@@ -160,33 +144,21 @@ export class EngineClass<
 			if (typeof window !== "undefined" && window.requestAnimationFrame) {
 				return window.requestAnimationFrame(cb);
 			}
-			return setTimeout(() => cb(performance.now()), 1000 / this.frame.fps);
+			return setTimeout(() => cb(performance.now()), 1000 / this.meta.fps);
 		};
 
 		while (!opts?.signal?.aborted) {
-			const frameTime = 1000 / this.frame.fps;
-			const updateTime = 1000 / this.frame.ups;
-
 			const now = await new Promise<number>(requestAnimationFrame);
+			const snapshot = this.#delta.calculate(now, this.meta.fps, this.meta.ups);
+			const updateTime = 1000 / this.meta.ups;
 
-			const updateDelta = now - lastUpdateTime;
-			const frameDelta = now - lastFrameTime;
+			if (snapshot.updateShouldRun || snapshot.frameShouldRun) {
+				(updateState as any).delta = snapshot.updateDelta;
+				(updateState as any).shouldUpdate = snapshot.updateShouldRun;
+				(frameState as any).delta = snapshot.frameDelta;
+				(frameState as any).shouldUpdate = snapshot.frameShouldRun;
 
-			const frameTolerance = frameTime * 0.15;
-			const updateTolerance = updateTime * 0.15;
-
-			const updateShouldRun = updateDelta >= updateTime - updateTolerance;
-			const frameShouldRun = frameDelta >= frameTime - frameTolerance;
-
-			if (updateShouldRun || frameShouldRun) {
-				(updateState as any).delta = updateDelta;
-				(updateState as any).shouldUpdate = updateShouldRun;
-				(frameState as any).delta = frameDelta;
-				(frameState as any).shouldUpdate = frameShouldRun;
-
-				this.frame.updateDelta = updateDelta;
-				this.frame.frameDelta = frameDelta;
-				this.frame.updateProgress = Math.min(updateDelta / updateTime, 1.0);
+				this.meta.setDeltas(snapshot.updateDelta, snapshot.frameDelta, updateTime);
 
 				if (!this.scene.isTransitioning) {
 					if (frameState.shouldUpdate) {
@@ -194,16 +166,16 @@ export class EngineClass<
 					}
 					if (updateState.shouldUpdate && !this.runningState.paused) {
 						this.runUpdateSystems(updateState.shouldUpdate);
-						lastUpdateTime = now;
-						this.frame.lastUpdateTime = now;
+						this.#delta.markUpdated(now);
+						this.meta.markUpdated(now);
 						(updateState as any).shouldUpdate = false;
 					}
 				}
 
 				yield yieldState;
 
-				if (frameShouldRun) {
-					lastFrameTime = now;
+				if (snapshot.frameShouldRun) {
+					this.#delta.markFramed(now);
 				}
 			}
 		}
@@ -213,7 +185,7 @@ export class EngineClass<
 		if (!shouldUpdate) return;
 		if (!this.#renderPipeline) return;
 
-		this.#currentPhase = "render";
+		this.#phase.setCurrent("render");
 
 		const activeSceneContext = this.scene.context;
 
@@ -221,13 +193,13 @@ export class EngineClass<
 			this.#renderPipeline?.render();
 		});
 
-		this.#currentPhase = null;
+		this.#phase.clear();
 	}
 
 	private runUpdateSystems(shouldUpdate: boolean) {
 		if (!shouldUpdate) return;
 
-		this.#currentPhase = "update";
+		this.#phase.setCurrent("update");
 		const systemsToRun = this.#updateSystems;
 
 		const activeSceneContext = this.scene.context;
@@ -245,6 +217,6 @@ export class EngineClass<
 			}
 		});
 
-		this.#currentPhase = null;
+		this.#phase.clear();
 	}
 }
