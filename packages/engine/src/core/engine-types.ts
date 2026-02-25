@@ -3,7 +3,7 @@ import { AssetManager } from "../asset";
 import type { inputSystem } from "../systems/input";
 import type { transformSnapshotSystem } from "../systems/transformSnapshot";
 import type { EngineClass } from "./engine";
-import type { EngineCamera } from "./engine-camera";
+import type { EngineEditor } from "./engine-editor";
 import type { RenderPipeline } from "./render-pipeline";
 import type { SceneDefinition, SceneDefinitionTuple } from "./scene/scene.types";
 import type { EngineSystem, SystemFactory, SystemFactoryTuple } from "./system";
@@ -28,7 +28,7 @@ export type AnyEngine = {
   scene: SceneManager<any>;
   assets: AssetManager<any>;
   render: RenderPipeline | null;
-  cameraState: EngineCamera;
+  editor: EngineEditor;
   canvas: HTMLCanvasElement;
 };
 

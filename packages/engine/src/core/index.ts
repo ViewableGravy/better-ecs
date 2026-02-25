@@ -1,6 +1,7 @@
 // Register folder exports
 export * from "./engine";
 export * from "./engine-camera";
+export * from "./engine-editor";
 export * from "./engine-types";
 export * from "./factory";
 export * from "./render-pipeline";

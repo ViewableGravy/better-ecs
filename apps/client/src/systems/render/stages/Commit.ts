@@ -16,7 +16,7 @@ export function commitWorld(
   const engine = useEngine();
 
   // --- Camera ---
-  if (engine.cameraState.mode === "engine") {
+  if (engine.editor.camera.mode === "engine") {
     const camera = resolveActiveCameraView(world);
     renderer.low.setCamera(camera.x, camera.y, camera.zoom);
   } else {

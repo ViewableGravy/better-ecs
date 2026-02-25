@@ -75,11 +75,12 @@ export function resolveActiveCameraView(
   cameraEntityId?: EntityId,
 ): CameraView {
   const engine = useEngine();
+  const camera = engine.editor.camera;
 
-  if (engine.cameraState.mode === "engine") {
-    cameraViewBuffer.x = engine.cameraState.x;
-    cameraViewBuffer.y = engine.cameraState.y;
-    cameraViewBuffer.zoom = engine.cameraState.zoom > 0 ? engine.cameraState.zoom : 1;
+  if (camera.mode === "engine") {
+    cameraViewBuffer.x = camera.x;
+    cameraViewBuffer.y = camera.y;
+    cameraViewBuffer.zoom = camera.zoom > 0 ? camera.zoom : 1;
     return cameraViewBuffer;
   }
 
