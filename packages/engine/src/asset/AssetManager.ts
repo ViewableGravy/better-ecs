@@ -34,8 +34,27 @@ export class AssetManager<TAssets extends Assets = Assets> implements LooseAsset
    */
   private registry: Registry<TAssets>;
 
+  /**
+   * Timeout (in milliseconds) for asset loading. Default is 10 seconds.
+   */
+  private readonly loadTimeoutMs = 10000;
+
   constructor(registry: Registry<TAssets> = { assets: {} }) {
     this.registry = registry;
+  }
+
+  /**
+   * Wraps a promise with a timeout. Rejects if the promise doesn't resolve within loadTimeoutMs.
+   */
+  private withTimeout<T>(promise: Promise<T>, key: AssetKey<TAssets>): Promise<T> {
+    return Promise.race([
+      promise,
+      new Promise<T>((_, reject) => {
+        setTimeout(() => {
+          reject(new Error(`[AssetManager] Asset "${key}" failed to load: timeout after ${this.loadTimeoutMs}ms`));
+        }, this.loadTimeoutMs);
+      }),
+    ]);
   }
 
   private isRegisteredKey(path: string): path is AssetKey<TAssets> {
@@ -140,7 +159,7 @@ export class AssetManager<TAssets extends Assets = Assets> implements LooseAsset
       return promise;
     }
 
-    const promise = adapter.load(key).then(
+    const promise = this.withTimeout(adapter.load(key), key).then(
       (asset) => {
         this.states[key] = "ready";
         this.storage[key] = asset;
