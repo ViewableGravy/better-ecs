@@ -1,6 +1,6 @@
 import { Color } from "../../components/sprite";
-import type { ShapeRenderData } from "../low-level";
-import type { RenderCommand } from "../render-queue";
+import type { ShapeRenderData } from "../types/low-level";
+import type { RenderCommand } from "../queue/render-queue";
 import type { FramePoolFactory } from "./types";
 
 type ShapeCommandFactory = FramePoolFactory<ShapeRenderData, readonly []>;

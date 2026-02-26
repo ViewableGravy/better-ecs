@@ -1,5 +1,5 @@
-import { Color } from "../components/sprite";
-import type { LowLevelRenderer, ShapeRenderData, SpriteRenderData } from "./low-level";
+import { Color } from "../../../components/sprite";
+import type { LowLevelRenderer, ShapeRenderData, SpriteRenderData } from "../../types/low-level";
 
 /**
  * Canvas 2D implementation of the low-level renderer.

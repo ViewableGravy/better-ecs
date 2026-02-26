@@ -1,4 +1,4 @@
-import type { Color } from "../components/sprite";
+import type { Color } from "../../components/sprite";
 
 /**
  * Data required to draw a sprite at the low level.

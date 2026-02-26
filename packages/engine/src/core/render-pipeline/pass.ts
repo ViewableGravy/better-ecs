@@ -1,4 +1,4 @@
-import type { EngineFrameAllocatorRegistry, FrameAllocatorRegistry } from "../../render/frame-allocator";
+import type { EngineFrameAllocatorRegistry, FrameAllocatorRegistry } from "../../render";
 import type { RenderPassContext } from "./context";
 import type { RenderPassScope } from "./types";
 

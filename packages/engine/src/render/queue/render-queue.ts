@@ -1,6 +1,6 @@
-import type { EntityId } from "../ecs/entity";
-import type { UserWorld } from "../ecs/world";
-import type { ShapeRenderData } from "./low-level";
+import type { EntityId } from "../../ecs/entity";
+import type { UserWorld } from "../../ecs/world";
+import type { ShapeRenderData } from "../types/low-level";
 
 /**
  * The kind of render command stored in {@link RenderQueue}.

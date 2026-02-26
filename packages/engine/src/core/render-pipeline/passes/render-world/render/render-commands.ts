@@ -5,9 +5,9 @@ import { resolveWorldTransform2D } from "../../../../../ecs/hierarchy";
 import type {
   EngineFrameAllocatorRegistry,
   InternalFrameAllocator,
-} from "../../../../../render/frame-allocator";
-import type { RenderQueue } from "../../../../../render/render-queue";
-import type { Renderer } from "../../../../../render/renderer";
+} from "../../../../../render";
+import type { RenderQueue } from "../../../../../render";
+import type { Renderer } from "../../../../../render";
 
 const SHARED_RENDER_TRANSFORM = new Transform2D();
 

@@ -1,7 +1,7 @@
 import { Shape } from "../../../../../components";
 import type { UserWorld } from "../../../../../ecs/world";
-import type { EngineFrameAllocatorRegistry, InternalFrameAllocator } from "../../../../../render/frame-allocator";
-import type { RenderQueue } from "../../../../../render/render-queue";
+import type { EngineFrameAllocatorRegistry, InternalFrameAllocator } from "../../../../../render";
+import type { RenderQueue } from "../../../../../render";
 
 export function queueShapes(
   world: UserWorld,

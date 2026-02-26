@@ -1,10 +1,10 @@
-import type { LooseAssetManager } from "../asset/AssetManager";
+import type { LooseAssetManager } from "../../../asset/AssetManager";
 import { Canvas2DHighLevel } from "./canvas2d-high-level";
 import { Canvas2DLowLevel } from "./canvas2d-low-level";
-import type { HighLevelRenderer } from "./high-level";
-import type { LowLevelRenderer } from "./low-level";
-import { DEFAULT_RENDERER_CONFIG, type Renderer, type RendererConfig } from "./renderer";
-import { TextureCache } from "./texture-cache";
+import type { HighLevelRenderer } from "../../types/high-level";
+import type { LowLevelRenderer } from "../../types/low-level";
+import { DEFAULT_RENDERER_CONFIG, type Renderer, type RendererConfig } from "../../types/renderer";
+import { TextureCache } from "../../textureCache/texture-cache";
 
 /**
  * Canvas 2D composite renderer.

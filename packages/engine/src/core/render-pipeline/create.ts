@@ -5,8 +5,8 @@ import {
     type EngineFrameAllocatorRegistry,
     type FrameAllocatorRegistry,
     type InternalFrameAllocator,
-} from "../../render/frame-allocator";
-import type { Renderer } from "../../render/renderer";
+} from "../../render";
+import type { Renderer } from "../../render";
 import { RenderPipelineContext } from "./context";
 import type { RenderPass } from "./pass";
 import { BeginFramePass } from "./passes/begin-frame";

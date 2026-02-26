@@ -1,4 +1,4 @@
-import type { RenderQueue } from "../../../../../render/render-queue";
+import type { RenderQueue } from "../../../../../render";
 
 export function sortCommands(queue: RenderQueue): void {
   queue.sortByLayer();

@@ -1,13 +1,13 @@
-import type { LooseAssetManager } from "../asset/AssetManager";
-import type { HighLevelRendererConfig } from "./canvas2d-high-level";
+import type { LooseAssetManager } from "../../asset/AssetManager";
+import type { HighLevelRendererConfig } from "../renderers/canvas2d/canvas2d-high-level";
 import type { HighLevelRenderer } from "./high-level";
 import type { LowLevelRenderer } from "./low-level";
-import type { TextureCacheConfig } from "./texture-cache";
+import type { TextureCacheConfig } from "../textureCache/texture-cache";
 
 export type { Renderable, Settable } from "./high-level";
 export type { ShapeRenderData, SpriteRenderData } from "./low-level";
-export { type TextureCacheConfig } from "./texture-cache";
-export type { TextureHandle, TextureInfo, TextureState, TextureStatus } from "./texture-cache";
+export { type TextureCacheConfig } from "../textureCache/texture-cache";
+export type { TextureHandle, TextureInfo, TextureState, TextureStatus } from "../textureCache/texture-cache";
 
 /**
  * Configuration for renderer behavior — combines cache and high-level

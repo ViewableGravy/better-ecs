@@ -10,30 +10,34 @@ export type {
     TextureInfo,
     TextureState,
     TextureStatus
-} from "./renderer";
+} from "./types/renderer";
 
-export { DEFAULT_RENDERER_CONFIG } from "./renderer";
-export type { Renderer } from "./renderer";
+export { DEFAULT_RENDERER_CONFIG } from "./types/renderer";
+export type { Renderer } from "./types/renderer";
 
 // ── Low / High level interfaces ─────────────────────────────────
-export type { HighLevelRenderer } from "./high-level";
-export type { LowLevelRenderer } from "./low-level";
+export type { HighLevelRenderer } from "./types/high-level";
+export type { LowLevelRenderer } from "./types/low-level";
 
 // ── Canvas 2D implementation ────────────────────────────────────
-export { Canvas2DRenderer } from "./canvas2d-renderer";
+export { Canvas2DRenderer } from "./renderers/canvas2d/canvas2d-renderer";
 
 // ── Texture cache ───────────────────────────────────────────────
-export { TextureCache } from "./texture-cache";
+export { TextureCache } from "./textureCache/texture-cache";
 
 // ── Render queue ────────────────────────────────────────────────
-export { RenderQueue } from "./render-queue";
+export { RenderQueue } from "./queue/render-queue";
 
 // ── Frame allocator ─────────────────────────────────────────────
-export {
-    FrameAllocator,
-    InternalFrameAllocator, engineFrameAllocatorRegistry, type EngineFrameAllocatorRegistry,
-    type FrameAllocatorRegistry,
-    type FramePoolFactory,
-    type MergeFrameAllocatorRegistry
-} from "./frame-allocator";
+export { FrameAllocator } from "./frame-allocator/frame-allocator";
+export { InternalFrameAllocator } from "./frame-allocator/internal-frame-allocator";
+export { engineFrameAllocatorRegistry } from "./frame-allocator/engine-registry";
+export type {
+  EngineFrameAllocatorRegistry,
+} from "./frame-allocator/engine-registry";
+export type {
+  FrameAllocatorRegistry,
+  FramePoolFactory,
+  MergeFrameAllocatorRegistry,
+} from "./frame-allocator/types";
 

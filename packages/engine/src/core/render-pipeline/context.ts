@@ -3,9 +3,9 @@ import {
 	type EngineFrameAllocatorRegistry,
 	type FrameAllocatorRegistry,
 	type InternalFrameAllocator,
-} from "../../render/frame-allocator";
-import { RenderQueue } from "../../render/render-queue";
-import type { Renderer } from "../../render/renderer";
+} from "../../render";
+import { RenderQueue } from "../../render";
+import type { Renderer } from "../../render";
 import type { WorldProvider } from "./types";
 
 export class RenderPipelineContext<

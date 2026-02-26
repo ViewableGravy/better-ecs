@@ -1,8 +1,8 @@
-import type { Camera } from "../components/camera";
-import type { Shape } from "../components/shape";
-import type { Color, Sprite } from "../components/sprite";
-import type { Transform2D } from "../components/transform/transform2d";
-import type { TextureCache } from "./texture-cache";
+import type { Camera } from "../../components/camera";
+import type { Shape } from "../../components/shape";
+import type { Color, Sprite } from "../../components/sprite";
+import type { Transform2D } from "../../components/transform/transform2d";
+import type { TextureCache } from "../textureCache/texture-cache";
 
 /**
  * Settable values for the high-level renderer.

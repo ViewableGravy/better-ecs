@@ -1,10 +1,10 @@
-import { Camera } from "../components/camera";
-import { Shape } from "../components/shape";
-import { Color, Sprite } from "../components/sprite";
-import type { Transform2D } from "../components/transform/transform2d";
-import type { HighLevelRenderer, Renderable, Settable } from "./high-level";
-import type { LowLevelRenderer, ShapeRenderData, SpriteRenderData } from "./low-level";
-import type { TextureCache, TextureState } from "./texture-cache";
+import { Camera } from "../../../components/camera";
+import { Shape } from "../../../components/shape";
+import { Color, Sprite } from "../../../components/sprite";
+import type { Transform2D } from "../../../components/transform/transform2d";
+import type { HighLevelRenderer, Renderable, Settable } from "../../types/high-level";
+import type { LowLevelRenderer, ShapeRenderData, SpriteRenderData } from "../../types/low-level";
+import type { TextureCache, TextureState } from "../../textureCache/texture-cache";
 
 // ── Shared render data (avoids per-frame allocation) ─────────────
 
