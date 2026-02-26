@@ -1,19 +1,12 @@
 import { engineHmr } from "@repo/hmr";
 import tailwindcss from "@tailwindcss/vite";
-import react from "@vitejs/plugin-react";
 import { resolve } from "node:path";
 import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
   root: __dirname,
-  plugins: [react(), tsconfigPaths(), tailwindcss(), engineHmr()],
-  resolve: {
-    alias: {
-      "@": resolve(__dirname, "./src"),
-      "@ui": resolve(__dirname, "../../packages/engine/src/ui"),
-    },
-  },
+  plugins: [tsconfigPaths(), tailwindcss(), engineHmr()],
   server: {
     port: 3000,
     host: "127.0.0.1",
@@ -32,7 +25,7 @@ export default defineConfig({
     },
     watch: {
       // Exclude heavy directories from file watching to reduce inotify pressure
-      ignored: ["**/node_modules/**", "**/dist/**", "**/.git/**", "**/performance-testing/**"],
+      ignored: ["**/node_modules/**", "**/.git/**", "**/performance-testing/**"],
     },
     allowedHosts: true,
   },

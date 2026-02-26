@@ -1,6 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "baseUrl": ".",
     "outDir": "./dist",
     "lib": ["DOM", "ES2022"],
     "jsx": "react-jsx",
@@ -11,7 +12,10 @@
     "sourceMap": true,
     "emitDeclarationOnly": false,
     "noEmit": false,
-    "typeRoots": ["../../node_modules/@types"]
+    "typeRoots": ["../../node_modules/@types"],
+    "paths": {
+      "@ui/*": ["./src/ui/*"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": [

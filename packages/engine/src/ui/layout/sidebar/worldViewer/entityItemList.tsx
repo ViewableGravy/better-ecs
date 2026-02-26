@@ -4,8 +4,8 @@ import { EntityTreeNodes } from "@ui/layout/sidebar/worldViewer/entityTreeNodes"
 import { EngineUiContext } from "@ui/utilities/engine-context";
 import { useIntervalState } from "@ui/utilities/hooks/use-interval-state";
 import { useInvariantContext } from "@ui/utilities/hooks/use-invariant-context";
-import { Gizmo, Parent } from "../../../../components";
-import type { EntityId } from "../../../../ecs/entity";
+import { Gizmo, Parent } from "@repo/engine/components";
+import type { EntityId } from "@repo/engine";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS

@@ -4,7 +4,7 @@ import { DebugHover } from "@ui/layout/sidebar/worldViewer/debugHover";
 import { Dropdown } from "@ui/layout/sidebar/worldViewer/dropdown";
 import type { EntityTreeNode } from "@ui/layout/sidebar/worldViewer/entityItemList";
 import { EntityRow } from "@ui/layout/sidebar/worldViewer/entityRow";
-import type { EntityId } from "../../../../ecs/entity";
+import type { EntityId } from "@repo/engine";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
