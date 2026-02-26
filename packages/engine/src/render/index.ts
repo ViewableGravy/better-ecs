@@ -1,15 +1,15 @@
 // ── Public types ─────────────────────────────────────────────────
 export type {
-  Renderable,
-  RendererConfig,
-  Settable,
-  ShapeRenderData,
-  SpriteRenderData,
-  TextureCacheConfig,
-  TextureHandle,
-  TextureInfo,
-  TextureState,
-  TextureStatus
+    Renderable,
+    RendererConfig,
+    Settable,
+    ShapeRenderData,
+    SpriteRenderData,
+    TextureCacheConfig,
+    TextureHandle,
+    TextureInfo,
+    TextureState,
+    TextureStatus
 } from "./renderer";
 
 export { DEFAULT_RENDERER_CONFIG } from "./renderer";
@@ -30,8 +30,10 @@ export { RenderQueue } from "./render-queue";
 
 // ── Frame allocator ─────────────────────────────────────────────
 export {
-  FrameAllocator,
-  type FrameAllocatorRegistry,
-  type FramePoolFactory
+    FrameAllocator,
+    InternalFrameAllocator, engineFrameAllocatorRegistry, type EngineFrameAllocatorRegistry,
+    type FrameAllocatorRegistry,
+    type FramePoolFactory,
+    type MergeFrameAllocatorRegistry
 } from "./frame-allocator";
 

@@ -1,15 +1,17 @@
 import { FPSPass } from "@/plugins/fps";
-import { CameraControlPass, createRenderPipeline, useAssets, useEngine } from "@repo/engine";
+import {
+  createRenderPipeline,
+  useAssets,
+  useEngine,
+} from "@repo/engine";
 import { Canvas2DRenderer, FrameAllocator } from "@repo/engine/render";
 import { ApplyContextVisualsPass } from "./passes/ApplyContextVisualsPass";
-import { BeginFramePass } from "./passes/BeginFramePass";
-import { EndFramePass } from "./passes/EndFramePass";
-import { RenderWorldPass } from "./passes/RenderWorldPass";
+import { DrawGridPass } from "./passes/DrawGridPass";
 import { ActiveWorldProvider } from "./world-provider";
 
 export const Render = createRenderPipeline({
   initializeContext() {
-    const canvas = getResizableCanvas();
+    const { canvas } = useEngine()
     const renderer = new Canvas2DRenderer();
 
     const assets = useAssets();
@@ -18,21 +20,14 @@ export const Render = createRenderPipeline({
     return {
       renderer,
       worldProvider: new ActiveWorldProvider(),
-      frameAllocator: new FrameAllocator({}),
+      frameAllocator: new FrameAllocator(),
     };
   },
-  passes: [
-    BeginFramePass, 
-    ApplyContextVisualsPass, 
-    CameraControlPass,
-    RenderWorldPass, 
-    FPSPass, 
-    EndFramePass
+  beforeWorldPasses: [
+    ApplyContextVisualsPass,
+  ],
+  afterWorldPasses: [
+    DrawGridPass,
+    FPSPass,
   ],
 });
-
-// Utility function to get the canvas and handle resizing
-function getResizableCanvas(): HTMLCanvasElement {
-  const { canvas } = useEngine();
-  return canvas;
-}

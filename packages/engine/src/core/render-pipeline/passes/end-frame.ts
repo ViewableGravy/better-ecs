@@ -1,4 +1,4 @@
-import { createRenderPass } from "@repo/engine";
+import { createRenderPass } from "../pass";
 
 export const EndFramePass = createRenderPass("end-frame")({
   execute({ renderer }) {
