@@ -12,7 +12,7 @@ To ensure consistent, predictable, and maintainable CSS classnames across the co
 ## When to use
 
 - When creating new React components that require styling.
-- When refactoring existing components to use standard CSS classnames.
+- When refactoring existing components with classnames.
 - When adding conditional styles or modifiers to elements.
 
 ## Behavior
@@ -22,7 +22,10 @@ To ensure consistent, predictable, and maintainable CSS classnames across the co
 3. **Root element naming**: The root element of a component should match the component's name but in `camelCase` (e.g., `myComponent` for `<MyComponent />`), or simply use `root`.
 4. **Modifiers are for conditionals**: Use descriptive camelCase names for conditional states (e.g., `isActive`, `isDisabled`, `hasError`). Apply them alongside the base class.
 5. **Avoid targeting children**: Do not target children classnames directly in CSS. Prefer passing a `className` prop to the child component.
-6. **Use `classNames` utility**: Use the `classNames` utility function for composing conditional classnames in React. If the `classNames` call must be formatted over multiple lines (e.g., due to line length or containing an object for conditional classes), assign it to a variable before the JSX return statement to prevent conflating the markup.
+6. **Use `classNames` for all conditional classnames**: Compose conditional classnames with the `classNames` utility. Do not use array joins or string interpolation for conditional class logic.
+7. **Keep `className` expressions simple and explicit**: A `className` should be either a string literal for static classes or a `classNames(...)` expression for any dynamic/conditional case.
+8. **Refactor on touch**: When modifying a component for any reason, normalize existing classname composition to these rules instead of preserving non-standard patterns.
+9. **Improve readability when multiline**: If a `classNames` call spans multiple lines (e.g., long arguments or conditional object syntax), assign it to a variable before `return` to keep JSX readable.
 
 ## Example
 

@@ -1,4 +1,6 @@
-import { useEngine, type EntityId, type UserWorld } from "../index";
+import { fromContext, Engine } from "../context";
+import type { EntityId, UserWorld } from "../index";
+import type { Renderer } from "../render";
 import { Camera } from "./camera";
 import { Transform2D } from "./transform";
 
@@ -32,6 +34,8 @@ export function resolveCameraSelection(
     }
   }
 
+  let fallbackSelection: CameraSelection | undefined;
+
   for (const id of world.query(Camera, Transform2D)) {
     const camera = world.get(id, Camera);
     const transform = world.get(id, Transform2D);
@@ -40,10 +44,16 @@ export function resolveCameraSelection(
       continue;
     }
 
-    return { camera, transform };
+    if (camera.primary) {
+      return { camera, transform };
+    }
+
+    if (!fallbackSelection) {
+      fallbackSelection = { camera, transform };
+    }
   }
 
-  return undefined;
+  return fallbackSelection;
 }
 
 export function resolveCameraView(
@@ -74,7 +84,7 @@ export function resolveActiveCameraView(
   world: UserWorld,
   cameraEntityId?: EntityId,
 ): CameraView {
-  const engine = useEngine();
+  const engine = fromContext(Engine);
   const camera = engine.editor.camera;
 
   if (camera.mode === "engine") {
@@ -87,6 +97,29 @@ export function resolveActiveCameraView(
   return resolveCameraView(world, cameraEntityId);
 }
 
+export function applyActiveCameraToRenderer(
+  world: UserWorld,
+  renderer: Renderer,
+  alpha: number,
+  cameraEntityId?: EntityId,
+): void {
+  const engine = fromContext(Engine);
+  const camera = engine.editor.camera;
+
+  if (camera.mode === "engine") {
+    renderer.low.setCamera(camera.x, camera.y, camera.zoom > 0 ? camera.zoom : 1);
+    return;
+  }
+
+  const selection = resolveCameraSelection(world, cameraEntityId);
+  if (!selection) {
+    renderer.low.setCamera(0, 0, 1);
+    return;
+  }
+
+  renderer.high.set(selection.camera, selection.transform, alpha);
+}
+
 export function screenToWorld(
   screenValue: number,
   viewportSize: number,
@@ -97,6 +130,6 @@ export function screenToWorld(
 }
 
 function resolveViewportHeight(): number {
-  const canvas = useEngine().canvas;
+  const canvas = fromContext(Engine).canvas;
   return canvas.getBoundingClientRect().height;
 }

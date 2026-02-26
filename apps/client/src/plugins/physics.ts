@@ -4,7 +4,7 @@ const physics = createPhysics({
   debug: {
     keybind: {
       code: "KeyH",
-      modifiers: { ctrl: true },
+      modifiers: { alt: true },
     },
   },
 });

@@ -1,70 +1,26 @@
-import { Pool } from "@repo/utils";
-import type { ActivePool, FrameAllocatorRegistry, PoolArgs, PoolValue } from "./types";
+import { engineFrameAllocatorRegistry, type EngineFrameAllocatorRegistry } from "./engine-registry";
+import { InternalFrameAllocator } from "./internal-frame-allocator";
+import type { FrameAllocatorRegistry, MergeFrameAllocatorRegistry } from "./types";
 
-export class FrameAllocator<TRegistry extends FrameAllocatorRegistry> {
-  readonly #pools = new Map<keyof TRegistry, ActivePool>();
-  readonly #scratchArrays = new Map<string, unknown[]>();
+type UserRegistry = FrameAllocatorRegistry;
 
-  constructor(registry: TRegistry) {
-    for (const poolName of Object.keys(registry) as Array<keyof TRegistry>) {
-      const factory = registry[poolName];
-      this.#pools.set(poolName, {
-        pool: new Pool(() => factory.create()),
-        active: [],
-        factory,
-      });
-    }
-  }
+function mergeRegistry<TRegistry extends UserRegistry>(
+  registry?: TRegistry,
+): MergeFrameAllocatorRegistry<EngineFrameAllocatorRegistry, TRegistry> {
+  // This is the generic merge boundary where user pools override engine defaults by key.
+  // TypeScript cannot prove this spread-based merge for arbitrary TRegistry without an explicit cast.
+  return {
+    ...engineFrameAllocatorRegistry,
+    ...(registry ?? {}),
+  } as unknown as MergeFrameAllocatorRegistry<EngineFrameAllocatorRegistry, TRegistry>;
+}
 
-  beginFrame(): void {
-    this.reset();
-  }
-
-  endFrame(): void {
-    this.reset();
-  }
-
-  reset(): void {
-    for (const poolState of this.#pools.values()) {
-      const { pool, active } = poolState;
-      for (let i = active.length - 1; i >= 0; i -= 1) {
-        const item = active[i];
-        if (item !== undefined) {
-          pool.release(item);
-        }
-      }
-      active.length = 0;
-    }
-
-    for (const scratch of this.#scratchArrays.values()) {
-      scratch.length = 0;
-    }
-  }
-
-  scratch<TValue>(name: string): TValue[] {
-    const existing = this.#scratchArrays.get(name);
-    if (existing) {
-      return existing as TValue[];
-    }
-
-    const created: TValue[] = [];
-    this.#scratchArrays.set(name, created);
-    return created;
-  }
-
-  acquire<TKey extends keyof TRegistry>(
-    name: TKey,
-    ...args: PoolArgs<TRegistry[TKey]>
-  ): PoolValue<TRegistry[TKey]> {
-    const poolState = this.#pools.get(name);
-    if (!poolState) {
-      throw new Error(`FrameAllocator pool "${String(name)}" is not registered`);
-    }
-
-    const value = poolState.pool.acquire();
-    poolState.factory.reset(value, ...args);
-    poolState.active.push(value);
-
-    return value as PoolValue<TRegistry[TKey]>;
+export class FrameAllocator<
+  TRegistry extends UserRegistry = Record<string, never>,
+> extends InternalFrameAllocator<MergeFrameAllocatorRegistry<EngineFrameAllocatorRegistry, TRegistry>> {
+  constructor();
+  constructor(registry: TRegistry);
+  constructor(registry?: TRegistry) {
+    super(mergeRegistry(registry));
   }
 }

@@ -11,10 +11,7 @@
     "sourceMap": true,
     "emitDeclarationOnly": false,
     "noEmit": false,
-    "typeRoots": ["../../node_modules/@types"],
-    "paths": {
-      "@ui/*": ["./src/ui/*"]
-    }
+    "typeRoots": ["../../node_modules/@types"]
   },
   "include": ["src/**/*"],
   "exclude": [

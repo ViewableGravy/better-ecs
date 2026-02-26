@@ -4,6 +4,7 @@ import { CanvasManager } from "../canvas";
 import { executeWithContext } from "../context";
 import { EngineEditor } from "../engine-editor";
 import type { RenderPipeline } from "../render-pipeline";
+import { RenderManager } from "../render-pipeline";
 import { SceneManager } from "../scene/scene-manager";
 import type { SceneDefinitionTuple } from "../scene/scene.types";
 import type { EngineInitializationSystem, EngineSystem, SystemFactoryTuple } from "../system/types";
@@ -21,6 +22,7 @@ export class EngineClass<
 > {
 	#systemsManager: SystemsManager;
 	#systemsView: Record<string, EngineSystem<any>>;
+	#renderManager: RenderManager;
 
 	#canvasManager: CanvasManager;
 	#phase: PhaseState = new PhaseState();
@@ -42,6 +44,7 @@ export class EngineClass<
 		this.#systemsManager = new SystemsManager(systems);
 		this.scene = new SceneManager<TScenes>(scenes, this.#systemsManager).setEngineRef(this);
 		this.#canvasManager = new CanvasManager(canvas, awaitCanvasBeforeStart);
+		this.#renderManager = new RenderManager(this.render);
 
 		this.#systemsView = this.#systemsManager.createSystemsView((name) => {
 			return this.#systemsManager.getSceneSystem(this.scene.definition?.name ?? null, name);
@@ -95,7 +98,7 @@ export class EngineClass<
 
 			this.#systemsManager.initializeEngineSystems();
 
-			this.render?.initialize();
+			this.#renderManager.initialize();
 		});
 
 		this.#init.markInitialized();
@@ -173,7 +176,7 @@ export class EngineClass<
 		const activeSceneContext = this.scene.context;
 
 		executeWithContext({ engine: this, scene: activeSceneContext }, () => {
-			this.render?.render();
+			this.#renderManager.render();
 		});
 
 		this.#phase.clear();

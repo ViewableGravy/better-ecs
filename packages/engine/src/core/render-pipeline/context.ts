@@ -1,16 +1,20 @@
 import type { UserWorld } from "../../ecs/world";
-import { FrameAllocator, type FrameAllocatorRegistry } from "../../render/frame-allocator";
+import {
+	type EngineFrameAllocatorRegistry,
+	type FrameAllocatorRegistry,
+	type InternalFrameAllocator,
+} from "../../render/frame-allocator";
 import { RenderQueue } from "../../render/render-queue";
 import type { Renderer } from "../../render/renderer";
 import type { WorldProvider } from "./types";
 
 export class RenderPipelineContext<
-	TRegistry extends FrameAllocatorRegistry = FrameAllocatorRegistry,
+	TRegistry extends FrameAllocatorRegistry = EngineFrameAllocatorRegistry,
 	TState extends object = Record<string, never>,
 > {
 	readonly renderer: Renderer;
 	readonly queue = new RenderQueue();
-	readonly frameAllocator: FrameAllocator<TRegistry>;
+	readonly frameAllocator: InternalFrameAllocator<TRegistry>;
 	readonly worldProvider: WorldProvider;
 	readonly state: TState;
 
@@ -21,7 +25,7 @@ export class RenderPipelineContext<
 	constructor(options: {
 		renderer: Renderer;
 		worldProvider: WorldProvider;
-		frameAllocator: FrameAllocator<TRegistry>;
+		frameAllocator: InternalFrameAllocator<TRegistry>;
 		state: TState;
 		world: UserWorld;
 	}) {
@@ -34,6 +38,6 @@ export class RenderPipelineContext<
 }
 
 export type RenderPassContext<
-	TRegistry extends FrameAllocatorRegistry = FrameAllocatorRegistry,
+	TRegistry extends FrameAllocatorRegistry = EngineFrameAllocatorRegistry,
 	TState extends object = Record<string, never>,
 > = RenderPipelineContext<TRegistry, TState>;

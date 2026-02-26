@@ -1,11 +1,12 @@
 import { OrbitMotion } from "@/components/orbit-motion";
-import { createSystem, useDelta, useWorld } from "@repo/engine";
+import { createSystem } from "@repo/engine";
+import { fromContext, Delta, World } from "@repo/engine/context";
 import { Parent, Transform2D } from "@repo/engine/components";
 
 export const PlayerOrbitSystem = createSystem("main:player-orbit")({
   system() {
-    const world = useWorld();
-    const [updateDelta] = useDelta();
+    const world = fromContext(World);
+    const [updateDelta] = fromContext(Delta);
     const seconds = updateDelta / 1000;
 
     for (const entityId of world.query(OrbitMotion, Parent, Transform2D)) {

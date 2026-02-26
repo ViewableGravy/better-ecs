@@ -21,7 +21,7 @@ export const HOTBAR_SLOT_EMPTY: KeyBind = {
 
 export const GRID_TOGGLE_CTRL: KeyBind = {
   code: "KeyG",
-  modifiers: { ctrl: true },
+  modifiers: { alt: true },
 };
 
 export const GRID_TOGGLE_META: KeyBind = {

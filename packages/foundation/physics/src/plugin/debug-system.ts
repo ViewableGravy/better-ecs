@@ -1,5 +1,6 @@
 import type { EntityId, UserWorld } from "@repo/engine";
-import { createSystem, useEngine, useSystem } from "@repo/engine";
+import { createSystem } from "@repo/engine";
+import { fromContext, Engine, System } from "@repo/engine/context";
 import { Color, Shape, Sprite, Transform2D } from "@repo/engine/components";
 import { CircleCollider } from "../colliders/circle";
 import { CompoundCollider } from "../colliders/compound";
@@ -21,9 +22,9 @@ export function createDebugSystem(opts: PhysicsDebugOpts) {
       schema: debugStateSchema,
     },
     system() {
-      const { data } = useSystem("plugin:physics:debug");
-      const engine = useEngine();
-      const input = useSystem("engine:input");
+      const { data } = fromContext(System("plugin:physics:debug"));
+      const engine = fromContext(Engine);
+      const input = fromContext(System("engine:input"));
 
       if (input.matchKeybind(opts.keybind)) {
         data.visible = !data.visible;

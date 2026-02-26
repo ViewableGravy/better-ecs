@@ -1,6 +1,7 @@
 import { GridBounds } from "@/components/grid-bounds";
 import { GRID_CELL_SIZE } from "@/scenes/world/systems/build-mode/const";
-import { useSystem, type UserWorld } from "@repo/engine";
+import { type UserWorld } from "@repo/engine";
+import { fromContext, System as ContextSystem } from "@repo/engine/context";
 import { Color, Shape, Transform2D } from "@repo/engine/components";
 import type { Renderer } from "@repo/engine/render";
 
@@ -38,7 +39,7 @@ const lineY = {
 };
 
 export function drawGrid(world: UserWorld, renderer: Renderer): void {
-  const buildMode = useSystem("main:build-mode");
+  const buildMode = fromContext(ContextSystem("main:build-mode"));
 
   if (buildMode && !buildMode.data.gridVisible) {
     return;

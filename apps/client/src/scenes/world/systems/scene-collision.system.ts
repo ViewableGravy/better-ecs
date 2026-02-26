@@ -1,12 +1,13 @@
 import { PlayerComponent } from "@/components/player";
-import { createSystem, useWorld } from "@repo/engine";
+import { createSystem } from "@repo/engine";
+import { fromContext, World } from "@repo/engine/context";
 import { PhysicsWorld, collides, resolve } from "@repo/physics";
 
 const physicsWorld = new PhysicsWorld();
 
 export const System = createSystem("main:spatial-contexts-collision")({
   system() {
-    const world = useWorld();
+    const world = fromContext(World);
 
     physicsWorld.build(world);
 

@@ -4,6 +4,7 @@ import { DebugHover } from "@ui/layout/sidebar/worldViewer/debugHover";
 import { Dropdown } from "@ui/layout/sidebar/worldViewer/dropdown";
 import type { EntityTreeNode } from "@ui/layout/sidebar/worldViewer/entityItemList";
 import { EntityRow } from "@ui/layout/sidebar/worldViewer/entityRow";
+import type { EntityId } from "../../../../ecs/entity";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -11,12 +12,17 @@ import { EntityRow } from "@ui/layout/sidebar/worldViewer/entityRow";
 type EntityTreeNodes = React.FC<{
   nodes: EntityTreeNode[];
   depth?: number;
+  expandedEntityIds?: ReadonlyArray<EntityId>;
 }>;
 
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
-export const EntityTreeNodes: EntityTreeNodes = ({ nodes, depth = 0 }) => {
+export const EntityTreeNodes: EntityTreeNodes = ({
+  nodes,
+  depth = 0,
+  expandedEntityIds,
+}) => {
   /***** RENDER *****/
   if (!nodes.length) {
     return null;
@@ -28,7 +34,7 @@ export const EntityTreeNodes: EntityTreeNodes = ({ nodes, depth = 0 }) => {
         <EntityIdContext value={node.entityId} key={node.entityId.toString()}>
           <li className={styles.worldsEntitiesEntityItem}>
             <DebugHover>
-              <Dropdown.Manager>
+              <Dropdown.Manager forceExpanded={expandedEntityIds?.includes(node.entityId)}>
                 <EntityRow.DropdownButton
                   depth={depth}
                   hasContent={node.children.length > 0 || node.components.length > 0}
@@ -42,7 +48,11 @@ export const EntityTreeNodes: EntityTreeNodes = ({ nodes, depth = 0 }) => {
                   </EntityRow.Root>
                 </EntityRow.DropdownButton>
                 <Dropdown.Content>
-                  <EntityTreeNodes depth={depth + 1} nodes={node.children} />
+                  <EntityTreeNodes
+                    depth={depth + 1}
+                    expandedEntityIds={expandedEntityIds}
+                    nodes={node.children}
+                  />
                   {node.components && node.components.length > 0 && (
                     <ul className={styles.worldsEntitiesNestedEntityList}>
                       {node.components.map((component) => (

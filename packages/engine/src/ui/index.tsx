@@ -1,7 +1,7 @@
-import { createRoot } from "react-dom/client";
 import { DefaultEngineEditorView } from "@ui/layout";
 import { attachCanvas, type AttachCanvasOptions, type AttachedCanvas } from "@ui/utilities/attach-canvas";
 import { type EngineUiContextValue } from "@ui/utilities/engine-context";
+import { createRoot } from "react-dom/client";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -31,10 +31,10 @@ export function mountEngineCanvasOnly(rootElement: HTMLElement, options?: Attach
   return attachCanvas(rootElement, options);
 }
 
+export { PreviewMode } from "@ui/components/previewMode";
 export { DefaultEngineEditorView } from "@ui/layout";
 export { EngineCanvas } from "@ui/layout/canvas";
-export { EngineEditorLayout } from "@ui/layout/components/engineEditorLayout";
-export { PreviewMode } from "@ui/components/previewMode";
+export { EngineEditorLayout } from "@ui/layout/components/engineEditorLayout/index";
 export { QuickActions } from "@ui/layout/quick-actions";
 export { attachCanvas } from "@ui/utilities/attach-canvas";
 export type { AttachCanvasOptions, AttachedCanvas } from "@ui/utilities/attach-canvas";
