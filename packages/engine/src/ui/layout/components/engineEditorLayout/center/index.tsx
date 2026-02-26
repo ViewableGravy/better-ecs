@@ -5,6 +5,7 @@ import { useInvariantContext } from "@ui/utilities/hooks/use-invariant-context";
 import classNames from "classnames";
 import { useSnapshot } from "valtio";
 import type { RegionProps } from "../types";
+import { usePausedGizmoSelection } from "./usePausedGizmoSelection";
 
 /**********************************************************************************************************
  *   COMPONENT START
@@ -14,6 +15,8 @@ export const Center: React.FC<RegionProps> = ({ children }) => {
   const [isPreviewMode] = useInvariantContext(PreviewModeContext);
   const engine = useInvariantContext(EngineUiContext);
   const { paused } = useSnapshot(engine.editor.runningState);
+
+  usePausedGizmoSelection(engine);
 
   /***** RENDER HELPERS *****/
   const centerClassName = classNames(styles.engineEditorLayoutCenter, {

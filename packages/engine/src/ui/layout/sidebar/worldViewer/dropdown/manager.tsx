@@ -1,5 +1,5 @@
-import { useState } from "react";
 import { DropdownContext } from "@ui/layout/sidebar/worldViewer/dropdown/context";
+import { useState } from "react";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -7,14 +7,20 @@ import { DropdownContext } from "@ui/layout/sidebar/worldViewer/dropdown/context
 type ManagerProps = {
   children: React.ReactNode;
   defaultExpanded?: boolean;
+  forceExpanded?: boolean;
 };
 
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
-export const Manager: React.FC<ManagerProps> = ({ children, defaultExpanded = false }) => {
+export const Manager: React.FC<ManagerProps> = ({
+  children,
+  defaultExpanded = false,
+  forceExpanded = false,
+}) => {
   /***** STATE *****/
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  const isDerivedExpanded = forceExpanded || isExpanded;
 
   /***** FUNCTIONS *****/
   const toggle = () => {
@@ -23,7 +29,7 @@ export const Manager: React.FC<ManagerProps> = ({ children, defaultExpanded = fa
 
   /***** RENDER *****/
   return (
-    <DropdownContext value={{ isExpanded, toggle }}>
+    <DropdownContext value={{ isExpanded: isDerivedExpanded, toggle }}>
       {children}
     </DropdownContext>
   );
