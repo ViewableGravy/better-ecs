@@ -1,7 +1,12 @@
 import { FPSPass } from "@/plugins/fps";
 import { createRenderPipeline } from "@repo/engine";
-import { fromContext, Assets, Engine } from "@repo/engine/context";
-import { Canvas2DRenderer, FrameAllocator } from "@repo/engine/render";
+import { Assets, Engine, fromContext } from "@repo/engine/context";
+import {
+    DEFAULT_RENDERER_CONFIG,
+    FrameAllocator,
+    Renderer2D,
+    WebGLRenderAPI,
+} from "@repo/engine/render";
 import { ApplyContextVisualsPass } from "./passes/ApplyContextVisualsPass";
 import { DrawGridPass } from "./passes/DrawGridPass";
 import { ActiveWorldProvider } from "./world-provider";
@@ -9,7 +14,10 @@ import { ActiveWorldProvider } from "./world-provider";
 export const Render = createRenderPipeline({
   initializeContext() {
     const { canvas } = fromContext(Engine);
-    const renderer = new Canvas2DRenderer();
+    const renderer = new Renderer2D(
+      new WebGLRenderAPI(),
+      DEFAULT_RENDERER_CONFIG,
+    );
 
     const assets = fromContext(Assets);
     renderer.initialize(canvas, assets);
@@ -20,11 +28,11 @@ export const Render = createRenderPipeline({
       frameAllocator: new FrameAllocator(),
     };
   },
-  beforeWorldPasses: [
+  passes: [
     ApplyContextVisualsPass,
+    DrawGridPass,
   ],
   afterWorldPasses: [
-    DrawGridPass,
     FPSPass,
   ],
 });

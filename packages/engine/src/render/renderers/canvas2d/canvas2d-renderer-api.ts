@@ -1,5 +1,6 @@
-import { Color } from "../components/sprite";
-import type { LowLevelRenderer, ShapeRenderData, SpriteRenderData } from "./low-level";
+import { Color } from "../../../components/sprite";
+import type { ShapeRenderData, SpriteRenderData } from "../../types/low-level";
+import type { RendererAPI } from "../../types/renderer-api";
 
 /**
  * Canvas 2D implementation of the low-level renderer.
@@ -7,7 +8,7 @@ import type { LowLevelRenderer, ShapeRenderData, SpriteRenderData } from "./low-
  * Handles raw drawing primitives: sprites, shapes, camera transform,
  * frame lifecycle, and viewport queries against a CanvasRenderingContext2D.
  */
-export class Canvas2DLowLevel implements LowLevelRenderer {
+export class Canvas2DRenderAPI implements RendererAPI {
   private canvas: HTMLCanvasElement | null = null;
   private ctx: CanvasRenderingContext2D | null = null;
 

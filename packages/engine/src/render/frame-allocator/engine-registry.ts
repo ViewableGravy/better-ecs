@@ -1,13 +1,16 @@
 import { Color } from "../../components/sprite";
-import type { ShapeRenderData } from "../low-level";
+import type { ShapeRenderData } from "../types/low-level";
+import type { RenderCommand } from "../queue/render-queue";
 import type { FramePoolFactory } from "./types";
 
 type ShapeCommandFactory = FramePoolFactory<ShapeRenderData, readonly []>;
 type NumberArrayFactory = FramePoolFactory<number[], readonly []>;
+type RenderCommandFactory = FramePoolFactory<RenderCommand, readonly []>;
 
 export type EngineFrameAllocatorRegistry = {
   "engine:shape-command": ShapeCommandFactory;
   "engine:number-array": NumberArrayFactory;
+  "engine:render-command": RenderCommandFactory;
 };
 
 export const engineFrameAllocatorRegistry: EngineFrameAllocatorRegistry = {
@@ -46,6 +49,26 @@ export const engineFrameAllocatorRegistry: EngineFrameAllocatorRegistry = {
     create: () => [],
     reset: (value) => {
       value.length = 0;
+    },
+  },
+  "engine:render-command": {
+    create: () => ({
+      type: "shape-entity",
+      world: null,
+      entityId: null,
+      shape: null,
+      layer: 0,
+      zOrder: 0,
+      sequence: 0,
+    }),
+    reset: (value) => {
+      value.type = "shape-entity";
+      value.world = null;
+      value.entityId = null;
+      value.shape = null;
+      value.layer = 0;
+      value.zOrder = 0;
+      value.sequence = 0;
     },
   },
 };

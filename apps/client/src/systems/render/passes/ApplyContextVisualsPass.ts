@@ -12,7 +12,7 @@ import {
   BlendTransitionMutator,
 } from "@/scenes/world/systems/houseTransition/transitionMutator";
 import { lerp } from "@/utilities/math";
-import { createRenderPass } from "@repo/engine";
+import { createRenderPass, type UserWorld } from "@repo/engine";
 import { fromContext, Engine } from "@repo/engine/context";
 import { Shape, Sprite } from "@repo/engine/components";
 import {
@@ -25,10 +25,16 @@ const INSIDE_OUTSIDE_ALPHA = 0.5;
 const transitionMutator = new BlendTransitionMutator();
 
 export const ApplyContextVisualsPass = createRenderPass("apply-context-visuals")({
-  execute() {
+  scope: "world",
+  execute({ world }) {
     const engine = fromContext(Engine);
     const manager = SpatialContexts.getManager(engine.scene.context);
     if (!manager) {
+      return;
+    }
+
+    const contextId = getContextIdByWorld(manager, world);
+    if (!contextId) {
       return;
     }
 
@@ -41,54 +47,60 @@ export const ApplyContextVisualsPass = createRenderPass("apply-context-visuals")
         ? 0
         : (blendByContext.get(activeInteriorContextId) ?? 0);
 
-    for (const { id: contextId } of manager.listDefinitions()) {
-      const world = manager.getWorld(contextId);
-      if (!world) {
+    const playerAlpha = getPlayerAlpha({
+      contextId,
+      focusedContextId: focused,
+      rootContextId,
+      activeInteriorContextId,
+    });
+
+    for (const entityId of world.query(PlayerComponent, Sprite)) {
+      const sprite = world.get(entityId, Sprite);
+      if (!sprite) {
         continue;
       }
 
-      const playerAlpha = getPlayerAlpha({
-        contextId,
-        focusedContextId: focused,
-        rootContextId,
-        activeInteriorContextId,
-      });
+      sprite.tint.a = playerAlpha;
+    }
 
-      for (const entityId of world.query(PlayerComponent, Sprite)) {
-        const sprite = world.get(entityId, Sprite);
-        if (!sprite) {
-          continue;
-        }
-
-        sprite.tint.a = playerAlpha;
+    for (const entityId of world.query(Shape, RenderVisibility)) {
+      const shape = world.get(entityId, Shape);
+      const visibility = world.get(entityId, RenderVisibility);
+      if (!shape || !visibility) {
+        continue;
       }
 
-      for (const entityId of world.query(Shape, RenderVisibility)) {
-        const shape = world.get(entityId, Shape);
-        const visibility = world.get(entityId, RenderVisibility);
-        if (!shape || !visibility) {
-          continue;
-        }
+      const visualBinding = world.get(entityId, ContextVisualBinding);
+      const alphaMultiplier = getAlphaMultiplier({
+        role: visibility.role,
+        blendByContext,
+        activeInteriorBlend,
+        worldContextId: contextId,
+        activeInteriorContextId,
+        visualContextId: visualBinding?.contextId,
+      });
 
-        const visualBinding = world.get(entityId, ContextVisualBinding);
-        const alphaMultiplier = getAlphaMultiplier({
-          role: visibility.role,
-          blendByContext,
-          activeInteriorBlend,
-          worldContextId: contextId,
-          activeInteriorContextId,
-          visualContextId: visualBinding?.contextId,
-        });
+      shape.fill.a = visibility.baseAlpha * alphaMultiplier;
 
-        shape.fill.a = visibility.baseAlpha * alphaMultiplier;
-
-        if (shape.stroke) {
-          shape.stroke.a = visibility.baseAlpha * alphaMultiplier;
-        }
+      if (shape.stroke) {
+        shape.stroke.a = visibility.baseAlpha * alphaMultiplier;
       }
     }
   },
 });
+
+function getContextIdByWorld(
+  manager: SpatialContextManager,
+  world: UserWorld,
+): ContextId | undefined {
+  for (const { id } of manager.listDefinitions()) {
+    if (manager.getWorld(id) === world) {
+      return id;
+    }
+  }
+
+  return undefined;
+}
 
 function getActiveInteriorContextId(
   manager: SpatialContextManager,

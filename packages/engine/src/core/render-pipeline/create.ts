@@ -1,12 +1,12 @@
+import { Engine, fromContext } from "../../context";
 import type { UserWorld } from "../../ecs/world";
 import {
-	FrameAllocator,
-	type EngineFrameAllocatorRegistry,
-	type FrameAllocatorRegistry,
-	type InternalFrameAllocator,
-} from "../../render/frame-allocator";
-import type { Renderer } from "../../render/renderer";
-import { fromContext, Engine } from "../../context";
+    FrameAllocator,
+    type EngineFrameAllocatorRegistry,
+    type FrameAllocatorRegistry,
+    type InternalFrameAllocator,
+} from "../../render";
+import type { Renderer } from "../../render";
 import { RenderPipelineContext } from "./context";
 import type { RenderPass } from "./pass";
 import { BeginFramePass } from "./passes/begin-frame";
@@ -37,6 +37,7 @@ type CreateRenderPipelineOptions<
 	TState extends object,
 > = {
 	initializeContext: () => CreateRenderPipelineContext<TState>;
+	passes?: readonly RenderPass<TRegistry, TState>[];
 	beforeWorldPasses?: readonly RenderPass<TRegistry, TState>[];
 	afterWorldPasses?: readonly RenderPass<TRegistry, TState>[];
 	overrides?: CorePassOverrides<TRegistry, TState>;
@@ -99,15 +100,26 @@ export function createRenderPipeline<
 	const cameraControlPass = resolveCorePass(options.overrides?.cameraControl, CameraControlPass);
 	const renderWorldPass = resolveCorePass(options.overrides?.renderWorld, RenderWorldPass);
 	const endFramePass = resolveCorePass(options.overrides?.endFrame, EndFramePass);
+	const useUnifiedPassList = options.passes !== undefined;
+	const unifiedPasses = options.passes ?? [];
 
-	const resolvedPasses: RenderPass<TRegistry, TState>[] = [
-		...(beginFramePass ? [beginFramePass] : []),
-		...(options.beforeWorldPasses ?? []),
-		...(cameraControlPass ? [cameraControlPass] : []),
-		...(renderWorldPass ? [renderWorldPass] : []),
-		...(options.afterWorldPasses ?? []),
-		...(endFramePass ? [endFramePass] : []),
-	];
+	const resolvedPasses: RenderPass<TRegistry, TState>[] = useUnifiedPassList
+		? [
+			...(beginFramePass ? [beginFramePass] : []),
+			...(cameraControlPass ? [cameraControlPass] : []),
+			...unifiedPasses,
+			...(renderWorldPass ? [renderWorldPass] : []),
+			...(options.afterWorldPasses ?? []),
+			...(endFramePass ? [endFramePass] : []),
+		]
+		: [
+			...(beginFramePass ? [beginFramePass] : []),
+			...(cameraControlPass ? [cameraControlPass] : []),
+			...(options.beforeWorldPasses ?? []),
+			...(renderWorldPass ? [renderWorldPass] : []),
+			...(options.afterWorldPasses ?? []),
+			...(endFramePass ? [endFramePass] : []),
+		];
 
 	return {
 		initialize(): void {

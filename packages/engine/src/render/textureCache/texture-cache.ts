@@ -1,5 +1,5 @@
-import type { LooseAssetManager } from "../asset/AssetManager";
-import type { Texture } from "../components/texture";
+import type { LooseAssetManager } from "../../asset/AssetManager";
+import type { Texture } from "../../components/texture";
 
 /**
  * Opaque handle for loaded textures.
