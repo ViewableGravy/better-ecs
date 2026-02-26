@@ -1,5 +1,5 @@
 import { TabPanel } from "@headlessui/react";
-import { EngineEditorLayout } from "@ui/layout/components/engineEditorLayout";
+import { EngineEditorLayout } from "@ui/layout/components/engineEditorLayout/index";
 import styles from "@ui/layout/sidebar/styles.module.css";
 import { WorldIdContext } from "@ui/layout/sidebar/worldViewer/context";
 import { Dropdown } from "@ui/layout/sidebar/worldViewer/dropdown";
