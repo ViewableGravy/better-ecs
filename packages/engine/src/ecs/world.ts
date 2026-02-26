@@ -196,7 +196,10 @@ export class World extends ObservableState {
 
   private destroyEntityShallow(entityId: EntityId): void {
     if (!this.entities.has(entityId)) return;
-    const parentId = this.getComponent<Parent>(entityId, Parent)?.entityId;
+    const shouldNotifyEntityObservers = this.entityObservers.size > 0;
+    const parentId = shouldNotifyEntityObservers
+      ? this.getComponent<Parent>(entityId, Parent)?.entityId
+      : undefined;
 
     // Remove from all component stores
     for (const store of this.componentStores.values()) {
@@ -205,9 +208,11 @@ export class World extends ObservableState {
 
     invalidateEntity(entityId);
     this.entities.delete(entityId);
-    this.notifyEntity(entityId);
-    if (parentId !== undefined) {
-      this.notifyEntity(parentId);
+    if (shouldNotifyEntityObservers) {
+      this.notifyEntity(entityId);
+      if (parentId !== undefined) {
+        this.notifyEntity(parentId);
+      }
     }
     this.notify();
   }
@@ -278,8 +283,11 @@ export class World extends ObservableState {
         ? (componentTypeOrComponent as Function)
         : (componentTypeOrComponent as any).constructor;
     const comp = component !== undefined ? component : (componentTypeOrComponent as T);
+    const shouldNotifyEntityObservers = this.entityObservers.size > 0;
     const previousParentId =
-      componentType === Parent ? this.getComponent<Parent>(entityId, Parent)?.entityId : undefined;
+      componentType === Parent && shouldNotifyEntityObservers
+        ? this.getComponent<Parent>(entityId, Parent)?.entityId
+        : undefined;
 
     let store = this.componentStores.get(componentType) as ComponentStore<T> | undefined;
     if (!store) {
@@ -288,8 +296,11 @@ export class World extends ObservableState {
     }
 
     store.add(entityId, comp);
-    this.notifyEntity(entityId);
-    if (componentType === Parent) {
+    if (shouldNotifyEntityObservers) {
+      this.notifyEntity(entityId);
+    }
+
+    if (componentType === Parent && shouldNotifyEntityObservers) {
       const nextParentId = this.getComponent<Parent>(entityId, Parent)?.entityId;
       if (nextParentId !== undefined) {
         this.notifyEntity(nextParentId);
@@ -330,12 +341,17 @@ export class World extends ObservableState {
   removeComponent(entityId: EntityId, componentType: Function): void {
     const store = this.componentStores.get(componentType);
     if (store) {
+      const shouldNotifyEntityObservers = this.entityObservers.size > 0;
       const previousParentId =
-        componentType === Parent ? this.getComponent<Parent>(entityId, Parent)?.entityId : undefined;
+        componentType === Parent && shouldNotifyEntityObservers
+          ? this.getComponent<Parent>(entityId, Parent)?.entityId
+          : undefined;
       store.remove(entityId);
-      this.notifyEntity(entityId);
-      if (previousParentId !== undefined) {
-        this.notifyEntity(previousParentId);
+      if (shouldNotifyEntityObservers) {
+        this.notifyEntity(entityId);
+        if (previousParentId !== undefined) {
+          this.notifyEntity(previousParentId);
+        }
       }
       this.notify();
     }
@@ -376,7 +392,9 @@ export class World extends ObservableState {
       throw new Error(`Entity ${entityId} already exists in target world`);
     }
 
-    const parentId = this.getComponent<Parent>(entityId, Parent)?.entityId;
+    const shouldNotifyEntityObservers = this.entityObservers.size > 0;
+    const parentId =
+      shouldNotifyEntityObservers ? this.getComponent<Parent>(entityId, Parent)?.entityId : undefined;
     targetWorld.entities.add(entityId);
 
     for (const [componentType, sourceStore] of this.componentStores) {
@@ -396,11 +414,13 @@ export class World extends ObservableState {
     }
 
     this.entities.delete(entityId);
-    this.notifyEntity(entityId);
-    targetWorld.notifyEntity(entityId);
-    if (parentId !== undefined) {
-      this.notifyEntity(parentId);
-      targetWorld.notifyEntity(parentId);
+    if (shouldNotifyEntityObservers) {
+      this.notifyEntity(entityId);
+      targetWorld.notifyEntity(entityId);
+      if (parentId !== undefined) {
+        this.notifyEntity(parentId);
+        targetWorld.notifyEntity(parentId);
+      }
     }
     this.notify();
     targetWorld.notify();

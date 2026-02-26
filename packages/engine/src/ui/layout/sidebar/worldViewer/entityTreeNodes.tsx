@@ -42,22 +42,23 @@ const areNodeDataEqual = (left: EntityNodeData, right: EntityNodeData) => {
     return false;
   }
 
-  for (let index = 0; index < left.childEntityIds.length; index += 1) {
-    if (left.childEntityIds[index] !== right.childEntityIds[index]) {
-      return false;
-    }
+  const hasSameEntityIds = left.childEntityIds.every(
+    (entityId, index) => entityId === right.childEntityIds[index],
+  );
+  if (!hasSameEntityIds) {
+    return false;
   }
 
   if (left.components.length !== right.components.length) {
     return false;
   }
 
-  for (let index = 0; index < left.components.length; index += 1) {
-    const leftComponent = left.components[index];
+  const hasSameComponents = left.components.every((component, index) => {
     const rightComponent = right.components[index];
-    if (leftComponent.key !== rightComponent.key || leftComponent.name !== rightComponent.name) {
-      return false;
-    }
+    return component.key === rightComponent.key && component.name === rightComponent.name;
+  });
+  if (!hasSameComponents) {
+    return false;
   }
 
   return true;
@@ -127,7 +128,9 @@ const EntityTreeNode: React.FC<EntityTreeNodeProps> = ({
     entityId,
     (currentWorld): EntityNodeData => {
       const allEntityIds = currentWorld.all();
-      if (!allEntityIds.includes(entityId)) {
+      const allEntityIdSet = new Set(allEntityIds);
+
+      if (!allEntityIdSet.has(entityId)) {
         return {
           childEntityIds: [],
           components: [],
@@ -143,8 +146,7 @@ const EntityTreeNode: React.FC<EntityTreeNodeProps> = ({
         }))
         .sort((left, right) => left.name.localeCompare(right.name));
 
-      const entityIds = allEntityIds.slice().sort((left, right) => left - right);
-      for (const currentEntityId of entityIds) {
+      for (const currentEntityId of allEntityIds) {
         if (currentEntityId === entityId || currentWorld.has(currentEntityId, EditorDebugEntity)) {
           continue;
         }
@@ -155,6 +157,8 @@ const EntityTreeNode: React.FC<EntityTreeNodeProps> = ({
 
         childEntityIds.push(currentEntityId);
       }
+
+      childEntityIds.sort((left, right) => left - right);
 
       return {
         childEntityIds,
