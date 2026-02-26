@@ -80,6 +80,7 @@ export const Mouse: EngineContextOptions<MouseInterface> = {
 
 type RegisteredSystemNames = Extract<SystemNames, keyof RegisteredSystems>;
 
+// System name strings are static module-level constants, so this cache never grows unboundedly.
 const systemCache = new Map<string, EngineContextOptions<RegisteredSystems[RegisteredSystemNames]>>();
 
 /**
