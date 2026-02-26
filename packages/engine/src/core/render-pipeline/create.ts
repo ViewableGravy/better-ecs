@@ -1,4 +1,5 @@
 import type { UserWorld } from "../../ecs/world";
+import { applyActiveCameraToRenderer } from "../../components/camera-utils";
 import { FrameAllocator, type FrameAllocatorRegistry } from "../../render/frame-allocator";
 import type { Renderer } from "../../render/renderer";
 import { useEngine } from "../context";
@@ -74,6 +75,7 @@ export function createRenderPipeline<
 
 		for (const world of passContext.visibleWorlds) {
 			passContext.world = world;
+			applyActiveCameraToRenderer(world, passContext.renderer, passContext.alpha);
 			pass.execute(passContext);
 		}
 	};

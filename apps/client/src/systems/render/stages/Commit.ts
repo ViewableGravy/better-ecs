@@ -1,5 +1,5 @@
 import { resolveWorldTransform2D, useEngine, type UserWorld } from "@repo/engine";
-import { Camera, Shape, Sprite, Transform2D, resolveActiveCameraView } from "@repo/engine/components";
+import { Shape, Sprite, Transform2D } from "@repo/engine/components";
 import type { RenderQueue, Renderer } from "@repo/engine/render";
 import { SpatialContexts } from "@repo/spatial-contexts";
 import { drawGrid } from "./DrawGrid";
@@ -14,30 +14,6 @@ export function commitWorld(
   alpha: number,
 ): void {
   const engine = useEngine();
-
-  // --- Camera ---
-  if (engine.editor.camera.mode === "engine") {
-    const camera = resolveActiveCameraView(world);
-    renderer.low.setCamera(camera.x, camera.y, camera.zoom);
-  } else {
-    let cameraSet = false;
-
-    for (const id of world.query(Camera, Transform2D)) {
-      const camera = world.get(id, Camera);
-      const transform = world.get(id, Transform2D);
-
-      if (camera && camera.enabled && transform) {
-        renderer.high.set(camera, transform, alpha);
-        cameraSet = true;
-        break; // Only support one camera for now
-      }
-    }
-
-    // handle fallback if we cannot find a camera, otherwise we risk crashing
-    if (!cameraSet) {
-      renderer.low.setCamera(0, 0, 1);
-    }
-  }
 
   // --- Render Queue Processing ---
 

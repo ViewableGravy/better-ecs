@@ -31,6 +31,9 @@ export class Camera {
   /** Whether this camera is enabled */
   public enabled: boolean;
 
+  /** Whether this is the primary scene camera */
+  public primary: boolean;
+
   constructor(
     projection: ProjectionType = "orthographic",
     orthoSize: number = 10,
@@ -41,7 +44,8 @@ export class Camera {
     viewportY: number = 0,
     viewportWidth: number = 1,
     viewportHeight: number = 1,
-    enabled: boolean = true
+    enabled: boolean = true,
+    primary: boolean = false,
   ) {
     this.projection = projection;
     this.orthoSize = orthoSize;
@@ -53,5 +57,6 @@ export class Camera {
     this.viewportWidth = viewportWidth;
     this.viewportHeight = viewportHeight;
     this.enabled = enabled;
+    this.primary = primary;
   }
 }
