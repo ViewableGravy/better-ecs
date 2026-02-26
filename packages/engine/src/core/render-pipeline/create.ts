@@ -1,12 +1,12 @@
+import { Engine, fromContext } from "../../context";
 import type { UserWorld } from "../../ecs/world";
 import {
-	FrameAllocator,
-	type EngineFrameAllocatorRegistry,
-	type FrameAllocatorRegistry,
-	type InternalFrameAllocator,
+    FrameAllocator,
+    type EngineFrameAllocatorRegistry,
+    type FrameAllocatorRegistry,
+    type InternalFrameAllocator,
 } from "../../render/frame-allocator";
 import type { Renderer } from "../../render/renderer";
-import { fromContext, Engine } from "../../context";
 import { RenderPipelineContext } from "./context";
 import type { RenderPass } from "./pass";
 import { BeginFramePass } from "./passes/begin-frame";

@@ -1,6 +1,6 @@
 import { FPSPass } from "@/plugins/fps";
 import { createRenderPipeline } from "@repo/engine";
-import { fromContext, Assets, Engine } from "@repo/engine/context";
+import { Assets, Engine, fromContext } from "@repo/engine/context";
 import { Canvas2DRenderer, FrameAllocator } from "@repo/engine/render";
 import { ApplyContextVisualsPass } from "./passes/ApplyContextVisualsPass";
 import { DrawGridPass } from "./passes/DrawGridPass";
@@ -22,9 +22,9 @@ export const Render = createRenderPipeline({
   },
   beforeWorldPasses: [
     ApplyContextVisualsPass,
+    DrawGridPass
   ],
   afterWorldPasses: [
-    DrawGridPass,
     FPSPass,
   ],
 });
