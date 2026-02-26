@@ -20,9 +20,9 @@ export type { RendererAPI } from "./types/renderer-api";
 export { RenderCommand } from "./render-command";
 export { Renderer2D } from "./renderers/renderer2d";
 
-// ── Canvas 2D implementation ────────────────────────────────────
-export { Canvas2DRenderer } from "./renderers/canvas2d/canvas2d-renderer";
+// ── Renderer API backends ───────────────────────────────────────
 export { Canvas2DRenderAPI } from "./renderers/canvas2d/canvas2d-renderer-api";
+export { WebGLRenderAPI } from "./renderers/webGL/webgl-renderer-api";
 
 // ── Texture cache ───────────────────────────────────────────────
 export { TextureCache } from "./textureCache/texture-cache";

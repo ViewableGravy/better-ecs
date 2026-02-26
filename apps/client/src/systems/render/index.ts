@@ -2,10 +2,10 @@ import { FPSPass } from "@/plugins/fps";
 import { createRenderPipeline } from "@repo/engine";
 import { Assets, Engine, fromContext } from "@repo/engine/context";
 import {
-  Canvas2DRenderAPI,
-  DEFAULT_RENDERER_CONFIG,
-  FrameAllocator,
-  Renderer2D,
+    DEFAULT_RENDERER_CONFIG,
+    FrameAllocator,
+    Renderer2D,
+    WebGLRenderAPI,
 } from "@repo/engine/render";
 import { ApplyContextVisualsPass } from "./passes/ApplyContextVisualsPass";
 import { DrawGridPass } from "./passes/DrawGridPass";
@@ -15,7 +15,7 @@ export const Render = createRenderPipeline({
   initializeContext() {
     const { canvas } = fromContext(Engine);
     const renderer = new Renderer2D(
-      new Canvas2DRenderAPI(),
+      new WebGLRenderAPI(),
       DEFAULT_RENDERER_CONFIG,
     );
 
