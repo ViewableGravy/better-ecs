@@ -1,4 +1,4 @@
-import type { EntityId } from "@repo/engine";
+import type { EntityId } from "@/ecs/entity";
 import { createContext } from "react";
 
 export const WorldIdContext = createContext<string | null>(null);

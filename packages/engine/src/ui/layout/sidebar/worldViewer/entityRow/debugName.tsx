@@ -1,4 +1,4 @@
-import { Debug } from "@repo/engine/components";
+import { Debug } from "@/components";
 import { EngineUiContext } from "@ui/utilities/engine-context";
 import { useInvariantContext } from "@ui/utilities/hooks/use-invariant-context";
 import styles from "@ui/layout/sidebar/styles.module.css";

@@ -5,9 +5,12 @@ import { libInjectCss } from "vite-plugin-lib-inject-css";
 export default defineConfig({
   plugins: [libInjectCss()],
   resolve: {
-    alias: {
-      "@ui": resolve(__dirname, "src/ui"),
-    },
+    alias: [
+      // Map @/* → @repo/engine/* so these imports stay external in the bundle,
+      // preserving class identity when the consuming app provides the package.
+      { find: /^@\/(.*)$/, replacement: "@repo/engine/$1" },
+      { find: "@ui", replacement: resolve(__dirname, "src/ui") },
+    ],
   },
   build: {
     outDir: "dist/src/ui",

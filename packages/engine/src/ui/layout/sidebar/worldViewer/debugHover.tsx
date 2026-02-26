@@ -1,6 +1,6 @@
 import React, { useRef } from "react";
-import { Parent, Shape, Transform2D } from "@repo/engine/components";
-import type { EntityId } from "@repo/engine";
+import { Parent, Shape, Transform2D } from "@/components";
+import type { EntityId } from "@/ecs/entity";
 import { EngineUiContext } from "@ui/utilities/engine-context";
 import { useInvariantContext } from "@ui/utilities/hooks/use-invariant-context";
 import { EntityIdContext, WorldIdContext } from "@ui/layout/sidebar/worldViewer/context";

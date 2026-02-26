@@ -14,7 +14,8 @@
     "noEmit": false,
     "typeRoots": ["../../node_modules/@types"],
     "paths": {
-      "@ui/*": ["./src/ui/*"]
+      "@ui/*": ["./src/ui/*"],
+      "@/*": ["./src/*"]
     }
   },
   "include": ["src/**/*"],
