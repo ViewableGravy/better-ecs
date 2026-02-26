@@ -1,5 +1,5 @@
 import { FPSPass } from "@/plugins/fps";
-import { createRenderPipeline, useAssets, useEngine } from "@repo/engine";
+import { CameraControlPass, createRenderPipeline, useAssets, useEngine } from "@repo/engine";
 import { Canvas2DRenderer, FrameAllocator } from "@repo/engine/render";
 import { ApplyContextVisualsPass } from "./passes/ApplyContextVisualsPass";
 import { BeginFramePass } from "./passes/BeginFramePass";
@@ -24,6 +24,7 @@ export const Render = createRenderPipeline({
   passes: [
     BeginFramePass, 
     ApplyContextVisualsPass, 
+    CameraControlPass,
     RenderWorldPass, 
     FPSPass, 
     EndFramePass
