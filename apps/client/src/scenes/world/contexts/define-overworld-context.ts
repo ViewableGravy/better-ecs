@@ -4,6 +4,7 @@ import { OUTSIDE } from "../components/render-visibility";
 import { spawnContextEntryRegion } from "../factories/spawnContextEntryRegion";
 import { spawnDoor } from "../factories/spawnDoor";
 import { spawnHouse } from "../factories/spawnHouse";
+import { spawnOreField } from "../factories/spawnOreField";
 import { spawnTree } from "../factories/spawnTree";
 import { spawnWall } from "../factories/spawnWall";
 import { createHouseLayout } from "../utilities/house-layout";
@@ -86,6 +87,11 @@ export function defineOverworldContext(options: OverworldContextOptions) {
           spawn: { x: 0, y: 160 },
           label: "Overworld -> Dungeon",
         },
+      });
+
+      spawnOreField(world, {
+        centerX: 700,
+        centerY: 360,
       });
     },
   });

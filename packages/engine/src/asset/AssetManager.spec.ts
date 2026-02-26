@@ -69,4 +69,29 @@ describe("AssetManager", () => {
     expect(() => manager.getStrict("test")).toThrow(/failed to load/);
     consoleSpy.mockRestore();
   });
+
+  it("should load child assets when loading a parent asset", async () => {
+    const loadParent = vi.fn().mockResolvedValue("sheet");
+    const loadChildA = vi.fn().mockResolvedValue("a");
+    const loadChildB = vi.fn().mockResolvedValue("b");
+
+    const registry = {
+      assets: {
+        sheet: { load: loadParent },
+        "sheet:100_a": { load: loadChildA },
+        "sheet:80_a": { load: loadChildB },
+      },
+    };
+
+    const manager = new AssetManager(registry);
+    await manager.load("sheet");
+
+    expect(loadParent).toHaveBeenCalledTimes(1);
+    expect(loadChildA).toHaveBeenCalledTimes(1);
+    expect(loadChildB).toHaveBeenCalledTimes(1);
+
+    expect(manager.getStrict("sheet")).toBe("sheet");
+    expect(manager.getStrict("sheet:100_a")).toBe("a");
+    expect(manager.getStrict("sheet:80_a")).toBe("b");
+  });
 });
