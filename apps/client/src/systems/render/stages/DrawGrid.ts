@@ -3,12 +3,20 @@ import { GRID_CELL_SIZE } from "@/scenes/world/systems/build-mode/const";
 import { type UserWorld } from "@repo/engine";
 import { fromContext, System as ContextSystem } from "@repo/engine/context";
 import { Color, Shape, Transform2D } from "@repo/engine/components";
-import type { Renderer } from "@repo/engine/render";
+import type {
+  EngineFrameAllocatorRegistry,
+  InternalFrameAllocator,
+  RenderQueue,
+  Renderer,
+  ShapeRenderData,
+} from "@repo/engine/render";
 
 const GRID_COLOR = new Color(1, 0.1, 0.75, 1);
 const GRID_FILL = new Color(0, 0, 0, 0);
 const GRID_LINE_WIDTH = 1;
 const MAX_LINES_PER_AXIS = 600;
+const GRID_LAYER = 0;
+const GRID_Z_ORDER = 1;
 
 const lineX = {
   type: "line" as const,
@@ -38,7 +46,12 @@ const lineY = {
   strokeWidth: GRID_LINE_WIDTH,
 };
 
-export function drawGrid(world: UserWorld, renderer: Renderer): void {
+export function drawGrid(
+  world: UserWorld,
+  renderer: Renderer,
+  queue: RenderQueue,
+  frameAllocator: InternalFrameAllocator<EngineFrameAllocatorRegistry>,
+): void {
   const buildMode = fromContext(ContextSystem("main:build-mode"));
 
   if (buildMode && !buildMode.data.gridVisible) {
@@ -89,17 +102,33 @@ export function drawGrid(world: UserWorld, renderer: Renderer): void {
   const lineCenterY = (minY + maxY) * 0.5;
 
   for (let x = minX; x <= maxX; x += xStep) {
-    lineX.x = x;
-    lineX.y = lineCenterY;
-    lineX.width = worldHeight;
-    renderer.low.drawShape(lineX);
+    const shape = frameAllocator.acquire("engine:shape-command");
+    writeLineShape(shape, lineX, x, lineCenterY, worldHeight);
+
+    const command = frameAllocator.acquire("engine:render-command");
+    command.type = "shape-draw";
+    command.world = world;
+    command.entityId = null;
+    command.shape = shape;
+    command.layer = GRID_LAYER;
+    command.zOrder = GRID_Z_ORDER;
+
+    queue.add(command);
   }
 
   for (let y = minY; y <= maxY; y += yStep) {
-    lineY.x = lineCenterX;
-    lineY.y = y;
-    lineY.width = worldWidth;
-    renderer.low.drawShape(lineY);
+    const shape = frameAllocator.acquire("engine:shape-command");
+    writeLineShape(shape, lineY, lineCenterX, y, worldWidth);
+
+    const command = frameAllocator.acquire("engine:render-command");
+    command.type = "shape-draw";
+    command.world = world;
+    command.entityId = null;
+    command.shape = shape;
+    command.layer = GRID_LAYER;
+    command.zOrder = GRID_Z_ORDER;
+
+    queue.add(command);
   }
 }
 
@@ -139,4 +168,54 @@ function getGridBounds(world: UserWorld):
   }
 
   return undefined;
+}
+
+function writeLineShape(
+  shape: ShapeRenderData,
+  template: {
+    type: "line";
+    height: number;
+    rotation: number;
+    scaleX: number;
+    scaleY: number;
+    fill: Color;
+    stroke: Color | null;
+    strokeWidth: number;
+  },
+  x: number,
+  y: number,
+  width: number,
+): void {
+  shape.type = template.type;
+  shape.x = x;
+  shape.y = y;
+  shape.width = width;
+  shape.height = template.height;
+  shape.rotation = template.rotation;
+  shape.scaleX = template.scaleX;
+  shape.scaleY = template.scaleY;
+  shape.fill.r = template.fill.r;
+  shape.fill.g = template.fill.g;
+  shape.fill.b = template.fill.b;
+  shape.fill.a = template.fill.a;
+
+  if (template.stroke) {
+    if (shape.stroke === null) {
+      shape.stroke = new Color(
+        template.stroke.r,
+        template.stroke.g,
+        template.stroke.b,
+        template.stroke.a,
+      );
+    } else {
+      shape.stroke.r = template.stroke.r;
+      shape.stroke.g = template.stroke.g;
+      shape.stroke.b = template.stroke.b;
+      shape.stroke.a = template.stroke.a;
+    }
+  } else {
+    shape.stroke = null;
+  }
+
+  shape.strokeWidth = template.strokeWidth;
 }

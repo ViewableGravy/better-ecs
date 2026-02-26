@@ -20,9 +20,9 @@ export const Render = createRenderPipeline({
       frameAllocator: new FrameAllocator(),
     };
   },
-  beforeWorldPasses: [
+  passes: [
     ApplyContextVisualsPass,
-    DrawGridPass
+    DrawGridPass,
   ],
   afterWorldPasses: [
     FPSPass,

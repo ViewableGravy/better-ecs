@@ -5,7 +5,7 @@ import { drawGrid } from "../stages/DrawGrid";
 
 export const DrawGridPass = createRenderPass("draw-grid")({
   scope: "world",
-  execute({ world, renderer }) {
+  execute({ world, renderer, queue, frameAllocator }) {
     const engine = fromContext(Engine);
     const manager = SpatialContexts.getManager(engine.scene.context);
     const focusedWorld = manager ? manager.focusedWorld : engine.world;
@@ -14,6 +14,6 @@ export const DrawGridPass = createRenderPass("draw-grid")({
       return;
     }
 
-    drawGrid(world, renderer);
+    drawGrid(world, renderer, queue, frameAllocator);
   },
 });

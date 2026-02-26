@@ -1,51 +1,64 @@
 import type { EntityId } from "../ecs/entity";
+import type { UserWorld } from "../ecs/world";
+import type { ShapeRenderData } from "./low-level";
 
 /**
- * A queue of entities to be rendered in the current frame.
- * This replaces the generic CommandBuffer with typed arrays for standard primitives,
- * reducing garbage collection pressure.
+ * The kind of render command stored in {@link RenderQueue}.
+ */
+export type RenderCommandType = "sprite-entity" | "shape-entity" | "shape-draw";
+
+/**
+ * A single render command entry.
+ */
+export type RenderCommand = {
+  type: RenderCommandType;
+  world: UserWorld | null;
+  entityId: EntityId | null;
+  shape: ShapeRenderData | null;
+  layer: number;
+  zOrder: number;
+  sequence: number;
+};
+
+/**
+ * A queue of render commands for the current frame.
+ * Commands are pushed by passes, then sorted and executed by engine render passes.
  */
 export class RenderQueue {
-  /** List of entities with Sprite components to render */
-  public sprites: EntityId[] = [];
-
-  /** List of entities with Shape components to render */
-  public shapes: EntityId[] = [];
+  public commands: RenderCommand[] = [];
+  #nextSequence = 0;
 
   /**
-   * Add a sprite entity to the render queue.
+   * Add a command to the queue while preserving stable insertion order.
    */
-  addSprite(entityId: EntityId): void {
-    this.sprites.push(entityId);
+  add(command: RenderCommand): void {
+    command.sequence = this.#nextSequence;
+    this.#nextSequence += 1;
+    this.commands.push(command);
   }
 
   /**
-   * Add a shape entity to the render queue.
+   * Sort commands by layer, then z-order, then insertion order.
    */
-  addShape(entityId: EntityId): void {
-    this.shapes.push(entityId);
+  sortByLayer(): void {
+    this.commands.sort((a, b) => {
+      if (a.layer !== b.layer) {
+        return a.layer - b.layer;
+      }
+
+      if (a.zOrder !== b.zOrder) {
+        return a.zOrder - b.zOrder;
+      }
+
+      return a.sequence - b.sequence;
+    });
   }
 
   /**
-   * Clear all queues. Call this at the start of each frame.
+   * Clear all commands.
    */
   clear(): void {
-    this.sprites.length = 0;
-    this.shapes.length = 0;
-  }
-
-  /**
-   * Sort the sprite queue using a comparison function.
-   * Useful for z-sorting (painters algorithm).
-   */
-  sortSprites(compare: (a: EntityId, b: EntityId) => number): void {
-    this.sprites.sort(compare);
-  }
-
-  /**
-   * Sort the shape queue using a comparison function.
-   */
-  sortShapes(compare: (a: EntityId, b: EntityId) => number): void {
-    this.shapes.sort(compare);
+    this.commands.length = 0;
+    this.#nextSequence = 0;
   }
 }
