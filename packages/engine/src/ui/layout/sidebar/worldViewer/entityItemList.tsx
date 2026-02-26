@@ -1,28 +1,22 @@
 import { WorldIdContext } from "@ui/layout/sidebar/worldViewer/context";
-import { EditorDebugEntity } from "@ui/layout/sidebar/worldViewer/editorDebugEntity";
 import { EntityTreeNodes } from "@ui/layout/sidebar/worldViewer/entityTreeNodes";
 import { EngineUiContext } from "@ui/utilities/engine-context";
-import { useIntervalState } from "@ui/utilities/hooks/use-interval-state";
 import { useInvariantContext } from "@ui/utilities/hooks/use-invariant-context";
+import { useSubscribableSelector } from "@ui/utilities/hooks/use-subscribable-selector";
 import { Gizmo, Parent } from "@/components";
 import type { EntityId } from "@/ecs/entity";
+import { EditorDebugEntity } from "@ui/layout/sidebar/worldViewer/editorDebugEntity";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
  **********************************************************************************************************/
-export type EntityTreeNode = {
-  entityId: EntityId;
-  children: EntityTreeNode[];
-  components: ComponentTreeNode[];
-};
-
 export type ComponentTreeNode = {
   key: string;
   name: string;
 };
 
 type EntityTreeData = {
-  roots: EntityTreeNode[];
+  rootEntityIds: EntityId[];
   expandedEntityIds: EntityId[];
 };
 
@@ -35,63 +29,47 @@ export const WorldEntitiesDropdown = () => {
   const worldId = useInvariantContext(WorldIdContext);
 
   /***** HOOKS *****/
-  const entityTree = useIntervalState(500, () => {
-    const world = engine.scene.context.requireWorld(worldId);
-    const entityIds = world
+  const world = engine.scene.context.requireWorld(worldId);
+  const entityTree = useSubscribableSelector(world, (currentWorld): EntityTreeData => {
+    const entityIds = currentWorld
       .all()
       .slice()
       .sort((left, right) => left - right);
 
-    const nodesById = new Map<EntityId, EntityTreeNode>();
+    const visibleEntityIds: EntityId[] = [];
+    const visibleEntityIdsSet = new Set<EntityId>();
     const parentById = new Map<EntityId, EntityId>();
-    const roots: EntityTreeNode[] = [];
+    const rootEntityIds: EntityId[] = [];
     let gizmoEntityId: EntityId | null = null;
 
     for (const entityId of entityIds) {
-      if (world.has(entityId, EditorDebugEntity)) {
+      if (currentWorld.has(entityId, EditorDebugEntity)) {
         continue;
       }
 
-      nodesById.set(entityId, {
-        entityId,
-        children: [],
-        components: world
-          .getComponentTypes(entityId)
-          .map((componentType) => ({
-            key: `${entityId}:${componentType.name}`,
-            name: componentType.name,
-          }))
-          .sort((left, right) => left.name.localeCompare(right.name)),
-      });
+      visibleEntityIds.push(entityId);
+      visibleEntityIdsSet.add(entityId);
 
-      if (gizmoEntityId === null && world.has(entityId, Gizmo)) {
+      if (gizmoEntityId === null && currentWorld.has(entityId, Gizmo)) {
         gizmoEntityId = entityId;
       }
     }
 
-    for (const entityId of entityIds) {
-      const node = nodesById.get(entityId);
-      if (!node) {
-        continue;
-      }
-
-      const parentId = world.get(entityId, Parent)?.entityId;
+    for (const entityId of visibleEntityIds) {
+      const parentId = currentWorld.get(entityId, Parent)?.entityId;
       if (parentId !== undefined) {
         parentById.set(entityId, parentId);
       }
 
       if (parentId === undefined || parentId === entityId) {
-        roots.push(node);
+        rootEntityIds.push(entityId);
         continue;
       }
 
-      const parent = nodesById.get(parentId);
-      if (!parent) {
-        roots.push(node);
+      if (!visibleEntityIdsSet.has(parentId)) {
+        rootEntityIds.push(entityId);
         continue;
       }
-
-      parent.children.push(node);
     }
 
     const expandedEntityIds: EntityId[] = [];
@@ -102,7 +80,7 @@ export const WorldEntitiesDropdown = () => {
       while (currentEntityId !== undefined && !visited.has(currentEntityId)) {
         visited.add(currentEntityId);
 
-        if (nodesById.has(currentEntityId)) {
+        if (visibleEntityIdsSet.has(currentEntityId)) {
           expandedEntityIds.push(currentEntityId);
         }
 
@@ -116,7 +94,7 @@ export const WorldEntitiesDropdown = () => {
     }
 
     const treeData: EntityTreeData = {
-      roots,
+      rootEntityIds,
       expandedEntityIds,
     };
 
@@ -128,7 +106,8 @@ export const WorldEntitiesDropdown = () => {
     <EntityTreeNodes
       depth={1}
       expandedEntityIds={entityTree.expandedEntityIds}
-      nodes={entityTree.roots}
+      entityIds={entityTree.rootEntityIds}
+      world={world}
     />
   );
 };

@@ -1,5 +1,6 @@
 import { Debug } from "@/components";
 import { EngineUiContext } from "@ui/utilities/engine-context";
+import { useEntitySelector } from "@ui/utilities/hooks/use-entity-selector";
 import { useInvariantContext } from "@ui/utilities/hooks/use-invariant-context";
 import styles from "@ui/layout/sidebar/styles.module.css";
 import { EntityIdContext, WorldIdContext } from "@ui/layout/sidebar/worldViewer/context";
@@ -20,14 +21,15 @@ export const DebugName: React.FC<DebugNameProps> = ({ className }) => {
   const worldId = useInvariantContext(WorldIdContext);
   const entityId = useInvariantContext(EntityIdContext);
 
-  /***** RENDER HELPERS *****/
   const world = engine.scene.context.requireWorld(worldId);
-  const debug = world.get(entityId, Debug);
+  const entityName = useEntitySelector(world, entityId, (currentWorld) => {
+    return currentWorld.get(entityId, Debug)?.name;
+  });
 
   /***** RENDER *****/
   return (
     <span className={className ?? styles.worldsEntitiesEntityName}>
-      {debug?.name ?? entityId}
+      {entityName ?? entityId}
     </span>
   );
 };
