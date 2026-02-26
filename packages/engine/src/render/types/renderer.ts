@@ -1,19 +1,25 @@
 import type { LooseAssetManager } from "../../asset/AssetManager";
-import type { HighLevelRendererConfig } from "../renderers/canvas2d/canvas2d-high-level";
-import type { HighLevelRenderer } from "./high-level";
-import type { LowLevelRenderer } from "./low-level";
-import type { TextureCacheConfig } from "../textureCache/texture-cache";
+import type { Camera } from "../../components/camera";
+import type { Shape } from "../../components/shape";
+import type { Color, Sprite } from "../../components/sprite";
+import type { Transform2D } from "../../components/transform/transform2d";
+import type { TextureCache, TextureCacheConfig } from "../textureCache/texture-cache";
+import type { ShapeRenderData } from "./low-level";
 
-export type { Renderable, Settable } from "./high-level";
-export type { ShapeRenderData, SpriteRenderData } from "./low-level";
 export { type TextureCacheConfig } from "../textureCache/texture-cache";
 export type { TextureHandle, TextureInfo, TextureState, TextureStatus } from "../textureCache/texture-cache";
+export type { ShapeRenderData, SpriteRenderData } from "./low-level";
+
+export type Renderable = Sprite | Shape;
+export type Settable = Camera;
 
 /**
- * Configuration for renderer behavior — combines cache and high-level
+ * Configuration for renderer behavior — combines cache and 2D renderer
  * config into a single flat options object.
  */
-export interface RendererConfig extends TextureCacheConfig, HighLevelRendererConfig {}
+export type RendererConfig = TextureCacheConfig & {
+  showFallback: boolean;
+};
 
 const DEFAULT_RENDERER_CONFIG: RendererConfig = {
   textureUploadBudget: 4,
@@ -24,25 +30,33 @@ const DEFAULT_RENDERER_CONFIG: RendererConfig = {
 export { DEFAULT_RENDERER_CONFIG };
 
 /**
- * Composite renderer — the entry point for all rendering.
+ * Renderer2D-facing composite renderer — the entry point for all rendering.
  *
- * Provides two layers:
- *   - `low`  — raw draw primitives (sprites, shapes, camera, viewport)
- *   - `high` — game-object level API (render, set, cache, begin/end/clear)
- *
- * Most game systems should use `high` exclusively.
- * `low` is available for custom / advanced rendering.
+ * Layering:
+ *   - `RendererAPI`   — backend implementation (Canvas2D/WebGL)
+ *   - `RenderCommand` — thin command facade over RendererAPI
+ *   - `Renderer`      — 2D orchestration (camera, texture cache, renderables)
  */
 export interface Renderer {
-  /** Initialize the renderer with a canvas and asset manager. */
   initialize(canvas: HTMLCanvasElement, assets: LooseAssetManager): void;
 
-  /** Low-level draw primitives. */
-  readonly low: LowLevelRenderer;
+  begin(): void;
+  end(): void;
+  clear(color: Color): void;
 
-  /** High-level game-object rendering API. */
-  readonly high: HighLevelRenderer;
+  render(renderable: Renderable, transform: Transform2D, alpha: number): void;
+  set(value: Settable, transform: Transform2D, alpha: number): void;
 
-  /** The active configuration. */
+  drawShape(data: ShapeRenderData): void;
+
+  setCamera(x: number, y: number, zoom: number): void;
+  getCameraX(): number;
+  getCameraY(): number;
+  getCameraZoom(): number;
+
+  getWidth(): number;
+  getHeight(): number;
+
+  readonly cache: TextureCache;
   readonly config: RendererConfig;
 }

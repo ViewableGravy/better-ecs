@@ -1,18 +1,14 @@
-import type { LooseAssetManager } from "../../../asset/AssetManager";
-import { Canvas2DHighLevel } from "./canvas2d-high-level";
-import { Canvas2DLowLevel } from "./canvas2d-low-level";
-import type { HighLevelRenderer } from "../../types/high-level";
-import type { LowLevelRenderer } from "../../types/low-level";
-import { DEFAULT_RENDERER_CONFIG, type Renderer, type RendererConfig } from "../../types/renderer";
-import { TextureCache } from "../../textureCache/texture-cache";
+import { DEFAULT_RENDERER_CONFIG, type RendererConfig } from "../../types/renderer";
+import { Renderer2D } from "../renderer2d";
+import { Canvas2DRenderAPI } from "./canvas2d-renderer-api";
 
 /**
- * Canvas 2D composite renderer.
+ * Canvas 2D convenience renderer.
  *
  * Wires together:
- *   - `Canvas2DLowLevel`   — raw CanvasRenderingContext2D draw calls
- *   - `Canvas2DHighLevel`  — game-object → draw-data translation
- *   - `TextureCache`       — texture lifecycle management
+ *   - `Canvas2DRenderAPI` — backend renderer API
+ *   - `RenderCommand`     — backend command facade
+ *   - `Renderer2D`        — 2D orchestration layer
  *
  * Usage:
  * ```ts
@@ -20,39 +16,15 @@ import { TextureCache } from "../../textureCache/texture-cache";
  * renderer.initialize(canvas, assets);
  *
  * // In render loop:
- * renderer.high.begin();
- * renderer.high.clear(clearColor);
- * renderer.high.set(camera, cameraTransform, alpha);
- * renderer.high.render(sprite, transform, alpha);
- * renderer.high.end();
+ * renderer.begin();
+ * renderer.clear(clearColor);
+ * renderer.set(camera, cameraTransform, alpha);
+ * renderer.render(sprite, transform, alpha);
+ * renderer.end();
  * ```
  */
-export class Canvas2DRenderer implements Renderer {
-  public readonly config: RendererConfig;
-
-  public readonly low: LowLevelRenderer;
-  public readonly high: HighLevelRenderer;
-
-  private readonly textureCache: TextureCache;
-
+export class Canvas2DRenderer extends Renderer2D {
   constructor(config?: Partial<RendererConfig>) {
-    this.config = { ...DEFAULT_RENDERER_CONFIG, ...config };
-
-    this.textureCache = new TextureCache({
-      textureUploadBudget: this.config.textureUploadBudget,
-      warnOnLazyLoad: this.config.warnOnLazyLoad,
-    });
-
-    const lowLevel = new Canvas2DLowLevel();
-    this.low = lowLevel;
-
-    this.high = new Canvas2DHighLevel(lowLevel, this.textureCache, {
-      showFallback: this.config.showFallback,
-    });
-  }
-
-  initialize(canvas: HTMLCanvasElement, assets: LooseAssetManager): void {
-    this.low.initialize(canvas);
-    this.textureCache.initialize(assets);
+    super(new Canvas2DRenderAPI(), { ...DEFAULT_RENDERER_CONFIG, ...config });
   }
 }

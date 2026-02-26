@@ -107,17 +107,17 @@ export function applyActiveCameraToRenderer(
   const camera = engine.editor.camera;
 
   if (camera.mode === "engine") {
-    renderer.low.setCamera(camera.x, camera.y, camera.zoom > 0 ? camera.zoom : 1);
+    renderer.setCamera(camera.x, camera.y, camera.zoom > 0 ? camera.zoom : 1);
     return;
   }
 
   const selection = resolveCameraSelection(world, cameraEntityId);
   if (!selection) {
-    renderer.low.setCamera(0, 0, 1);
+    renderer.setCamera(0, 0, 1);
     return;
   }
 
-  renderer.high.set(selection.camera, selection.transform, alpha);
+  renderer.set(selection.camera, selection.transform, alpha);
 }
 
 export function screenToWorld(

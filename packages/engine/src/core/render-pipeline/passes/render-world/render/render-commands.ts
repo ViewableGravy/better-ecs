@@ -5,9 +5,9 @@ import { resolveWorldTransform2D } from "../../../../../ecs/hierarchy";
 import type {
   EngineFrameAllocatorRegistry,
   InternalFrameAllocator,
+  Renderer,
+  RenderQueue,
 } from "../../../../../render";
-import type { RenderQueue } from "../../../../../render";
-import type { Renderer } from "../../../../../render";
 
 const SHARED_RENDER_TRANSFORM = new Transform2D();
 
@@ -20,7 +20,7 @@ export function renderCommands(
   for (const command of queue.commands) {
     if (command.type === "shape-draw") {
       if (command.shape) {
-        renderer.low.drawShape(command.shape);
+        renderer.drawShape(command.shape);
       }
       continue;
     }
@@ -41,7 +41,7 @@ export function renderCommands(
         continue;
       }
 
-      renderer.high.render(sprite, SHARED_RENDER_TRANSFORM, alpha);
+      renderer.render(sprite, SHARED_RENDER_TRANSFORM, alpha);
       continue;
     }
 
@@ -81,6 +81,6 @@ export function renderCommands(
 
     shapeCommand.strokeWidth = shape.strokeWidth;
 
-    renderer.low.drawShape(shapeCommand);
+    renderer.drawShape(shapeCommand);
   }
 }

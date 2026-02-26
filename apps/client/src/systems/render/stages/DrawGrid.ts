@@ -1,8 +1,8 @@
 import { GridBounds } from "@/components/grid-bounds";
 import { GRID_CELL_SIZE } from "@/scenes/world/systems/build-mode/const";
 import { type UserWorld } from "@repo/engine";
-import { fromContext, System as ContextSystem } from "@repo/engine/context";
 import { Color, Shape, Transform2D } from "@repo/engine/components";
+import { System as ContextSystem, fromContext } from "@repo/engine/context";
 import type {
   EngineFrameAllocatorRegistry,
   InternalFrameAllocator,
@@ -58,11 +58,11 @@ export function drawGrid(
     return;
   }
 
-  const viewportWidth = renderer.low.getWidth();
-  const viewportHeight = renderer.low.getHeight();
-  const cameraX = renderer.low.getCameraX();
-  const cameraY = renderer.low.getCameraY();
-  const cameraZoom = renderer.low.getCameraZoom();
+  const viewportWidth = renderer.getWidth();
+  const viewportHeight = renderer.getHeight();
+  const cameraX = renderer.getCameraX();
+  const cameraY = renderer.getCameraY();
+  const cameraZoom = renderer.getCameraZoom();
 
   if (cameraZoom <= 0) {
     return;
