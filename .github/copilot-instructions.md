@@ -42,6 +42,7 @@
   - Correcting imports.
   - Linking or installing missing workspace dependencies.
   - Verifying existing package exports before changing build/tooling config.
+- Never leave "legacy compatibility" files, patterns, or code paths. If something is no longer used, remove it entirely.
 
 # Documentation
 

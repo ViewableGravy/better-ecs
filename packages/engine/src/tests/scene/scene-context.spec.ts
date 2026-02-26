@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { SceneContext } from "../../core";
 import { World } from "../../ecs/world";
@@ -75,5 +75,21 @@ describe("SceneContext", () => {
     expect(overworld.all()).toEqual([]);
     expect(house.all()).toEqual([player]);
     expect(house.get(player, TestComponent)?.value).toBe("player");
+  });
+
+  it("should notify subscribers when worlds are added or removed", () => {
+    const scene = new SceneContext("scene", new World("scene"));
+    const listener = vi.fn();
+    const unsubscribe = scene.subscribe(listener);
+
+    scene.loadAdditionalWorld("overworld");
+    scene.unloadWorld("overworld");
+
+    expect(listener).toHaveBeenCalledTimes(2);
+
+    unsubscribe();
+    scene.loadAdditionalWorld("dungeon");
+
+    expect(listener).toHaveBeenCalledTimes(2);
   });
 });
