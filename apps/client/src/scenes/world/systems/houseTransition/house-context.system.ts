@@ -3,9 +3,9 @@ import { ContextFocusBlendTransitionMutator } from "@/scenes/world/systems/house
 import {
   createSystem,
   type EntityId,
-  useDelta,
-  useWorld,
+  type UserWorld,
 } from "@repo/engine";
+import { fromContext, Delta, World } from "@repo/engine/context";
 import { Transform2D } from "@repo/engine/components";
 import { ContextEntryRegion, type ContextId, useContextManager } from "@repo/spatial-contexts";
 import { InsideContext } from "../../components/inside-context";
@@ -27,8 +27,8 @@ const transitionMutator = new ContextFocusBlendTransitionMutator();
 export const HouseContextSystem = createSystem("main:context-focus")({
   system() {
     const manager = useContextManager();
-    const world = useWorld();
-    const [updateDelta] = useDelta();
+    const world = fromContext(World);
+    const [updateDelta] = fromContext(Delta);
     const [playerId] = world.invariantQuery(PlayerComponent);
     const playerTransform = world.require(playerId, Transform2D);
     const focused = manager.focusedContextId;
@@ -109,7 +109,7 @@ export const HouseContextSystem = createSystem("main:context-focus")({
 
 function switchContext(
   manager: ReturnType<typeof useContextManager>,
-  sourceWorld: ReturnType<typeof useWorld>,
+  sourceWorld: UserWorld,
   sourcePlayerId: EntityId,
   next: ContextId,
 ): void {
@@ -121,7 +121,7 @@ function switchContext(
 }
 
 function setInsideContext(
-  world: ReturnType<typeof useWorld>,
+  world: UserWorld,
   playerId: EntityId,
   contextId: ContextId,
   sourceRegionEntity: EntityId,

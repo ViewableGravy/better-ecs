@@ -1,5 +1,5 @@
 import type { AnyEngine, EngineSystem } from "@repo/engine";
-import { useEngine, useOverloadedSystem, useSystem } from "@repo/engine";
+import { fromContext, Engine, OverrideSystem, System } from "@repo/engine/context";
 import invariant from "tiny-invariant";
 import { updateModeVisibility } from "./initialize";
 import type { Opts } from "./types";
@@ -8,13 +8,13 @@ import { schema } from "./types";
 const SLIDER_INIT_ATTR = "data-fps-sliders-initialized";
 
 export function update(opts: Opts) {
-  const { data } = useOverloadedSystem<EngineSystem<typeof schema>>("plugin:fps-counter");
-  const engine = useEngine();
+  const { data } = fromContext(OverrideSystem<EngineSystem<typeof schema>>("plugin:fps-counter"));
+  const engine = fromContext(Engine);
   const now = performance.now();
 
   // Cycle through modes via engine input if a keybind was provided
   if (opts.modeToggleKey) {
-    const input = useSystem("engine:input");
+    const input = fromContext(System("engine:input"));
     if (input.matchKeybind({ state: "pressed" })(opts.modeToggleKey)) {
       const modes: Array<"disabled" | "simple" | "default" | "advanced"> = [
         "disabled",

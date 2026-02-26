@@ -1,4 +1,4 @@
-import { useSystem } from "@repo/engine";
+import { fromContext, System } from "@repo/engine/context";
 import {
   GRID_TOGGLE_CTRL,
   GRID_TOGGLE_META,
@@ -10,8 +10,8 @@ import {
  *   COMPONENT START
  **********************************************************************************************************/
 export function matchKeybinds(): void {
-  const { data } = useSystem("main:build-mode");
-  const input = useSystem("engine:input");
+  const { data } = fromContext(System("main:build-mode"));
+  const input = fromContext(System("engine:input"));
 
   if (input.matchKeybind(HOTBAR_SLOT_BOX)) {
     data.selectedItem = "box";

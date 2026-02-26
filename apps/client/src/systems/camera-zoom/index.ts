@@ -1,5 +1,6 @@
-import { clamp, createSystem, useEngine, useSystem } from "@repo/engine";
+import { clamp, createSystem } from "@repo/engine";
 import { Camera } from "@repo/engine/components";
+import { fromContext, Engine, System as ContextSystem } from "@repo/engine/context";
 import z from "zod";
 
 const MIN_ORTHO_SIZE = 120;
@@ -21,8 +22,8 @@ export const System = createSystem("camera-zoom")({
     })
   },
   initialize() {
-    const { canvas } = useEngine()
-    const { data } = useSystem("camera-zoom");
+    const { canvas } = fromContext(Engine)
+    const { data } = fromContext(ContextSystem("camera-zoom"));
 
     data.wheelHandler = (event: WheelEvent) => {
       data.pendingWheelDelta += normalizeWheelDelta(event);
@@ -41,7 +42,7 @@ export const System = createSystem("camera-zoom")({
     };
   },
   system() {
-    const { data } = useSystem("camera-zoom");
+    const { data } = fromContext(ContextSystem("camera-zoom"));
 
     if (data.pendingWheelDelta === 0) {
       return;
@@ -51,7 +52,7 @@ export const System = createSystem("camera-zoom")({
     data.pendingWheelDelta = 0;
 
     const zoomFactor = Math.exp(wheelDelta * ZOOM_SENSITIVITY);
-    const engine = useEngine();
+    const engine = fromContext(Engine);
 
     for (const world of engine.scene.context.worlds) {
       for (const cameraId of world.query(Camera)) {

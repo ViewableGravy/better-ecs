@@ -6,7 +6,7 @@ import {
 	type InternalFrameAllocator,
 } from "../../render/frame-allocator";
 import type { Renderer } from "../../render/renderer";
-import { useEngine } from "../context";
+import { fromContext, Engine } from "../../context";
 import { RenderPipelineContext } from "./context";
 import type { RenderPass } from "./pass";
 import { BeginFramePass } from "./passes/begin-frame";
@@ -44,7 +44,7 @@ type CreateRenderPipelineOptions<
 
 class DefaultWorldProvider implements WorldProvider {
 	getVisibleWorlds(): readonly UserWorld[] {
-		return [useEngine().world];
+		return [fromContext(Engine).world];
 	}
 }
 
@@ -74,7 +74,7 @@ export function createRenderPipeline<
 			// `state` defaults to an empty object and is optionally extended by user code.
 			// This cast is localized to the initialization boundary.
 			state: (initialized.state ?? {}) as TState,
-			world: useEngine().world,
+			world: fromContext(Engine).world,
 		});
 
 		return context;
@@ -115,7 +115,7 @@ export function createRenderPipeline<
 		},
 		render(): void {
 			const passContext = getOrInitializeContext();
-			const engine = useEngine();
+			const engine = fromContext(Engine);
 
 			// 1) Build interpolation alpha from the latest fixed-step update timing.
 			const updateTimeMs = 1000 / engine.meta.ups;
@@ -157,8 +157,7 @@ export function createRenderPipeline<
 					index = blockEnd;
 				}
 			} finally {
-				// 5) Restore context defaults and release per-frame pooled objects.
-				passContext.world = useEngine().world;
+				passContext.world = fromContext(Engine).world;
 				passContext.frameAllocator.endFrame();
 			}
 		},

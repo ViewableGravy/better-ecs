@@ -1,4 +1,5 @@
-import { createSystem, useEngine, useScene } from "@repo/engine";
+import { createSystem } from "@repo/engine";
+import { fromContext, Engine, Scene } from "@repo/engine/context";
 import { SpatialContexts } from "./install";
 
 /**
@@ -10,8 +11,8 @@ export function createSpatialContextsRuntimeSystem<const TSceneName extends stri
   return createSystem(`plugin:spatial-contexts-runtime:${sceneName}`)({
     priority: 100_000,
     system() {
-      const engine = useEngine();
-      const scene = useScene();
+      const engine = fromContext(Engine);
+      const scene = fromContext(Scene);
       const manager = SpatialContexts.install(scene);
       manager.setActiveWorldController(engine.scene);
 

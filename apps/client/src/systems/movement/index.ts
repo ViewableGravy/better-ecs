@@ -1,13 +1,14 @@
-import { createSystem, useDelta, useSystem, useWorld } from "@repo/engine";
+import { createSystem } from "@repo/engine";
 import { Transform2D } from "@repo/engine/components";
+import { fromContext, Delta, System as ContextSystem, World } from "@repo/engine/context";
 import { PlayerComponent } from "../../components/player";
 
 export const System = createSystem("movement")({
   system() {
-    /***** HOOKS *****/
-    const world = useWorld();
-    const { data } = useSystem("engine:input");
-    const [updateDelta] = useDelta();
+    /***** CONTEXT *****/
+    const world = fromContext(World);
+    const { data } = fromContext(ContextSystem("engine:input"));
+    const [updateDelta] = fromContext(Delta);
 
     /***** QUERIES *****/
     const [playerId] = world.query(PlayerComponent);

@@ -1,10 +1,10 @@
 import { Transform2D, Transform3D } from "../components/transform";
-import { useWorld } from "../core/context";
+import { fromContext, World } from "../context";
 import { createSystem } from "../core/system";
 
 export const transformSnapshotSystem = createSystem("engine:transformSnapshot")({
   system: () => {
-    const world = useWorld();
+    const world = fromContext(World);
 
     // Snapshot Transform2D
     for (const entityId of world.query(Transform2D)) {

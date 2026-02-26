@@ -1,14 +1,6 @@
-import type { UserWorld } from "../ecs/world";
 import type { EngineClass } from "./engine";
-import type {
-  AllSceneNames,
-  RegisteredAssetManager,
-  RegisteredEngine,
-  RegisteredSystems,
-  SystemNames,
-} from "./engine-types";
+import type { RegisteredEngine } from "./engine-types";
 import type { SceneContext } from "./scene/scene-context";
-import type { EngineSystem } from "./system";
 
 /***** TYPE DEFINITIONS *****/
 type Context = {
@@ -61,83 +53,15 @@ export function executeWithContext<T>(context: Partial<LooseContext>, fn: () => 
   return result as any;
 }
 
-export function useEngine(): RegisteredEngine {
+/**
+ * Returns the engine from the current execution context.
+ * Throws if called outside of a system execution context.
+ * @internal used by fromContext and internal engine systems
+ */
+export function getContextEngine(): RegisteredEngine {
   if (!context.engine) {
-    throw new Error("useEngine() called outside of a system execution context");
+    throw new Error("fromContext() called outside of a system execution context");
   }
 
   return context.engine;
-}
-
-export function useDelta(): [updateDelta: number, frameDelta: number, updateProgress: number] {
-  const engine = useEngine();
-  return [engine.meta.updateDelta, engine.meta.frameDelta, engine.meta.updateProgress];
-}
-
-type RegisteredSystemNames = Extract<SystemNames, keyof RegisteredSystems>;
-
-/**
- * Use a system by name with automatic type inference from the registered engine.
- * This hook uses the global Register interface to infer the system type.
- *
- * For plugins that need to manually specify types (because they don't have access
- * to the global Register), use `useOverloadedSystem` instead.
- */
-export function useSystem<TSystem extends RegisteredSystemNames>(
-  system: TSystem,
-): RegisteredSystems[TSystem] {
-  const engine = useEngine();
-  return engine.systems[system];
-}
-
-/**
- * Use a system by name with an explicit type override.
- * This hook is designed for plugins that don't have access to the global Register
- * interface and need to manually specify the system type.
- *
- * @example
- * const { data } = useOverloadedSystem<EngineSystem<typeof schema>>("plugin:fps-counter");
- */
-export function useOverloadedSystem<TOverride extends EngineSystem>(system: string): TOverride {
-  const engine = useEngine();
-  return (engine.systems as any)[system] as TOverride;
-}
-
-export function useWorld(): UserWorld {
-  const engine = useEngine();
-  return engine.world;
-}
-
-export function useScene(): SceneContext {
-  if (!context.engine) {
-    throw new Error("useScene() called outside of a system execution context");
-  }
-
-  if (!context.scene) {
-    throw new Error("useScene() called outside of scene context (no active scene)");
-  }
-
-  return context.scene;
-}
-
-export function useAssets(): RegisteredAssetManager {
-  const engine = useEngine();
-  return engine.assets;
-}
-
-/**
- * Returns a function to transition to a scene by name.
- * This hook captures the engine context and returns a type-safe setter function.
- *
- * @example
- * ```ts
- * const setScene = useSetScene();
- *
- * // Later in the system:
- * await setScene("game");
- * ```
- */
-export function useSetScene(): <TName extends AllSceneNames>(sceneName: TName) => Promise<void> {
-  const engine = useEngine();
-  return (sceneName) => (engine as any).scene.set(sceneName);
 }

@@ -1,14 +1,15 @@
 import { PlayerComponent } from "@/components/player";
 import { InsideContext } from "@/scenes/world/components/inside-context";
-import { useEngine, useWorld, type UserWorld, type WorldProvider } from "@repo/engine";
+import { type UserWorld, type WorldProvider } from "@repo/engine";
+import { fromContext, Engine, World } from "@repo/engine/context";
 import { SpatialContexts, type SpatialContextManager } from "@repo/spatial-contexts";
 
 export class ActiveWorldProvider implements WorldProvider {
   getVisibleWorlds(): readonly UserWorld[] {
-    const manager = SpatialContexts.getManager(useEngine().scene.context);
+    const manager = SpatialContexts.getManager(fromContext(Engine).scene.context);
 
     if (!manager) {
-      return [useWorld()];
+      return [fromContext(World)];
     }
 
     const visibleWorlds = [...manager.getVisibleWorlds()];

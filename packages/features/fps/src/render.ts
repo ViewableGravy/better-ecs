@@ -1,10 +1,11 @@
-import { useEngine, useOverloadedSystem, type EngineSystem } from "@repo/engine";
+import type { EngineSystem } from "@repo/engine";
+import { fromContext, Engine, OverrideSystem } from "@repo/engine/context";
 import { schema, type Opts } from "./types";
 
 export function render(opts: Opts) {
   const now = performance.now();
-  const engine = useEngine();
-  const { data } = useOverloadedSystem<EngineSystem<typeof schema>>("plugin:fps-counter");
+  const engine = fromContext(Engine);
+  const { data } = fromContext(OverrideSystem<EngineSystem<typeof schema>>("plugin:fps-counter"));
   const fpsBufferStart = data.fpsBuffer.start;
   if (fpsBufferStart === null) {
     data.fpsBuffer.start = now;

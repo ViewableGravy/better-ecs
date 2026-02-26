@@ -1,4 +1,5 @@
-import { createSystem, useWorld } from "@repo/engine";
+import { createSystem } from "@repo/engine";
+import { fromContext, World } from "@repo/engine/context";
 import { useContextManager } from "../hooks";
 import { Portal } from "./portal.component";
 import type { PortalSystemOptions } from "./portal.types";
@@ -14,10 +15,10 @@ export const createPortalSystem = <const TName extends string = "plugin:spatial-
     priority: 50_000,
     system() {
       const manager = useContextManager();
-      const world = useWorld();
+      const world = fromContext(World);
       const focusedContextId = manager.focusedContextId;
 
-      // `useWorld()` is already bound to the focused context world by the runtime system.
+      // `fromContext(World)` is already bound to the focused context world by the runtime system.
       // Do not compare wrapper object identity here: SceneManager and SceneContext use
       // different UserWorld wrappers for the same internal world.
 

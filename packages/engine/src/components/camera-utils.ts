@@ -1,4 +1,5 @@
-import { useEngine, type EntityId, type UserWorld } from "../index";
+import { fromContext, Engine } from "../context";
+import type { EntityId, UserWorld } from "../index";
 import type { Renderer } from "../render";
 import { Camera } from "./camera";
 import { Transform2D } from "./transform";
@@ -83,7 +84,7 @@ export function resolveActiveCameraView(
   world: UserWorld,
   cameraEntityId?: EntityId,
 ): CameraView {
-  const engine = useEngine();
+  const engine = fromContext(Engine);
   const camera = engine.editor.camera;
 
   if (camera.mode === "engine") {
@@ -102,7 +103,7 @@ export function applyActiveCameraToRenderer(
   alpha: number,
   cameraEntityId?: EntityId,
 ): void {
-  const engine = useEngine();
+  const engine = fromContext(Engine);
   const camera = engine.editor.camera;
 
   if (camera.mode === "engine") {
@@ -129,6 +130,6 @@ export function screenToWorld(
 }
 
 function resolveViewportHeight(): number {
-  const canvas = useEngine().canvas;
+  const canvas = fromContext(Engine).canvas;
   return canvas.getBoundingClientRect().height;
 }

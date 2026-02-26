@@ -1,5 +1,5 @@
 import { EventPool } from "@repo/utils";
-import { useOverloadedSystem } from "../../core/context";
+import { fromContext, OverrideSystem } from "../../context";
 import { createSystem, type EngineSystem } from "../../core/system";
 import { InputStateSchema } from "./input.types";
 import { createMatchKeybind } from "./keybind/keybind";
@@ -24,7 +24,6 @@ export const inputSystem = createSystem("engine:input")({
   },
   methods(system) {
     // Return methods object that will be merged with system
-    // The methods will be called during system execution where useOverloadedSystem is available
     const data = system.data;
 
     return {
@@ -35,7 +34,7 @@ export const inputSystem = createSystem("engine:input")({
 
 /***** ENTRYPOINT START *****/
 function Entrypoint() {
-  const { data } = useOverloadedSystem<EngineSystem<typeof InputStateSchema>>("engine:input");
+  const { data } = fromContext(OverrideSystem<EngineSystem<typeof InputStateSchema>>("engine:input"));
 
   // Clear per-tick buffers at start of this update
   data.pressedThisTick.clear();
@@ -92,7 +91,7 @@ function Initialize() {
   // Only initialize in browser environment
   if (typeof window === "undefined") return;
 
-  const { data } = useOverloadedSystem<EngineSystem<typeof InputStateSchema>>("engine:input");
+  const { data } = fromContext(OverrideSystem<EngineSystem<typeof InputStateSchema>>("engine:input"));
 
   const eventPool = new EventPool();
 

@@ -12,7 +12,8 @@ import {
   BlendTransitionMutator,
 } from "@/scenes/world/systems/houseTransition/transitionMutator";
 import { lerp } from "@/utilities/math";
-import { createRenderPass, useEngine } from "@repo/engine";
+import { createRenderPass } from "@repo/engine";
+import { fromContext, Engine } from "@repo/engine/context";
 import { Shape, Sprite } from "@repo/engine/components";
 import {
   SpatialContexts,
@@ -25,7 +26,7 @@ const transitionMutator = new BlendTransitionMutator();
 
 export const ApplyContextVisualsPass = createRenderPass("apply-context-visuals")({
   execute() {
-    const engine = useEngine();
+    const engine = fromContext(Engine);
     const manager = SpatialContexts.getManager(engine.scene.context);
     if (!manager) {
       return;

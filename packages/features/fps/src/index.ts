@@ -1,13 +1,12 @@
 import {
     createRenderPass,
     createSystem,
-    useEngine,
-    useOverloadedSystem,
     type EngineSystem,
     type RenderPass,
     type StandardSchema,
     type SystemFactory,
 } from "@repo/engine";
+import { fromContext, Engine, OverrideSystem } from "@repo/engine/context";
 import { initialize } from "./initialize";
 import { render } from "./render";
 import { schema, type FPSCounterData, type Opts } from "./types";
@@ -37,8 +36,8 @@ export const System = (
   });
 
   function EntryPoint() {
-    const engine = useEngine();
-    const { data } = useOverloadedSystem<EngineSystem<typeof schema>>("plugin:fps-counter");
+    const engine = fromContext(Engine);
+    const { data } = fromContext(OverrideSystem<EngineSystem<typeof schema>>("plugin:fps-counter"));
     const now = performance.now();
 
     if (data.customFps !== null && engine.meta.fps !== data.customFps) {

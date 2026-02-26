@@ -1,11 +1,12 @@
-import { createRenderPass, useEngine } from "@repo/engine";
+import { createRenderPass } from "@repo/engine";
+import { fromContext, Engine } from "@repo/engine/context";
 import { SpatialContexts } from "@repo/spatial-contexts";
 import { drawGrid } from "../stages/DrawGrid";
 
 export const DrawGridPass = createRenderPass("draw-grid")({
   scope: "world",
   execute({ world, renderer }) {
-    const engine = useEngine();
+    const engine = fromContext(Engine);
     const manager = SpatialContexts.getManager(engine.scene.context);
     const focusedWorld = manager ? manager.focusedWorld : engine.world;
 

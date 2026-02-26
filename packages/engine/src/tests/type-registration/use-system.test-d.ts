@@ -3,11 +3,11 @@ import z from "zod";
 import {
   createEngine,
   createSystem,
-  useSystem,
   type EngineSystemFactory,
   type InferEngineSystem,
   type SystemNames,
 } from "../../core";
+import { fromContext, System } from "../../context";
 
 const CounterSystem = createSystem("app:counter")({
   schema: {
@@ -44,10 +44,10 @@ declare module "../../core/engine-types" {
 expectTypeOf<"engine:input">().toExtend<SystemNames>();
 expectTypeOf<"app:counter">().toExtend<SystemNames>();
 
-const input = useSystem("engine:input");
+const input = fromContext(System("engine:input"));
 expectTypeOf(input).toEqualTypeOf<InferEngineSystem<EngineSystemFactory<"engine:input">>>();
 
-const counter = useSystem("app:counter");
+const counter = fromContext(System("app:counter"));
 expectTypeOf(counter).toEqualTypeOf<ReturnType<typeof CounterSystem>>();
 expectTypeOf(counter.data).toEqualTypeOf<{ count: number }>();
 expectTypeOf(counter.increment).toEqualTypeOf<() => void>();

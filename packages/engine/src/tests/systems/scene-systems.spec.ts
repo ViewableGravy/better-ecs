@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { createEngine, createScene, createSystem, useScene } from "../../core";
+import { createEngine, createScene, createSystem } from "../../core";
+import { fromContext, Scene } from "../../context";
 
 describe("Scene-level systems", () => {
   it("should run scene systems after engine systems (update phase)", async () => {
@@ -17,7 +18,7 @@ describe("Scene-level systems", () => {
     const SceneOrderSystem = createSystem("test:scene-order")({
       priority: 10_000,
       system() {
-        const scene = useScene();
+        const scene = fromContext(Scene);
         order.push(`scene:${scene.name}`);
 
         if (order.length >= 2) {
@@ -57,13 +58,13 @@ describe("Scene-level systems", () => {
     expect(engineIndex).toBeLessThan(sceneIndex);
   });
 
-  it("useScene() should resolve default scene when no explicit scene is active", async () => {
+  it("fromContext(Scene) should resolve default scene when no explicit scene is active", async () => {
     const controller = new AbortController();
     const observedNames: string[] = [];
 
     const SceneSystem = createSystem("test:useScene-default")({
       system() {
-        observedNames.push(useScene().name);
+        observedNames.push(fromContext(Scene).name);
         controller.abort();
       },
     });

@@ -1,4 +1,4 @@
-import { useEngine, useSystem } from "../../core/context";
+import { getContextEngine } from "../../core/context";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -52,13 +52,13 @@ let lastCanvasUpdateTime = -1;
 /**********************************************************************************************************
 *   CONSTS
 **********************************************************************************************************/
-const mouseApi: Mouse = {
+export const mouseApi: Mouse = {
   get screen(): MousePoint {
-    const engine = useEngine();
+    const engine = getContextEngine();
     const currentTime = engine.meta.lastUpdateTime;
     
     if (lastScreenUpdateTime !== currentTime) {
-      const { data } = useSystem("engine:input");
+      const { data } = engine.systems["engine:input"];
       screenPointer.x = data.mouseClientX;
       screenPointer.y = data.mouseClientY;
       lastScreenUpdateTime = currentTime;
@@ -67,11 +67,11 @@ const mouseApi: Mouse = {
     return screenPointer;
   },
   get canvas(): MousePoint {
-    const engine = useEngine();
+    const engine = getContextEngine();
     const currentTime = engine.meta.lastUpdateTime;
     
     if (lastCanvasUpdateTime !== currentTime) {
-      const { data } = useSystem("engine:input");
+      const { data } = engine.systems["engine:input"];
 
       updateCanvasPointer(
         engine.canvas, 
@@ -85,13 +85,13 @@ const mouseApi: Mouse = {
     return canvasPointer;
   },
   world(cameraOrX: MouseCameraView | number, y?: number, zoom?: number): MousePoint {
-    const engine = useEngine();
+    const engine = getContextEngine();
     const currentTime = engine.meta.lastUpdateTime;
     
     // Note: We can't memoize world pointer based on just time since camera parameters change
     // However, we can still avoid re-computing canvas pointer if it was already computed this frame
     if (lastCanvasUpdateTime !== currentTime) {
-      const { data } = useSystem("engine:input");
+      const { data } = engine.systems["engine:input"];
       
       updateCanvasPointer(
         engine.canvas, 
@@ -132,10 +132,6 @@ const mouseApi: Mouse = {
     return worldPointer;
   },
 };
-
-export function useMouse(): Mouse {
-  return mouseApi;
-}
 
 function updateCanvasPointer(
   canvas: HTMLCanvasElement,
