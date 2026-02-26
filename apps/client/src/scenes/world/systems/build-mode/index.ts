@@ -1,8 +1,9 @@
 import type { RenderVisibilityRole } from "@/scenes/world/components/render-visibility";
 import { HOUSE_INTERIOR, OUTSIDE } from "@/scenes/world/components/render-visibility";
 import { spawnBox } from "@/scenes/world/factories/spawnBox";
-import { createSystem, useEngine, useMouse, useSystem, type RegisteredEngine, type RegisteredSystems } from "@repo/engine";
+import { createSystem, type RegisteredEngine, type RegisteredSystems } from "@repo/engine";
 import { resolveActiveCameraView } from "@repo/engine/components";
+import { fromContext, Engine, Mouse, System as ContextSystem } from "@repo/engine/context";
 import { SpatialContexts, type ContextId } from "@repo/spatial-contexts";
 import { GhostPreview } from "./components";
 import { buildModeStateDefault, buildModeStateSchema } from "./const";
@@ -26,9 +27,9 @@ export const System = createSystem("main:build-mode")({
     };
   },
   system() {
-    const { data } = useSystem("main:build-mode");
-    const engine = useEngine();
-    const mouse = useMouse();
+    const { data } = fromContext(ContextSystem("main:build-mode"));
+    const engine = fromContext(Engine);
+    const mouse = fromContext(Mouse);
 
     const manager = SpatialContexts.requireManager(engine.scene.context);
     const focusedWorld = manager.focusedWorld;

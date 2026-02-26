@@ -1,5 +1,6 @@
 import { FPSPass } from "@/plugins/fps";
-import { createRenderPipeline, useAssets, useEngine } from "@repo/engine";
+import { createRenderPipeline } from "@repo/engine";
+import { fromContext, Assets, Engine } from "@repo/engine/context";
 import { Canvas2DRenderer, FrameAllocator } from "@repo/engine/render";
 import { ApplyContextVisualsPass } from "./passes/ApplyContextVisualsPass";
 import { BeginFramePass } from "./passes/BeginFramePass";
@@ -12,7 +13,7 @@ export const Render = createRenderPipeline({
     const canvas = getResizableCanvas();
     const renderer = new Canvas2DRenderer();
 
-    const assets = useAssets();
+    const assets = fromContext(Assets);
     renderer.initialize(canvas, assets);
 
     return {
@@ -32,6 +33,6 @@ export const Render = createRenderPipeline({
 
 // Utility function to get the canvas and handle resizing
 function getResizableCanvas(): HTMLCanvasElement {
-  const { canvas } = useEngine();
+  const { canvas } = fromContext(Engine);
   return canvas;
 }

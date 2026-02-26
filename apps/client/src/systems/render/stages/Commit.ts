@@ -1,4 +1,5 @@
-import { resolveWorldTransform2D, useEngine, type UserWorld } from "@repo/engine";
+import { resolveWorldTransform2D, type UserWorld } from "@repo/engine";
+import { fromContext, Engine } from "@repo/engine/context";
 import { Camera, Shape, Sprite, Transform2D, resolveActiveCameraView } from "@repo/engine/components";
 import type { RenderQueue, Renderer } from "@repo/engine/render";
 import { SpatialContexts } from "@repo/spatial-contexts";
@@ -13,7 +14,7 @@ export function commitWorld(
   queue: RenderQueue,
   alpha: number,
 ): void {
-  const engine = useEngine();
+  const engine = fromContext(Engine);
 
   // --- Camera ---
   if (engine.editor.camera.mode === "engine") {

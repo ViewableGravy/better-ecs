@@ -1,4 +1,5 @@
-import { useEngine, useSystem, type RegisteredSystems } from "@repo/engine";
+import { type RegisteredSystems } from "@repo/engine";
+import { fromContext, Engine, System } from "@repo/engine/context";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -15,8 +16,8 @@ export class BuildModeDomEvents {
   private readonly data: RegisteredSystems['main:build-mode']["data"];
 
   private constructor() {
-    this.canvas = useEngine().canvas;
-    this.data = useSystem("main:build-mode").data;
+    this.canvas = fromContext(Engine).canvas;
+    this.data = fromContext(System("main:build-mode")).data;
   }
 
   public static create(): Destroy {

@@ -1,7 +1,7 @@
 import type { UserWorld } from "../../ecs/world";
 import { FrameAllocator, type FrameAllocatorRegistry } from "../../render/frame-allocator";
 import type { Renderer } from "../../render/renderer";
-import { useEngine } from "../context";
+import { fromContext, Engine } from "../../context";
 import { RenderPipelineContext, type RenderPassContext } from "./context";
 import type { RenderPass } from "./pass";
 import type { RenderPipeline, WorldProvider } from "./types";
@@ -26,7 +26,7 @@ type CreateRenderPipelineOptions<
 
 class DefaultWorldProvider implements WorldProvider {
 	getVisibleWorlds(): readonly UserWorld[] {
-		return [useEngine().world];
+		return [fromContext(Engine).world];
 	}
 }
 
@@ -57,7 +57,7 @@ export function createRenderPipeline<
 			// `state` defaults to an empty object and is optionally extended by user code.
 			// This cast is localized to the initialization boundary.
 			state: (initialized.state ?? {}) as TState,
-			world: useEngine().world,
+			world: fromContext(Engine).world,
 		});
 
 		return context;
@@ -84,7 +84,7 @@ export function createRenderPipeline<
 		},
 		render(): void {
 			const passContext = getOrInitializeContext();
-			const engine = useEngine();
+			const engine = fromContext(Engine);
 
 			const updateTimeMs = 1000 / engine.meta.ups;
 			const timeSinceLastUpdate = performance.now() - engine.meta.lastUpdateTime;
@@ -99,7 +99,7 @@ export function createRenderPipeline<
 					runPass(pass, passContext);
 				}
 			} finally {
-				passContext.world = useEngine().world;
+				passContext.world = fromContext(Engine).world;
 				passContext.frameAllocator.endFrame();
 			}
 		},

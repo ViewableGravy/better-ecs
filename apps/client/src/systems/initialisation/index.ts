@@ -1,9 +1,10 @@
 import { invariantById } from "@/utilities/selectors";
-import { createInitializationSystem, useEngine, useSetScene } from "@repo/engine";
+import { createInitializationSystem } from "@repo/engine";
+import { fromContext, Engine, SetScene } from "@repo/engine/context";
 
 export const System = createInitializationSystem(() => {
-  const setScene = useSetScene();
-  const engine = useEngine();
+  const setScene = fromContext(SetScene);
+  const engine = fromContext(Engine);
   const canvas = engine.canvas;
 
   const canvasContainer = canvas.parentElement;

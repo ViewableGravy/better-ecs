@@ -1,5 +1,5 @@
 import { invariantReturn } from "@/utilities/invariantReturn";
-import { useSystem } from "@repo/engine";
+import { fromContext, System } from "@repo/engine/context";
 import { HOTBAR_INDICATOR_ID } from "../const";
 
 /**********************************************************************************************************
@@ -52,7 +52,7 @@ export class HUD {
   }
 
   public static update() {
-    const { data } = useSystem("main:build-mode");
+    const { data } = fromContext(System("main:build-mode"));
 
     if (data.selectedItem !== HUD.#previouslySelectedItem) {
       this.node.style.background = data.selectedItem ? "#5a125699" : "#00000066";

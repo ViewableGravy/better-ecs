@@ -1,11 +1,11 @@
 import type { UserWorld } from "@repo/engine";
-import { useScene } from "@repo/engine";
+import { fromContext, Scene } from "@repo/engine/context";
 import type { ContextId } from "./context-id";
 import { SpatialContexts } from "./install";
 import type { SpatialContextManager } from "./manager";
 
 export function useContextManager(): SpatialContextManager {
-  const scene = useScene();
+  const scene = fromContext(Scene);
   const manager = SpatialContexts.getManager(scene);
   if (!manager) {
     throw new Error(
