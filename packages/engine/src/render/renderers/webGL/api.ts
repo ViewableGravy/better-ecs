@@ -1,7 +1,7 @@
 import { Color } from "../../../components/sprite";
 import type { ShapeRenderData, SpriteRenderData } from "../../types/low-level";
 import type { RendererAPI } from "../../types/renderer-api";
-import { ShaderCompiler } from "./shader-compiler";
+import { ShaderCompiler } from "./compiler";
 import circleFragmentShaderSource from "./shaders/circle.frag";
 import circleVertexShaderSource from "./shaders/circle.vert";
 import colorFragmentShaderSource from "./shaders/color.frag";
