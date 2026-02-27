@@ -28,10 +28,12 @@ const RING_SEGMENTS = 48;
 
 const AXIS_RED = new Color(1, 0.25, 0.25, 1);
 const AXIS_GREEN = new Color(0.45, 1, 0.45, 1);
-const RING_STROKE = new Color(0.92, 0.92, 0.92, 1);
+const RING_SCALE_STROKE = new Color(0.92, 0.92, 0.92, 1);
+const RING_ROTATE_STROKE = new Color(0.3, 0.6, 1, 1);
 const AXIS_RED_HOVER = new Color(1, 0.75, 0.35, 1);
 const AXIS_GREEN_HOVER = new Color(0.85, 1, 0.45, 1);
-const RING_STROKE_HOVER = new Color(1, 0.9, 0.45, 1);
+const RING_SCALE_STROKE_HOVER = new Color(1, 0.9, 0.45, 1);
+const RING_ROTATE_STROKE_HOVER = new Color(0.5, 0.75, 1, 1);
 const PLANE_STROKE = new Color(0.95, 0.95, 0.95, 1);
 const PLANE_STROKE_HOVER = new Color(1, 0.9, 0.45, 1);
 
@@ -89,7 +91,7 @@ export function queueGizmos(
       centerX,
       centerY,
       ringRadius,
-      gizmo.hoveredHandle === "ring" ? RING_STROKE_HOVER : RING_STROKE,
+      gizmo.hoveredHandle,
     );
 
     queuePlaneHandle(
@@ -177,7 +179,7 @@ function queueRing(
   centerX: number,
   centerY: number,
   radius: number,
-  stroke: Color,
+  hoveredHandle: Gizmo["hoveredHandle"],
 ): void {
   const step = (Math.PI * 2) / RING_SEGMENTS;
 
@@ -189,6 +191,15 @@ function queueRing(
     const startY = centerY + Math.sin(angleStart) * radius;
     const endX = centerX + Math.cos(angleEnd) * radius;
     const endY = centerY + Math.sin(angleEnd) * radius;
+
+    const midpointAngle = angleStart + step * 0.5;
+    const midX = Math.cos(midpointAngle);
+    const midY = Math.sin(midpointAngle);
+    const isRotateQuadrant = midX >= 0 && midY <= 0;
+
+    const stroke = isRotateQuadrant
+      ? (hoveredHandle === "ring-rotate" ? RING_ROTATE_STROKE_HOVER : RING_ROTATE_STROKE)
+      : (hoveredHandle === "ring-scale" ? RING_SCALE_STROKE_HOVER : RING_SCALE_STROKE);
 
     queueLine(queue, frameAllocator, startX, startY, endX, endY, stroke);
   }

@@ -7,6 +7,7 @@ import {
   GIZMO_PLANE_HANDLE_SIZE_WORLD,
   GIZMO_RING_HIT_THICKNESS_WORLD,
   GIZMO_RING_RADIUS_WORLD,
+  GIZMO_SCALE_MIN_DISTANCE_WORLD,
   Transform2D,
   type GizmoHandle,
 } from "../../components";
@@ -52,6 +53,14 @@ type DragState =
       entityId: EntityId;
       startRotation: number;
       startPointerAngle: number;
+      pointerId: number;
+    }
+  | {
+      mode: "scale";
+      entityId: EntityId;
+      startPointerDistance: number;
+      startScaleX: number;
+      startScaleY: number;
       pointerId: number;
     };
 
@@ -222,11 +231,26 @@ export class GizmoInputManager {
 
     const centerX = this.#SHARED_TRANSFORM2D.curr.pos.x;
     const centerY = this.#SHARED_TRANSFORM2D.curr.pos.y;
-    const angle = Math.atan2(worldY - centerY, worldX - centerX);
-    const nextRotation = this.#dragState.startRotation + (angle - this.#dragState.startPointerAngle);
 
-    transform.curr.rotation = nextRotation;
-    transform.prev.rotation = nextRotation;
+    if (this.#dragState.mode === "rotate") {
+      const angle = Math.atan2(worldY - centerY, worldX - centerX);
+      const nextRotation = this.#dragState.startRotation + (angle - this.#dragState.startPointerAngle);
+
+      transform.curr.rotation = nextRotation;
+      transform.prev.rotation = nextRotation;
+      this.#updateHoveredHandle(event);
+      return;
+    }
+
+    const currentDistance = Math.hypot(worldX - centerX, worldY - centerY);
+    const safeStartDistance = Math.max(this.#dragState.startPointerDistance, GIZMO_SCALE_MIN_DISTANCE_WORLD);
+    const scaleFactor = Math.max(currentDistance, GIZMO_SCALE_MIN_DISTANCE_WORLD) / safeStartDistance;
+
+    const nextScaleX = this.#dragState.startScaleX * scaleFactor;
+    const nextScaleY = this.#dragState.startScaleY * scaleFactor;
+
+    transform.curr.scale.set(nextScaleX, nextScaleY);
+    transform.prev.scale.set(nextScaleX, nextScaleY);
     this.#updateHoveredHandle(event);
   }
 
@@ -330,7 +354,7 @@ export class GizmoInputManager {
       return true;
     }
 
-    if (handle === "ring") {
+    if (handle === "ring-rotate") {
       this.#dragState = {
         mode: "rotate",
         entityId: gizmoEntityId,
@@ -339,7 +363,21 @@ export class GizmoInputManager {
         pointerId: event.pointerId,
       };
 
-      gizmo.hoveredHandle = "ring";
+      gizmo.hoveredHandle = "ring-rotate";
+      return true;
+    }
+
+    if (handle === "ring-scale") {
+      this.#dragState = {
+        mode: "scale",
+        entityId: gizmoEntityId,
+        startPointerDistance: Math.hypot(event.worldX - centerX, event.worldY - centerY),
+        startScaleX: transform.curr.scale.x,
+        startScaleY: transform.curr.scale.y,
+        pointerId: event.pointerId,
+      };
+
+      gizmo.hoveredHandle = "ring-scale";
       return true;
     }
 
@@ -381,7 +419,13 @@ export class GizmoInputManager {
 
     const distanceFromCenter = Math.hypot(worldX - centerX, worldY - centerY);
     if (Math.abs(distanceFromCenter - ringRadius) <= ringHitThickness) {
-      return "ring";
+      const deltaX = worldX - centerX;
+      const deltaY = worldY - centerY;
+      if (deltaX >= 0 && deltaY <= 0) {
+        return "ring-rotate";
+      }
+
+      return "ring-scale";
     }
 
     return null;
