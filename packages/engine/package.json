@@ -49,6 +49,7 @@
     "@headlessui/react": "^2.2.9",
     "@phosphor-icons/react": "^2.1.10",
     "@repo/utils": "workspace:*",
+    "@tanstack/react-query": "^5.90.21",
     "classnames": "^2.5.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
