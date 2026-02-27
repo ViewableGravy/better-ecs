@@ -97,16 +97,23 @@ This section is intentionally explicit to reduce drift.
 
 - `get*` means nullable/optional retrieval.
   - Example: `world.get(entityId, Component)` returns `T | undefined`.
+- Use `get*` when reading an already-owned value with no meaningful derivation.
+  - Example: retrieving active scene context from `engine.scene` should use `getSceneContext`, not `resolveSceneContext`.
 - `require*` means must exist (non-nullable) and throws on absence.
   - Example: `world.require(entityId, Component)`.
 - Use `invariant*` when operation semantics need explicit assertion context and `require` is ambiguous.
   - Existing examples: `invariantQuery(...)`, `useInvariantContext(...)`.
   - Preferred when multiple base verbs could apply: `invariantGet`, `invariantQuery`.
+- Prefer asserting invariants at API boundaries instead of spreading redundant nullable checks upward.
+  - If ids are expected to be valid by contract, assert once (`invariant(...)` or `require*`) and continue with non-nullable flow.
+  - Exception: destructive/idempotent methods (for example `destroy`) may return booleans instead of throwing when absence is expected.
 
 ### `resolve` vs out-parameter naming
 
 - Use `resolve*` for computing/deriving a value or decision from current state.
   - Good fit today: `resolvePlacementWorld`, `resolveCameraView`, collision `resolve*` functions.
+- Do not use `resolve*` for simple owner reads/getters.
+  - If no derivation occurs, use `get*` (or `require*` for non-nullable access).
 - Avoid plain `resolve*` for APIs whose primary contract is “write into provided object”.
 
 For APIs with output destination arguments, standardize on the naming:
@@ -117,6 +124,8 @@ For APIs with output destination arguments, standardize on the naming:
 Parameter naming for destination values:
 
 - Use `out` for pooled scratch objects/single structured outputs.
+- For reusable pooled fields, prefer explicit `SHARED_` naming to signal reuse and mutation.
+  - Example: `#SHARED_TRANSFORM2D`.
 - Use `target` for mutating an existing collection or external receiver.
 - Keep destination parameter last.
 

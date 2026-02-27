@@ -1,4 +1,4 @@
-import { Gizmo, Transform2D } from "@/components";
+import { Transform2D } from "@/components";
 import styles from "@ui/layout/sidebar/styles.module.css";
 import { EntityIdContext, WorldIdContext } from "@ui/layout/sidebar/worldViewer/context";
 import { EngineUiContext } from "@ui/utilities/engine-context";
@@ -25,7 +25,7 @@ export const CenterCamera: React.FC<CenterCameraProps> = ({ className }) => {
   const onCenterCamera = (event: MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
 
-    engine.editor.runningState.pause();
+    engine.editor.running.pause();
 
     const world = engine.scene.context.requireWorld(worldId);
     const transform = world.get(entityId, Transform2D);
@@ -33,13 +33,7 @@ export const CenterCamera: React.FC<CenterCameraProps> = ({ className }) => {
       return;
     }
 
-    for (const [, worldEntry] of engine.scene.context.worldEntries) {
-      for (const gizmoEntityId of worldEntry.query(Gizmo)) {
-        worldEntry.remove(gizmoEntityId, Gizmo);
-      }
-    }
-
-    world.add(entityId, Gizmo, new Gizmo());
+    engine.editor.gizmo.create(entityId, worldId);
 
     engine.editor.camera.setPosition(transform.curr.pos.x, transform.curr.pos.y);
   };

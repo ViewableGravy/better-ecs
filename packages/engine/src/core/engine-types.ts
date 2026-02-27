@@ -4,6 +4,7 @@ import type { inputSystem } from "../systems/input";
 import type { transformSnapshotSystem } from "../systems/transformSnapshot";
 import type { EngineClass } from "./engine";
 import type { EngineEditor } from "./engine-editor";
+import type { EngineInput } from "./input";
 import type { RenderPipeline } from "./render-pipeline";
 import type { SceneDefinition, SceneDefinitionTuple } from "./scene/scene.types";
 import type { EngineSystem, SystemFactory, SystemFactoryTuple } from "./system";
@@ -29,6 +30,7 @@ export type AnyEngine = {
   assets: AssetManager<any>;
   render: RenderPipeline | null;
   editor: EngineEditor;
+  input: EngineInput;
   canvas: HTMLCanvasElement;
 };
 

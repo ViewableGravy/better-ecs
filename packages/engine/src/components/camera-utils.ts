@@ -85,6 +85,24 @@ export function resolveActiveCameraView(
   cameraEntityId?: EntityId,
 ): CameraView {
   const engine = fromContext(Engine);
+  return resolveActiveCameraViewFromEngine(engine, world, cameraEntityId);
+}
+
+export function resolveActiveCameraViewFromEngine(
+  engine: {
+    canvas: HTMLCanvasElement;
+    editor: {
+      camera: {
+        mode: "world" | "engine";
+        x: number;
+        y: number;
+        zoom: number;
+      };
+    };
+  },
+  world: UserWorld,
+  cameraEntityId?: EntityId,
+): CameraView {
   const camera = engine.editor.camera;
 
   if (camera.mode === "engine") {
@@ -94,7 +112,22 @@ export function resolveActiveCameraView(
     return cameraViewBuffer;
   }
 
-  return resolveCameraView(world, cameraEntityId);
+  const selection = resolveCameraSelection(world, cameraEntityId);
+  if (!selection) {
+    cameraViewBuffer.x = 0;
+    cameraViewBuffer.y = 0;
+    cameraViewBuffer.zoom = 1;
+    return cameraViewBuffer;
+  }
+
+  const viewportHeight = engine.canvas.getBoundingClientRect().height;
+  const zoom = selection.camera.orthoSize > 0 ? viewportHeight / (selection.camera.orthoSize * 2) : 1;
+
+  cameraViewBuffer.x = selection.transform.curr.pos.x;
+  cameraViewBuffer.y = selection.transform.curr.pos.y;
+  cameraViewBuffer.zoom = zoom;
+
+  return cameraViewBuffer;
 }
 
 export function applyActiveCameraToRenderer(

@@ -3,6 +3,7 @@ import type { UserWorld } from "../../ecs/world";
 import { CanvasManager } from "../canvas";
 import { executeWithContext } from "../context";
 import { EngineEditor } from "../engine-editor";
+import { EngineInput } from "../input";
 import type { RenderPipeline } from "../render-pipeline";
 import { RenderManager } from "../render-pipeline";
 import { SceneManager } from "../scene/scene-manager";
@@ -31,6 +32,7 @@ export class EngineClass<
 
 	public readonly scene: SceneManager<TScenes>;
 	public readonly editor: EngineEditor;
+	public readonly input: EngineInput;
 	public readonly meta: Meta = new Meta(this.#phase.is);
 
 	public constructor(
@@ -45,6 +47,10 @@ export class EngineClass<
 		this.scene = new SceneManager<TScenes>(scenes, this.#systemsManager).setEngineRef(this);
 		this.#canvasManager = new CanvasManager(canvas, awaitCanvasBeforeStart);
 		this.#renderManager = new RenderManager(this.render);
+		this.input = new EngineInput({
+			resolveCanvas: () => this.canvas,
+			getEngine: () => this,
+		});
 		this.editor = new EngineEditor(this);
 
 		this.#systemsView = this.#systemsManager.createSystemsView((name) => {
