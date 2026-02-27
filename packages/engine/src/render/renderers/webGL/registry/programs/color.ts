@@ -1,7 +1,7 @@
 import invariant from "tiny-invariant";
+import colorFragmentShaderSource from "../../shaders/color.frag";
+import colorVertexShaderSource from "../../shaders/color.vert";
 import { createProgram } from "../create";
-import colorFragmentShaderSource from "../shaders/color.frag";
-import colorVertexShaderSource from "../shaders/color.vert";
 
 export interface ColorProgram {
   program: WebGLProgram;

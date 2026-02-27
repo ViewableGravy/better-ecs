@@ -8,3 +8,5 @@ export const registry = createProgramRegistry({
   circle: createCircleProgram,
   sprite: createSpriteProgram,
 });
+
+export type WebGLProgramRegistry = typeof registry;

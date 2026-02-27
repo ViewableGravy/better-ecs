@@ -1,7 +1,7 @@
 import invariant from "tiny-invariant";
+import spriteFragmentShaderSource from "../../shaders/sprite.frag";
+import spriteVertexShaderSource from "../../shaders/sprite.vert";
 import { createProgram } from "../create";
-import spriteFragmentShaderSource from "../shaders/sprite.frag";
-import spriteVertexShaderSource from "../shaders/sprite.vert";
 
 export interface SpriteProgram {
   program: WebGLProgram;

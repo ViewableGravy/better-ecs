@@ -1,7 +1,7 @@
 import invariant from "tiny-invariant";
+import circleFragmentShaderSource from "../../shaders/circle.frag";
+import circleVertexShaderSource from "../../shaders/circle.vert";
 import { createProgram } from "../create";
-import circleFragmentShaderSource from "../shaders/circle.frag";
-import circleVertexShaderSource from "../shaders/circle.vert";
 
 export interface CircleProgram {
   program: WebGLProgram;

@@ -2,9 +2,8 @@ import { Color } from "../../../components/sprite";
 import type { ShapeRenderData, SpriteRenderData } from "../../types/low-level";
 import type { RendererAPI } from "../../types/renderer-api";
 import { ShaderCompiler } from "./compiler";
+import { shapeDrawers, type ShapeDrawerContext, type Vec2 } from "./drawers";
 import { registry } from "./registry";
-
-type Vec2 = { x: number; y: number };
 
 export class WebGLRenderAPI implements RendererAPI {
   #canvas: HTMLCanvasElement | null = null;
@@ -151,35 +150,10 @@ export class WebGLRenderAPI implements RendererAPI {
       return;
     }
 
-    const colorProgram = registry.get("color");
-
     const center = this.#worldToScreen(data.x, data.y);
 
-    gl.useProgram(colorProgram.program);
-    gl.bindVertexArray(colorProgram.vertexArray);
-
-    switch (data.type) {
-      case "rectangle": {
-        const vertices = this.#buildRectangleVertices(center, data);
-        this.#drawColorTriangles(gl, colorProgram.positionBuffer, colorProgram.colorUniformLocation, vertices, data.fill);
-        break;
-      }
-      case "line": {
-        if (!data.stroke) {
-          break;
-        }
-
-        const vertices = this.#buildLineVertices(center, data);
-        this.#drawColorTriangles(gl, colorProgram.positionBuffer, colorProgram.colorUniformLocation, vertices, data.stroke);
-        break;
-      }
-      case "circle": {
-        this.#drawCircle(gl, center, data);
-        break;
-      }
-    }
-
-    gl.bindVertexArray(null);
+    const context = this.#createShapeDrawerContext(gl, canvas, center);
+    shapeDrawers.draw(context, data);
   }
 
   getWidth(): number {
@@ -190,21 +164,42 @@ export class WebGLRenderAPI implements RendererAPI {
     return this.#canvas?.height ?? 0;
   }
 
-  #drawColorTriangles(
-    gl: WebGL2RenderingContext,
-    positionBuffer: WebGLBuffer,
-    colorUniformLocation: WebGLUniformLocation | null,
-    vertices: Float32Array,
-    color: Color,
-  ): void {
-    if (!colorUniformLocation) {
+  #drawColorTriangles(vertices: Float32Array, color: Color): void {
+    const gl = this.#gl;
+    if (!gl) {
       return;
     }
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    const colorProgram = registry.get("color");
+    if (!colorProgram.colorUniformLocation) {
+      return;
+    }
+
+    gl.useProgram(colorProgram.program);
+    gl.bindVertexArray(colorProgram.vertexArray);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, colorProgram.positionBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.DYNAMIC_DRAW);
-    gl.uniform4f(colorUniformLocation, color.r, color.g, color.b, color.a);
+    gl.uniform4f(colorProgram.colorUniformLocation, color.r, color.g, color.b, color.a);
     gl.drawArrays(gl.TRIANGLES, 0, vertices.length / 2);
+    gl.bindVertexArray(null);
+  }
+
+  #createShapeDrawerContext(
+    gl: WebGL2RenderingContext,
+    canvas: HTMLCanvasElement,
+    center: Vec2,
+  ): ShapeDrawerContext {
+    return {
+      gl,
+      canvas,
+      center,
+      cameraZoom: this.#cameraZoom,
+      programs: registry,
+      drawColorTriangles: (vertices, color) => {
+        this.#drawColorTriangles(vertices, color);
+      },
+    };
   }
 
   #worldToScreen(x: number, y: number): Vec2 {
@@ -232,147 +227,6 @@ export class WebGLRenderAPI implements RendererAPI {
       x: (x / canvas.width) * 2 - 1,
       y: 1 - (y / canvas.height) * 2,
     };
-  }
-
-  #buildRectangleVertices(center: Vec2, data: ShapeRenderData): Float32Array {
-    const canvas = this.#canvas;
-    if (!canvas) {
-      return new Float32Array();
-    }
-
-    const widthPixels = data.width * data.scaleX * this.#cameraZoom;
-    const heightPixels = data.height * data.scaleY * this.#cameraZoom;
-
-    const cos = Math.cos(data.rotation);
-    const sin = Math.sin(data.rotation);
-
-    const halfW = widthPixels / 2;
-    const halfH = heightPixels / 2;
-
-    const corners = [
-      { x: -halfW, y: -halfH },
-      { x: halfW, y: -halfH },
-      { x: halfW, y: halfH },
-      { x: -halfW, y: halfH },
-    ];
-
-    const ndcCorners = corners.map((corner) => {
-      const rx = corner.x * cos - corner.y * sin;
-      const ry = corner.x * sin + corner.y * cos;
-
-      const screenX = (center.x + 1) * 0.5 * canvas.width + rx;
-      const screenY = (1 - center.y) * 0.5 * canvas.height + ry;
-      return this.#screenToNdc(screenX, screenY);
-    });
-
-    return new Float32Array([
-      ndcCorners[0].x, ndcCorners[0].y,
-      ndcCorners[1].x, ndcCorners[1].y,
-      ndcCorners[2].x, ndcCorners[2].y,
-      ndcCorners[0].x, ndcCorners[0].y,
-      ndcCorners[2].x, ndcCorners[2].y,
-      ndcCorners[3].x, ndcCorners[3].y,
-    ]);
-  }
-
-  #buildLineVertices(center: Vec2, data: ShapeRenderData): Float32Array {
-    const canvas = this.#canvas;
-    if (!canvas) {
-      return new Float32Array();
-    }
-
-    const length = data.width * data.scaleX * this.#cameraZoom;
-    const thickness = Math.max(1, data.strokeWidth) * this.#cameraZoom;
-
-    const halfL = length / 2;
-    const halfT = thickness / 2;
-
-    const cos = Math.cos(data.rotation);
-    const sin = Math.sin(data.rotation);
-
-    const corners = [
-      { x: -halfL, y: -halfT },
-      { x: halfL, y: -halfT },
-      { x: halfL, y: halfT },
-      { x: -halfL, y: halfT },
-    ];
-
-    const ndcCorners = corners.map((corner) => {
-      const rx = corner.x * cos - corner.y * sin;
-      const ry = corner.x * sin + corner.y * cos;
-      const screenX = (center.x + 1) * 0.5 * canvas.width + rx;
-      const screenY = (1 - center.y) * 0.5 * canvas.height + ry;
-      return this.#screenToNdc(screenX, screenY);
-    });
-
-    return new Float32Array([
-      ndcCorners[0].x, ndcCorners[0].y,
-      ndcCorners[1].x, ndcCorners[1].y,
-      ndcCorners[2].x, ndcCorners[2].y,
-      ndcCorners[0].x, ndcCorners[0].y,
-      ndcCorners[2].x, ndcCorners[2].y,
-      ndcCorners[3].x, ndcCorners[3].y,
-    ]);
-  }
-
-  #drawCircle(gl: WebGL2RenderingContext, center: Vec2, data: ShapeRenderData): void {
-    const circleProgram = registry.get("circle");
-    if (!circleProgram.colorUniformLocation) {
-      return;
-    }
-
-    const quadVertices = this.#buildCircleQuadVertices(center, data);
-    const uv = new Float32Array([
-      0, 1,
-      1, 1,
-      0, 0,
-      1, 0,
-    ]);
-
-    gl.useProgram(circleProgram.program);
-    gl.bindVertexArray(circleProgram.vertexArray);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, circleProgram.positionBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, quadVertices, gl.DYNAMIC_DRAW);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, circleProgram.uvBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, uv, gl.DYNAMIC_DRAW);
-
-    gl.uniform4f(circleProgram.colorUniformLocation, data.fill.r, data.fill.g, data.fill.b, data.fill.a);
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-  }
-
-  #buildCircleQuadVertices(center: Vec2, data: ShapeRenderData): Float32Array {
-    const canvas = this.#canvas;
-    if (!canvas) {
-      return new Float32Array();
-    }
-
-    const radiusX = (data.width * data.scaleX * this.#cameraZoom) / 2;
-    const radiusY = (data.height * data.scaleY * this.#cameraZoom) / 2;
-
-    const corners = [
-      { x: -radiusX, y: -radiusY },
-      { x: radiusX, y: -radiusY },
-      { x: -radiusX, y: radiusY },
-      { x: radiusX, y: radiusY },
-    ];
-
-    const centerScreenX = (center.x + 1) * 0.5 * canvas.width;
-    const centerScreenY = (1 - center.y) * 0.5 * canvas.height;
-
-    const vertices = corners.map((corner) => {
-      const screenX = centerScreenX + corner.x;
-      const screenY = centerScreenY + corner.y;
-      return this.#screenToNdc(screenX, screenY);
-    });
-
-    return new Float32Array([
-      vertices[0].x, vertices[0].y,
-      vertices[1].x, vertices[1].y,
-      vertices[2].x, vertices[2].y,
-      vertices[3].x, vertices[3].y,
-    ]);
   }
 
   #buildSpriteQuad(
