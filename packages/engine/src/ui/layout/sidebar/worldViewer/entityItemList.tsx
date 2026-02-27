@@ -1,11 +1,11 @@
+import { Gizmo, Parent } from "@/components";
+import type { EntityId } from "@/ecs/entity";
 import { WorldIdContext } from "@ui/layout/sidebar/worldViewer/context";
+import { EditorDebugEntity } from "@ui/layout/sidebar/worldViewer/editorDebugEntity";
 import { EntityTreeNodes } from "@ui/layout/sidebar/worldViewer/entityTreeNodes";
 import { EngineUiContext } from "@ui/utilities/engine-context";
 import { useInvariantContext } from "@ui/utilities/hooks/use-invariant-context";
 import { useSubscribableSelector } from "@ui/utilities/hooks/use-subscribable-selector";
-import { Gizmo, Parent } from "@/components";
-import type { EntityId } from "@/ecs/entity";
-import { EditorDebugEntity } from "@ui/layout/sidebar/worldViewer/editorDebugEntity";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS

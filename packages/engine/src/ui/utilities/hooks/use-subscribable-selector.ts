@@ -17,30 +17,48 @@ export function useSubscribableSelector<TSource extends Subscribable, TSelected>
   const selectorRef = useRef(selector);
   const equalityRef = useRef(equalityFn);
   const selectedRef = useRef<{ value: TSelected } | null>(null);
+  const sourceRef = useRef(source);
+  const isDirtyRef = useRef(true);
 
   selectorRef.current = selector;
   equalityRef.current = equalityFn;
 
+  if (sourceRef.current !== source) {
+    sourceRef.current = source;
+    selectedRef.current = null;
+    isDirtyRef.current = true;
+  }
+
   const subscribe = useCallback(
     (observer: Observer) => {
-      return source.subscribe(observer);
+      return source.subscribe(() => {
+        isDirtyRef.current = true;
+        observer();
+      });
     },
     [source],
   );
 
   const getSnapshot = useCallback(() => {
+    if (selectedRef.current !== null && !isDirtyRef.current) {
+      return selectedRef.current.value;
+    }
+
     const nextValue = selectorRef.current(source);
 
     if (selectedRef.current === null) {
       selectedRef.current = { value: nextValue };
+      isDirtyRef.current = false;
       return nextValue;
     }
 
     if (equalityRef.current(selectedRef.current.value, nextValue)) {
+      isDirtyRef.current = false;
       return selectedRef.current.value;
     }
 
     selectedRef.current.value = nextValue;
+    isDirtyRef.current = false;
     return nextValue;
   }, [source]);
 

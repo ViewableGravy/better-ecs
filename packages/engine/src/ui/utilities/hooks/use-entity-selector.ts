@@ -19,30 +19,50 @@ export function useEntitySelector<TSource extends EntitySubscribable, TSelected>
   const selectorRef = useRef(selector);
   const equalityRef = useRef(equalityFn);
   const selectedRef = useRef<{ value: TSelected } | null>(null);
+  const sourceRef = useRef(source);
+  const entityIdRef = useRef(entityId);
+  const isDirtyRef = useRef(true);
 
   selectorRef.current = selector;
   equalityRef.current = equalityFn;
 
+  if (sourceRef.current !== source || entityIdRef.current !== entityId) {
+    sourceRef.current = source;
+    entityIdRef.current = entityId;
+    selectedRef.current = null;
+    isDirtyRef.current = true;
+  }
+
   const subscribe = useCallback(
     (observer: Observer) => {
-      return source.subscribeEntity(entityId, observer);
+      return source.subscribeEntity(entityId, () => {
+        isDirtyRef.current = true;
+        observer();
+      });
     },
     [entityId, source],
   );
 
   const getSnapshot = useCallback(() => {
+    if (selectedRef.current !== null && !isDirtyRef.current) {
+      return selectedRef.current.value;
+    }
+
     const nextValue = selectorRef.current(source);
 
     if (selectedRef.current === null) {
       selectedRef.current = { value: nextValue };
+      isDirtyRef.current = false;
       return nextValue;
     }
 
     if (equalityRef.current(selectedRef.current.value, nextValue)) {
+      isDirtyRef.current = false;
       return selectedRef.current.value;
     }
 
     selectedRef.current.value = nextValue;
+    isDirtyRef.current = false;
     return nextValue;
   }, [source]);
 
