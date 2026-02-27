@@ -2,12 +2,7 @@ import { Color } from "../../../components/sprite";
 import type { ShapeRenderData, SpriteRenderData } from "../../types/low-level";
 import type { RendererAPI } from "../../types/renderer-api";
 import { ShaderCompiler } from "./compiler";
-import circleFragmentShaderSource from "./shaders/circle.frag";
-import circleVertexShaderSource from "./shaders/circle.vert";
-import colorFragmentShaderSource from "./shaders/color.frag";
-import colorVertexShaderSource from "./shaders/color.vert";
-import spriteFragmentShaderSource from "./shaders/sprite.frag";
-import spriteVertexShaderSource from "./shaders/sprite.vert";
+import { registry } from "./registry";
 
 type Vec2 = { x: number; y: number };
 
@@ -18,27 +13,6 @@ export class WebGLRenderAPI implements RendererAPI {
   #cameraX = 0;
   #cameraY = 0;
   #cameraZoom = 1;
-
-  #colorProgram: WebGLProgram | null = null;
-  #colorPositionBuffer: WebGLBuffer | null = null;
-  #colorVertexArray: WebGLVertexArrayObject | null = null;
-  #colorPositionLocation = -1;
-  #colorUniformLocation: WebGLUniformLocation | null = null;
-
-  #circleProgram: WebGLProgram | null = null;
-  #circlePositionBuffer: WebGLBuffer | null = null;
-  #circleUvBuffer: WebGLBuffer | null = null;
-  #circleVertexArray: WebGLVertexArrayObject | null = null;
-  #circleColorLocation: WebGLUniformLocation | null = null;
-
-  #spriteProgram: WebGLProgram | null = null;
-  #spritePositionBuffer: WebGLBuffer | null = null;
-  #spriteUvBuffer: WebGLBuffer | null = null;
-  #spriteVertexArray: WebGLVertexArrayObject | null = null;
-  #spritePositionLocation = -1;
-  #spriteUvLocation = -1;
-  #spriteTintLocation: WebGLUniformLocation | null = null;
-  #spriteSamplerLocation: WebGLUniformLocation | null = null;
 
   #textureCache = new WeakMap<object, WebGLTexture>();
   #shaderCompiler: ShaderCompiler | null = null;
@@ -64,9 +38,7 @@ export class WebGLRenderAPI implements RendererAPI {
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
-    this.#initializeColorPipeline(gl);
-    this.#initializeCirclePipeline(gl);
-    this.#initializeSpritePipeline(gl);
+    registry.initialize(gl, this.#shaderCompiler);
   }
 
   beginFrame(): void {
@@ -113,9 +85,11 @@ export class WebGLRenderAPI implements RendererAPI {
   drawSprite(data: SpriteRenderData): void {
     const gl = this.#gl;
     const canvas = this.#canvas;
-    if (!gl || !canvas || !this.#spriteProgram || !this.#spriteVertexArray) {
+    if (!gl || !canvas) {
       return;
     }
+
+    const spriteProgram = registry.get("sprite");
 
     const texture = this.#getOrCreateTexture(gl, data.image);
     if (!texture) {
@@ -145,24 +119,24 @@ export class WebGLRenderAPI implements RendererAPI {
       u1, v0,
     ]);
 
-    gl.useProgram(this.#spriteProgram);
-    gl.bindVertexArray(this.#spriteVertexArray);
+    gl.useProgram(spriteProgram.program);
+    gl.bindVertexArray(spriteProgram.vertexArray);
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.#spritePositionBuffer);
+    gl.bindBuffer(gl.ARRAY_BUFFER, spriteProgram.positionBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, quad, gl.DYNAMIC_DRAW);
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.#spriteUvBuffer);
+    gl.bindBuffer(gl.ARRAY_BUFFER, spriteProgram.uvBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, uv, gl.DYNAMIC_DRAW);
 
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, texture);
 
-    if (this.#spriteSamplerLocation) {
-      gl.uniform1i(this.#spriteSamplerLocation, 0);
+    if (spriteProgram.samplerLocation) {
+      gl.uniform1i(spriteProgram.samplerLocation, 0);
     }
 
-    if (this.#spriteTintLocation) {
-      gl.uniform4f(this.#spriteTintLocation, data.tint.r, data.tint.g, data.tint.b, data.tint.a);
+    if (spriteProgram.tintLocation) {
+      gl.uniform4f(spriteProgram.tintLocation, data.tint.r, data.tint.g, data.tint.b, data.tint.a);
     }
 
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
@@ -173,19 +147,21 @@ export class WebGLRenderAPI implements RendererAPI {
   drawShape(data: ShapeRenderData): void {
     const gl = this.#gl;
     const canvas = this.#canvas;
-    if (!gl || !canvas || !this.#colorProgram || !this.#colorVertexArray) {
+    if (!gl || !canvas) {
       return;
     }
 
+    const colorProgram = registry.get("color");
+
     const center = this.#worldToScreen(data.x, data.y);
 
-    gl.useProgram(this.#colorProgram);
-    gl.bindVertexArray(this.#colorVertexArray);
+    gl.useProgram(colorProgram.program);
+    gl.bindVertexArray(colorProgram.vertexArray);
 
     switch (data.type) {
       case "rectangle": {
         const vertices = this.#buildRectangleVertices(center, data);
-        this.#drawColorTriangles(gl, vertices, data.fill);
+        this.#drawColorTriangles(gl, colorProgram.positionBuffer, colorProgram.colorUniformLocation, vertices, data.fill);
         break;
       }
       case "line": {
@@ -194,7 +170,7 @@ export class WebGLRenderAPI implements RendererAPI {
         }
 
         const vertices = this.#buildLineVertices(center, data);
-        this.#drawColorTriangles(gl, vertices, data.stroke);
+        this.#drawColorTriangles(gl, colorProgram.positionBuffer, colorProgram.colorUniformLocation, vertices, data.stroke);
         break;
       }
       case "circle": {
@@ -214,121 +190,21 @@ export class WebGLRenderAPI implements RendererAPI {
     return this.#canvas?.height ?? 0;
   }
 
-  #drawColorTriangles(gl: WebGL2RenderingContext, vertices: Float32Array, color: Color): void {
-    if (!this.#colorUniformLocation || !this.#colorPositionBuffer) {
+  #drawColorTriangles(
+    gl: WebGL2RenderingContext,
+    positionBuffer: WebGLBuffer,
+    colorUniformLocation: WebGLUniformLocation | null,
+    vertices: Float32Array,
+    color: Color,
+  ): void {
+    if (!colorUniformLocation) {
       return;
     }
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.#colorPositionBuffer);
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.DYNAMIC_DRAW);
-    gl.uniform4f(this.#colorUniformLocation, color.r, color.g, color.b, color.a);
+    gl.uniform4f(colorUniformLocation, color.r, color.g, color.b, color.a);
     gl.drawArrays(gl.TRIANGLES, 0, vertices.length / 2);
-  }
-
-  #initializeColorPipeline(gl: WebGL2RenderingContext): void {
-    const compiler = this.#shaderCompiler;
-    if (!compiler) {
-      throw new Error("Shader compiler is not initialized");
-    }
-
-    const vertexShader = compiler.compile(gl.VERTEX_SHADER, colorVertexShaderSource, "color.vert");
-    const fragmentShader = compiler.compile(gl.FRAGMENT_SHADER, colorFragmentShaderSource, "color.frag");
-
-    const program = this.#createProgram(gl, vertexShader, fragmentShader);
-    const positionBuffer = gl.createBuffer();
-    const vertexArray = gl.createVertexArray();
-
-    if (!program || !positionBuffer || !vertexArray) {
-      throw new Error("Failed to initialize WebGL color pipeline");
-    }
-
-    this.#colorProgram = program;
-    this.#colorPositionBuffer = positionBuffer;
-    this.#colorVertexArray = vertexArray;
-    this.#colorPositionLocation = 0;
-    this.#colorUniformLocation = gl.getUniformLocation(program, "uColor");
-
-    gl.bindVertexArray(vertexArray);
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    gl.enableVertexAttribArray(this.#colorPositionLocation);
-    gl.vertexAttribPointer(this.#colorPositionLocation, 2, gl.FLOAT, false, 0, 0);
-    gl.bindVertexArray(null);
-  }
-
-  #initializeCirclePipeline(gl: WebGL2RenderingContext): void {
-    const compiler = this.#shaderCompiler;
-    if (!compiler) {
-      throw new Error("Shader compiler is not initialized");
-    }
-
-    const vertexShader = compiler.compile(gl.VERTEX_SHADER, circleVertexShaderSource, "circle.vert");
-    const fragmentShader = compiler.compile(gl.FRAGMENT_SHADER, circleFragmentShaderSource, "circle.frag");
-    const program = this.#createProgram(gl, vertexShader, fragmentShader);
-    const positionBuffer = gl.createBuffer();
-    const uvBuffer = gl.createBuffer();
-    const vertexArray = gl.createVertexArray();
-
-    if (!program || !positionBuffer || !uvBuffer || !vertexArray) {
-      throw new Error("Failed to initialize WebGL circle pipeline");
-    }
-
-    this.#circleProgram = program;
-    this.#circlePositionBuffer = positionBuffer;
-    this.#circleUvBuffer = uvBuffer;
-    this.#circleVertexArray = vertexArray;
-    this.#circleColorLocation = gl.getUniformLocation(program, "uColor");
-
-    gl.bindVertexArray(vertexArray);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    gl.enableVertexAttribArray(0);
-    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer);
-    gl.enableVertexAttribArray(1);
-    gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 0, 0);
-
-    gl.bindVertexArray(null);
-  }
-
-  #initializeSpritePipeline(gl: WebGL2RenderingContext): void {
-    const compiler = this.#shaderCompiler;
-    if (!compiler) {
-      throw new Error("Shader compiler is not initialized");
-    }
-
-    const vertexShader = compiler.compile(gl.VERTEX_SHADER, spriteVertexShaderSource, "sprite.vert");
-    const fragmentShader = compiler.compile(gl.FRAGMENT_SHADER, spriteFragmentShaderSource, "sprite.frag");
-
-    const program = this.#createProgram(gl, vertexShader, fragmentShader);
-    const positionBuffer = gl.createBuffer();
-    const uvBuffer = gl.createBuffer();
-    const vertexArray = gl.createVertexArray();
-
-    if (!program || !positionBuffer || !uvBuffer || !vertexArray) {
-      throw new Error("Failed to initialize WebGL sprite pipeline");
-    }
-
-    this.#spriteProgram = program;
-    this.#spritePositionBuffer = positionBuffer;
-    this.#spriteUvBuffer = uvBuffer;
-    this.#spriteVertexArray = vertexArray;
-    this.#spritePositionLocation = 0;
-    this.#spriteUvLocation = 1;
-    this.#spriteTintLocation = gl.getUniformLocation(program, "uTint");
-    this.#spriteSamplerLocation = gl.getUniformLocation(program, "uTexture");
-
-    gl.bindVertexArray(vertexArray);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    gl.enableVertexAttribArray(this.#spritePositionLocation);
-    gl.vertexAttribPointer(this.#spritePositionLocation, 2, gl.FLOAT, false, 0, 0);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer);
-    gl.enableVertexAttribArray(this.#spriteUvLocation);
-    gl.vertexAttribPointer(this.#spriteUvLocation, 2, gl.FLOAT, false, 0, 0);
-
-    gl.bindVertexArray(null);
   }
 
   #worldToScreen(x: number, y: number): Vec2 {
@@ -440,7 +316,8 @@ export class WebGLRenderAPI implements RendererAPI {
   }
 
   #drawCircle(gl: WebGL2RenderingContext, center: Vec2, data: ShapeRenderData): void {
-    if (!this.#circleProgram || !this.#circleVertexArray || !this.#circlePositionBuffer || !this.#circleUvBuffer || !this.#circleColorLocation) {
+    const circleProgram = registry.get("circle");
+    if (!circleProgram.colorUniformLocation) {
       return;
     }
 
@@ -452,16 +329,16 @@ export class WebGLRenderAPI implements RendererAPI {
       1, 0,
     ]);
 
-    gl.useProgram(this.#circleProgram);
-    gl.bindVertexArray(this.#circleVertexArray);
+    gl.useProgram(circleProgram.program);
+    gl.bindVertexArray(circleProgram.vertexArray);
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.#circlePositionBuffer);
+    gl.bindBuffer(gl.ARRAY_BUFFER, circleProgram.positionBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, quadVertices, gl.DYNAMIC_DRAW);
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.#circleUvBuffer);
+    gl.bindBuffer(gl.ARRAY_BUFFER, circleProgram.uvBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, uv, gl.DYNAMIC_DRAW);
 
-    gl.uniform4f(this.#circleColorLocation, data.fill.r, data.fill.g, data.fill.b, data.fill.a);
+    gl.uniform4f(circleProgram.colorUniformLocation, data.fill.r, data.fill.g, data.fill.b, data.fill.a);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }
 
@@ -577,26 +454,4 @@ export class WebGLRenderAPI implements RendererAPI {
     return texture;
   }
 
-  #createProgram(
-    gl: WebGL2RenderingContext,
-    vertexShader: WebGLShader,
-    fragmentShader: WebGLShader,
-  ): WebGLProgram {
-    const program = gl.createProgram();
-    if (!program) {
-      throw new Error("Failed to create WebGL program");
-    }
-
-    gl.attachShader(program, vertexShader);
-    gl.attachShader(program, fragmentShader);
-    gl.linkProgram(program);
-
-    if (gl.getProgramParameter(program, gl.LINK_STATUS)) {
-      return program;
-    }
-
-    const error = gl.getProgramInfoLog(program) ?? "Unknown program link error";
-    gl.deleteProgram(program);
-    throw new Error(error);
-  }
 }
