@@ -22,8 +22,7 @@
       "@repo/hmr": ["./packages/tooling/hmr/src/index.ts"],
       "@repo/physics": ["./packages/foundation/physics/src/index.ts"],
       "@repo/spatial-contexts": ["./packages/foundation/spatial-contexts/src/index.ts"],
-      "@repo/utils": ["./packages/utils/src/index.ts"],
-      "@ui/*": ["./packages/engine/src/ui/*"]
+      "@repo/utils": ["./packages/utils/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "dist"]

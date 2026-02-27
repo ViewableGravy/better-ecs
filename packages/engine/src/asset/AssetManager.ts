@@ -61,6 +61,23 @@ export class AssetManager<TAssets extends Assets = Assets> implements LooseAsset
     return Object.hasOwn(this.registry.assets, path);
   }
 
+  private getChildKeys(parentKey: AssetKey<TAssets>): AssetKey<TAssets>[] {
+    const prefix = `${parentKey}:`;
+    const childKeys: AssetKey<TAssets>[] = [];
+
+    for (const key in this.registry.assets) {
+      if (!Object.hasOwn(this.registry.assets, key)) {
+        continue;
+      }
+
+      if (key.startsWith(prefix) && this.isRegisteredKey(key)) {
+        childKeys.push(key);
+      }
+    }
+
+    return childKeys;
+  }
+
   /**
    * strict typed retrieval.
    * Throws if asset is missing in storage.
@@ -160,9 +177,16 @@ export class AssetManager<TAssets extends Assets = Assets> implements LooseAsset
     }
 
     const promise = this.withTimeout(adapter.load(key), key).then(
-      (asset) => {
+      async (asset) => {
         this.states[key] = "ready";
         this.storage[key] = asset;
+
+        const childKeys = this.getChildKeys(key);
+
+        if (childKeys.length > 0) {
+          await Promise.all(childKeys.map((childKey) => this.load(childKey)));
+        }
+
         return asset;
       },
       (err: unknown) => {

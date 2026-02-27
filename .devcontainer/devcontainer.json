@@ -7,7 +7,10 @@
   "features": {
     "ghcr.io/shyim/devcontainers-features/bun:0": {},
     "ghcr.io/devcontainers-community/npm-features/prettier:1": {},
-    "ghcr.io/devcontainers-extra/features/nx-npm:1": {}
+    "ghcr.io/devcontainers-extra/features/nx-npm:1": {},
+    "ghcr.io/eitsupi/devcontainer-features/jq-likes:1": {
+        "jqVersion": "latest"
+    }
   },
 
   // Features to add to the dev container. More info: https://containers.dev/features.

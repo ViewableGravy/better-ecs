@@ -1,4 +1,5 @@
 import { GridBounds } from "@/components/grid-bounds";
+import { RENDER_LAYERS } from "@/render/layers";
 import type { UserWorld } from "@repo/engine";
 import { Color, Debug, Shape, Transform2D } from "@repo/engine/components";
 import { OUTSIDE, RenderVisibility, type RenderVisibilityRole } from "../components/render-visibility";
@@ -27,7 +28,7 @@ export function spawnBackground(world: UserWorld, opts: SpawnBackgroundOptions):
       opts.stroke ?? null,
       opts.strokeWidth ?? 0,
       -100,
-      -100,
+      RENDER_LAYERS.background,
     ),
   );
   world.add(entity, new RenderVisibility(opts.role ?? OUTSIDE, opts.baseAlpha ?? 1));

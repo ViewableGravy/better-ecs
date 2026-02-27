@@ -13,7 +13,7 @@ async function main() {
 
   // Start application
   // prettier-ignore
-  for await (const [update, frame] of engine.startEngine({ fps: 60, ups: 10 })) {
+  for await (const [update, frame] of engine.startEngine({ fps: 120, ups: 120 })) {
     if (update.shouldUpdate) {
       // Update phase - run update logic
     }

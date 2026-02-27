@@ -1,8 +1,8 @@
 import { EditorDebugEntity } from "@ui/layout/sidebar/worldViewer/editorDebugEntity";
 import type { EngineUiContextValue } from "@ui/utilities/engine-context";
 import { useEffect } from "react";
-import { Gizmo, Transform2D } from "../../../../../components";
-import type { EntityId } from "../../../../../ecs/entity";
+import { Gizmo, Transform2D } from "@/components";
+import type { EntityId } from "@/ecs/entity";
 
 /**********************************************************************************************************
  *   CONSTS

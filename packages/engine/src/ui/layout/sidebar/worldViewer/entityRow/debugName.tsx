@@ -1,8 +1,8 @@
-import { Debug } from "../../../../../components";
-import { EngineUiContext } from "@ui/utilities/engine-context";
-import { useInvariantContext } from "@ui/utilities/hooks/use-invariant-context";
+import { Debug } from "@/components";
 import styles from "@ui/layout/sidebar/styles.module.css";
 import { EntityIdContext, WorldIdContext } from "@ui/layout/sidebar/worldViewer/context";
+import { EngineUiContext } from "@ui/utilities/engine-context";
+import { useInvariantContext } from "@ui/utilities/hooks/use-invariant-context";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -20,14 +20,13 @@ export const DebugName: React.FC<DebugNameProps> = ({ className }) => {
   const worldId = useInvariantContext(WorldIdContext);
   const entityId = useInvariantContext(EntityIdContext);
 
-  /***** RENDER HELPERS *****/
   const world = engine.scene.context.requireWorld(worldId);
-  const debug = world.get(entityId, Debug);
+  const entityName = world.get(entityId, Debug)?.name;
 
   /***** RENDER *****/
   return (
     <span className={className ?? styles.worldsEntitiesEntityName}>
-      {debug?.name ?? entityId}
+      {entityName ?? entityId}
     </span>
   );
 };

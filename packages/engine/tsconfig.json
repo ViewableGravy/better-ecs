@@ -1,10 +1,15 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "baseUrl": ".",
     "lib": ["DOM", "ES2022"],
     "jsx": "react-jsx",
     "skipLibCheck": true,
-    "typeRoots": ["../../node_modules/@types"]
+    "typeRoots": ["../../node_modules/@types"],
+    "paths": {
+      "@ui/*": ["./src/ui/*"],
+      "@/*": ["./src/*"]
+    }
   },
   "files": [],
   "references": [
