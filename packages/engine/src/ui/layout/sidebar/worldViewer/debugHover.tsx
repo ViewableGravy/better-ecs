@@ -1,10 +1,8 @@
-import React, { useRef } from "react";
-import { Parent, Shape, Transform2D } from "@/components";
-import type { EntityId } from "@/ecs/entity";
+import { EditorHoverHighlight } from "@/components";
+import { EntityIdContext, WorldIdContext } from "@ui/layout/sidebar/worldViewer/context";
 import { EngineUiContext } from "@ui/utilities/engine-context";
 import { useInvariantContext } from "@ui/utilities/hooks/use-invariant-context";
-import { EntityIdContext, WorldIdContext } from "@ui/layout/sidebar/worldViewer/context";
-import { EditorDebugEntity } from "@ui/layout/sidebar/worldViewer/editorDebugEntity";
+import React, { useEffect } from "react";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -18,27 +16,31 @@ type DebugHoverProps = {
  **********************************************************************************************************/
 export const DebugHover: React.FC<DebugHoverProps> = ({ children }) => {
   /***** HOOKS *****/
-  const debugEntityId = useRef<EntityId | null>(null);
   const engine = useInvariantContext(EngineUiContext);
   const worldId = useInvariantContext(WorldIdContext);
   const entityId = useInvariantContext(EntityIdContext);
 
+  useEffect(() => {
+    return () => {
+      const world = engine.scene.context.requireWorld(worldId);
+      if (world.has(entityId, EditorHoverHighlight)) {
+        world.remove(entityId, EditorHoverHighlight);
+      }
+    };
+  }, [engine, entityId, worldId]);
+
   /***** FUNCTIONS *****/
   const onMouseEnter = () => {
     const world = engine.scene.context.requireWorld(worldId);
-    debugEntityId.current = world.create();
-
-    world.add(debugEntityId.current, Transform2D, new Transform2D(0, 0));
-    world.add(debugEntityId.current, Shape, new Shape("circle", 75, 75));
-    world.add(debugEntityId.current, Parent, new Parent(entityId));
-    world.add(debugEntityId.current, EditorDebugEntity, new EditorDebugEntity());
+    if (!world.has(entityId, EditorHoverHighlight)) {
+      world.add(entityId, EditorHoverHighlight, new EditorHoverHighlight(0.35));
+    }
   };
 
   const onMouseLeave = () => {
-    if (debugEntityId.current) {
-      const world = engine.scene.context.requireWorld(worldId);
-      world.destroy(debugEntityId.current);
-      debugEntityId.current = null;
+    const world = engine.scene.context.requireWorld(worldId);
+    if (world.has(entityId, EditorHoverHighlight)) {
+      world.remove(entityId, EditorHoverHighlight);
     }
   };
 

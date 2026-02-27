@@ -1,4 +1,4 @@
-import { Shape, Sprite } from "../../../../../components";
+import { EditorHoverHighlight, Shape, Sprite } from "../../../../../components";
 import { Color } from "../../../../../components/sprite";
 import { Transform2D } from "../../../../../components/transform";
 import { resolveWorldTransform2D } from "../../../../../ecs/hierarchy";
@@ -10,6 +10,7 @@ import type {
 } from "../../../../../render";
 
 const SHARED_RENDER_TRANSFORM = new Transform2D();
+const HOVER_TINT_COLOR = new Color(1, 1, 0, 1);
 
 export function renderCommands(
   queue: RenderQueue,
@@ -41,7 +42,25 @@ export function renderCommands(
         continue;
       }
 
+      const hoverHighlight = world.get(entityId, EditorHoverHighlight);
+      if (!hoverHighlight) {
+        renderer.render(sprite, SHARED_RENDER_TRANSFORM, alpha);
+        continue;
+      }
+
+      const originalR = sprite.tint.r;
+      const originalG = sprite.tint.g;
+      const originalB = sprite.tint.b;
+
+      sprite.tint.r = blendChannel(sprite.tint.r, HOVER_TINT_COLOR.r, hoverHighlight.amount);
+      sprite.tint.g = blendChannel(sprite.tint.g, HOVER_TINT_COLOR.g, hoverHighlight.amount);
+      sprite.tint.b = blendChannel(sprite.tint.b, HOVER_TINT_COLOR.b, hoverHighlight.amount);
+
       renderer.render(sprite, SHARED_RENDER_TRANSFORM, alpha);
+
+      sprite.tint.r = originalR;
+      sprite.tint.g = originalG;
+      sprite.tint.b = originalB;
       continue;
     }
 
@@ -66,6 +85,13 @@ export function renderCommands(
     shapeCommand.fill.b = shape.fill.b;
     shapeCommand.fill.a = shape.fill.a;
 
+    const hoverHighlight = world.get(entityId, EditorHoverHighlight);
+    if (hoverHighlight) {
+      shapeCommand.fill.r = blendChannel(shapeCommand.fill.r, HOVER_TINT_COLOR.r, hoverHighlight.amount);
+      shapeCommand.fill.g = blendChannel(shapeCommand.fill.g, HOVER_TINT_COLOR.g, hoverHighlight.amount);
+      shapeCommand.fill.b = blendChannel(shapeCommand.fill.b, HOVER_TINT_COLOR.b, hoverHighlight.amount);
+    }
+
     if (shape.stroke) {
       if (shapeCommand.stroke === null) {
         shapeCommand.stroke = new Color(shape.stroke.r, shape.stroke.g, shape.stroke.b, shape.stroke.a);
@@ -75,6 +101,12 @@ export function renderCommands(
         shapeCommand.stroke.b = shape.stroke.b;
         shapeCommand.stroke.a = shape.stroke.a;
       }
+
+      if (hoverHighlight && shapeCommand.stroke) {
+        shapeCommand.stroke.r = blendChannel(shapeCommand.stroke.r, HOVER_TINT_COLOR.r, hoverHighlight.amount);
+        shapeCommand.stroke.g = blendChannel(shapeCommand.stroke.g, HOVER_TINT_COLOR.g, hoverHighlight.amount);
+        shapeCommand.stroke.b = blendChannel(shapeCommand.stroke.b, HOVER_TINT_COLOR.b, hoverHighlight.amount);
+      }
     } else {
       shapeCommand.stroke = null;
     }
@@ -83,4 +115,8 @@ export function renderCommands(
 
     renderer.drawShape(shapeCommand);
   }
+}
+
+function blendChannel(base: number, tint: number, amount: number): number {
+  return base + (tint - base) * amount;
 }

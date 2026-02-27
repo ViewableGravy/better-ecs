@@ -1,6 +1,8 @@
 import { Gizmo } from "../../../../../components/gizmo";
-import type { UserWorld } from "../../../../../ecs/world";
+import { Color } from "../../../../../components/sprite";
+import { Transform2D } from "../../../../../components/transform";
 import { resolveWorldTransform2D } from "../../../../../ecs/hierarchy";
+import type { UserWorld } from "../../../../../ecs/world";
 import type {
   EngineFrameAllocatorRegistry,
   InternalFrameAllocator,
@@ -8,8 +10,6 @@ import type {
   Renderer,
   ShapeRenderData,
 } from "../../../../../render";
-import { Color } from "../../../../../components/sprite";
-import { Transform2D } from "../../../../../components/transform";
 
 /**********************************************************************************************************
  *   CONSTS
@@ -25,6 +25,9 @@ const RING_SEGMENTS = 48;
 const AXIS_RED = new Color(1, 0.25, 0.25, 1);
 const AXIS_GREEN = new Color(0.45, 1, 0.45, 1);
 const RING_STROKE = new Color(0.92, 0.92, 0.92, 1);
+const AXIS_RED_HOVER = new Color(1, 0.75, 0.35, 1);
+const AXIS_GREEN_HOVER = new Color(0.85, 1, 0.45, 1);
+const RING_STROKE_HOVER = new Color(1, 0.9, 0.45, 1);
 
 const TRANSPARENT_FILL = new Color(0, 0, 0, 0);
 
@@ -49,6 +52,8 @@ export function queueGizmos(
   const ringRadius = RING_RADIUS_PIXELS / cameraZoom;
 
   for (const entityId of world.query(Gizmo, Transform2D)) {
+    const gizmo = world.require(entityId, Gizmo);
+
     if (!resolveWorldTransform2D(world, entityId, SHARED_TRANSFORM)) {
       continue;
     }
@@ -63,7 +68,7 @@ export function queueGizmos(
       centerY,
       centerX + axisLength,
       centerY,
-      AXIS_RED,
+      gizmo.hoveredHandle === "axis-x" ? AXIS_RED_HOVER : AXIS_RED,
       arrowHead,
     );
 
@@ -74,11 +79,18 @@ export function queueGizmos(
       centerY,
       centerX,
       centerY - axisLength,
-      AXIS_GREEN,
+      gizmo.hoveredHandle === "axis-y" ? AXIS_GREEN_HOVER : AXIS_GREEN,
       arrowHead,
     );
 
-    queueRing(queue, frameAllocator, centerX, centerY, ringRadius);
+    queueRing(
+      queue,
+      frameAllocator,
+      centerX,
+      centerY,
+      ringRadius,
+      gizmo.hoveredHandle === "ring" ? RING_STROKE_HOVER : RING_STROKE,
+    );
   }
 }
 
@@ -136,6 +148,7 @@ function queueRing(
   centerX: number,
   centerY: number,
   radius: number,
+  stroke: Color,
 ): void {
   const step = (Math.PI * 2) / RING_SEGMENTS;
 
@@ -148,7 +161,7 @@ function queueRing(
     const endX = centerX + Math.cos(angleEnd) * radius;
     const endY = centerY + Math.sin(angleEnd) * radius;
 
-    queueLine(queue, frameAllocator, startX, startY, endX, endY, RING_STROKE);
+    queueLine(queue, frameAllocator, startX, startY, endX, endY, stroke);
   }
 }
 

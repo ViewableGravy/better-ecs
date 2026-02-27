@@ -1,7 +1,6 @@
-import { Gizmo, Parent } from "@/components";
+import { EditorHoverHighlight, Gizmo, Parent } from "@/components";
 import type { EntityId } from "@/ecs/entity";
 import type { UserWorld } from "@/ecs/world";
-import { EditorDebugEntity } from "@ui/layout/sidebar/worldViewer/editorDebugEntity";
 import { type EngineUiContextValue } from "@ui/utilities/engine-context";
 import { createQueryOptions } from "@ui/utilities/query/create-query-options";
 
@@ -115,10 +114,6 @@ function buildWorldTree(
   let gizmoEntityId: EntityId | null = null;
 
   for (const entityId of allEntityIds) {
-    if (world.has(entityId, EditorDebugEntity)) {
-      continue;
-    }
-
     visibleEntityIds.push(entityId);
     visibleEntityIdSet.add(entityId);
 
@@ -187,6 +182,7 @@ function buildWorldTree(
     const previousNode = previousWorldTree?.entitiesById[entityIdKey];
     const components = world
       .getComponentTypes(entityId)
+      .filter((componentType) => componentType !== EditorHoverHighlight)
       .map((componentType) => ({
         key: `${entityId}:${componentType.name}`,
         name: componentType.name,

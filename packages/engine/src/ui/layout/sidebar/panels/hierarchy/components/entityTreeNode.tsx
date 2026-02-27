@@ -68,6 +68,7 @@ export const EntityTreeNode: React.FC<EntityTreeNodeProps> = React.memo(({
               <EntityRow.Icon.Entity />
               <EntityRow.DebugName />
               <EntityRow.Actions>
+                <EntityRow.CenterCamera />
                 <EntityRow.Delete />
               </EntityRow.Actions>
             </EntityRow.Root>

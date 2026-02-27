@@ -1,8 +1,7 @@
-import { EditorDebugEntity } from "@ui/layout/sidebar/worldViewer/editorDebugEntity";
+import { Gizmo, Transform2D, type GizmoHandle } from "@/components";
+import type { EntityId } from "@/ecs/entity";
 import type { EngineUiContextValue } from "@ui/utilities/engine-context";
 import { useEffect } from "react";
-import { Gizmo, Transform2D } from "@/components";
-import type { EntityId } from "@/ecs/entity";
 
 /**********************************************************************************************************
  *   CONSTS
@@ -41,6 +40,12 @@ type DragState =
  **********************************************************************************************************/
 export function usePausedGizmoSelection(engine: EngineUiContextValue): void {
   useEffect(() => {
+    if (!engine.editor.runningState.paused) {
+      clearAllGizmos(engine)
+    };
+  }, [engine, engine.editor.runningState.paused]);
+
+  useEffect(() => {
     let dragState: DragState | null = null;
 
     const toWorldPoint = (event: PointerEvent): { worldX: number; worldY: number; cameraZoom: number } => {
@@ -66,6 +71,63 @@ export function usePausedGizmoSelection(engine: EngineUiContextValue): void {
       return null;
     };
 
+    const getHandleAtPoint = (
+      worldX: number,
+      worldY: number,
+      centerX: number,
+      centerY: number,
+      cameraZoom: number,
+    ): GizmoHandle | null => {
+      const axisLength = AXIS_LENGTH_PIXELS / cameraZoom;
+      const axisHitThickness = AXIS_HIT_THICKNESS_PIXELS / cameraZoom;
+      const ringRadius = RING_RADIUS_PIXELS / cameraZoom;
+      const ringHitThickness = RING_HIT_THICKNESS_PIXELS / cameraZoom;
+
+      const axisXDistance = distanceToSegment(worldX, worldY, centerX, centerY, centerX + axisLength, centerY);
+      if (axisXDistance <= axisHitThickness) {
+        return "axis-x";
+      }
+
+      const axisYDistance = distanceToSegment(worldX, worldY, centerX, centerY, centerX, centerY - axisLength);
+      if (axisYDistance <= axisHitThickness) {
+        return "axis-y";
+      }
+
+      const distanceFromCenter = Math.hypot(worldX - centerX, worldY - centerY);
+      if (Math.abs(distanceFromCenter - ringRadius) <= ringHitThickness) {
+        return "ring";
+      }
+
+      return null;
+    };
+
+    const updateHoveredHandle = (event: PointerEvent): void => {
+      const world = engine.scene.world;
+      const gizmoEntityId = getGizmoEntity();
+      if (gizmoEntityId === null) {
+        return;
+      }
+
+      const gizmo = world.get(gizmoEntityId, Gizmo);
+      const transform = world.get(gizmoEntityId, Transform2D);
+      if (!gizmo || !transform) {
+        return;
+      }
+
+      const { worldX, worldY, cameraZoom } = toWorldPoint(event);
+      const nextHandle = getHandleAtPoint(
+        worldX,
+        worldY,
+        transform.curr.pos.x,
+        transform.curr.pos.y,
+        cameraZoom,
+      );
+
+      if (gizmo.hoveredHandle !== nextHandle) {
+        gizmo.hoveredHandle = nextHandle;
+      }
+    };
+
     const tryBeginGizmoDrag = (event: PointerEvent): boolean => {
       const world = engine.scene.world;
       const gizmoEntityId = getGizmoEntity();
@@ -75,7 +137,8 @@ export function usePausedGizmoSelection(engine: EngineUiContextValue): void {
       }
 
       const transform = world.get(gizmoEntityId, Transform2D);
-      if (!transform) {
+      const gizmo = world.get(gizmoEntityId, Gizmo);
+      if (!transform || !gizmo) {
         return false;
       }
 
@@ -83,13 +146,8 @@ export function usePausedGizmoSelection(engine: EngineUiContextValue): void {
       const centerX = transform.curr.pos.x;
       const centerY = transform.curr.pos.y;
 
-      const axisLength = AXIS_LENGTH_PIXELS / cameraZoom;
-      const axisHitThickness = AXIS_HIT_THICKNESS_PIXELS / cameraZoom;
-      const ringRadius = RING_RADIUS_PIXELS / cameraZoom;
-      const ringHitThickness = RING_HIT_THICKNESS_PIXELS / cameraZoom;
-
-      const axisXDistance = distanceToSegment(worldX, worldY, centerX, centerY, centerX + axisLength, centerY);
-      if (axisXDistance <= axisHitThickness) {
+      const handle = getHandleAtPoint(worldX, worldY, centerX, centerY, cameraZoom);
+      if (handle === "axis-x") {
         dragState = {
           mode: "move",
           entityId: gizmoEntityId,
@@ -102,11 +160,12 @@ export function usePausedGizmoSelection(engine: EngineUiContextValue): void {
           pointerId: event.pointerId,
         };
 
+        gizmo.hoveredHandle = "axis-x";
+
         return true;
       }
 
-      const axisYDistance = distanceToSegment(worldX, worldY, centerX, centerY, centerX, centerY - axisLength);
-      if (axisYDistance <= axisHitThickness) {
+      if (handle === "axis-y") {
         dragState = {
           mode: "move",
           entityId: gizmoEntityId,
@@ -119,11 +178,12 @@ export function usePausedGizmoSelection(engine: EngineUiContextValue): void {
           pointerId: event.pointerId,
         };
 
+        gizmo.hoveredHandle = "axis-y";
+
         return true;
       }
 
-      const distanceFromCenter = Math.hypot(worldX - centerX, worldY - centerY);
-      if (Math.abs(distanceFromCenter - ringRadius) <= ringHitThickness) {
+      if (handle === "ring") {
         dragState = {
           mode: "rotate",
           entityId: gizmoEntityId,
@@ -132,6 +192,8 @@ export function usePausedGizmoSelection(engine: EngineUiContextValue): void {
           pointerId: event.pointerId,
         };
 
+        gizmo.hoveredHandle = "ring";
+
         return true;
       }
 
@@ -139,7 +201,16 @@ export function usePausedGizmoSelection(engine: EngineUiContextValue): void {
     };
 
     const onPointerMove = (event: PointerEvent): void => {
+      if (engine.editor.camera.mode !== "engine") {
+        return;
+      }
+
+      if (!engine.editor.runningState.paused) {
+        return;
+      }
+
       if (!dragState || event.pointerId !== dragState.pointerId) {
+        updateHoveredHandle(event);
         return;
       }
 
@@ -161,6 +232,7 @@ export function usePausedGizmoSelection(engine: EngineUiContextValue): void {
 
         transform.curr.pos.set(nextX, nextY);
         transform.prev.pos.set(nextX, nextY);
+        updateHoveredHandle(event);
         return;
       }
 
@@ -171,11 +243,18 @@ export function usePausedGizmoSelection(engine: EngineUiContextValue): void {
 
       transform.curr.rotation = nextRotation;
       transform.prev.rotation = nextRotation;
+      updateHoveredHandle(event);
     };
 
     const onPointerUp = (event: PointerEvent): void => {
       if (!dragState || event.pointerId !== dragState.pointerId) {
         return;
+      }
+
+      const world = engine.scene.world;
+      const gizmo = world.get(dragState.entityId, Gizmo);
+      if (gizmo) {
+        gizmo.hoveredHandle = null;
       }
 
       dragState = null;
@@ -208,10 +287,6 @@ export function usePausedGizmoSelection(engine: EngineUiContextValue): void {
       let nearestDistanceSquared = maxDistanceSquared;
 
       for (const entityId of world.query(Transform2D)) {
-        if (world.has(entityId, EditorDebugEntity)) {
-          continue;
-        }
-
         const transform = world.get(entityId, Transform2D);
         if (!transform) {
           continue;
@@ -233,11 +308,7 @@ export function usePausedGizmoSelection(engine: EngineUiContextValue): void {
         return;
       }
 
-      for (const [, worldEntry] of engine.scene.context.worldEntries) {
-        for (const gizmoEntityId of worldEntry.query(Gizmo)) {
-          worldEntry.remove(gizmoEntityId, Gizmo);
-        }
-      }
+      clearAllGizmos(engine);
 
       world.add(nearestEntityId, Gizmo, new Gizmo());
     };
@@ -255,6 +326,14 @@ export function usePausedGizmoSelection(engine: EngineUiContextValue): void {
       window.removeEventListener("pointercancel", onPointerUp);
     };
   }, [engine]);
+}
+
+function clearAllGizmos(engine: EngineUiContextValue): void {
+  for (const [, worldEntry] of engine.scene.context.worldEntries) {
+    for (const gizmoEntityId of worldEntry.query(Gizmo)) {
+      worldEntry.remove(gizmoEntityId, Gizmo);
+    }
+  }
 }
 
 function distanceToSegment(
