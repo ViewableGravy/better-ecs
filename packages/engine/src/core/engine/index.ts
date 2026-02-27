@@ -1,6 +1,4 @@
 import { AssetManager } from "../../asset/AssetManager";
-import { Camera, Transform2D } from "../../components";
-import type { EntityId } from "../../ecs/entity";
 import type { UserWorld } from "../../ecs/world";
 import { CanvasManager } from "../canvas";
 import { executeWithContext } from "../context";
@@ -47,62 +45,11 @@ export class EngineClass<
 		this.scene = new SceneManager<TScenes>(scenes, this.#systemsManager).setEngineRef(this);
 		this.#canvasManager = new CanvasManager(canvas, awaitCanvasBeforeStart);
 		this.#renderManager = new RenderManager(this.render);
-		this.editor = new EngineEditor({
-			onPause: () => {
-				this.syncEditorCameraFromWorld();
-			},
-		});
+		this.editor = new EngineEditor(this);
 
 		this.#systemsView = this.#systemsManager.createSystemsView((name) => {
 			return this.#systemsManager.getSceneSystem(this.scene.definition?.name ?? null, name);
 		});
-	}
-
-	private syncEditorCameraFromWorld(): void {
-		if (this.editor.camera.mode !== "engine") {
-			return;
-		}
-
-		const world = this.scene.world;
-		let fallbackCameraEntityId: EntityId | null = null;
-
-		for (const cameraEntityId of world.query(Camera, Transform2D)) {
-			const camera = world.get(cameraEntityId, Camera);
-			const transform = world.get(cameraEntityId, Transform2D);
-
-			if (!camera || !camera.enabled || !transform) {
-				continue;
-			}
-
-			if (!camera.primary && fallbackCameraEntityId === null) {
-				fallbackCameraEntityId = cameraEntityId;
-				continue;
-			}
-
-			if (!camera.primary) {
-				continue;
-			}
-
-			const viewportHeight = this.canvas.getBoundingClientRect().height;
-			const zoom = camera.orthoSize > 0 ? viewportHeight / (camera.orthoSize * 2) : 1;
-			this.editor.camera.setView(transform.curr.pos.x, transform.curr.pos.y, zoom);
-			return;
-		}
-
-		if (fallbackCameraEntityId !== null) {
-			const fallbackCamera = world.get(fallbackCameraEntityId, Camera);
-			const fallbackTransform = world.get(fallbackCameraEntityId, Transform2D);
-
-			if (fallbackCamera && fallbackTransform) {
-				const viewportHeight = this.canvas.getBoundingClientRect().height;
-				const zoom = fallbackCamera.orthoSize > 0 ? viewportHeight / (fallbackCamera.orthoSize * 2) : 1;
-				this.editor.camera.setView(fallbackTransform.curr.pos.x, fallbackTransform.curr.pos.y, zoom);
-				return;
-			}
-
-		}
-
-		this.editor.camera.setView(0, 0, 1);
 	}
 
 	/** @internal */
