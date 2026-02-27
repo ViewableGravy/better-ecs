@@ -12,6 +12,7 @@ import type { RenderPass } from "./pass";
 import { BeginFramePass } from "./passes/begin-frame";
 import { CameraControlPass } from "./passes/camera-control";
 import { EndFramePass } from "./passes/end-frame";
+import { GizmoRenderPass } from "./passes/render-gizmo";
 import { RenderWorldPass } from "./passes/render-world";
 import type { RenderPipeline, WorldProvider } from "./types";
 
@@ -22,6 +23,7 @@ type CorePassOverrides<
 	beginFrame?: RenderPass<TRegistry, TState> | false;
 	cameraControl?: RenderPass<TRegistry, TState> | false;
 	renderWorld?: RenderPass<TRegistry, TState> | false;
+	renderGizmo?: RenderPass<TRegistry, TState> | false;
 	endFrame?: RenderPass<TRegistry, TState> | false;
 };
 
@@ -99,6 +101,7 @@ export function createRenderPipeline<
 	const beginFramePass = resolveCorePass(options.overrides?.beginFrame, BeginFramePass);
 	const cameraControlPass = resolveCorePass(options.overrides?.cameraControl, CameraControlPass);
 	const renderWorldPass = resolveCorePass(options.overrides?.renderWorld, RenderWorldPass);
+	const renderGizmoPass = resolveCorePass(options.overrides?.renderGizmo, GizmoRenderPass);
 	const endFramePass = resolveCorePass(options.overrides?.endFrame, EndFramePass);
 	const useUnifiedPassList = options.passes !== undefined;
 	const unifiedPasses = options.passes ?? [];
@@ -109,6 +112,7 @@ export function createRenderPipeline<
 			...(cameraControlPass ? [cameraControlPass] : []),
 			...unifiedPasses,
 			...(renderWorldPass ? [renderWorldPass] : []),
+			...(renderGizmoPass ? [renderGizmoPass] : []),
 			...(options.afterWorldPasses ?? []),
 			...(endFramePass ? [endFramePass] : []),
 		]
@@ -117,6 +121,7 @@ export function createRenderPipeline<
 			...(cameraControlPass ? [cameraControlPass] : []),
 			...(options.beforeWorldPasses ?? []),
 			...(renderWorldPass ? [renderWorldPass] : []),
+			...(renderGizmoPass ? [renderGizmoPass] : []),
 			...(options.afterWorldPasses ?? []),
 			...(endFramePass ? [endFramePass] : []),
 		];

@@ -27,7 +27,7 @@ export interface SpriteRenderData {
  * Data required to draw a shape at the low level.
  */
 export interface ShapeRenderData {
-  type: "rectangle" | "circle" | "line";
+  type: "rectangle" | "circle" | "line" | "arc";
   x: number;
   y: number;
   width: number;
@@ -38,4 +38,8 @@ export interface ShapeRenderData {
   fill: Color;
   stroke: Color | null;
   strokeWidth: number;
+  /** Start angle in radians. Used only when type is "arc". */
+  arcStart: number;
+  /** End angle in radians. Used only when type is "arc". */
+  arcEnd: number;
 }

@@ -27,6 +27,8 @@ export const engineFrameAllocatorRegistry: EngineFrameAllocatorRegistry = {
       fill: new Color(1, 1, 1, 1),
       stroke: null,
       strokeWidth: 0,
+      arcStart: 0,
+      arcEnd: Math.PI * 2,
     }),
     reset: (value) => {
       value.type = "rectangle";
@@ -43,6 +45,8 @@ export const engineFrameAllocatorRegistry: EngineFrameAllocatorRegistry = {
       value.fill.a = 1;
       value.stroke = null;
       value.strokeWidth = 0;
+      value.arcStart = 0;
+      value.arcEnd = Math.PI * 2;
     },
   },
   "engine:number-array": {

@@ -30,6 +30,8 @@ const SHARED_SHAPE_DATA: ShapeRenderData = {
   fill: new Color(),
   stroke: null,
   strokeWidth: 0,
+  arcStart: 0,
+  arcEnd: Math.PI * 2,
 };
 
 const SHARED_FALLBACK_SHAPE_DATA: ShapeRenderData = {
@@ -44,6 +46,8 @@ const SHARED_FALLBACK_SHAPE_DATA: ShapeRenderData = {
   fill: new Color(),
   stroke: new Color(),
   strokeWidth: 2,
+  arcStart: 0,
+  arcEnd: Math.PI * 2,
 };
 
 export class Renderer2D implements Renderer {
@@ -207,6 +211,8 @@ export class Renderer2D implements Renderer {
     SHARED_SHAPE_DATA.fill = shape.fill;
     SHARED_SHAPE_DATA.stroke = shape.stroke;
     SHARED_SHAPE_DATA.strokeWidth = shape.strokeWidth;
+    SHARED_SHAPE_DATA.arcStart = shape.arcStart;
+    SHARED_SHAPE_DATA.arcEnd = shape.arcEnd;
 
     this.#command.drawShape(SHARED_SHAPE_DATA);
   }

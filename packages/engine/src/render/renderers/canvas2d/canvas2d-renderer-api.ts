@@ -153,6 +153,18 @@ export class Canvas2DRenderAPI implements RendererAPI {
         if (data.stroke) this.ctx.stroke();
         break;
 
+      case "arc": {
+        const radiusX = scaledW / 2;
+        const radiusY = scaledH / 2;
+        this.ctx.beginPath();
+        this.ctx.moveTo(0, 0);
+        this.ctx.ellipse(0, 0, radiusX, radiusY, 0, data.arcStart, data.arcEnd);
+        this.ctx.closePath();
+        this.ctx.fill();
+        if (data.stroke) this.ctx.stroke();
+        break;
+      }
+
       case "line":
         if (data.stroke) {
           this.ctx.beginPath();

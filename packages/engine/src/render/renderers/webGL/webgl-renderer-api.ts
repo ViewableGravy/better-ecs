@@ -188,6 +188,11 @@ export class WebGLRenderAPI implements RendererAPI {
         this.#drawColorTriangles(gl, vertices, data.fill);
         break;
       }
+      case "arc": {
+        const vertices = this.#buildArcVertices(center, data);
+        this.#drawColorTriangles(gl, vertices, data.fill);
+        break;
+      }
     }
 
     gl.bindVertexArray(null);
@@ -424,6 +429,38 @@ export class WebGLRenderAPI implements RendererAPI {
       ndcCorners[2].x, ndcCorners[2].y,
       ndcCorners[3].x, ndcCorners[3].y,
     ]);
+  }
+
+  #buildArcVertices(center: Vec2, data: ShapeRenderData): Float32Array {
+    const canvas = this.#canvas;
+    if (!canvas) {
+      return new Float32Array();
+    }
+
+    const radiusX = (data.width * data.scaleX * this.#cameraZoom) / 2;
+    const radiusY = (data.height * data.scaleY * this.#cameraZoom) / 2;
+
+    const centerScreenX = (center.x + 1) * 0.5 * canvas.width;
+    const centerScreenY = (1 - center.y) * 0.5 * canvas.height;
+
+    const arcStart = data.arcStart;
+    const arcEnd = data.arcEnd;
+    const arcSpan = arcEnd - arcStart;
+    const segments = Math.max(1, Math.ceil(Math.abs(arcSpan) / (Math.PI * 2) * CIRCLE_SEGMENTS));
+
+    const vertices: number[] = [];
+
+    for (let i = 0; i < segments; i += 1) {
+      const t0 = arcStart + (i / segments) * arcSpan;
+      const t1 = arcStart + ((i + 1) / segments) * arcSpan;
+
+      const p0 = this.#screenToNdc(centerScreenX + Math.cos(t0) * radiusX, centerScreenY + Math.sin(t0) * radiusY);
+      const p1 = this.#screenToNdc(centerScreenX + Math.cos(t1) * radiusX, centerScreenY + Math.sin(t1) * radiusY);
+
+      vertices.push(center.x, center.y, p0.x, p0.y, p1.x, p1.y);
+    }
+
+    return new Float32Array(vertices);
   }
 
   #buildCircleVertices(center: Vec2, data: ShapeRenderData): Float32Array {

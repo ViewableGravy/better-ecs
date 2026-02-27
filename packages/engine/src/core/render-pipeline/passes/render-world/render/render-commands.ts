@@ -80,6 +80,8 @@ export function renderCommands(
     }
 
     shapeCommand.strokeWidth = shape.strokeWidth;
+    shapeCommand.arcStart = shape.arcStart;
+    shapeCommand.arcEnd = shape.arcEnd;
 
     renderer.drawShape(shapeCommand);
   }

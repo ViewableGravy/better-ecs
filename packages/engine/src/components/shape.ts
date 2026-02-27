@@ -1,6 +1,6 @@
 import { Color } from "./sprite";
 
-export type ShapeType = "rectangle" | "circle" | "line";
+export type ShapeType = "rectangle" | "circle" | "line" | "arc";
 
 /**
  * Simple shape component for rendering basic shapes without textures.
@@ -31,6 +31,12 @@ export class Shape {
   /** Render layer */
   public layer: number;
 
+  /** Start angle in radians. Used only when type is "arc". */
+  public arcStart: number;
+
+  /** End angle in radians. Used only when type is "arc". */
+  public arcEnd: number;
+
   constructor(
     type: ShapeType = "rectangle",
     width: number = 10,
@@ -39,7 +45,9 @@ export class Shape {
     stroke: Color | null = null,
     strokeWidth: number = 1,
     zOrder: number = 0,
-    layer: number = 0
+    layer: number = 0,
+    arcStart: number = 0,
+    arcEnd: number = Math.PI * 2,
   ) {
     this.type = type;
     this.width = width;
@@ -49,5 +57,7 @@ export class Shape {
     this.strokeWidth = strokeWidth;
     this.zOrder = zOrder;
     this.layer = layer;
+    this.arcStart = arcStart;
+    this.arcEnd = arcEnd;
   }
 }
