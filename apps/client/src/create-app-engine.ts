@@ -10,6 +10,7 @@ import { System as CameraZoom } from "./systems/camera-zoom";
 import { System as Initialize } from "./systems/initialisation";
 import { System as Movement } from "./systems/movement";
 import { Render } from "./systems/render";
+import { System as TempAutoSavePlayerPosition } from "./systems/temp-auto-save";
 import { invariantById } from "./utilities/selectors";
 
 export const createAppEngine = () => {
@@ -24,6 +25,7 @@ export const createAppEngine = () => {
       // Plugins
       FPSSystem,
       // Update systems
+      TempAutoSavePlayerPosition,
       Movement,
       Collision,
       CameraFollow,

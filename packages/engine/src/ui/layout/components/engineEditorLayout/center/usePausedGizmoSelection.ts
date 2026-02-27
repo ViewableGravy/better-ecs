@@ -1,5 +1,6 @@
 import { Gizmo, Transform2D, type GizmoHandle } from "@/components";
 import type { EntityId } from "@/ecs/entity";
+import { resolveWorldTransform2D } from "@/ecs/hierarchy";
 import type { EngineUiContextValue } from "@ui/utilities/engine-context";
 import { useEffect } from "react";
 
@@ -21,8 +22,8 @@ type DragState =
       entityId: EntityId;
       axisX: number;
       axisY: number;
-      startEntityX: number;
-      startEntityY: number;
+      startEntityLocalX: number;
+      startEntityLocalY: number;
       startPointerX: number;
       startPointerY: number;
       pointerId: number;
@@ -47,6 +48,7 @@ export function usePausedGizmoSelection(engine: EngineUiContextValue): void {
 
   useEffect(() => {
     let dragState: DragState | null = null;
+    const sharedResolvedTransform = new Transform2D();
 
     const toWorldPoint = (event: PointerEvent): { worldX: number; worldY: number; cameraZoom: number } => {
       const canvas = engine.canvas;
@@ -109,8 +111,11 @@ export function usePausedGizmoSelection(engine: EngineUiContextValue): void {
       }
 
       const gizmo = world.get(gizmoEntityId, Gizmo);
-      const transform = world.get(gizmoEntityId, Transform2D);
-      if (!gizmo || !transform) {
+      if (!gizmo) {
+        return;
+      }
+
+      if (!resolveWorldTransform2D(world, gizmoEntityId, sharedResolvedTransform)) {
         return;
       }
 
@@ -118,8 +123,8 @@ export function usePausedGizmoSelection(engine: EngineUiContextValue): void {
       const nextHandle = getHandleAtPoint(
         worldX,
         worldY,
-        transform.curr.pos.x,
-        transform.curr.pos.y,
+        sharedResolvedTransform.curr.pos.x,
+        sharedResolvedTransform.curr.pos.y,
         cameraZoom,
       );
 
@@ -142,9 +147,13 @@ export function usePausedGizmoSelection(engine: EngineUiContextValue): void {
         return false;
       }
 
+      if (!resolveWorldTransform2D(world, gizmoEntityId, sharedResolvedTransform)) {
+        return false;
+      }
+
       const { worldX, worldY, cameraZoom } = toWorldPoint(event);
-      const centerX = transform.curr.pos.x;
-      const centerY = transform.curr.pos.y;
+      const centerX = sharedResolvedTransform.curr.pos.x;
+      const centerY = sharedResolvedTransform.curr.pos.y;
 
       const handle = getHandleAtPoint(worldX, worldY, centerX, centerY, cameraZoom);
       if (handle === "axis-x") {
@@ -153,8 +162,8 @@ export function usePausedGizmoSelection(engine: EngineUiContextValue): void {
           entityId: gizmoEntityId,
           axisX: 1,
           axisY: 0,
-          startEntityX: centerX,
-          startEntityY: centerY,
+          startEntityLocalX: transform.curr.pos.x,
+          startEntityLocalY: transform.curr.pos.y,
           startPointerX: worldX,
           startPointerY: worldY,
           pointerId: event.pointerId,
@@ -171,8 +180,8 @@ export function usePausedGizmoSelection(engine: EngineUiContextValue): void {
           entityId: gizmoEntityId,
           axisX: 0,
           axisY: -1,
-          startEntityX: centerX,
-          startEntityY: centerY,
+          startEntityLocalX: transform.curr.pos.x,
+          startEntityLocalY: transform.curr.pos.y,
           startPointerX: worldX,
           startPointerY: worldY,
           pointerId: event.pointerId,
@@ -227,8 +236,8 @@ export function usePausedGizmoSelection(engine: EngineUiContextValue): void {
         const deltaY = worldY - dragState.startPointerY;
         const projected = deltaX * dragState.axisX + deltaY * dragState.axisY;
 
-        const nextX = dragState.startEntityX + dragState.axisX * projected;
-        const nextY = dragState.startEntityY + dragState.axisY * projected;
+        const nextX = dragState.startEntityLocalX + dragState.axisX * projected;
+        const nextY = dragState.startEntityLocalY + dragState.axisY * projected;
 
         transform.curr.pos.set(nextX, nextY);
         transform.prev.pos.set(nextX, nextY);
@@ -236,8 +245,12 @@ export function usePausedGizmoSelection(engine: EngineUiContextValue): void {
         return;
       }
 
-      const centerX = transform.curr.pos.x;
-      const centerY = transform.curr.pos.y;
+      if (!resolveWorldTransform2D(world, dragState.entityId, sharedResolvedTransform)) {
+        return;
+      }
+
+      const centerX = sharedResolvedTransform.curr.pos.x;
+      const centerY = sharedResolvedTransform.curr.pos.y;
       const angle = Math.atan2(worldY - centerY, worldX - centerX);
       const nextRotation = dragState.startRotation + (angle - dragState.startPointerAngle);
 
@@ -287,13 +300,12 @@ export function usePausedGizmoSelection(engine: EngineUiContextValue): void {
       let nearestDistanceSquared = maxDistanceSquared;
 
       for (const entityId of world.query(Transform2D)) {
-        const transform = world.get(entityId, Transform2D);
-        if (!transform) {
+        if (!resolveWorldTransform2D(world, entityId, sharedResolvedTransform)) {
           continue;
         }
 
-        const deltaX = transform.curr.pos.x - worldX;
-        const deltaY = transform.curr.pos.y - worldY;
+        const deltaX = sharedResolvedTransform.curr.pos.x - worldX;
+        const deltaY = sharedResolvedTransform.curr.pos.y - worldY;
         const distanceSquared = deltaX * deltaX + deltaY * deltaY;
 
         if (distanceSquared > nearestDistanceSquared) {

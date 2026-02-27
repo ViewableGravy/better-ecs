@@ -21,6 +21,10 @@
       "types": "./dist/src/components/index.d.ts",
       "default": "./dist/src/components/index.js"
     },
+    "./ecs/hierarchy": {
+      "types": "./dist/src/ecs/hierarchy.d.ts",
+      "default": "./dist/src/ecs/hierarchy.js"
+    },
     "./render": {
       "types": "./dist/src/render/index.d.ts",
       "default": "./dist/src/render/index.js"
