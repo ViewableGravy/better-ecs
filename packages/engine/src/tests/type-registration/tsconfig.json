@@ -5,7 +5,12 @@
     "noEmit": true,
     "rootDir": "../../../../../",
     "lib": ["ESNext", "DOM"],
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "baseUrl": "../../",
+    "paths": {
+      "@ui/*": ["./ui/*"],
+      "@/*": ["./*"]
+    }
   },
   "include": [
     "./**/*.ts",

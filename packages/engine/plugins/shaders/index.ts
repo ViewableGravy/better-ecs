@@ -28,7 +28,7 @@ export function shadersPlugin(): Plugin {
   return {
     name: "engine:shaders",
     transform(source: string, id: string) {
-      shaderPlugin.transform(source, id);
+      return shaderPlugin.transform(source, id);
     },
     async buildStart() {
       await shaderPlugin.buildStart();

@@ -1,7 +1,9 @@
-import { defineConfig } from 'vitest/config';
 import { fileURLToPath } from 'node:url';
+import { defineConfig } from 'vitest/config';
+import { shadersPlugin } from './plugins/shaders';
 
 export default defineConfig({
+  plugins: [shadersPlugin()],
   resolve: {
     alias: {
       '@ui': fileURLToPath(new URL('./src/ui', import.meta.url)),

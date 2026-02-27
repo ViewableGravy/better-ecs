@@ -1,16 +1,16 @@
 import {
-  Gizmo,
-  GIZMO_AXIS_HIT_THICKNESS_WORLD,
-  GIZMO_AXIS_LENGTH_WORLD,
-  GIZMO_PLANE_HANDLE_OFFSET_X_WORLD,
-  GIZMO_PLANE_HANDLE_OFFSET_Y_WORLD,
-  GIZMO_PLANE_HANDLE_SIZE_WORLD,
-  GIZMO_RING_HIT_THICKNESS_WORLD,
-  GIZMO_RING_RADIUS_WORLD,
-  GIZMO_ROTATE_RING_RADIUS_WORLD,
-  GIZMO_SCALE_MIN_DISTANCE_WORLD,
-  Transform2D,
-  type GizmoHandle,
+    Gizmo,
+    GIZMO_AXIS_HIT_THICKNESS_WORLD,
+    GIZMO_AXIS_LENGTH_WORLD,
+    GIZMO_PLANE_HANDLE_OFFSET_X_WORLD,
+    GIZMO_PLANE_HANDLE_OFFSET_Y_WORLD,
+    GIZMO_PLANE_HANDLE_SIZE_WORLD,
+    GIZMO_RING_HIT_THICKNESS_WORLD,
+    GIZMO_RING_RADIUS_WORLD,
+    GIZMO_ROTATE_RING_RADIUS_WORLD,
+    GIZMO_SCALE_MIN_DISTANCE_WORLD,
+    Transform2D,
+    type GizmoHandle,
 } from "../../components";
 import type { EntityId } from "../../ecs/entity";
 import { resolveWorldTransform2D } from "../../ecs/hierarchy";
@@ -303,6 +303,7 @@ export class GizmoInputManager {
       event.worldY,
       this.#SHARED_TRANSFORM2D.curr.pos.x,
       this.#SHARED_TRANSFORM2D.curr.pos.y,
+      this.#SHARED_TRANSFORM2D.curr.rotation,
     );
 
     this.#gizmo.setHoveredHandle(gizmoEntityId, handle);
