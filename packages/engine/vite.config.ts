@@ -1,9 +1,10 @@
 import { resolve } from "node:path";
 import { defineConfig } from "vite";
 import { libInjectCss } from "vite-plugin-lib-inject-css";
+import { shadersPlugin } from "./plugins/shaders";
 
 export default defineConfig({
-  plugins: [libInjectCss()],
+  plugins: [libInjectCss(), shadersPlugin()],
   resolve: {
     alias: [
       // Map @/* → @repo/engine/* so these imports stay external in the bundle,

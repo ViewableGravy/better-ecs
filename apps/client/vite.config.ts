@@ -4,9 +4,25 @@ import { resolve } from "node:path";
 import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 
+function fragAsStringPlugin() {
+  return {
+    name: "shader-as-string",
+    transform(source: string, id: string) {
+      if (!id.endsWith(".frag") && !id.endsWith(".vert")) {
+        return null;
+      }
+
+      return {
+        code: `export default ${JSON.stringify(source)};`,
+        map: null,
+      };
+    },
+  };
+}
+
 export default defineConfig({
   root: __dirname,
-  plugins: [tsconfigPaths(), tailwindcss(), engineHmr()],
+  plugins: [tsconfigPaths(), tailwindcss(), engineHmr(), fragAsStringPlugin()],
   server: {
     port: 3000,
     host: "127.0.0.1",

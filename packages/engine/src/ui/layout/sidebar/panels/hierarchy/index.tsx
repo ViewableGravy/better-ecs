@@ -1,11 +1,11 @@
 import { TabPanel } from "@headlessui/react";
 import { useQuery } from "@tanstack/react-query";
 import { EngineEditorLayout } from "@ui/layout/components/engineEditorLayout/index";
+import { WorldEntitiesDropdown } from "@ui/layout/sidebar/panels/hierarchy/components/worldEntitiesDropdown";
 import {
 	createHierarchyTreeQueryOptions,
 	type HierarchyTreeSnapshot,
 } from "@ui/layout/sidebar/panels/hierarchy/queries/hierarchyTreeQuery";
-import { WorldEntitiesDropdown } from "@ui/layout/sidebar/panels/hierarchy/components/worldEntitiesDropdown";
 import styles from "@ui/layout/sidebar/styles.module.css";
 import { WorldIdContext } from "@ui/layout/sidebar/worldViewer/context";
 import { Dropdown } from "@ui/layout/sidebar/worldViewer/dropdown";
