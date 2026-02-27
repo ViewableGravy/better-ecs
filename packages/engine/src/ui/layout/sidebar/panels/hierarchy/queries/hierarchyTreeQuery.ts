@@ -33,6 +33,7 @@ export type HierarchyTreeSnapshot = {
 
 const HIERARCHY_TREE_QUERY_KEY = ["engine-ui", "hierarchy-tree"] as const;
 const POLLING_INTERVAL_MS = 250;
+const SNAPSHOT_CACHE = new WeakMap<EngineUiContextValue, HierarchyTreeSnapshot>();
 
 /**********************************************************************************************************
  *   COMPONENT START
@@ -40,7 +41,12 @@ const POLLING_INTERVAL_MS = 250;
 export const createHierarchyTreeQueryOptions = (engine: EngineUiContextValue) => {
   return createQueryOptions({
     queryKey: HIERARCHY_TREE_QUERY_KEY,
-    queryFn: () => buildHierarchyTreeSnapshot(engine),
+    queryFn: () => {
+      const previousSnapshot = SNAPSHOT_CACHE.get(engine);
+      const nextSnapshot = buildHierarchyTreeSnapshot(engine, previousSnapshot);
+      SNAPSHOT_CACHE.set(engine, nextSnapshot);
+      return nextSnapshot;
+    },
     refetchInterval: POLLING_INTERVAL_MS,
   });
 };
@@ -48,7 +54,10 @@ export const createHierarchyTreeQueryOptions = (engine: EngineUiContextValue) =>
 /**********************************************************************************************************
  *   QUERY FUNCTION
  **********************************************************************************************************/
-function buildHierarchyTreeSnapshot(engine: EngineUiContextValue): HierarchyTreeSnapshot {
+function buildHierarchyTreeSnapshot(
+  engine: EngineUiContextValue,
+  previousSnapshot?: HierarchyTreeSnapshot,
+): HierarchyTreeSnapshot {
   const worldIds: string[] = [];
   const worldsById: Record<string, HierarchyWorldTree> = {};
 
@@ -57,21 +66,42 @@ function buildHierarchyTreeSnapshot(engine: EngineUiContextValue): HierarchyTree
   }
 
   worldIds.sort((left, right) => left.localeCompare(right));
+  const stableWorldIds = reuseArray(previousSnapshot?.worldIds, worldIds);
+  let hasWorldTreeChanges = previousSnapshot === undefined;
 
-  for (const worldId of worldIds) {
+  for (const worldId of stableWorldIds) {
     const world = engine.scene.context.requireWorld(worldId);
-    worldsById[worldId] = buildWorldTree(world);
+    const previousWorldTree = previousSnapshot?.worldsById[worldId];
+    const nextWorldTree = buildWorldTree(world, previousWorldTree);
+    worldsById[worldId] = nextWorldTree;
+
+    if (nextWorldTree !== previousWorldTree) {
+      hasWorldTreeChanges = true;
+    }
+  }
+
+  if (
+    previousSnapshot &&
+    !hasWorldTreeChanges &&
+    previousSnapshot.activeSceneName === engine.scene.activeSceneName &&
+    previousSnapshot.activeWorldId === engine.scene.activeWorldId &&
+    previousSnapshot.worldIds === stableWorldIds
+  ) {
+    return previousSnapshot;
   }
 
   return {
     activeSceneName: engine.scene.activeSceneName,
     activeWorldId: engine.scene.activeWorldId,
-    worldIds,
+    worldIds: stableWorldIds,
     worldsById,
   };
 }
 
-function buildWorldTree(world: UserWorld): HierarchyWorldTree {
+function buildWorldTree(
+  world: UserWorld,
+  previousWorldTree?: HierarchyWorldTree,
+): HierarchyWorldTree {
   const allEntityIds = world
     .all()
     .slice()
@@ -126,6 +156,7 @@ function buildWorldTree(world: UserWorld): HierarchyWorldTree {
   }
 
   rootEntityIds.sort((left, right) => left - right);
+  const stableRootEntityIds = reuseArray(previousWorldTree?.rootEntityIds, rootEntityIds);
 
   const expandedEntityIds: EntityId[] = [];
   if (gizmoEntityId !== null) {
@@ -149,8 +180,11 @@ function buildWorldTree(world: UserWorld): HierarchyWorldTree {
   }
 
   const entitiesById: Record<string, HierarchyEntityNode> = {};
+  let hasEntityNodeChanges = previousWorldTree === undefined;
 
   for (const entityId of visibleEntityIds) {
+    const entityIdKey = entityId.toString();
+    const previousNode = previousWorldTree?.entitiesById[entityIdKey];
     const components = world
       .getComponentTypes(entityId)
       .map((componentType) => ({
@@ -159,19 +193,79 @@ function buildWorldTree(world: UserWorld): HierarchyWorldTree {
       }))
       .sort((left, right) => left.name.localeCompare(right.name));
 
-    const childEntityIds = childEntityIdsByParent.get(entityId) ?? [];
+    const nextChildEntityIds = childEntityIdsByParent.get(entityId) ?? [];
+    const stableChildEntityIds = reuseArray(previousNode?.childEntityIds, nextChildEntityIds);
+    const stableComponents = reuseComponents(previousNode?.components, components);
 
-    entitiesById[entityId.toString()] = {
-      childEntityIds,
-      components,
-    };
+    if (
+      previousNode &&
+      previousNode.childEntityIds === stableChildEntityIds &&
+      previousNode.components === stableComponents
+    ) {
+      entitiesById[entityIdKey] = previousNode;
+    } else {
+      entitiesById[entityIdKey] = {
+        childEntityIds: stableChildEntityIds,
+        components: stableComponents,
+      };
+      hasEntityNodeChanges = true;
+    }
+  }
+
+  const stableExpandedEntityIds = reuseArray(previousWorldTree?.expandedEntityIds, expandedEntityIds);
+
+  if (
+    previousWorldTree &&
+    !hasEntityNodeChanges &&
+    Object.keys(previousWorldTree.entitiesById).length === visibleEntityIds.length &&
+    previousWorldTree.rootEntityIds === stableRootEntityIds &&
+    previousWorldTree.expandedEntityIds === stableExpandedEntityIds
+  ) {
+    return previousWorldTree;
   }
 
   return {
-    rootEntityIds,
-    expandedEntityIds,
+    rootEntityIds: stableRootEntityIds,
+    expandedEntityIds: stableExpandedEntityIds,
     entitiesById,
   };
+}
+
+function reuseArray<T>(previous: T[] | undefined, next: T[]): T[] {
+  if (!previous || previous.length !== next.length) {
+    return next;
+  }
+
+  for (let index = 0; index < next.length; index += 1) {
+    if (previous[index] !== next[index]) {
+      return next;
+    }
+  }
+
+  return previous;
+}
+
+function reuseComponents(
+  previous: ComponentTreeNode[] | undefined,
+  next: ComponentTreeNode[],
+): ComponentTreeNode[] {
+  if (!previous || previous.length !== next.length) {
+    return next;
+  }
+
+  for (let index = 0; index < next.length; index += 1) {
+    const previousComponent = previous[index];
+    const nextComponent = next[index];
+
+    if (
+      previousComponent.key !== nextComponent.key ||
+      previousComponent.name !== nextComponent.name
+    ) {
+      return next;
+    }
+  }
+
+  return previous;
 }
 
 /**********************************************************************************************************

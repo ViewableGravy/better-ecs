@@ -1,6 +1,7 @@
 import type { EntityId } from "@/ecs/entity";
 import styles from "@ui/layout/sidebar/styles.module.css";
 import { EntityIdContext } from "@ui/layout/sidebar/worldViewer/context";
+import React from "react";
 import { EntityTreeNode } from "./entityTreeNode";
 
 /**********************************************************************************************************
@@ -15,7 +16,7 @@ type EntityTreeNodesProps = {
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
-export const EntityTreeNodes: React.FC<EntityTreeNodesProps> = ({
+export const EntityTreeNodes: React.FC<EntityTreeNodesProps> = React.memo(({
   entityIds,
   depth = 0,
   expandedEntityIds,
@@ -34,4 +35,4 @@ export const EntityTreeNodes: React.FC<EntityTreeNodesProps> = ({
       ))}
     </ul>
   );
-};
+});

@@ -3,7 +3,6 @@ import { UserWorld, World } from "../../ecs/world";
 import { executeWithContext } from "../context";
 import type { EngineClass } from "../engine";
 import { SystemsManager } from "../engine/systems";
-import { ObservableState } from "../observable";
 import { SceneContext } from "./scene-context";
 import type { SceneDefinition, SceneDefinitionTuple, SceneName } from "./scene.types";
 
@@ -15,14 +14,13 @@ import type { SceneDefinition, SceneDefinitionTuple, SceneName } from "./scene.t
  * - `engine.scene.current` - Get the active scene name
  * - `engine.scene.world` - Get the active scene's default world
  */
-export class SceneManager<TScenes extends SceneDefinitionTuple = []> extends ObservableState {
+export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
   static readonly DEFAULT_SCENE_NAME = "__default__" as const;
 
   #scenes: Map<string, SceneDefinition<string>> = new Map();
 
   #activeScene: SceneDefinition<string> | null = null;
   #activeSceneContext: SceneContext;
-  #activeSceneContextUnsubscribe: (() => void) | null = null;
 
   // Always points at the *active* world for the active scene (or the fallback world).
   // The active world is typically the scene default, but can be changed (e.g. spatial contexts).
@@ -39,12 +37,10 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> extends Obs
   #systemsManager: SystemsManager;
 
   constructor(scenes: SceneDefinitionTuple = [], systemsManager?: SystemsManager) {
-    super();
     this.#systemsManager = systemsManager ?? new SystemsManager({});
     this.#activeWorld = new World("__default__");
     this.#userWorld = new UserWorld(this.#activeWorld);
     this.#activeSceneContext = new SceneContext(SceneManager.DEFAULT_SCENE_NAME, this.#activeWorld);
-    this.#bindSceneContext(this.#activeSceneContext);
     this.#activeWorldId = this.#activeSceneContext.defaultWorldId;
 
     // Register all scenes and instantiate their scene-level systems (per engine instance)
@@ -53,13 +49,6 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> extends Obs
     }
 
     this.#systemsManager.registerSceneSystems(scenes);
-  }
-
-  #bindSceneContext(context: SceneContext): void {
-    this.#activeSceneContextUnsubscribe?.();
-    this.#activeSceneContextUnsubscribe = context.subscribe(() => {
-      this.notify();
-    });
   }
 
   /**
@@ -106,7 +95,6 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> extends Obs
     this.#activeWorldId = id;
     this.#activeWorld = internal;
     this.#userWorld.setWorld(internal);
-    this.notify();
   }
 
   /** Get the name of the currently active scene context. */
@@ -164,7 +152,6 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> extends Obs
     }
 
     this.#isTransitioning = true;
-    this.notify();
 
     try {
       if (this.#activeScene) {
@@ -174,7 +161,6 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> extends Obs
       await this.#setupScene(newScene);
     } finally {
       this.#isTransitioning = false;
-      this.notify();
     }
   }
 
@@ -188,7 +174,6 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> extends Obs
     if (this.#isTransitioning) return;
 
     this.#isTransitioning = true;
-    this.notify();
 
     try {
       const sceneToReload = this.#activeScene;
@@ -196,7 +181,6 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> extends Obs
       await this.#setupScene(sceneToReload);
     } finally {
       this.#isTransitioning = false;
-      this.notify();
     }
   }
 
@@ -215,10 +199,6 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> extends Obs
     existing.sceneTeardown = fresh.sceneTeardown;
 
     const isActiveDefinition = this.#activeScene?.name === fresh.name;
-
-    if (isActiveDefinition) {
-      this.notify();
-    }
 
     return isActiveDefinition;
   }
@@ -246,7 +226,6 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> extends Obs
 
     prevContext.clearAllWorlds();
     this.#activeScene = null;
-    this.notify();
   }
 
   async #setupScene(scene: SceneDefinition<string>): Promise<void> {
@@ -255,11 +234,9 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> extends Obs
 
     this.#activeScene = scene;
     this.#activeSceneContext = newContext;
-    this.#bindSceneContext(newContext);
     this.#activeWorldId = newContext.defaultWorldId;
     this.#activeWorld = newWorld;
     this.#userWorld.setWorld(newWorld);
-    this.notify();
 
     await executeWithContext({ engine: this.#engineRef, scene: newContext }, async () => {
       this.#systemsManager.initializeSceneSystems(scene.name);

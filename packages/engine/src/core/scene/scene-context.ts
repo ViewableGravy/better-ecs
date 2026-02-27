@@ -1,5 +1,4 @@
 import { UserWorld, World } from "../../ecs/world";
-import { ObservableState } from "../observable";
 
 const DEFAULT_WORLD_ID = "default" as const;
 
@@ -8,7 +7,7 @@ const DEFAULT_WORLD_ID = "default" as const;
  *
  * A scene owns one or more worlds. The engine guarantees a default world exists.
  */
-export class SceneContext<TName extends string = string> extends ObservableState {
+export class SceneContext<TName extends string = string> {
   readonly name: TName;
 
   readonly #defaultWorldId: string;
@@ -16,7 +15,6 @@ export class SceneContext<TName extends string = string> extends ObservableState
   readonly #userWorlds = new Map<string, UserWorld>();
 
   constructor(name: TName, defaultWorld: World, defaultWorldId: string = DEFAULT_WORLD_ID) {
-    super();
     this.name = name;
     this.#defaultWorldId = defaultWorldId;
 
@@ -83,13 +81,11 @@ export class SceneContext<TName extends string = string> extends ObservableState
     const wrapper = this.#userWorlds.get(id);
     if (wrapper) {
       wrapper.setWorld(world);
-      this.notify();
       return wrapper;
     }
 
     const newWrapper = new UserWorld(world);
     this.#userWorlds.set(id, newWrapper);
-    this.notify();
     return newWrapper;
   }
 
@@ -124,7 +120,6 @@ export class SceneContext<TName extends string = string> extends ObservableState
 
     this.#worlds.delete(id);
     this.#userWorlds.delete(id);
-    this.notify();
   }
 
   /**
@@ -141,7 +136,5 @@ export class SceneContext<TName extends string = string> extends ObservableState
         this.#userWorlds.delete(id);
       }
     }
-
-    this.notify();
   }
 }

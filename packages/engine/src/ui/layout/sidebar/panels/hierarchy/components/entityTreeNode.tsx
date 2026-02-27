@@ -13,7 +13,7 @@ import { Dropdown } from "@ui/layout/sidebar/worldViewer/dropdown";
 import { EntityRow } from "@ui/layout/sidebar/worldViewer/entityRow";
 import { EngineUiContext } from "@ui/utilities/engine-context";
 import { useInvariantContext } from "@ui/utilities/hooks/use-invariant-context";
-import { useCallback } from "react";
+import React, { useCallback } from "react";
 import { EntityTreeNodes } from "./entityTreeNodes";
 import { NodeComponents } from "./nodeComponents";
 
@@ -31,7 +31,7 @@ const EMPTY_COMPONENTS: ComponentTreeNode[] = [];
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
-export const EntityTreeNode: React.FC<EntityTreeNodeProps> = ({
+export const EntityTreeNode: React.FC<EntityTreeNodeProps> = React.memo(({
   depth,
   expandedEntityIds,
 }) => {
@@ -87,4 +87,4 @@ export const EntityTreeNode: React.FC<EntityTreeNodeProps> = ({
       </DebugHover>
     </li>
   );
-};
+});

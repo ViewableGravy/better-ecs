@@ -1,9 +1,8 @@
 import { Debug } from "@/components";
-import { EngineUiContext } from "@ui/utilities/engine-context";
-import { useEntitySelector } from "@ui/utilities/hooks/use-entity-selector";
-import { useInvariantContext } from "@ui/utilities/hooks/use-invariant-context";
 import styles from "@ui/layout/sidebar/styles.module.css";
 import { EntityIdContext, WorldIdContext } from "@ui/layout/sidebar/worldViewer/context";
+import { EngineUiContext } from "@ui/utilities/engine-context";
+import { useInvariantContext } from "@ui/utilities/hooks/use-invariant-context";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -22,9 +21,7 @@ export const DebugName: React.FC<DebugNameProps> = ({ className }) => {
   const entityId = useInvariantContext(EntityIdContext);
 
   const world = engine.scene.context.requireWorld(worldId);
-  const entityName = useEntitySelector(world, entityId, (currentWorld) => {
-    return currentWorld.get(entityId, Debug)?.name;
-  });
+  const entityName = world.get(entityId, Debug)?.name;
 
   /***** RENDER *****/
   return (

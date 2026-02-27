@@ -2,6 +2,7 @@ import type { ComponentTreeNode } from "@ui/layout/sidebar/panels/hierarchy/quer
 import styles from "@ui/layout/sidebar/styles.module.css";
 import { Dropdown } from "@ui/layout/sidebar/worldViewer/dropdown";
 import { EntityRow } from "@ui/layout/sidebar/worldViewer/entityRow";
+import React from "react";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -14,7 +15,7 @@ type NodeComponentsProps = {
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
-export const NodeComponents: React.FC<NodeComponentsProps> = ({ components, depth }) => {
+export const NodeComponents: React.FC<NodeComponentsProps> = React.memo(({ components, depth }) => {
   /***** RENDER *****/
   if (!components.length) {
     return null;
@@ -36,4 +37,4 @@ export const NodeComponents: React.FC<NodeComponentsProps> = ({ components, dept
       ))}
     </ul>
   );
-};
+});
