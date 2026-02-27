@@ -10,7 +10,7 @@ export const RenderWorldPass = createRenderPass("world-render")({
   execute({ world, queue, renderer, alpha, frameAllocator }) {
     queueSprites(world, queue, frameAllocator);
     queueShapes(world, queue, frameAllocator);
-    queueGizmos(world, queue, frameAllocator);
+    queueGizmos(world, renderer, queue, frameAllocator);
 
     sortCommands(queue);
     renderCommands(queue, renderer, alpha, frameAllocator);

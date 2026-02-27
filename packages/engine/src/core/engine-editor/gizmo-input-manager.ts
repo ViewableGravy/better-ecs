@@ -7,6 +7,7 @@ import {
   GIZMO_PLANE_HANDLE_SIZE_WORLD,
   GIZMO_RING_HIT_THICKNESS_WORLD,
   GIZMO_RING_RADIUS_WORLD,
+  GIZMO_ROTATE_RING_RADIUS_WORLD,
   GIZMO_SCALE_MIN_DISTANCE_WORLD,
   Transform2D,
   type GizmoHandle,
@@ -172,6 +173,12 @@ export class GizmoInputManager {
     event.preventDefault();
 
     if (this.#dragState) {
+      const world = this.#getWorld();
+      const gizmo = world.get(this.#dragState.entityId, Gizmo);
+      if (gizmo) {
+        gizmo.clearRotatePreview();
+      }
+
       this.#gizmo.setHoveredHandle(this.#dragState.entityId, null);
       this.#dragState = null;
     }
@@ -234,10 +241,21 @@ export class GizmoInputManager {
 
     if (this.#dragState.mode === "rotate") {
       const angle = Math.atan2(worldY - centerY, worldX - centerX);
-      const nextRotation = this.#dragState.startRotation + (angle - this.#dragState.startPointerAngle);
+      const rotationDelta = angle - this.#dragState.startPointerAngle;
+      const nextRotation = this.#dragState.startRotation + rotationDelta;
 
       transform.curr.rotation = nextRotation;
       transform.prev.rotation = nextRotation;
+
+      const gizmo = world.get(this.#dragState.entityId, Gizmo);
+      if (gizmo && gizmo.rotateStartDeltaX !== null && gizmo.rotateStartDeltaY !== null) {
+        const cosDelta = Math.cos(rotationDelta);
+        const sinDelta = Math.sin(rotationDelta);
+        gizmo.rotateCurrentDeltaX = gizmo.rotateStartDeltaX * cosDelta - gizmo.rotateStartDeltaY * sinDelta;
+        gizmo.rotateCurrentDeltaY = gizmo.rotateStartDeltaX * sinDelta + gizmo.rotateStartDeltaY * cosDelta;
+        gizmo.rotateAngleDelta = rotationDelta;
+      }
+
       this.#updateHoveredHandle(event);
       return;
     }
@@ -257,6 +275,12 @@ export class GizmoInputManager {
   #onMouseUp(event: EngineMouseEvent): void {
     if (!this.#dragState || event.pointerId !== this.#dragState.pointerId) {
       return;
+    }
+
+    const world = this.#getWorld();
+    const gizmo = world.get(this.#dragState.entityId, Gizmo);
+    if (gizmo) {
+      gizmo.clearRotatePreview();
     }
 
     this.#gizmo.setHoveredHandle(this.#dragState.entityId, null);
@@ -303,8 +327,9 @@ export class GizmoInputManager {
 
     const centerX = this.#SHARED_TRANSFORM2D.curr.pos.x;
     const centerY = this.#SHARED_TRANSFORM2D.curr.pos.y;
+    const worldRotation = this.#SHARED_TRANSFORM2D.curr.rotation;
 
-    const handle = this.#getHandleAtPoint(event.worldX, event.worldY, centerX, centerY);
+    const handle = this.#getHandleAtPoint(event.worldX, event.worldY, centerX, centerY, worldRotation);
     if (handle === "plane-xy") {
       this.#dragState = {
         mode: "move-plane",
@@ -321,11 +346,14 @@ export class GizmoInputManager {
     }
 
     if (handle === "axis-x") {
+      const axisX = Math.cos(worldRotation);
+      const axisY = Math.sin(worldRotation);
+
       this.#dragState = {
         mode: "move",
         entityId: gizmoEntityId,
-        axisX: 1,
-        axisY: 0,
+        axisX,
+        axisY,
         startEntityLocalX: transform.curr.pos.x,
         startEntityLocalY: transform.curr.pos.y,
         startPointerX: event.worldX,
@@ -338,11 +366,14 @@ export class GizmoInputManager {
     }
 
     if (handle === "axis-y") {
+      const axisX = Math.sin(worldRotation);
+      const axisY = -Math.cos(worldRotation);
+
       this.#dragState = {
         mode: "move",
         entityId: gizmoEntityId,
-        axisX: 0,
-        axisY: -1,
+        axisX,
+        axisY,
         startEntityLocalX: transform.curr.pos.x,
         startEntityLocalY: transform.curr.pos.y,
         startPointerX: event.worldX,
@@ -355,14 +386,23 @@ export class GizmoInputManager {
     }
 
     if (handle === "ring-rotate") {
+      const clickAngle = Math.atan2(event.worldY - centerY, event.worldX - centerX);
+      const startDeltaX = Math.cos(clickAngle) * GIZMO_ROTATE_RING_RADIUS_WORLD;
+      const startDeltaY = Math.sin(clickAngle) * GIZMO_ROTATE_RING_RADIUS_WORLD;
+
       this.#dragState = {
         mode: "rotate",
         entityId: gizmoEntityId,
         startRotation: transform.curr.rotation,
-        startPointerAngle: Math.atan2(event.worldY - centerY, event.worldX - centerX),
+        startPointerAngle: clickAngle,
         pointerId: event.pointerId,
       };
 
+      gizmo.rotateStartDeltaX = startDeltaX;
+      gizmo.rotateStartDeltaY = startDeltaY;
+      gizmo.rotateCurrentDeltaX = startDeltaX;
+      gizmo.rotateCurrentDeltaY = startDeltaY;
+      gizmo.rotateAngleDelta = 0;
       gizmo.hoveredHandle = "ring-rotate";
       return true;
     }
@@ -389,15 +429,25 @@ export class GizmoInputManager {
     worldY: number,
     centerX: number,
     centerY: number,
+    worldRotation: number,
   ): GizmoHandle | null {
     const axisLength = GIZMO_AXIS_LENGTH_WORLD;
     const axisHitThickness = GIZMO_AXIS_HIT_THICKNESS_WORLD;
-    const ringRadius = GIZMO_RING_RADIUS_WORLD;
+    const ringScaleRadius = GIZMO_RING_RADIUS_WORLD;
+    const ringRotateRadius = GIZMO_ROTATE_RING_RADIUS_WORLD;
     const ringHitThickness = GIZMO_RING_HIT_THICKNESS_WORLD;
     const planeHalfSize = GIZMO_PLANE_HANDLE_SIZE_WORLD * 0.5;
 
-    const planeCenterX = centerX + GIZMO_PLANE_HANDLE_OFFSET_X_WORLD;
-    const planeCenterY = centerY + GIZMO_PLANE_HANDLE_OFFSET_Y_WORLD;
+    const cosRotation = Math.cos(worldRotation);
+    const sinRotation = Math.sin(worldRotation);
+
+    const planeOffsetX =
+      GIZMO_PLANE_HANDLE_OFFSET_X_WORLD * cosRotation - GIZMO_PLANE_HANDLE_OFFSET_Y_WORLD * sinRotation;
+    const planeOffsetY =
+      GIZMO_PLANE_HANDLE_OFFSET_X_WORLD * sinRotation + GIZMO_PLANE_HANDLE_OFFSET_Y_WORLD * cosRotation;
+
+    const planeCenterX = centerX + planeOffsetX;
+    const planeCenterY = centerY + planeOffsetY;
     const planeMinX = planeCenterX - planeHalfSize;
     const planeMaxX = planeCenterX + planeHalfSize;
     const planeMinY = planeCenterY - planeHalfSize;
@@ -407,24 +457,42 @@ export class GizmoInputManager {
       return "plane-xy";
     }
 
-    const axisXDistance = distanceToSegment(worldX, worldY, centerX, centerY, centerX + axisLength, centerY);
+    const axisXDistance = distanceToSegment(
+      worldX,
+      worldY,
+      centerX,
+      centerY,
+      centerX + Math.cos(worldRotation) * axisLength,
+      centerY + Math.sin(worldRotation) * axisLength,
+    );
     if (axisXDistance <= axisHitThickness) {
       return "axis-x";
     }
 
-    const axisYDistance = distanceToSegment(worldX, worldY, centerX, centerY, centerX, centerY - axisLength);
+    const axisYDistance = distanceToSegment(
+      worldX,
+      worldY,
+      centerX,
+      centerY,
+      centerX + Math.sin(worldRotation) * axisLength,
+      centerY - Math.cos(worldRotation) * axisLength,
+    );
     if (axisYDistance <= axisHitThickness) {
       return "axis-y";
     }
 
-    const distanceFromCenter = Math.hypot(worldX - centerX, worldY - centerY);
-    if (Math.abs(distanceFromCenter - ringRadius) <= ringHitThickness) {
-      const deltaX = worldX - centerX;
-      const deltaY = worldY - centerY;
-      if (deltaX >= 0 && deltaY <= 0) {
-        return "ring-rotate";
-      }
+    const deltaX = worldX - centerX;
+    const deltaY = worldY - centerY;
+    const localDeltaX = deltaX * cosRotation + deltaY * sinRotation;
+    const localDeltaY = deltaX * sinRotation - deltaY * cosRotation;
+    const isRotateQuadrant = localDeltaX >= 0 && localDeltaY >= 0;
+    const distanceFromCenter = Math.hypot(deltaX, deltaY);
 
+    if (isRotateQuadrant && Math.abs(distanceFromCenter - ringRotateRadius) <= ringHitThickness) {
+      return "ring-rotate";
+    }
+
+    if (Math.abs(distanceFromCenter - ringScaleRadius) <= ringHitThickness) {
       return "ring-scale";
     }
 
