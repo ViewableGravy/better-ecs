@@ -2,6 +2,9 @@ import {
   Gizmo,
   GIZMO_AXIS_HIT_THICKNESS_WORLD,
   GIZMO_AXIS_LENGTH_WORLD,
+  GIZMO_PLANE_HANDLE_OFFSET_X_WORLD,
+  GIZMO_PLANE_HANDLE_OFFSET_Y_WORLD,
+  GIZMO_PLANE_HANDLE_SIZE_WORLD,
   GIZMO_RING_HIT_THICKNESS_WORLD,
   GIZMO_RING_RADIUS_WORLD,
   Transform2D,
@@ -29,6 +32,15 @@ type DragState =
       entityId: EntityId;
       axisX: number;
       axisY: number;
+      startEntityLocalX: number;
+      startEntityLocalY: number;
+      startPointerX: number;
+      startPointerY: number;
+      pointerId: number;
+    }
+  | {
+      mode: "move-plane";
+      entityId: EntityId;
       startEntityLocalX: number;
       startEntityLocalY: number;
       startPointerX: number;
@@ -191,6 +203,19 @@ export class GizmoInputManager {
       return;
     }
 
+    if (this.#dragState.mode === "move-plane") {
+      const deltaX = worldX - this.#dragState.startPointerX;
+      const deltaY = worldY - this.#dragState.startPointerY;
+
+      const nextX = this.#dragState.startEntityLocalX + deltaX;
+      const nextY = this.#dragState.startEntityLocalY + deltaY;
+
+      transform.curr.pos.set(nextX, nextY);
+      transform.prev.pos.set(nextX, nextY);
+      this.#updateHoveredHandle(event);
+      return;
+    }
+
     if (!resolveWorldTransform2D(world, this.#dragState.entityId, this.#SHARED_TRANSFORM2D)) {
       return;
     }
@@ -256,6 +281,21 @@ export class GizmoInputManager {
     const centerY = this.#SHARED_TRANSFORM2D.curr.pos.y;
 
     const handle = this.#getHandleAtPoint(event.worldX, event.worldY, centerX, centerY);
+    if (handle === "plane-xy") {
+      this.#dragState = {
+        mode: "move-plane",
+        entityId: gizmoEntityId,
+        startEntityLocalX: transform.curr.pos.x,
+        startEntityLocalY: transform.curr.pos.y,
+        startPointerX: event.worldX,
+        startPointerY: event.worldY,
+        pointerId: event.pointerId,
+      };
+
+      gizmo.hoveredHandle = "plane-xy";
+      return true;
+    }
+
     if (handle === "axis-x") {
       this.#dragState = {
         mode: "move",
@@ -316,6 +356,18 @@ export class GizmoInputManager {
     const axisHitThickness = GIZMO_AXIS_HIT_THICKNESS_WORLD;
     const ringRadius = GIZMO_RING_RADIUS_WORLD;
     const ringHitThickness = GIZMO_RING_HIT_THICKNESS_WORLD;
+    const planeHalfSize = GIZMO_PLANE_HANDLE_SIZE_WORLD * 0.5;
+
+    const planeCenterX = centerX + GIZMO_PLANE_HANDLE_OFFSET_X_WORLD;
+    const planeCenterY = centerY + GIZMO_PLANE_HANDLE_OFFSET_Y_WORLD;
+    const planeMinX = planeCenterX - planeHalfSize;
+    const planeMaxX = planeCenterX + planeHalfSize;
+    const planeMinY = planeCenterY - planeHalfSize;
+    const planeMaxY = planeCenterY + planeHalfSize;
+
+    if (worldX >= planeMinX && worldX <= planeMaxX && worldY >= planeMinY && worldY <= planeMaxY) {
+      return "plane-xy";
+    }
 
     const axisXDistance = distanceToSegment(worldX, worldY, centerX, centerY, centerX + axisLength, centerY);
     if (axisXDistance <= axisHitThickness) {

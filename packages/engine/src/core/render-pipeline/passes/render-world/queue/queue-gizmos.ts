@@ -2,6 +2,9 @@ import {
   Gizmo,
   GIZMO_ARROW_HEAD_WORLD,
   GIZMO_AXIS_LENGTH_WORLD,
+  GIZMO_PLANE_HANDLE_OFFSET_X_WORLD,
+  GIZMO_PLANE_HANDLE_OFFSET_Y_WORLD,
+  GIZMO_PLANE_HANDLE_SIZE_WORLD,
   GIZMO_RING_RADIUS_WORLD,
 } from "../../../../../components/gizmo";
 import { Color } from "../../../../../components/sprite";
@@ -29,6 +32,8 @@ const RING_STROKE = new Color(0.92, 0.92, 0.92, 1);
 const AXIS_RED_HOVER = new Color(1, 0.75, 0.35, 1);
 const AXIS_GREEN_HOVER = new Color(0.85, 1, 0.45, 1);
 const RING_STROKE_HOVER = new Color(1, 0.9, 0.45, 1);
+const PLANE_STROKE = new Color(0.95, 0.95, 0.95, 1);
+const PLANE_STROKE_HOVER = new Color(1, 0.9, 0.45, 1);
 
 const TRANSPARENT_FILL = new Color(0, 0, 0, 0);
 
@@ -86,7 +91,36 @@ export function queueGizmos(
       ringRadius,
       gizmo.hoveredHandle === "ring" ? RING_STROKE_HOVER : RING_STROKE,
     );
+
+    queuePlaneHandle(
+      queue,
+      frameAllocator,
+      centerX + GIZMO_PLANE_HANDLE_OFFSET_X_WORLD,
+      centerY + GIZMO_PLANE_HANDLE_OFFSET_Y_WORLD,
+      GIZMO_PLANE_HANDLE_SIZE_WORLD,
+      gizmo.hoveredHandle === "plane-xy" ? PLANE_STROKE_HOVER : PLANE_STROKE,
+    );
   }
+}
+
+function queuePlaneHandle(
+  queue: RenderQueue,
+  frameAllocator: InternalFrameAllocator<EngineFrameAllocatorRegistry>,
+  centerX: number,
+  centerY: number,
+  size: number,
+  stroke: Color,
+): void {
+  const halfSize = size * 0.5;
+  const minX = centerX - halfSize;
+  const maxX = centerX + halfSize;
+  const minY = centerY - halfSize;
+  const maxY = centerY + halfSize;
+
+  queueLine(queue, frameAllocator, minX, minY, maxX, minY, stroke);
+  queueLine(queue, frameAllocator, maxX, minY, maxX, maxY, stroke);
+  queueLine(queue, frameAllocator, maxX, maxY, minX, maxY, stroke);
+  queueLine(queue, frameAllocator, minX, maxY, minX, minY, stroke);
 }
 
 function queueAxis(
