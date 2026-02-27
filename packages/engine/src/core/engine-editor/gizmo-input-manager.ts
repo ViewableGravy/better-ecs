@@ -1,16 +1,20 @@
-import { Gizmo, Transform2D, type GizmoHandle } from "../../components";
+import {
+  Gizmo,
+  GIZMO_AXIS_HIT_THICKNESS_WORLD,
+  GIZMO_AXIS_LENGTH_WORLD,
+  GIZMO_RING_HIT_THICKNESS_WORLD,
+  GIZMO_RING_RADIUS_WORLD,
+  Transform2D,
+  type GizmoHandle,
+} from "../../components";
 import type { EntityId } from "../../ecs/entity";
 import { resolveWorldTransform2D } from "../../ecs/hierarchy";
 import type { UserWorld } from "../../ecs/world";
 import type { EngineCamera } from "../engine-camera";
-import type { EngineInput, EngineMouseEvent } from "../input";
+import type { EngineInput, EngineKeyboardEvent, EngineMouseEvent } from "../input";
 import { EngineEditorGizmoManager } from "./gizmo-manager";
 
 const PICK_RADIUS_PIXELS = 18;
-const AXIS_LENGTH_PIXELS = 48;
-const AXIS_HIT_THICKNESS_PIXELS = 14;
-const RING_RADIUS_PIXELS = 64;
-const RING_HIT_THICKNESS_PIXELS = 14;
 
 type GizmoInputManagerOptions = {
   input: EngineInput;
@@ -80,6 +84,10 @@ export class GizmoInputManager {
         event: "mouseCancel",
         callback: (event) => this.#onMouseUp(event),
       }),
+      this.#input.addEventListener({
+        event: { code: "Escape", modifiers: {} },
+        callback: (event: EngineKeyboardEvent) => this.#onEscape(event),
+      }),
     );
 
     this.#listening = true;
@@ -126,16 +134,28 @@ export class GizmoInputManager {
       return;
     }
 
-    if (!event.altKey) {
-      return;
-    }
-
     const nearestEntityId = event.entityAtPoint(PICK_RADIUS_PIXELS, this.#getWorld());
     if (nearestEntityId === null) {
+      this.#gizmo.clear();
       return;
     }
 
     this.#gizmo.create(nearestEntityId);
+  }
+
+  #onEscape(event: EngineKeyboardEvent): void {
+    if (this.#camera.mode !== "engine") {
+      return;
+    }
+
+    event.preventDefault();
+
+    if (this.#dragState) {
+      this.#gizmo.setHoveredHandle(this.#dragState.entityId, null);
+      this.#dragState = null;
+    }
+
+    this.#gizmo.clear();
   }
 
   #onMouseMove(event: EngineMouseEvent): void {
@@ -210,7 +230,6 @@ export class GizmoInputManager {
       event.worldY,
       this.#SHARED_TRANSFORM2D.curr.pos.x,
       this.#SHARED_TRANSFORM2D.curr.pos.y,
-      this.#camera.zoom,
     );
 
     this.#gizmo.setHoveredHandle(gizmoEntityId, handle);
@@ -236,7 +255,7 @@ export class GizmoInputManager {
     const centerX = this.#SHARED_TRANSFORM2D.curr.pos.x;
     const centerY = this.#SHARED_TRANSFORM2D.curr.pos.y;
 
-    const handle = this.#getHandleAtPoint(event.worldX, event.worldY, centerX, centerY, this.#camera.zoom);
+    const handle = this.#getHandleAtPoint(event.worldX, event.worldY, centerX, centerY);
     if (handle === "axis-x") {
       this.#dragState = {
         mode: "move",
@@ -292,12 +311,11 @@ export class GizmoInputManager {
     worldY: number,
     centerX: number,
     centerY: number,
-    cameraZoom: number,
   ): GizmoHandle | null {
-    const axisLength = AXIS_LENGTH_PIXELS / cameraZoom;
-    const axisHitThickness = AXIS_HIT_THICKNESS_PIXELS / cameraZoom;
-    const ringRadius = RING_RADIUS_PIXELS / cameraZoom;
-    const ringHitThickness = RING_HIT_THICKNESS_PIXELS / cameraZoom;
+    const axisLength = GIZMO_AXIS_LENGTH_WORLD;
+    const axisHitThickness = GIZMO_AXIS_HIT_THICKNESS_WORLD;
+    const ringRadius = GIZMO_RING_RADIUS_WORLD;
+    const ringHitThickness = GIZMO_RING_HIT_THICKNESS_WORLD;
 
     const axisXDistance = distanceToSegment(worldX, worldY, centerX, centerY, centerX + axisLength, centerY);
     if (axisXDistance <= axisHitThickness) {

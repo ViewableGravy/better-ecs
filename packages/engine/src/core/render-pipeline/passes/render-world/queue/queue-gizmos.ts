@@ -1,4 +1,9 @@
-import { Gizmo } from "../../../../../components/gizmo";
+import {
+  Gizmo,
+  GIZMO_ARROW_HEAD_WORLD,
+  GIZMO_AXIS_LENGTH_WORLD,
+  GIZMO_RING_RADIUS_WORLD,
+} from "../../../../../components/gizmo";
 import { Color } from "../../../../../components/sprite";
 import { Transform2D } from "../../../../../components/transform";
 import { resolveWorldTransform2D } from "../../../../../ecs/hierarchy";
@@ -7,7 +12,6 @@ import type {
   EngineFrameAllocatorRegistry,
   InternalFrameAllocator,
   RenderQueue,
-  Renderer,
   ShapeRenderData,
 } from "../../../../../render";
 
@@ -17,9 +21,6 @@ import type {
 const GIZMO_LAYER = 10_000;
 const GIZMO_Z_ORDER = 10_000;
 
-const AXIS_LENGTH_PIXELS = 48;
-const ARROW_HEAD_PIXELS = 12;
-const RING_RADIUS_PIXELS = 64;
 const RING_SEGMENTS = 48;
 
 const AXIS_RED = new Color(1, 0.25, 0.25, 1);
@@ -38,18 +39,12 @@ const SHARED_TRANSFORM = new Transform2D();
  **********************************************************************************************************/
 export function queueGizmos(
   world: UserWorld,
-  renderer: Renderer,
   queue: RenderQueue,
   frameAllocator: InternalFrameAllocator<EngineFrameAllocatorRegistry>,
 ): void {
-  const cameraZoom = renderer.getCameraZoom();
-  if (cameraZoom <= 0) {
-    return;
-  }
-
-  const axisLength = AXIS_LENGTH_PIXELS / cameraZoom;
-  const arrowHead = ARROW_HEAD_PIXELS / cameraZoom;
-  const ringRadius = RING_RADIUS_PIXELS / cameraZoom;
+  const axisLength = GIZMO_AXIS_LENGTH_WORLD;
+  const arrowHead = GIZMO_ARROW_HEAD_WORLD;
+  const ringRadius = GIZMO_RING_RADIUS_WORLD;
 
   for (const entityId of world.query(Gizmo, Transform2D)) {
     const gizmo = world.require(entityId, Gizmo);
