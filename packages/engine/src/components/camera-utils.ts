@@ -1,14 +1,12 @@
 import { Engine, fromContext } from "../context";
-import type { EntityId, UserWorld } from "../index";
+import type { EngineInputHost, EntityId, UserWorld } from "../index";
+import type { CameraView } from "../internal/utils";
+import { resolveActiveCameraViewFromEngine as resolveActiveCameraViewFromEngineInternal } from "../internal/utils";
 import type { Renderer } from "../render";
 import { Camera } from "./camera";
 import { Transform2D } from "./transform";
 
-export type CameraView = {
-  x: number;
-  y: number;
-  zoom: number;
-};
+export type { CameraView } from "../internal/utils";
 
 export type CameraSelection = {
   camera: Camera;
@@ -80,54 +78,12 @@ export function resolveCameraView(
   return cameraViewBuffer;
 }
 
-export function resolveActiveCameraView(
-  world: UserWorld,
-  cameraEntityId?: EntityId,
-): CameraView {
-  const engine = fromContext(Engine);
-  return resolveActiveCameraViewFromEngine(engine, world, cameraEntityId);
-}
-
 export function resolveActiveCameraViewFromEngine(
-  engine: {
-    canvas: HTMLCanvasElement;
-    editor: {
-      camera: {
-        mode: "world" | "engine";
-        x: number;
-        y: number;
-        zoom: number;
-      };
-    };
-  },
+  engine: EngineInputHost,
   world: UserWorld,
   cameraEntityId?: EntityId,
 ): CameraView {
-  const camera = engine.editor.camera;
-
-  if (camera.mode === "engine") {
-    cameraViewBuffer.x = camera.x;
-    cameraViewBuffer.y = camera.y;
-    cameraViewBuffer.zoom = camera.zoom > 0 ? camera.zoom : 1;
-    return cameraViewBuffer;
-  }
-
-  const selection = resolveCameraSelection(world, cameraEntityId);
-  if (!selection) {
-    cameraViewBuffer.x = 0;
-    cameraViewBuffer.y = 0;
-    cameraViewBuffer.zoom = 1;
-    return cameraViewBuffer;
-  }
-
-  const viewportHeight = engine.canvas.getBoundingClientRect().height;
-  const zoom = selection.camera.orthoSize > 0 ? viewportHeight / (selection.camera.orthoSize * 2) : 1;
-
-  cameraViewBuffer.x = selection.transform.curr.pos.x;
-  cameraViewBuffer.y = selection.transform.curr.pos.y;
-  cameraViewBuffer.zoom = zoom;
-
-  return cameraViewBuffer;
+  return resolveActiveCameraViewFromEngineInternal(engine, world, cameraEntityId);
 }
 
 export function applyActiveCameraToRenderer(

@@ -61,6 +61,11 @@ This is the single source of truth for agent behavior and coding conventions in 
 - Keep public APIs minimal and composable.
 - Remove files when all exports are removed (no empty placeholders).
 - Do not create unused helpers/functions.
+- Keep one class/component per file.
+  - If related classes/components must live together conceptually, create a folder named after the feature and split into focused files (for example `input/index.ts` + `input/mouse.ts`).
+- Prefer concrete named types over indirect `typeof`/`ReturnType<typeof ...>` extraction when a stable, importable type already exists.
+  - Example: prefer `Engine` over `ReturnType<typeof makeEngine>[0]`.
+  - Use `typeof`/`ReturnType` only when a concrete type is not reasonably importable (for example complex inferred unions/intersections).
 
 ## Performance guidance
 
@@ -115,6 +120,16 @@ This section is intentionally explicit to reduce drift.
 - Do not use `resolve*` for simple owner reads/getters.
   - If no derivation occurs, use `get*` (or `require*` for non-nullable access).
 - Avoid plain `resolve*` for APIs whose primary contract is “write into provided object”.
+
+### Utility layering (context vs engine vs bound)
+
+- Prefer a 3-layer utility shape for reusable runtime helpers:
+  1. **Context utils** (`@repo/engine/context-utils`) for userland/system calls that read engine from `fromContext(...)`.
+  2. **Internal engine-arg utils** (`@repo/engine/internal/utils`) that accept `engine` explicitly and do not read context.
+  3. **Bound engine utilities** (`engine.utils`) as thin instance adapters over internal engine-arg utils.
+- When adding new helper behavior, implement internal engine-arg utility first, then expose context/bound adapters as needed.
+- Context selector factories should use **PascalCase** naming and be consumed via `fromContext(...)`.
+  - Example: `fromContext(Engine)` and `fromContext(ActiveCameraView(world, cameraEntityId))`.
 
 For APIs with output destination arguments, standardize on the naming:
 

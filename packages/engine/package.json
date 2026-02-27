@@ -21,6 +21,14 @@
       "types": "./dist/src/components/index.d.ts",
       "default": "./dist/src/components/index.js"
     },
+    "./context-utils": {
+      "types": "./dist/src/context-utils/index.d.ts",
+      "default": "./dist/src/context-utils/index.js"
+    },
+    "./internal/utils": {
+      "types": "./dist/src/internal/utils/index.d.ts",
+      "default": "./dist/src/internal/utils/index.js"
+    },
     "./ecs/hierarchy": {
       "types": "./dist/src/ecs/hierarchy.d.ts",
       "default": "./dist/src/ecs/hierarchy.js"

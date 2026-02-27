@@ -3,6 +3,7 @@ export * from "./engine";
 export * from "./engine-camera";
 export * from "./engine-editor";
 export * from "./engine-types";
+export * from "./engine-utils";
 export * from "./factory";
 export * from "./input";
 export * from "./render-pipeline";
