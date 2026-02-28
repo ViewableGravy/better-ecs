@@ -1,30 +1,28 @@
 import {
-    Gizmo,
-    GIZMO_AXIS_HIT_THICKNESS_WORLD,
-    GIZMO_AXIS_LENGTH_WORLD,
-    GIZMO_PLANE_HANDLE_OFFSET_X_WORLD,
-    GIZMO_PLANE_HANDLE_OFFSET_Y_WORLD,
-    GIZMO_PLANE_HANDLE_SIZE_WORLD,
-    GIZMO_RING_HIT_THICKNESS_WORLD,
-    GIZMO_RING_RADIUS_WORLD,
-    GIZMO_ROTATE_RING_RADIUS_WORLD,
-    GIZMO_SCALE_MIN_DISTANCE_WORLD,
-    Transform2D,
-    type GizmoHandle,
+  Gizmo,
+  GIZMO_AXIS_HIT_THICKNESS_WORLD,
+  GIZMO_AXIS_LENGTH_WORLD,
+  GIZMO_PLANE_HANDLE_OFFSET_X_WORLD,
+  GIZMO_PLANE_HANDLE_OFFSET_Y_WORLD,
+  GIZMO_PLANE_HANDLE_SIZE_WORLD,
+  GIZMO_RING_HIT_THICKNESS_WORLD,
+  GIZMO_RING_RADIUS_WORLD,
+  GIZMO_ROTATE_RING_RADIUS_WORLD,
+  GIZMO_SCALE_MIN_DISTANCE_WORLD,
+  Transform2D,
+  type GizmoHandle,
 } from "@components";
+import { EngineEditorGizmoManager } from "@core/engine-editor/gizmo-manager";
+import type { EngineInput, EngineKeyboardEvent, EngineMouseEvent } from "@core/input";
 import type { EntityId } from "@ecs/entity";
 import { resolveWorldTransform2D } from "@ecs/hierarchy";
 import type { UserWorld } from "@ecs/world";
-import type { EngineCamera } from "@core/engine-camera";
-import type { EngineInput, EngineKeyboardEvent, EngineMouseEvent } from "@core/input";
-import { EngineEditorGizmoManager } from "@core/engine-editor/gizmo-manager";
 
 const PICK_RADIUS_PIXELS = 18;
 
 type GizmoInputManagerOptions = {
   input: EngineInput;
   getWorld: () => UserWorld;
-  camera: EngineCamera;
   gizmo: EngineEditorGizmoManager;
 };
 
@@ -68,7 +66,6 @@ type DragState =
 export class GizmoInputManager {
   readonly #input: EngineInput;
   readonly #getWorld: () => UserWorld;
-  readonly #camera: EngineCamera;
   readonly #gizmo: EngineEditorGizmoManager;
 
   readonly #SHARED_TRANSFORM2D = new Transform2D();
@@ -80,7 +77,6 @@ export class GizmoInputManager {
   public constructor(options: GizmoInputManagerOptions) {
     this.#input = options.input;
     this.#getWorld = options.getWorld;
-    this.#camera = options.camera;
     this.#gizmo = options.gizmo;
   }
 
@@ -148,10 +144,6 @@ export class GizmoInputManager {
       return;
     }
 
-    if (this.#camera.mode !== "engine") {
-      return;
-    }
-
     if (this.#tryBeginGizmoDrag(event)) {
       event.preventDefault();
       return;
@@ -167,10 +159,6 @@ export class GizmoInputManager {
   }
 
   #onEscape(event: EngineKeyboardEvent): void {
-    if (this.#camera.mode !== "engine") {
-      return;
-    }
-
     event.preventDefault();
 
     if (this.#dragState) {
@@ -189,10 +177,6 @@ export class GizmoInputManager {
   }
 
   #onMouseMove(event: EngineMouseEvent): void {
-    if (this.#camera.mode !== "engine") {
-      return;
-    }
-
     if (!this.#dragState || event.pointerId !== this.#dragState.pointerId) {
       this.#updateHoveredHandle(event);
       return;

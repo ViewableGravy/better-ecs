@@ -1,10 +1,10 @@
-import type { UserWorld } from "@ecs/world";
 import { EngineCamera } from "@core/engine-camera";
-import type { EngineInput } from "@core/input";
-import { createEngineRunningState, type EngineRunningState } from "@core/running-state";
 import { GizmoInputManager } from "@core/engine-editor/gizmo-input-manager";
 import { EngineEditorGizmoManager } from "@core/engine-editor/gizmo-manager";
 import { EngineEditorSelectionManager } from "@core/engine-editor/selection-manager";
+import type { EngineInput } from "@core/input";
+import { createEngineRunningState, type EngineRunningState } from "@core/running-state";
+import type { UserWorld } from "@ecs/world";
 
 type EngineEditorHost = {
   scene: {
@@ -56,7 +56,6 @@ export class EngineEditor {
     this.gizmoInput = new GizmoInputManager({
       input: this.#engine.input,
       getWorld: () => this.#engine.scene.world,
-      camera: this.camera,
       gizmo: this.gizmo,
     });
   }
