@@ -9,7 +9,7 @@ type Context = {
 };
 
 type LooseContext = {
-  engine: EngineClass<any, any, any> | null;
+  engine: EngineClass<any, any, any, any> | null;
   scene: SceneContext | null;
 };
 

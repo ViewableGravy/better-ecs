@@ -1,16 +1,41 @@
-import { AssetAdapter } from "./asset";
+import type { AssetAdapter, AssetType } from "./asset";
 
 type Assets = Record<string, unknown>;
 type AssetKey<TAssets extends Assets> = Extract<keyof TAssets, string>;
 type AssetState = "loading" | "error" | "ready";
 
+type AssetKeyForType<
+  TAssets extends Assets,
+  TAssetTypes extends Record<string, unknown>,
+  TType extends AssetType,
+> = {
+  [TKey in AssetKey<TAssets>]: TKey extends keyof TAssetTypes
+    ? TAssetTypes[TKey] extends TType
+      ? TKey
+      : never
+    : never;
+}[AssetKey<TAssets>];
+
+type LoadedAssetEntryForType<
+  TAssets extends Assets,
+  TAssetTypes extends Record<string, unknown>,
+  TType extends AssetType,
+> = {
+  [TKey in AssetKey<TAssets>]: TKey extends keyof TAssetTypes
+    ? TAssetTypes[TKey] extends TType
+      ? { key: TKey; asset: TAssets[TKey] }
+      : never
+    : never;
+}[AssetKey<TAssets>];
+
 export interface LooseAssetManager {
   getLoose(path: string): unknown;
   loadLoose(path: string): Promise<unknown>;
+  getLoadedByType(type: AssetType): ReadonlyArray<{ key: string; asset: unknown }>;
 }
 
 type Registry<TAssets extends Assets> = {
-  assets: { [K in AssetKey<TAssets>]?: AssetAdapter<TAssets[K]> };
+  assets: { [K in AssetKey<TAssets>]?: AssetAdapter<TAssets[K], AssetType> };
 };
 
 type AssetStorage<TAssets extends Assets> = {
@@ -21,7 +46,10 @@ type AssetRequests<TAssets extends Assets> = {
   [K in AssetKey<TAssets>]?: Promise<TAssets[K]>;
 };
 
-export class AssetManager<TAssets extends Assets = Assets> implements LooseAssetManager {
+export class AssetManager<
+  TAssets extends Assets = Assets,
+  TAssetTypes extends Record<string, unknown> = Record<string, AssetType>,
+> implements LooseAssetManager {
   /**
    * Internal storage for resolved assets.
    */
@@ -153,6 +181,38 @@ export class AssetManager<TAssets extends Assets = Assets> implements LooseAsset
     return this.load(path);
   }
 
+  getLoadedByType(type: AssetType): ReadonlyArray<{ key: string; asset: unknown }> {
+    const loaded: Array<{ key: string; asset: unknown }> = [];
+
+    for (const key in this.registry.assets) {
+      if (!Object.hasOwn(this.registry.assets, key)) {
+        continue;
+      }
+
+      if (!this.isRegisteredKey(key)) {
+        continue;
+      }
+
+      if (this.states[key] !== "ready") {
+        continue;
+      }
+
+      const adapter = this.registry.assets[key];
+      if (!adapter || adapter.type !== type) {
+        continue;
+      }
+
+      const asset = this.storage[key];
+      if (asset === undefined) {
+        continue;
+      }
+
+      loaded.push({ key, asset });
+    }
+
+    return loaded;
+  }
+
   public load<K extends AssetKey<TAssets>>(key: K): Promise<TAssets[K]> {
     const existing = this.requests[key];
 
@@ -199,5 +259,21 @@ export class AssetManager<TAssets extends Assets = Assets> implements LooseAsset
     this.requests[key] = promise;
 
     return promise;
+  }
+
+  public type<TType extends AssetType>(assetType: TType): {
+    get<K extends AssetKeyForType<TAssets, TAssetTypes, TType>>(key: K): TAssets[K] | undefined;
+    getStrict<K extends AssetKeyForType<TAssets, TAssetTypes, TType>>(key: K): TAssets[K];
+    load<K extends AssetKeyForType<TAssets, TAssetTypes, TType>>(key: K): Promise<TAssets[K]>;
+    getLoaded(): ReadonlyArray<LoadedAssetEntryForType<TAssets, TAssetTypes, TType>>;
+  } {
+    return {
+      get: (key) => this.get(key),
+      getStrict: (key) => this.getStrict(key),
+      load: (key) => this.load(key),
+      getLoaded: () => {
+        return this.getLoadedByType(assetType) as ReadonlyArray<LoadedAssetEntryForType<TAssets, TAssetTypes, TType>>;
+      },
+    };
   }
 }

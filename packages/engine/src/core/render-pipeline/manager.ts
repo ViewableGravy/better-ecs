@@ -7,8 +7,12 @@ export class RenderManager {
     this.#renderPipeline = renderPipeline;
   }
 
-  initialize(): void {
-    this.#renderPipeline?.initialize();
+  async initialize(): Promise<void> {
+    if (!this.#renderPipeline) {
+      return;
+    }
+
+    await this.#renderPipeline.initialize();
   }
 
   render(): void {

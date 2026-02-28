@@ -32,7 +32,7 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
   #isTransitioning = false;
 
   // Reference to engine for context execution
-  #engineRef: EngineClass<any, any, any> | null = null;
+  #engineRef: EngineClass<any, any, any, any> | null = null;
 
   #systemsManager: SystemsManager;
 
@@ -55,7 +55,7 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
    * Set the engine reference for context execution.
    * @internal
    */
-  setEngineRef(engine: EngineClass<any, any, any>): this {
+  setEngineRef(engine: EngineClass<any, any, any, any>): this {
     this.#engineRef = engine;
     return this;
   }

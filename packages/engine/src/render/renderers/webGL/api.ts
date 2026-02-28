@@ -1,9 +1,29 @@
+import invariant from "tiny-invariant";
+import type { ShaderSourceAsset } from "../../../asset";
+import type { LooseAssetManager } from "../../../asset/AssetManager";
 import { Color } from "../../../components/sprite";
-import type { ShapeRenderData, SpriteRenderData } from "../../types/low-level";
+import type { ShapeRenderData, SpriteRenderData, TexturedQuadRenderData } from "../../types/low-level";
 import type { RendererAPI } from "../../types/renderer-api";
 import { ShaderCompiler } from "./compiler";
 import { shapeDrawers, type ShapeDrawerContext, type Vec2 } from "./drawers";
+import { GPUTextureManager } from "./gpu-texture-manager";
 import { registry } from "./registry";
+
+interface TexturedShaderProgram {
+  program: WebGLProgram;
+  positionBuffer: WebGLBuffer;
+  uvBuffer: WebGLBuffer;
+  vertexArray: WebGLVertexArrayObject;
+  tintLocation: WebGLUniformLocation | null;
+  samplerLocation: WebGLUniformLocation | null;
+  timeLocation?: WebGLUniformLocation | null;
+}
+
+type ShaderSourceLike = {
+  type: "shader";
+  vertex: string;
+  fragment: string;
+};
 
 export class WebGLRenderAPI implements RendererAPI {
   #canvas: HTMLCanvasElement | null = null;
@@ -13,10 +33,16 @@ export class WebGLRenderAPI implements RendererAPI {
   #cameraY = 0;
   #cameraZoom = 1;
 
-  #textureCache = new WeakMap<object, WebGLTexture>();
+  #gpuTextureManager: GPUTextureManager | null = null;
   #shaderCompiler: ShaderCompiler | null = null;
+  #customTexturedShaders = new WeakMap<ShaderSourceAsset, TexturedShaderProgram>();
+  #assets: LooseAssetManager | null;
 
-  initialize(canvas: HTMLCanvasElement): void {
+  constructor(assets?: LooseAssetManager) {
+    this.#assets = assets ?? null;
+  }
+
+  async initialize(canvas: HTMLCanvasElement, assets: LooseAssetManager): Promise<void> {
     this.#canvas = canvas;
 
     const gl = canvas.getContext("webgl2", {
@@ -33,11 +59,17 @@ export class WebGLRenderAPI implements RendererAPI {
 
     this.#gl = gl;
     this.#shaderCompiler = new ShaderCompiler(gl);
+    this.#gpuTextureManager = new GPUTextureManager(gl);
+    this.#assets = this.#assets ?? assets;
 
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
     registry.initialize(gl, this.#shaderCompiler);
+
+    const assetManager = this.#assets;
+    invariant(assetManager, "Asset manager is not initialized");
+    this.#initializeCustomTexturedShaders(gl, assetManager);
   }
 
   beginFrame(): void {
@@ -84,16 +116,41 @@ export class WebGLRenderAPI implements RendererAPI {
   drawSprite(data: SpriteRenderData): void {
     const gl = this.#gl;
     const canvas = this.#canvas;
-    if (!gl || !canvas) {
-      return;
-    }
+
+    invariant(gl, "WebGL context is not initialized");
+    invariant(canvas, "Canvas element is not initialized");
 
     const spriteProgram = registry.get("sprite");
+    this.#drawTexturedQuadWithProgram(gl, data, spriteProgram);
+  }
 
-    const texture = this.#getOrCreateTexture(gl, data.image);
-    if (!texture) {
-      return;
-    }
+  drawTexturedQuad(data: TexturedQuadRenderData): void {
+    const gl = this.#gl;
+    const canvas = this.#canvas;
+    const customProgram = this.#customTexturedShaders.get(data.shader);
+
+    invariant(gl, "WebGL context is not initialized");
+    invariant(canvas, "Canvas element is not initialized");
+    invariant(customProgram, "Custom shader program not found for provided shader asset");
+
+    this.#drawTexturedQuadWithProgram(gl, data, customProgram);
+  }
+
+  #drawTexturedQuadWithProgram(
+    gl: WebGL2RenderingContext,
+    data: TexturedQuadRenderData | SpriteRenderData,
+    program: TexturedShaderProgram,
+  ): void {
+    const canvas = this.#canvas;
+    invariant(canvas, "Canvas element is not initialized");
+    const gpuTextureManager = this.#gpuTextureManager;
+    invariant(gpuTextureManager, "GPU texture manager is not initialized");
+
+    const image = "image" in data ? data.image : null;
+    const texture = image
+      ? gpuTextureManager.getOrCreateTexture(image)
+      : gpuTextureManager.getWhiteTexture();
+    invariant(texture, "Failed to create or retrieve texture");
 
     const width = data.width * Math.abs(data.scaleX) * this.#cameraZoom;
     const height = data.height * Math.abs(data.scaleY) * this.#cameraZoom;
@@ -101,8 +158,8 @@ export class WebGLRenderAPI implements RendererAPI {
     const center = this.#worldToScreen(data.x, data.y);
     const quad = this.#buildSpriteQuad(center, width, height, data.rotation, data.anchorX, data.anchorY, data.flipX, data.flipY, data.scaleX, data.scaleY);
 
-    const srcW = data.image.width > 0 ? data.image.width : 1;
-    const srcH = data.image.height > 0 ? data.image.height : 1;
+    const srcW = image ? (image.width > 0 ? image.width : 1) : 1;
+    const srcH = image ? (image.height > 0 ? image.height : 1) : 1;
     const frameWidth = data.sourceWidth > 0 ? data.sourceWidth : srcW;
     const frameHeight = data.sourceHeight > 0 ? data.sourceHeight : srcH;
 
@@ -118,29 +175,86 @@ export class WebGLRenderAPI implements RendererAPI {
       u1, v0,
     ]);
 
-    gl.useProgram(spriteProgram.program);
-    gl.bindVertexArray(spriteProgram.vertexArray);
+    gl.useProgram(program.program);
+    gl.bindVertexArray(program.vertexArray);
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, spriteProgram.positionBuffer);
+    gl.bindBuffer(gl.ARRAY_BUFFER, program.positionBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, quad, gl.DYNAMIC_DRAW);
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, spriteProgram.uvBuffer);
+    gl.bindBuffer(gl.ARRAY_BUFFER, program.uvBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, uv, gl.DYNAMIC_DRAW);
 
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, texture);
 
-    if (spriteProgram.samplerLocation) {
-      gl.uniform1i(spriteProgram.samplerLocation, 0);
+    if (program.samplerLocation) {
+      gl.uniform1i(program.samplerLocation, 0);
     }
 
-    if (spriteProgram.tintLocation) {
-      gl.uniform4f(spriteProgram.tintLocation, data.tint.r, data.tint.g, data.tint.b, data.tint.a);
+    if (program.tintLocation) {
+      gl.uniform4f(program.tintLocation, data.tint.r, data.tint.g, data.tint.b, data.tint.a);
+    }
+
+    if (program.timeLocation) {
+      gl.uniform1f(program.timeLocation, "time" in data ? data.time : 0);
     }
 
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
     gl.bindVertexArray(null);
+  }
+
+  #initializeCustomTexturedShaders(
+    gl: WebGL2RenderingContext,
+    assets: LooseAssetManager,
+  ): void {
+    const compiler = this.#shaderCompiler;
+    if (!compiler) {
+      return;
+    }
+
+    this.#customTexturedShaders = new WeakMap<ShaderSourceAsset, TexturedShaderProgram>();
+
+    for (const loaded of assets.getLoadedByType("shader")) {
+      if (!isShaderSourceAsset(loaded.asset)) {
+        throw new Error(`Loaded shader asset "${loaded.key}" is invalid.`);
+      }
+
+      const program = compiler.createProgram(
+        compiler.compile(gl.VERTEX_SHADER, loaded.asset.vertex, `${loaded.key}.vert`),
+        compiler.compile(gl.FRAGMENT_SHADER, loaded.asset.fragment, `${loaded.key}.frag`),
+      );
+
+      const positionBuffer = gl.createBuffer();
+      const uvBuffer = gl.createBuffer();
+      const vertexArray = gl.createVertexArray();
+
+      if (!positionBuffer || !uvBuffer || !vertexArray) {
+        throw new Error(`Failed to create GPU buffers for custom textured shader "${loaded.key}"`);
+      }
+
+      gl.bindVertexArray(vertexArray);
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+      gl.enableVertexAttribArray(0);
+      gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer);
+      gl.enableVertexAttribArray(1);
+      gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 0, 0);
+
+      gl.bindVertexArray(null);
+
+      this.#customTexturedShaders.set(loaded.asset, {
+        program,
+        positionBuffer,
+        uvBuffer,
+        vertexArray,
+        tintLocation: gl.getUniformLocation(program, "uTint"),
+        samplerLocation: gl.getUniformLocation(program, "uTexture"),
+        timeLocation: gl.getUniformLocation(program, "uTime"),
+      });
+    }
   }
 
   drawShape(data: ShapeRenderData): void {
@@ -281,31 +395,16 @@ export class WebGLRenderAPI implements RendererAPI {
     ]);
   }
 
-  #getOrCreateTexture(
-    gl: WebGL2RenderingContext,
-    source: HTMLImageElement | ImageBitmap | HTMLCanvasElement,
-  ): WebGLTexture | null {
-    const cacheKey = source as unknown as object;
-    const existing = this.#textureCache.get(cacheKey);
-    if (existing) {
-      return existing;
-    }
+}
 
-    const texture = gl.createTexture();
-    if (!texture) {
-      return null;
-    }
-
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
-
-    this.#textureCache.set(cacheKey, texture);
-    return texture;
+function isShaderSourceAsset(value: unknown): value is ShaderSourceLike {
+  if (typeof value !== "object" || value === null) {
+    return false;
   }
 
+  if (!("type" in value) || !("vertex" in value) || !("fragment" in value)) {
+    return false;
+  }
+
+  return value.type === "shader" && typeof value.vertex === "string" && typeof value.fragment === "string";
 }

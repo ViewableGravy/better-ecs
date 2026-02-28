@@ -9,8 +9,8 @@ import { executeWithContext } from "../context";
 import { EngineClass } from "../engine";
 import type { SceneDefinition, SceneDefinitionTuple, SceneName } from "../scene/scene.types";
 import {
-    executeSystemCleanup as runSystemCleanup,
-    executeSystemInitialize as runSystemInitialize,
+	executeSystemCleanup as runSystemCleanup,
+	executeSystemInitialize as runSystemInitialize,
 } from "../system";
 import type { EngineSystem, SystemFactoryTuple } from "../system/types";
 import type { CreateEngineOptions } from "./types";
@@ -19,7 +19,8 @@ export function createEngine<
 	TSystems extends SystemFactoryTuple,
 	TScenes extends SceneDefinitionTuple = [],
 	TAssets extends Record<string, unknown> = Record<string, unknown>,
->(opts: CreateEngineOptions<TSystems, TScenes, TAssets>): EngineClass<TSystems, TScenes, TAssets> {
+	TAssetTypes extends Record<string, unknown> = Record<string, unknown>,
+>(opts: CreateEngineOptions<TSystems, TScenes, TAssets, TAssetTypes>): EngineClass<TSystems, TScenes, TAssets, TAssetTypes> {
 	const systemsRecord: Record<string, EngineSystem<any>> = {};
 
 	const builtInSystems = [inputSystem, transformSnapshotSystem];
@@ -34,11 +35,11 @@ export function createEngine<
 	}
 
 	const scenes = opts.scenes ?? ([] as unknown as TScenes);
-	const assets = opts.assetLoader ?? new AssetManager<TAssets>();
+	const assets = opts.assetLoader ?? new AssetManager<TAssets, TAssetTypes>();
 	const rootElement = opts.rootElement ?? null;
 	const shouldBootstrapCanvasFromRoot = rootElement !== null;
 
-	const engine = new EngineClass<TSystems, TScenes, TAssets>(
+	const engine = new EngineClass<TSystems, TScenes, TAssets, TAssetTypes>(
 		systemsRecord,
 		scenes,
 		assets,

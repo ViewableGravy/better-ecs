@@ -1,8 +1,9 @@
+import type { LooseAssetManager } from "../../asset/AssetManager";
 import type { Color } from "../../components/sprite";
-import type { ShapeRenderData, SpriteRenderData } from "./low-level";
+import type { ShapeRenderData, SpriteRenderData, TexturedQuadRenderData } from "./low-level";
 
 export interface RendererAPI {
-  initialize(canvas: HTMLCanvasElement): void;
+  initialize(canvas: HTMLCanvasElement, assets: LooseAssetManager): Promise<void> | void;
 
   beginFrame(): void;
   endFrame(): void;
@@ -14,6 +15,7 @@ export interface RendererAPI {
   getCameraZoom(): number;
 
   drawSprite(data: SpriteRenderData): void;
+  drawTexturedQuad(data: TexturedQuadRenderData): void;
   drawShape(data: ShapeRenderData): void;
 
   getWidth(): number;

@@ -21,6 +21,7 @@ export class EngineClass<
 	TSystems extends SystemFactoryTuple,
 	TScenes extends SceneDefinitionTuple = [],
 	TAssets extends Record<string, unknown> = Record<string, unknown>,
+	TAssetTypes extends Record<string, unknown> = Record<string, unknown>,
 > {
 	#systemsManager: SystemsManager;
 	#systemsView: Record<string, EngineSystem<any>>;
@@ -40,7 +41,7 @@ export class EngineClass<
 	public constructor(
 		systems: Record<string, EngineSystem<any>>,
 		scenes: SceneDefinitionTuple = [],
-		public readonly assets: AssetManager<TAssets>,
+		public readonly assets: AssetManager<TAssets, TAssetTypes>,
 		public readonly render: RenderPipeline | null,
 		canvas: HTMLCanvasElement | null,
 		awaitCanvasBeforeStart = false,
@@ -108,7 +109,7 @@ export class EngineClass<
 
 			this.#systemsManager.initializeEngineSystems();
 
-			this.#renderManager.initialize();
+			await this.#renderManager.initialize();
 		});
 
 		this.#init.markInitialized();

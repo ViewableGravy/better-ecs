@@ -1,5 +1,5 @@
 import { Color } from "../../../components/sprite";
-import type { ShapeRenderData, SpriteRenderData } from "../../types/low-level";
+import type { ShapeRenderData, SpriteRenderData, TexturedQuadRenderData } from "../../types/low-level";
 import type { RendererAPI } from "../../types/renderer-api";
 
 /**
@@ -113,6 +113,32 @@ export class Canvas2DRenderAPI implements RendererAPI {
     );
 
     this.ctx.restore();
+  }
+
+  drawTexturedQuad(data: TexturedQuadRenderData): void {
+    if (!data.image) {
+      return;
+    }
+
+    this.drawSprite({
+      image: data.image,
+      x: data.x,
+      y: data.y,
+      width: data.width,
+      height: data.height,
+      rotation: data.rotation,
+      scaleX: data.scaleX,
+      scaleY: data.scaleY,
+      anchorX: data.anchorX,
+      anchorY: data.anchorY,
+      sourceX: data.sourceX,
+      sourceY: data.sourceY,
+      sourceWidth: data.sourceWidth,
+      sourceHeight: data.sourceHeight,
+      flipX: data.flipX,
+      flipY: data.flipY,
+      tint: data.tint,
+    });
   }
 
   drawShape(data: ShapeRenderData): void {

@@ -1,5 +1,6 @@
 import type { Color } from "../components/sprite";
-import type { ShapeRenderData, SpriteRenderData } from "./types/low-level";
+import type { LooseAssetManager } from "../asset/AssetManager";
+import type { ShapeRenderData, SpriteRenderData, TexturedQuadRenderData } from "./types/low-level";
 import type { RendererAPI } from "./types/renderer-api";
 
 export class RenderCommand {
@@ -9,8 +10,8 @@ export class RenderCommand {
     this.#rendererApi = rendererApi;
   }
 
-  initialize(canvas: HTMLCanvasElement): void {
-    this.#rendererApi.initialize(canvas);
+  initialize(canvas: HTMLCanvasElement, assets: LooseAssetManager): Promise<void> | void {
+    return this.#rendererApi.initialize(canvas, assets);
   }
 
   beginFrame(): void {
@@ -43,6 +44,10 @@ export class RenderCommand {
 
   drawSprite(data: SpriteRenderData): void {
     this.#rendererApi.drawSprite(data);
+  }
+
+  drawTexturedQuad(data: TexturedQuadRenderData): void {
+    this.#rendererApi.drawTexturedQuad(data);
   }
 
   drawShape(data: ShapeRenderData): void {

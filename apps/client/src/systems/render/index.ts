@@ -1,26 +1,26 @@
 import { FPSPass } from "@/plugins/fps";
 import { createRenderPipeline } from "@repo/engine";
-import { Assets, Engine, fromContext } from "@repo/engine/context";
 import {
-    DEFAULT_RENDERER_CONFIG,
-    FrameAllocator,
-    Renderer2D,
-    WebGLRenderAPI,
+  DEFAULT_RENDERER_CONFIG,
+  FrameAllocator,
+  Renderer2D,
+  WebGLRenderAPI,
 } from "@repo/engine/render";
 import { ApplyContextVisualsPass } from "./passes/ApplyContextVisualsPass";
+import { DrawCustomShaderQuadPass } from "./passes/DrawCustomShaderQuadPass";
 import { DrawGridPass } from "./passes/DrawGridPass";
 import { ActiveWorldProvider } from "./world-provider";
 
 export const Render = createRenderPipeline({
-  initializeContext() {
-    const { canvas } = fromContext(Engine);
+  async initializeContext({ canvas, assets }) {
+    await assets.loadLoose("editor:demo-quad-shader");
+
     const renderer = new Renderer2D(
-      new WebGLRenderAPI(),
+      new WebGLRenderAPI(assets),
       DEFAULT_RENDERER_CONFIG,
     );
 
-    const assets = fromContext(Assets);
-    renderer.initialize(canvas, assets);
+    await renderer.initialize(canvas, assets);
 
     return {
       renderer,
@@ -31,6 +31,7 @@ export const Render = createRenderPipeline({
   passes: [
     ApplyContextVisualsPass,
     DrawGridPass,
+    DrawCustomShaderQuadPass,
   ],
   afterWorldPasses: [
     FPSPass,

@@ -1,22 +1,28 @@
+import type { ShaderSourceAsset } from "../../asset";
 import type { LooseAssetManager } from "../../asset/AssetManager";
 import { Camera } from "../../components/camera";
 import { Shape } from "../../components/shape";
 import { Color, Sprite } from "../../components/sprite";
-import type { Transform2D } from "../../components/transform/transform2d";
+import type { Texture } from "../../components/texture";
+import type { ShaderTransform2D, Transform2D } from "../../components/transform";
 import { RenderCommand } from "../render-command";
 import { TextureCache } from "../textureCache/texture-cache";
 import type {
-  Renderable,
-  Renderer,
-  RendererConfig,
-  Settable,
-  ShapeRenderData,
-  SpriteRenderData,
+    Renderable,
+    Renderer,
+    RendererConfig,
+    Settable,
+    ShaderQuadOptions,
+    ShapeRenderData,
+    SpriteRenderData,
+    TexturedQuadDrawData,
+    TexturedQuadRenderData,
 } from "../types/renderer";
 import type { RendererAPI } from "../types/renderer-api";
 
 const FALLBACK_PENDING_COLOR = new Color(1, 0, 1, 0.4);
 const FALLBACK_ERROR_COLOR = new Color(1, 0, 0, 0.6);
+const DEFAULT_SHADER_QUAD_TINT = new Color(1, 1, 1, 1);
 
 const SHARED_SHAPE_DATA: ShapeRenderData = {
   type: "rectangle",
@@ -51,6 +57,7 @@ export class Renderer2D implements Renderer {
   readonly #showFallback: boolean;
 
   #sharedSpriteData: SpriteRenderData | undefined;
+  #sharedTexturedQuadData: TexturedQuadRenderData | undefined;
 
   public readonly config: RendererConfig;
   public readonly cache: TextureCache;
@@ -66,8 +73,8 @@ export class Renderer2D implements Renderer {
     });
   }
 
-  initialize(canvas: HTMLCanvasElement, assets: LooseAssetManager): void {
-    this.#command.initialize(canvas);
+  async initialize(canvas: HTMLCanvasElement, assets: LooseAssetManager): Promise<void> {
+    await this.#command.initialize(canvas, assets);
     this.cache.initialize(assets);
   }
 
@@ -109,6 +116,79 @@ export class Renderer2D implements Renderer {
 
   drawShape(data: ShapeRenderData): void {
     this.#command.drawShape(data);
+  }
+
+  drawTexturedQuad(data: TexturedQuadDrawData): void {
+    const image = data.texture ? this.#resolveTextureImage(data.texture) : null;
+    if (data.texture && !image) {
+      return;
+    }
+
+    const renderData = this.#sharedTexturedQuadData ?? (this.#sharedTexturedQuadData = {
+      shader: data.shader,
+      image,
+      x: 0,
+      y: 0,
+      width: 0,
+      height: 0,
+      rotation: 0,
+      scaleX: 1,
+      scaleY: 1,
+      anchorX: 0.5,
+      anchorY: 0.5,
+      sourceX: 0,
+      sourceY: 0,
+      sourceWidth: 0,
+      sourceHeight: 0,
+      flipX: false,
+      flipY: false,
+      tint: new Color(),
+      time: 0,
+    });
+
+    renderData.shader = data.shader;
+    renderData.image = image;
+    renderData.x = data.x;
+    renderData.y = data.y;
+    renderData.width = data.width;
+    renderData.height = data.height;
+    renderData.rotation = data.rotation;
+    renderData.scaleX = data.scaleX;
+    renderData.scaleY = data.scaleY;
+    renderData.anchorX = data.anchorX;
+    renderData.anchorY = data.anchorY;
+    renderData.sourceX = data.texture?.frameX ?? 0;
+    renderData.sourceY = data.texture?.frameY ?? 0;
+    renderData.sourceWidth = data.texture?.frameWidth ?? 0;
+    renderData.sourceHeight = data.texture?.frameHeight ?? 0;
+    renderData.flipX = false;
+    renderData.flipY = false;
+    renderData.tint = data.tint ?? DEFAULT_SHADER_QUAD_TINT;
+    renderData.time = data.time;
+
+    this.#command.drawTexturedQuad(renderData);
+  }
+
+  drawShaderQuad(
+    shader: ShaderSourceAsset,
+    transform: ShaderTransform2D,
+    options: ShaderQuadOptions = {},
+  ): void {
+    this.drawTexturedQuad({
+      shader,
+      texture: options.texture,
+      x: transform.curr.pos.x,
+      y: transform.curr.pos.y,
+      width: transform.width,
+      height: transform.height,
+      rotation: transform.curr.rotation,
+      scaleX: transform.curr.scale.x,
+      scaleY: transform.curr.scale.y,
+      anchorX: transform.anchorX,
+      anchorY: transform.anchorY,
+      tint: options.tint ?? DEFAULT_SHADER_QUAD_TINT,
+      time: options.time ?? 0,
+    });
   }
 
   setCamera(x: number, y: number, zoom: number): void {
@@ -242,6 +322,11 @@ export class Renderer2D implements Renderer {
     SHARED_FALLBACK_SHAPE_DATA.strokeWidth = 2;
 
     this.#command.drawShape(SHARED_FALLBACK_SHAPE_DATA);
+  }
+
+  #resolveTextureImage(texture: Texture): HTMLImageElement | ImageBitmap | HTMLCanvasElement | null {
+    const handle = this.cache.load(texture);
+    return this.cache.getImage(handle);
   }
 }
 

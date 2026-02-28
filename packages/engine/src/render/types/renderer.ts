@@ -1,17 +1,41 @@
+import type { ShaderSourceAsset } from "../../asset";
 import type { LooseAssetManager } from "../../asset/AssetManager";
 import type { Camera } from "../../components/camera";
 import type { Shape } from "../../components/shape";
 import type { Color, Sprite } from "../../components/sprite";
-import type { Transform2D } from "../../components/transform/transform2d";
+import type { Texture } from "../../components/texture";
+import type { ShaderTransform2D, Transform2D } from "../../components/transform";
 import type { TextureCache, TextureCacheConfig } from "../textureCache/texture-cache";
 import type { ShapeRenderData } from "./low-level";
 
 export { type TextureCacheConfig } from "../textureCache/texture-cache";
 export type { TextureHandle, TextureInfo, TextureState, TextureStatus } from "../textureCache/texture-cache";
-export type { ShapeRenderData, SpriteRenderData } from "./low-level";
+export type { ShapeRenderData, SpriteRenderData, TexturedQuadRenderData } from "./low-level";
 
 export type Renderable = Sprite | Shape;
 export type Settable = Camera;
+
+export interface ShaderQuadOptions {
+  texture?: Texture;
+  tint?: Color;
+  time?: number;
+}
+
+export interface TexturedQuadDrawData {
+  shader: ShaderSourceAsset;
+  texture?: Texture;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation: number;
+  scaleX: number;
+  scaleY: number;
+  anchorX: number;
+  anchorY: number;
+  tint?: Color;
+  time: number;
+}
 
 /**
  * Configuration for renderer behavior — combines cache and 2D renderer
@@ -24,7 +48,7 @@ export type RendererConfig = TextureCacheConfig & {
 const DEFAULT_RENDERER_CONFIG: RendererConfig = {
   textureUploadBudget: 4,
   showFallback: true,
-  warnOnLazyLoad: typeof process !== "undefined" ? process.env.NODE_ENV !== "production" : true,
+  warnOnLazyLoad: true,
 };
 
 export { DEFAULT_RENDERER_CONFIG };
@@ -38,7 +62,7 @@ export { DEFAULT_RENDERER_CONFIG };
  *   - `Renderer`      — 2D orchestration (camera, texture cache, renderables)
  */
 export interface Renderer {
-  initialize(canvas: HTMLCanvasElement, assets: LooseAssetManager): void;
+  initialize(canvas: HTMLCanvasElement, assets: LooseAssetManager): Promise<void>;
 
   begin(): void;
   end(): void;
@@ -48,6 +72,8 @@ export interface Renderer {
   set(value: Settable, transform: Transform2D, alpha: number): void;
 
   drawShape(data: ShapeRenderData): void;
+  drawTexturedQuad(data: TexturedQuadDrawData): void;
+  drawShaderQuad(shader: ShaderSourceAsset, transform: ShaderTransform2D, options?: ShaderQuadOptions): void;
 
   setCamera(x: number, y: number, zoom: number): void;
   getCameraX(): number;

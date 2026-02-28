@@ -7,13 +7,14 @@ export type CreateEngineOptions<
 	TSystems extends SystemFactoryTuple,
 	TScenes extends SceneDefinitionTuple,
 	TAssets extends Record<string, unknown>,
+	TAssetTypes extends Record<string, unknown> = Record<string, unknown>,
 > = {
 	rootElement?: HTMLElement | null;
 	systems: TSystems;
 	scenes?: TScenes;
 	initialScene?: SceneName<TScenes[number]>;
 	initialization?: EngineInitializationSystem;
-	assetLoader?: AssetManager<TAssets>;
+	assetLoader?: AssetManager<TAssets, TAssetTypes>;
 	render?: RenderPipeline;
 };
 

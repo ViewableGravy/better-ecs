@@ -1,12 +1,13 @@
+import type { LooseAssetManager } from "../../asset/AssetManager";
 import { Engine, fromContext } from "../../context";
 import type { UserWorld } from "../../ecs/world";
-import {
-    FrameAllocator,
-    type EngineFrameAllocatorRegistry,
-    type FrameAllocatorRegistry,
-    type InternalFrameAllocator,
-} from "../../render";
 import type { Renderer } from "../../render";
+import {
+	FrameAllocator,
+	type EngineFrameAllocatorRegistry,
+	type FrameAllocatorRegistry,
+	type InternalFrameAllocator,
+} from "../../render";
 import { RenderPipelineContext } from "./context";
 import type { RenderPass } from "./pass";
 import { BeginFramePass } from "./passes/begin-frame";
@@ -32,11 +33,18 @@ type CreateRenderPipelineContext<TState extends object> = {
 	state?: TState;
 };
 
+type InitializeRenderContextOptions = {
+	canvas: HTMLCanvasElement;
+	assets: LooseAssetManager;
+};
+
 type CreateRenderPipelineOptions<
 	TRegistry extends FrameAllocatorRegistry,
 	TState extends object,
 > = {
-	initializeContext: () => CreateRenderPipelineContext<TState>;
+	initializeContext: (
+		options: InitializeRenderContextOptions,
+	) => Promise<CreateRenderPipelineContext<TState>> | CreateRenderPipelineContext<TState>;
 	passes?: readonly RenderPass<TRegistry, TState>[];
 	beforeWorldPasses?: readonly RenderPass<TRegistry, TState>[];
 	afterWorldPasses?: readonly RenderPass<TRegistry, TState>[];
@@ -54,29 +62,52 @@ export function createRenderPipeline<
 	TState extends object = Record<string, never>,
 >(options: CreateRenderPipelineOptions<TRegistry, TState>): RenderPipeline {
 	let context: RenderPipelineContext<TRegistry, TState> | null = null;
+	let contextPromise: Promise<RenderPipelineContext<TRegistry, TState>> | null = null;
 
-	const getOrInitializeContext = (): RenderPipelineContext<TRegistry, TState> => {
+	const getOrInitializeContext = async (): Promise<RenderPipelineContext<TRegistry, TState>> => {
 		if (context) {
 			return context;
 		}
 
-		const initialized = options.initializeContext();
-		const frameAllocator =
-			(initialized.frameAllocator as InternalFrameAllocator<TRegistry> | undefined) ??
-			// The default path creates an engine allocator with built-in pools.
-			// This cast is isolated to the initialization boundary when user code omits a custom allocator.
-			(new FrameAllocator() as unknown as InternalFrameAllocator<TRegistry>);
-		const worldProvider = initialized.worldProvider ?? new DefaultWorldProvider();
+		if (contextPromise) {
+			return contextPromise;
+		}
 
-		context = new RenderPipelineContext({
-			renderer: initialized.renderer,
-			frameAllocator,
-			worldProvider,
-			// `state` defaults to an empty object and is optionally extended by user code.
-			// This cast is localized to the initialization boundary.
-			state: (initialized.state ?? {}) as TState,
-			world: fromContext(Engine).world,
+		const engine = fromContext(Engine);
+
+		contextPromise = Promise.resolve(
+			options.initializeContext({
+				canvas: engine.canvas,
+				assets: engine.assets,
+			}),
+		).then((initialized) => {
+			const frameAllocator =
+				(initialized.frameAllocator as InternalFrameAllocator<TRegistry> | undefined) ??
+				// The default path creates an engine allocator with built-in pools.
+				// This cast is isolated to the initialization boundary when user code omits a custom allocator.
+				(new FrameAllocator() as unknown as InternalFrameAllocator<TRegistry>);
+			const worldProvider = initialized.worldProvider ?? new DefaultWorldProvider();
+
+			context = new RenderPipelineContext({
+				renderer: initialized.renderer,
+				frameAllocator,
+				worldProvider,
+				// `state` defaults to an empty object and is optionally extended by user code.
+				// This cast is localized to the initialization boundary.
+				state: (initialized.state ?? {}) as TState,
+				world: fromContext(Engine).world,
+			});
+
+			return context;
 		});
+
+		return contextPromise;
+	};
+
+	const requireContext = (): RenderPipelineContext<TRegistry, TState> => {
+		if (!context) {
+			throw new Error("Render pipeline context is not initialized. Ensure initialize() is awaited before render().");
+		}
 
 		return context;
 	};
@@ -122,11 +153,11 @@ export function createRenderPipeline<
 		];
 
 	return {
-		initialize(): void {
-			getOrInitializeContext();
+		async initialize(): Promise<void> {
+			await getOrInitializeContext();
 		},
 		render(): void {
-			const passContext = getOrInitializeContext();
+			const passContext = requireContext();
 			const engine = fromContext(Engine);
 
 			// 1) Build interpolation alpha from the latest fixed-step update timing.

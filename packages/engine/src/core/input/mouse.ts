@@ -19,6 +19,7 @@ export type Point2D = {
 export type EngineInputHost = EngineClass<
   SystemFactoryTuple,
   SceneDefinitionTuple,
+  Record<string, unknown>,
   Record<string, unknown>
 >;
 

@@ -1,3 +1,4 @@
+import type { ShaderSourceAsset } from "../../asset";
 import type { Color } from "../../components/sprite";
 
 /**
@@ -21,6 +22,31 @@ export interface SpriteRenderData {
   flipX: boolean;
   flipY: boolean;
   tint: Color;
+}
+
+/**
+ * Data required to draw a textured quad with a custom shader.
+ */
+export interface TexturedQuadRenderData {
+  shader: ShaderSourceAsset;
+  image: HTMLImageElement | ImageBitmap | HTMLCanvasElement | null;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation: number;
+  scaleX: number;
+  scaleY: number;
+  anchorX: number;
+  anchorY: number;
+  sourceX: number;
+  sourceY: number;
+  sourceWidth: number;
+  sourceHeight: number;
+  flipX: boolean;
+  flipY: boolean;
+  tint: Color;
+  time: number;
 }
 
 /**

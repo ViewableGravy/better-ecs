@@ -7,6 +7,6 @@ export interface WorldProvider {
 }
 
 export interface RenderPipeline {
-	initialize(): void;
+	initialize(): Promise<void>;
 	render(): void;
 }
