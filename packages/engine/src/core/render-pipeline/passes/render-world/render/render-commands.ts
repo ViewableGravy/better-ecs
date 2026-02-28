@@ -1,4 +1,5 @@
-import { EditorHoverHighlight, Shape, Sprite } from "../../../../../components";
+import type { LooseAssetManager } from "../../../../../asset/AssetManager";
+import { EditorHoverHighlight, ShaderQuad, Shape, Sprite } from "../../../../../components";
 import { Color } from "../../../../../components/sprite";
 import { Transform2D } from "../../../../../components/transform";
 import { resolveWorldTransform2D } from "../../../../../ecs/hierarchy";
@@ -11,10 +12,12 @@ import type {
 
 const SHARED_RENDER_TRANSFORM = new Transform2D();
 const HOVER_TINT_COLOR = new Color(1, 1, 0, 1);
+const SHARED_HOVER_TINT = new Color(1, 1, 1, 1);
 
 export function renderCommands(
   queue: RenderQueue,
   renderer: Renderer,
+  assets: LooseAssetManager,
   alpha: number,
   frameAllocator: InternalFrameAllocator<EngineFrameAllocatorRegistry>,
 ): void {
@@ -61,6 +64,41 @@ export function renderCommands(
       sprite.tint.r = originalR;
       sprite.tint.g = originalG;
       sprite.tint.b = originalB;
+      continue;
+    }
+
+    if (command.type === "shader-entity") {
+      const shaderQuad = world.get(entityId, ShaderQuad);
+      if (!shaderQuad) {
+        continue;
+      }
+
+      const loadedShader = assets.getLoose(shaderQuad.assetId);
+      if (!isShaderSourceAsset(loadedShader)) {
+        continue;
+      }
+
+      const hoverHighlight = world.get(entityId, EditorHoverHighlight);
+      const tint = hoverHighlight
+        ? blendColor(shaderQuad.tint, HOVER_TINT_COLOR, hoverHighlight.amount)
+        : shaderQuad.tint;
+
+      renderer.drawTexturedQuad({
+        shader: loadedShader,
+        x: SHARED_RENDER_TRANSFORM.prev.pos.x +
+          (SHARED_RENDER_TRANSFORM.curr.pos.x - SHARED_RENDER_TRANSFORM.prev.pos.x) * alpha,
+        y: SHARED_RENDER_TRANSFORM.prev.pos.y +
+          (SHARED_RENDER_TRANSFORM.curr.pos.y - SHARED_RENDER_TRANSFORM.prev.pos.y) * alpha,
+        width: shaderQuad.width,
+        height: shaderQuad.height,
+        rotation: SHARED_RENDER_TRANSFORM.curr.rotation,
+        scaleX: SHARED_RENDER_TRANSFORM.curr.scale.x,
+        scaleY: SHARED_RENDER_TRANSFORM.curr.scale.y,
+        anchorX: shaderQuad.anchorX,
+        anchorY: shaderQuad.anchorY,
+        tint,
+        time: shaderQuad.useTime ? performance.now() : 0,
+      });
       continue;
     }
 
@@ -119,4 +157,36 @@ export function renderCommands(
 
 function blendChannel(base: number, tint: number, amount: number): number {
   return base + (tint - base) * amount;
+}
+
+function blendColor(base: Color, tint: Color, amount: number): Color {
+  const color = SHARED_HOVER_TINT;
+  color.r = blendChannel(base.r, tint.r, amount);
+  color.g = blendChannel(base.g, tint.g, amount);
+  color.b = blendChannel(base.b, tint.b, amount);
+  color.a = base.a;
+  return color;
+}
+
+function isShaderSourceAsset(asset: unknown): asset is { type: "shader"; vertex: string; fragment: string } {
+  if (!asset || typeof asset !== "object") {
+    return false;
+  }
+
+  const type = Reflect.get(asset, "type");
+  if (type !== "shader") {
+    return false;
+  }
+
+  const vertex = Reflect.get(asset, "vertex");
+  if (typeof vertex !== "string") {
+    return false;
+  }
+
+  const fragment = Reflect.get(asset, "fragment");
+  if (typeof fragment !== "string") {
+    return false;
+  }
+
+  return true;
 }

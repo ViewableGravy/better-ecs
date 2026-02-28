@@ -8,7 +8,6 @@ import {
   WebGLRenderAPI,
 } from "@repo/engine/render";
 import { ApplyContextVisualsPass } from "./passes/ApplyContextVisualsPass";
-import { DrawCustomShaderQuadPass } from "./passes/DrawCustomShaderQuadPass";
 import { DrawGridPass } from "./passes/DrawGridPass";
 import { ActiveWorldProvider } from "./world-provider";
 
@@ -37,7 +36,6 @@ export const Render = createRenderPipeline({
   passes: [
     ApplyContextVisualsPass,
     DrawGridPass,
-    DrawCustomShaderQuadPass,
   ],
   afterWorldPasses: [
     FPSPass,

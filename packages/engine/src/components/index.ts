@@ -4,6 +4,7 @@ export * from "./debug";
 export * from "./editor-hover-highlight";
 export * from "./gizmo";
 export * from "./hierarchy";
+export * from "./shader-quad";
 export * from "./shape";
 export * from "./sprite";
 export * from "./texture";

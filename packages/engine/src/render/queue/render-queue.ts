@@ -5,7 +5,7 @@ import type { ShapeRenderData } from "../types/low-level";
 /**
  * The kind of render command stored in {@link RenderQueue}.
  */
-export type RenderCommandType = "sprite-entity" | "shape-entity" | "shape-draw";
+export type RenderCommandType = "sprite-entity" | "shader-entity" | "shape-entity" | "shape-draw";
 
 /**
  * A single render command entry.

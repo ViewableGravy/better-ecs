@@ -2,6 +2,7 @@ import { Color } from "@repo/engine/components";
 import { defineContext, type ContextId } from "@repo/spatial-contexts";
 import { OUTSIDE } from "../components/render-visibility";
 import { spawnContextEntryRegion } from "../factories/spawnContextEntryRegion";
+import { spawnDemoShaderQuad } from "../factories/spawnDemoShaderQuad";
 import { spawnDoor } from "../factories/spawnDoor";
 import { spawnHouse } from "../factories/spawnHouse";
 import { spawnOreField } from "../factories/spawnOreField";
@@ -75,6 +76,11 @@ export function defineOverworldContext(options: OverworldContextOptions) {
       spawnTree(world, { x: 260, y: 170 });
       spawnTree(world, { x: 120, y: 250 });
       spawnTree(world, { x: -40, y: -270 });
+
+      spawnDemoShaderQuad(world, {
+        x: -500,
+        y: -96,
+      });
 
       spawnDoor(world, {
         x: 0,
