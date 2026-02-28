@@ -2,6 +2,7 @@ import * as Engine from "@repo/engine";
 import { Loader } from "./assets";
 import { FPSSystem } from "./plugins/fps";
 import { PhysicsDebugSystem } from "./plugins/physics";
+import { Render } from "./render";
 import { Scene as E2eScene } from "./scenes/e2e";
 import { Scene as MainScene } from "./scenes/world";
 import { System as Collision } from "./scenes/world/systems/scene-collision.system";
@@ -9,7 +10,6 @@ import { System as CameraFollow } from "./systems/camera-follow";
 import { System as CameraZoom } from "./systems/camera-zoom";
 import { System as Initialize } from "./systems/initialisation";
 import { System as Movement } from "./systems/movement";
-import { Render } from "./systems/render";
 import { System as TempAutoSavePlayerPosition } from "./systems/temp-auto-save";
 import { invariantById } from "./utilities/selectors";
 

@@ -1,6 +1,6 @@
 import { FPSPass } from "@/plugins/fps";
 import { createRenderPipeline, type CreateRenderPipelineContext } from "@repo/engine";
-import { Assets, Engine, fromContext } from "@repo/engine/context";
+import { fromContext, FromEngine } from "@repo/engine/context";
 import {
   DEFAULT_RENDERER_CONFIG,
   FrameAllocator,
@@ -14,8 +14,8 @@ import { ActiveWorldProvider } from "./world-provider";
 
 export const Render = createRenderPipeline({
   async initializeContext(): Promise<CreateRenderPipelineContext> {
-    const assets = fromContext(Assets);
-    const { canvas } = fromContext(Engine);
+    const assets = fromContext(FromEngine.Assets);
+    const { canvas } = fromContext(FromEngine.Engine);
 
     // load shaders used by render pass
     await assets.load("editor:demo-quad-shader");

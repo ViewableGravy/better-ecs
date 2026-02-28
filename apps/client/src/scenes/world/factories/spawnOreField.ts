@@ -1,4 +1,4 @@
-import { RENDER_LAYERS } from "@/render/layers";
+import { RENDER_LAYERS } from "@/consts";
 import { GRID_CELL_SIZE } from "@/scenes/world/systems/build-mode/const";
 import type { UserWorld } from "@repo/engine";
 import { Debug, Sprite, Transform2D } from "@repo/engine/components";
