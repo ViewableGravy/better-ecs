@@ -1,11 +1,14 @@
 import { ShaderQuad } from "../../../../../components";
+import { FromRender, fromContext } from "../../../../../context";
 import type { UserWorld } from "../../../../../ecs/world";
 import type { EngineFrameAllocatorRegistry, InternalFrameAllocator, RenderQueue } from "../../../../../render";
 
 export function queueShaderQuads(
-  world: UserWorld,
-  queue: RenderQueue,
-  frameAllocator: InternalFrameAllocator<EngineFrameAllocatorRegistry>,
+  world: UserWorld = fromContext(FromRender.World),
+  queue: RenderQueue = fromContext(FromRender.Queue),
+  frameAllocator: InternalFrameAllocator<EngineFrameAllocatorRegistry> = fromContext(
+    FromRender.FrameAllocator,
+  ),
 ): void {
   for (const id of world.query(ShaderQuad)) {
     const shaderQuad = world.require(id, ShaderQuad);

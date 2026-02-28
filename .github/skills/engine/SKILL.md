@@ -100,6 +100,17 @@ The engine exports several hooks to access context within a system's `Entrypoint
 - **Component Access**: `world.get(entityId, ComponentClass)` returns the component instance.
 - **Component Utilities**: Components often expose `curr` (current state) and `prev` (previous state) for interpolation usage in render systems.
 
+When iterating over `world.query(...)`, use `world.require(...)` for any component included in the query list.
+
+```typescript
+for (const entityId of world.query(ShaderQuad)) {
+  const shaderQuad = world.require(entityId, ShaderQuad);
+  // ...
+}
+```
+
+Use `world.get(...)` only for optional components that are not guaranteed by the query.
+
 ### 5. Leverage Core Systems
 
 The engine provides built-in systems often prefixed with `engine:`.

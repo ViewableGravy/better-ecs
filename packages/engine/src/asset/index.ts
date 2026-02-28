@@ -9,4 +9,5 @@ export {
   createLoadTexture
 } from "./loaders";
 export type { ShaderSourceAsset, SheetSprite } from "./loaders";
+export { isShaderSourceAsset } from "./utils";
 

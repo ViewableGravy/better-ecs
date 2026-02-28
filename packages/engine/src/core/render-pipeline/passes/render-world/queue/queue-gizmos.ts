@@ -12,6 +12,7 @@ import {
 } from "../../../../../components/gizmo";
 import { Color } from "../../../../../components/sprite";
 import { Transform2D } from "../../../../../components/transform";
+import { fromContext, FromRender } from "../../../../../context";
 import { resolveWorldTransform2D } from "../../../../../ecs/hierarchy";
 import type { UserWorld } from "../../../../../ecs/world";
 import type {
@@ -70,10 +71,12 @@ const SHARED_TRANSFORM = new Transform2D();
  *   COMPONENT START
  **********************************************************************************************************/
 export function queueGizmos(
-  world: UserWorld,
-  renderer: Pick<Renderer, "getCameraZoom">,
-  queue: RenderQueue,
-  frameAllocator: InternalFrameAllocator<EngineFrameAllocatorRegistry>,
+  world: UserWorld = fromContext(FromRender.World),
+  renderer: Pick<Renderer, "getCameraZoom"> = fromContext(FromRender.Renderer),
+  queue: RenderQueue = fromContext(FromRender.Queue),
+  frameAllocator: InternalFrameAllocator<EngineFrameAllocatorRegistry> = fromContext(
+    FromRender.FrameAllocator,
+  ),
 ): void {
   const cameraZoom = renderer.getCameraZoom();
   if (cameraZoom <= 0) {

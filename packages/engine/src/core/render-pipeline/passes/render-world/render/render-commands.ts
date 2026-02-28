@@ -1,7 +1,9 @@
 import type { LooseAssetManager } from "../../../../../asset/AssetManager";
+import { isShaderSourceAsset } from "../../../../../asset/utils";
 import { EditorHoverHighlight, ShaderQuad, Shape, Sprite } from "../../../../../components";
 import { Color } from "../../../../../components/sprite";
 import { Transform2D } from "../../../../../components/transform";
+import { fromContext, FromEngine, FromRender } from "../../../../../context";
 import { resolveWorldTransform2D } from "../../../../../ecs/hierarchy";
 import type {
   EngineFrameAllocatorRegistry,
@@ -15,11 +17,13 @@ const HOVER_TINT_COLOR = new Color(1, 1, 0, 1);
 const SHARED_HOVER_TINT = new Color(1, 1, 1, 1);
 
 export function renderCommands(
-  queue: RenderQueue,
-  renderer: Renderer,
-  assets: LooseAssetManager,
-  alpha: number,
-  frameAllocator: InternalFrameAllocator<EngineFrameAllocatorRegistry>,
+  queue: RenderQueue = fromContext(FromRender.Queue),
+  renderer: Renderer = fromContext(FromRender.Renderer),
+  assets: LooseAssetManager = fromContext(FromEngine.Assets),
+  alpha: number = fromContext(FromRender.Alpha),
+  frameAllocator: InternalFrameAllocator<EngineFrameAllocatorRegistry> = fromContext(
+    FromRender.FrameAllocator,
+  ),
 ): void {
   for (const command of queue.commands) {
     if (command.type === "shape-draw") {
@@ -168,25 +172,3 @@ function blendColor(base: Color, tint: Color, amount: number): Color {
   return color;
 }
 
-function isShaderSourceAsset(asset: unknown): asset is { type: "shader"; vertex: string; fragment: string } {
-  if (!asset || typeof asset !== "object") {
-    return false;
-  }
-
-  const type = Reflect.get(asset, "type");
-  if (type !== "shader") {
-    return false;
-  }
-
-  const vertex = Reflect.get(asset, "vertex");
-  if (typeof vertex !== "string") {
-    return false;
-  }
-
-  const fragment = Reflect.get(asset, "fragment");
-  if (typeof fragment !== "string") {
-    return false;
-  }
-
-  return true;
-}

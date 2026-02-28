@@ -1,6 +1,7 @@
 import invariant from "tiny-invariant";
 import type { ShaderSourceAsset } from "../../../asset";
 import type { LooseAssetManager } from "../../../asset/AssetManager";
+import { isShaderSourceAsset } from "../../../asset/utils";
 import { Color } from "../../../components/sprite";
 import type { ShapeRenderData, SpriteRenderData, TexturedQuadRenderData } from "../../types/low-level";
 import type { RendererAPI } from "../../types/renderer-api";
@@ -18,12 +19,6 @@ interface TexturedShaderProgram {
   samplerLocation: WebGLUniformLocation | null;
   timeLocation?: WebGLUniformLocation | null;
 }
-
-type ShaderSourceLike = {
-  type: "shader";
-  vertex: string;
-  fragment: string;
-};
 
 export class WebGLRenderAPI implements RendererAPI {
   #canvas: HTMLCanvasElement | null = null;
@@ -395,16 +390,4 @@ export class WebGLRenderAPI implements RendererAPI {
     ]);
   }
 
-}
-
-function isShaderSourceAsset(value: unknown): value is ShaderSourceLike {
-  if (typeof value !== "object" || value === null) {
-    return false;
-  }
-
-  if (!("type" in value) || !("vertex" in value) || !("fragment" in value)) {
-    return false;
-  }
-
-  return value.type === "shader" && typeof value.vertex === "string" && typeof value.fragment === "string";
 }
