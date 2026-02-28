@@ -21,9 +21,7 @@ export function renderCommands(
   renderer: Renderer = fromContext(FromRender.Renderer),
   assets: LooseAssetManager = fromContext(FromEngine.Assets),
   alpha: number = fromContext(FromRender.Alpha),
-  frameAllocator: InternalFrameAllocator<EngineFrameAllocatorRegistry> = fromContext(
-    FromRender.FrameAllocator,
-  ),
+  frameAllocator: InternalFrameAllocator<EngineFrameAllocatorRegistry> = fromContext(FromRender.FrameAllocator,),
 ): void {
   for (const command of queue.commands) {
     if (command.type === "shape-draw") {
