@@ -1,10 +1,10 @@
 import { Color } from "@components/sprite";
 import type {
-  CircleShapeRenderData,
-  DenseShapeRenderData,
-  ShapeRenderInput,
-  SpriteRenderData,
-  TexturedQuadRenderData,
+    CircleShapeRenderData,
+    DenseShapeRenderData,
+    ShapeRenderInput,
+    SpriteRenderData,
+    TexturedQuadRenderData,
 } from "@render/types/low-level";
 import type { RendererAPI } from "@render/types/renderer-api";
 

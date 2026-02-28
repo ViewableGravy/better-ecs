@@ -1,5 +1,5 @@
-import type { Color } from "@components/sprite";
 import type { LooseAssetManager } from "@assets/AssetManager";
+import type { Color } from "@components/sprite";
 import type { ShapeRenderInput, SpriteRenderData, TexturedQuadRenderData } from "@render/types/low-level";
 import type { RendererAPI } from "@render/types/renderer-api";
 

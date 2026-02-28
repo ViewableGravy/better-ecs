@@ -6,16 +6,16 @@ import type { Color, Sprite } from "@components/sprite";
 import type { Texture } from "@components/texture";
 import type { ShaderTransform2D, Transform2D } from "@components/transform";
 import type { TextureCache, TextureCacheConfig } from "@render/textureCache/texture-cache";
-import type { DenseShapeRenderData, ShapeRenderData, ShapeRenderInput } from "@render/types/low-level";
+import type { ShapeRenderInput } from "@render/types/low-level";
 
 export { type TextureCacheConfig } from "@render/textureCache/texture-cache";
 export type { TextureHandle, TextureInfo, TextureState, TextureStatus } from "@render/textureCache/texture-cache";
 export type {
-  DenseShapeRenderData,
-  ShapeRenderData,
-  ShapeRenderInput,
-  SpriteRenderData,
-  TexturedQuadRenderData,
+    DenseShapeRenderData,
+    ShapeRenderData,
+    ShapeRenderInput,
+    SpriteRenderData,
+    TexturedQuadRenderData
 } from "@render/types/low-level";
 
 export type Renderable = Sprite | Shape;

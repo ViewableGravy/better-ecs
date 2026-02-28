@@ -8,13 +8,13 @@ import type { ShaderTransform2D, Transform2D } from "@components/transform";
 import { RenderCommand } from "@render/render-command";
 import { TextureCache } from "@render/textureCache/texture-cache";
 import type {
-  DenseShapeRenderData,
+    DenseShapeRenderData,
     Renderable,
     Renderer,
     RendererConfig,
     Settable,
     ShaderQuadOptions,
-  ShapeRenderInput,
+    ShapeRenderInput,
     SpriteRenderData,
     TexturedQuadDrawData,
     TexturedQuadRenderData,
