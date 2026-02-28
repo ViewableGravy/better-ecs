@@ -1,5 +1,5 @@
-import type { inputSystem } from "./input";
-import type { transformSnapshotSystem } from "./transformSnapshot";
+import type { inputSystem } from "@/systems/input";
+import type { transformSnapshotSystem } from "@/systems/transformSnapshot";
 
 // --- Built-in Engine System Names ---
 /**

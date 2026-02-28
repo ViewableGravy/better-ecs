@@ -1,4 +1,4 @@
-export * from './shader-transform2d';
-export * from './transform2d';
-export * from './transform3d';
+export * from '@components/transform/shader-transform2d';
+export * from '@components/transform/transform2d';
+export * from '@components/transform/transform3d';
 

@@ -1,8 +1,8 @@
-import { Camera } from "../../components/camera";
-import { Transform2D } from "../../components/transform";
-import type { EngineInputHost, Point2D } from "../../core/input";
-import type { EntityId } from "../../ecs/entity";
-import type { UserWorld } from "../../ecs/world";
+import { Camera } from "@components/camera";
+import { Transform2D } from "@components/transform";
+import type { EngineInputHost, Point2D } from "@core/input";
+import type { EntityId } from "@ecs/entity";
+import type { UserWorld } from "@ecs/world";
 
 export type CameraView = {
   x: number;

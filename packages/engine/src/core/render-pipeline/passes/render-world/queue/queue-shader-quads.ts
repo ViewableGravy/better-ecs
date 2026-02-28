@@ -1,7 +1,7 @@
-import { ShaderQuad } from "../../../../../components";
-import { FromRender, fromContext } from "../../../../../context";
-import type { UserWorld } from "../../../../../ecs/world";
-import type { EngineFrameAllocatorRegistry, InternalFrameAllocator, RenderQueue } from "../../../../../render";
+import { ShaderQuad } from "@components";
+import { FromRender, fromContext } from "@context";
+import type { UserWorld } from "@ecs/world";
+import type { EngineFrameAllocatorRegistry, InternalFrameAllocator, RenderQueue } from "@render";
 
 export function queueShaderQuads(
   world: UserWorld = fromContext(FromRender.World),

@@ -1,4 +1,4 @@
-import type { RegisteredAssets } from "../core";
+import type { RegisteredAssets } from "@core";
 
 export class Color {
   constructor(

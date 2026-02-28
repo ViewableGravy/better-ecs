@@ -1,16 +1,16 @@
-import type { LooseAssetManager } from "../../../../../asset/AssetManager";
-import { isShaderSourceAsset } from "../../../../../asset/utils";
-import { EditorHoverHighlight, ShaderQuad, Shape, Sprite } from "../../../../../components";
-import { Color } from "../../../../../components/sprite";
-import { Transform2D } from "../../../../../components/transform";
-import { fromContext, FromEngine, FromRender } from "../../../../../context";
-import { resolveWorldTransform2D } from "../../../../../ecs/hierarchy";
+import type { LooseAssetManager } from "@assets/AssetManager";
+import { isShaderSourceAsset } from "@assets/utils";
+import { EditorHoverHighlight, ShaderQuad, Shape, Sprite } from "@components";
+import { Color } from "@components/sprite";
+import { Transform2D } from "@components/transform";
+import { fromContext, FromEngine, FromRender } from "@context";
+import { resolveWorldTransform2D } from "@ecs/hierarchy";
 import type {
   EngineFrameAllocatorRegistry,
   InternalFrameAllocator,
   Renderer,
   RenderQueue,
-} from "../../../../../render";
+} from "@render";
 
 const SHARED_RENDER_TRANSFORM = new Transform2D();
 const HOVER_TINT_COLOR = new Color(1, 1, 0, 1);

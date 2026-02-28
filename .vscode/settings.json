@@ -21,6 +21,12 @@
   "typescript.tsdk": "node_modules/typescript/lib",
   "typescript.preferences.importModuleSpecifier": "non-relative",
   "javascript.preferences.importModuleSpecifier": "non-relative",
+  "typescript.preferences.autoImportFileExcludePatterns": [
+    "**/packages/engine/dist/**"
+  ],
+  "javascript.preferences.autoImportFileExcludePatterns": [
+    "**/packages/engine/dist/**"
+  ],
   "vitest.disableWorkspaceWarning": true,
   "npm.packageManager": "bun",
   "chat.useAgentSkills": true,

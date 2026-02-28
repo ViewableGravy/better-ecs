@@ -1,7 +1,7 @@
 import { assertType } from 'vitest';
-import type { InputState } from '../input.types';
-import { createMatchKeybind } from './keybind';
-import type { KeyBind, KeyBindGroup, Match, MatchList } from './keybind.types';
+import type { InputState } from '@/systems/input/input.types';
+import { createMatchKeybind } from '@/systems/input/keybind/keybind';
+import type { KeyBind, KeyBindGroup, Match, MatchList } from '@/systems/input/keybind/keybind.types';
 
 declare const state: InputState;
 const matchKeybind = createMatchKeybind(state);

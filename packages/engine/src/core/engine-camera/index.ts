@@ -1,6 +1,6 @@
-import { Camera, Transform2D } from "../../components";
-import type { EntityId } from "../../ecs/entity";
-import type { UserWorld } from "../../ecs/world";
+import { Camera, Transform2D } from "@components";
+import type { EntityId } from "@ecs/entity";
+import type { UserWorld } from "@ecs/world";
 
 export type EngineCameraMode = "world" | "engine";
 

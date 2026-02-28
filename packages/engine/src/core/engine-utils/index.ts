@@ -1,7 +1,7 @@
-import type { EntityId } from "../../ecs/entity";
-import type { UserWorld } from "../../ecs/world";
-import { pointToWorldFromEngine, resolveActiveCameraViewFromEngine } from "../../internal/utils";
-import type { EngineInputHost, Point2D } from "../input";
+import type { EntityId } from "@ecs/entity";
+import type { UserWorld } from "@ecs/world";
+import { pointToWorldFromEngine, resolveActiveCameraViewFromEngine } from "@/internal/utils";
+import type { EngineInputHost, Point2D } from "@core/input";
 
 export class EngineUtils {
   readonly #engine: EngineInputHost;

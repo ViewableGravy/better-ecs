@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { AssetManager } from "./AssetManager";
-import { AssetAdapter } from "./asset";
+import { AssetManager } from "@assets/AssetManager";
+import { AssetAdapter } from "@assets/asset";
 
 describe("AssetManager", () => {
   it("should throw when getting non-existent asset strictly", () => {

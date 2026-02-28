@@ -11,13 +11,13 @@ import {
     GIZMO_SCALE_MIN_DISTANCE_WORLD,
     Transform2D,
     type GizmoHandle,
-} from "../../components";
-import type { EntityId } from "../../ecs/entity";
-import { resolveWorldTransform2D } from "../../ecs/hierarchy";
-import type { UserWorld } from "../../ecs/world";
-import type { EngineCamera } from "../engine-camera";
-import type { EngineInput, EngineKeyboardEvent, EngineMouseEvent } from "../input";
-import { EngineEditorGizmoManager } from "./gizmo-manager";
+} from "@components";
+import type { EntityId } from "@ecs/entity";
+import { resolveWorldTransform2D } from "@ecs/hierarchy";
+import type { UserWorld } from "@ecs/world";
+import type { EngineCamera } from "@core/engine-camera";
+import type { EngineInput, EngineKeyboardEvent, EngineMouseEvent } from "@core/input";
+import { EngineEditorGizmoManager } from "@core/engine-editor/gizmo-manager";
 
 const PICK_RADIUS_PIXELS = 18;
 

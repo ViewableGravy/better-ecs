@@ -3,8 +3,8 @@ import styles from "@ui/layout/components/styles.module.css";
 import { useInvariantContext } from "@ui/utilities/hooks/use-invariant-context";
 import classNames from "classnames";
 import { useRef, useState, type CSSProperties } from "react";
-import type { EngineEditorLayoutRootProps } from "../types";
-import { useHandleResize } from "./useHandleResize";
+import type { EngineEditorLayoutRootProps } from "@ui/layout/components/engineEditorLayout/types";
+import { useHandleResize } from "@ui/layout/components/engineEditorLayout/root/useHandleResize";
 
 /**********************************************************************************************************
  *   COMPONENT START

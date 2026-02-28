@@ -4,7 +4,7 @@ import { EngineUiContext } from "@ui/utilities/engine-context";
 import { useInvariantContext } from "@ui/utilities/hooks/use-invariant-context";
 import classNames from "classnames";
 import { useSnapshot } from "valtio";
-import type { RegionProps } from "../types";
+import type { RegionProps } from "@ui/layout/components/engineEditorLayout/types";
 
 /**********************************************************************************************************
  *   COMPONENT START

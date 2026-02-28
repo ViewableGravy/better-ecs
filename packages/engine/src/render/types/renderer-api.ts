@@ -1,6 +1,6 @@
-import type { LooseAssetManager } from "../../asset/AssetManager";
-import type { Color } from "../../components/sprite";
-import type { ShapeRenderData, SpriteRenderData, TexturedQuadRenderData } from "./low-level";
+import type { LooseAssetManager } from "@assets/AssetManager";
+import type { Color } from "@components/sprite";
+import type { ShapeRenderData, SpriteRenderData, TexturedQuadRenderData } from "@render/types/low-level";
 
 export interface RendererAPI {
   initialize(canvas: HTMLCanvasElement, assets: LooseAssetManager): Promise<void> | void;

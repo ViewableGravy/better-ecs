@@ -1,6 +1,6 @@
-import { Parent, Transform2D } from "../components";
-import type { EntityId } from "./entity";
-import type { IUserWorld } from "./world";
+import { Parent, Transform2D } from "@components";
+import type { EntityId } from "@ecs/entity";
+import type { IUserWorld } from "@ecs/world";
 
 const MAX_HIERARCHY_DEPTH = 64;
 const LOCAL_STACK: Array<Transform2D | undefined> = new Array(MAX_HIERARCHY_DEPTH);

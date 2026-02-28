@@ -1,12 +1,12 @@
-import { Engine, fromContext } from "../context";
-import type { EngineInputHost, EntityId, UserWorld } from "../index";
-import type { CameraView } from "../internal/utils";
-import { resolveActiveCameraViewFromEngine as resolveActiveCameraViewFromEngineInternal } from "../internal/utils";
-import type { Renderer } from "../render";
-import { Camera } from "./camera";
-import { Transform2D } from "./transform";
+import { Engine, fromContext } from "@context";
+import type { EngineInputHost, EntityId, UserWorld } from "@/index";
+import type { CameraView } from "@/internal/utils";
+import { resolveActiveCameraViewFromEngine as resolveActiveCameraViewFromEngineInternal } from "@/internal/utils";
+import type { Renderer } from "@render";
+import { Camera } from "@components/camera";
+import { Transform2D } from "@components/transform";
 
-export type { CameraView } from "../internal/utils";
+export type { CameraView } from "@/internal/utils";
 
 export type CameraSelection = {
   camera: Camera;

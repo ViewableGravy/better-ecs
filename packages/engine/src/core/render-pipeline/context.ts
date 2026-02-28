@@ -1,12 +1,12 @@
-import type { UserWorld } from "../../ecs/world";
-import type { Renderer } from "../../render";
+import type { UserWorld } from "@ecs/world";
+import type { Renderer } from "@render";
 import {
     RenderQueue,
     type EngineFrameAllocatorRegistry,
     type FrameAllocatorRegistry,
     type InternalFrameAllocator,
-} from "../../render";
-import type { WorldProvider } from "./types";
+} from "@render";
+import type { WorldProvider } from "@core/render-pipeline/types";
 
 export class RenderPipelineContext<
 	TRegistry extends FrameAllocatorRegistry = EngineFrameAllocatorRegistry,

@@ -1,7 +1,7 @@
-import type { Color } from "../components/sprite";
-import type { LooseAssetManager } from "../asset/AssetManager";
-import type { ShapeRenderData, SpriteRenderData, TexturedQuadRenderData } from "./types/low-level";
-import type { RendererAPI } from "./types/renderer-api";
+import type { Color } from "@components/sprite";
+import type { LooseAssetManager } from "@assets/AssetManager";
+import type { ShapeRenderData, SpriteRenderData, TexturedQuadRenderData } from "@render/types/low-level";
+import type { RendererAPI } from "@render/types/renderer-api";
 
 export class RenderCommand {
   readonly #rendererApi: RendererAPI;

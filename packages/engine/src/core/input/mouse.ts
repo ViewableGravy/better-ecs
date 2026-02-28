@@ -1,10 +1,10 @@
-import { Parent, Transform2D } from "../../components";
-import type { EntityId } from "../../ecs/entity";
-import { resolveWorldTransform2D } from "../../ecs/hierarchy";
-import type { UserWorld } from "../../ecs/world";
-import type { EngineClass } from "../engine";
-import type { SceneDefinitionTuple } from "../scene/scene.types";
-import type { SystemFactoryTuple } from "../system/types";
+import { Parent, Transform2D } from "@components";
+import type { EntityId } from "@ecs/entity";
+import { resolveWorldTransform2D } from "@ecs/hierarchy";
+import type { UserWorld } from "@ecs/world";
+import type { EngineClass } from "@core/engine";
+import type { SceneDefinitionTuple } from "@core/scene/scene.types";
+import type { SystemFactoryTuple } from "@core/system/types";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS

@@ -1,1 +1,1 @@
-export * from "./camera";
+export * from "@/internal/utils/camera";

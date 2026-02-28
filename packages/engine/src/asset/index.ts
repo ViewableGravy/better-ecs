@@ -1,5 +1,5 @@
-export type { AssetAdapter, AssetType } from "./asset";
-export { AssetManager } from "./AssetManager";
+export type { AssetAdapter, AssetType } from "@assets/asset";
+export { AssetManager } from "@assets/AssetManager";
 export {
   createAssetLoader,
   createLoadImage,
@@ -7,7 +7,7 @@ export {
   createLoadSheet,
   createLoadText,
   createLoadTexture
-} from "./loaders";
-export type { ShaderSourceAsset, SheetSprite } from "./loaders";
-export { isShaderSourceAsset } from "./utils";
+} from "@assets/loaders";
+export type { ShaderSourceAsset, SheetSprite } from "@assets/loaders";
+export { isShaderSourceAsset } from "@assets/utils";
 

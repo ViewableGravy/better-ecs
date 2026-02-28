@@ -1,6 +1,6 @@
-import type { Color } from "../../../../components/sprite";
-import type { ShapeRenderData } from "../../../types/low-level";
-import type { WebGLProgramRegistry } from "../registry";
+import type { Color } from "@components/sprite";
+import type { ShapeRenderData } from "@render/types/low-level";
+import type { WebGLProgramRegistry } from "@render/renderers/webGL/registry";
 
 export type Vec2 = { x: number; y: number };
 

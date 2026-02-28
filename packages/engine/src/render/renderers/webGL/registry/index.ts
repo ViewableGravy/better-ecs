@@ -1,7 +1,7 @@
-import { createProgramRegistry } from "./create";
-import { createCircleProgram } from "./programs/circle";
-import { createColorProgram } from "./programs/color";
-import { createSpriteProgram } from "./programs/sprite";
+import { createProgramRegistry } from "@render/renderers/webGL/registry/create";
+import { createCircleProgram } from "@render/renderers/webGL/registry/programs/circle";
+import { createColorProgram } from "@render/renderers/webGL/registry/programs/color";
+import { createSpriteProgram } from "@render/renderers/webGL/registry/programs/sprite";
 
 export const registry = createProgramRegistry({
   color: createColorProgram,

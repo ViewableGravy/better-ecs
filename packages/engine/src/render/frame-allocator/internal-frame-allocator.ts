@@ -1,5 +1,5 @@
 import { Pool } from "@repo/utils";
-import type { ActivePool, FrameAllocatorRegistry, PoolArgs, PoolValue } from "./types";
+import type { ActivePool, FrameAllocatorRegistry, PoolArgs, PoolValue } from "@render/frame-allocator/types";
 
 export class InternalFrameAllocator<TRegistry extends FrameAllocatorRegistry> {
   readonly #pools = new Map<keyof TRegistry, ActivePool>();

@@ -1,14 +1,14 @@
 import invariant from "tiny-invariant";
-import type { ShaderSourceAsset } from "../../../asset";
-import type { LooseAssetManager } from "../../../asset/AssetManager";
-import { isShaderSourceAsset } from "../../../asset/utils";
-import { Color } from "../../../components/sprite";
-import type { ShapeRenderData, SpriteRenderData, TexturedQuadRenderData } from "../../types/low-level";
-import type { RendererAPI } from "../../types/renderer-api";
-import { ShaderCompiler } from "./compiler";
-import { shapeDrawers, type ShapeDrawerContext, type Vec2 } from "./drawers";
-import { GPUTextureManager } from "./gpu-texture-manager";
-import { registry } from "./registry";
+import type { ShaderSourceAsset } from "@assets";
+import type { LooseAssetManager } from "@assets/AssetManager";
+import { isShaderSourceAsset } from "@assets/utils";
+import { Color } from "@components/sprite";
+import type { ShapeRenderData, SpriteRenderData, TexturedQuadRenderData } from "@render/types/low-level";
+import type { RendererAPI } from "@render/types/renderer-api";
+import { ShaderCompiler } from "@render/renderers/webGL/compiler";
+import { shapeDrawers, type ShapeDrawerContext, type Vec2 } from "@render/renderers/webGL/drawers";
+import { GPUTextureManager } from "@render/renderers/webGL/gpu-texture-manager";
+import { registry } from "@render/renderers/webGL/registry";
 
 interface TexturedShaderProgram {
   program: WebGLProgram;

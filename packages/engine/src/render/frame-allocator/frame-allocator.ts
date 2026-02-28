@@ -1,6 +1,6 @@
-import { engineFrameAllocatorRegistry, type EngineFrameAllocatorRegistry } from "./engine-registry";
-import { InternalFrameAllocator } from "./internal-frame-allocator";
-import type { FrameAllocatorRegistry, MergeFrameAllocatorRegistry } from "./types";
+import { engineFrameAllocatorRegistry, type EngineFrameAllocatorRegistry } from "@render/frame-allocator/engine-registry";
+import { InternalFrameAllocator } from "@render/frame-allocator/internal-frame-allocator";
+import type { FrameAllocatorRegistry, MergeFrameAllocatorRegistry } from "@render/frame-allocator/types";
 
 type UserRegistry = FrameAllocatorRegistry;
 

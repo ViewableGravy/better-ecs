@@ -1,10 +1,10 @@
-import type { ShapeRenderData } from "../../../types/low-level";
+import type { ShapeRenderData } from "@render/types/low-level";
 import type {
   ShapeDrawer,
   ShapeDrawerContext,
   ShapeDrawerMap,
   ShapeDrawerRegistry,
-} from "./types";
+} from "@render/renderers/webGL/drawers/types";
 
 export function createDrawer(drawer: ShapeDrawer): ShapeDrawer {
   return drawer;

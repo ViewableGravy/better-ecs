@@ -8,36 +8,36 @@ export type {
     TextureState,
     TextureStatus, TexturedQuadDrawData,
     TexturedQuadRenderData
-} from "./types/renderer";
+} from "@render/types/renderer";
 
-export { DEFAULT_RENDERER_CONFIG } from "./types/renderer";
-export type { Renderer } from "./types/renderer";
-export type { RendererAPI } from "./types/renderer-api";
+export { DEFAULT_RENDERER_CONFIG } from "@render/types/renderer";
+export type { Renderer } from "@render/types/renderer";
+export type { RendererAPI } from "@render/types/renderer-api";
 
 // ── Render layers ───────────────────────────────────────────────
-export { RenderCommand } from "./render-command";
-export { Renderer2D } from "./renderers/renderer2d";
+export { RenderCommand } from "@render/render-command";
+export { Renderer2D } from "@render/renderers/renderer2d";
 
 // ── Renderer API backends ───────────────────────────────────────
-export { Canvas2DRenderAPI } from "./renderers/canvas2d/canvas2d-renderer-api";
-export { WebGLRenderAPI } from "./renderers/webGL/api";
+export { Canvas2DRenderAPI } from "@render/renderers/canvas2d/canvas2d-renderer-api";
+export { WebGLRenderAPI } from "@render/renderers/webGL/api";
 
 // ── Texture cache ───────────────────────────────────────────────
-export { TextureCache } from "./textureCache/texture-cache";
+export { TextureCache } from "@render/textureCache/texture-cache";
 
 // ── Render queue ────────────────────────────────────────────────
-export { RenderQueue } from "./queue/render-queue";
+export { RenderQueue } from "@render/queue/render-queue";
 
 // ── Frame allocator ─────────────────────────────────────────────
-export { engineFrameAllocatorRegistry } from "./frame-allocator/engine-registry";
+export { engineFrameAllocatorRegistry } from "@render/frame-allocator/engine-registry";
 export type {
     EngineFrameAllocatorRegistry
-} from "./frame-allocator/engine-registry";
-export { FrameAllocator } from "./frame-allocator/frame-allocator";
-export { InternalFrameAllocator } from "./frame-allocator/internal-frame-allocator";
+} from "@render/frame-allocator/engine-registry";
+export { FrameAllocator } from "@render/frame-allocator/frame-allocator";
+export { InternalFrameAllocator } from "@render/frame-allocator/internal-frame-allocator";
 export type {
     FrameAllocatorRegistry,
     FramePoolFactory,
     MergeFrameAllocatorRegistry
-} from "./frame-allocator/types";
+} from "@render/frame-allocator/types";
 

@@ -1,4 +1,4 @@
-import type { ShaderCompiler } from "../compiler";
+import type { ShaderCompiler } from "@render/renderers/webGL/compiler";
 
 export interface BaseProgram {
   program: WebGLProgram;

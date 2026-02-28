@@ -1,4 +1,4 @@
-import type { AssetAdapter, AssetType } from "./asset";
+import type { AssetAdapter, AssetType } from "@assets/asset";
 
 type Assets = Record<string, unknown>;
 type AssetKey<TAssets extends Assets> = Extract<keyof TAssets, string>;

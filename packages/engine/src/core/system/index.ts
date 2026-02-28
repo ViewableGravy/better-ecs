@@ -1,11 +1,11 @@
-import type { InferStandardSchema, StandardSchema } from "../types";
+import type { InferStandardSchema, StandardSchema } from "@core/types";
 import {
   type EmptySystemSchema,
   type EngineInitializationSystem,
   type EngineSystem,
   type SystemFactory,
   type SystemOpts,
-} from "./types";
+} from "@core/system/types";
 
 const emptySystemSchema: EmptySystemSchema = {
 	"~standard": {
@@ -99,5 +99,5 @@ export type {
   SystemFactory,
   SystemFactoryTuple,
   SystemOpts
-} from "./types";
+} from "@core/system/types";
 

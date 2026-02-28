@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { Gizmo, Transform2D } from "../../../../../components";
-import { UserWorld, World } from "../../../../../ecs/world";
+import { Gizmo, Transform2D } from "@components";
+import { UserWorld, World } from "@ecs/world";
 import {
     engineFrameAllocatorRegistry,
     InternalFrameAllocator,
     RenderQueue,
     type Renderer,
-} from "../../../../../render";
-import { queueGizmos } from "./queue-gizmos";
+} from "@render";
+import { queueGizmos } from "@core/render-pipeline/passes/render-world/queue/queue-gizmos";
 
 function collectStrokeAlphas(queue: RenderQueue): number[] {
   const alphas: number[] = [];

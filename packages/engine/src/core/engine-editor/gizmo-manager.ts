@@ -1,7 +1,7 @@
 import invariant from "tiny-invariant";
-import { Gizmo, type GizmoHandle } from "../../components";
-import type { EntityId } from "../../ecs/entity";
-import type { UserWorld } from "../../ecs/world";
+import { Gizmo, type GizmoHandle } from "@components";
+import type { EntityId } from "@ecs/entity";
+import type { UserWorld } from "@ecs/world";
 
 type EngineEditorSceneContext = {
   worldEntries: IterableIterator<[string, UserWorld]>;

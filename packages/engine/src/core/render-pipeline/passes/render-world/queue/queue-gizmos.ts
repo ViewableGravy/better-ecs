@@ -9,19 +9,19 @@ import {
   GIZMO_ROTATE_RING_RADIUS_WORLD,
   GIZMO_SCALE_MIN_DISTANCE_WORLD,
   type GizmoHandle,
-} from "../../../../../components/gizmo";
-import { Color } from "../../../../../components/sprite";
-import { Transform2D } from "../../../../../components/transform";
-import { fromContext, FromRender } from "../../../../../context";
-import { resolveWorldTransform2D } from "../../../../../ecs/hierarchy";
-import type { UserWorld } from "../../../../../ecs/world";
+} from "@components/gizmo";
+import { Color } from "@components/sprite";
+import { Transform2D } from "@components/transform";
+import { fromContext, FromRender } from "@context";
+import { resolveWorldTransform2D } from "@ecs/hierarchy";
+import type { UserWorld } from "@ecs/world";
 import type {
   EngineFrameAllocatorRegistry,
   InternalFrameAllocator,
   Renderer,
   RenderQueue,
   ShapeRenderData,
-} from "../../../../../render";
+} from "@render";
 
 /**********************************************************************************************************
  *   CONSTS

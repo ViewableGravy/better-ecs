@@ -1,5 +1,5 @@
-import type { UserWorld } from "../../ecs/world";
-import { getEntityAtWorldPoint, type EntityAtPointOptions } from "../input/mouse";
+import type { UserWorld } from "@ecs/world";
+import { getEntityAtWorldPoint, type EntityAtPointOptions } from "@core/input/mouse";
 
 type EngineEditorSelectionManagerOptions = {
   getWorld: () => UserWorld;

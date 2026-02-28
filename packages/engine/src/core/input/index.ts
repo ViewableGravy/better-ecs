@@ -1,5 +1,5 @@
-import type { KeyBind } from "../../systems/input/keybind";
-import { EngineMouseEvent, type EngineInputHost, type EngineMouseEventName } from "./mouse";
+import type { KeyBind } from "@/systems/input/keybind";
+import { EngineMouseEvent, type EngineInputHost, type EngineMouseEventName } from "@core/input/mouse";
 
 export type EngineKeyboardEvent = {
   type: "key";
@@ -232,6 +232,6 @@ export class EngineInput {
   }
 }
 
-export { EngineMouseEvent, getEntityAtPoint } from "./mouse";
-export type { EngineInputHost, EngineMouseEventName, EntityAtPointOptions, Point2D } from "./mouse";
+export { EngineMouseEvent, getEntityAtPoint } from "@core/input/mouse";
+export type { EngineInputHost, EngineMouseEventName, EntityAtPointOptions, Point2D } from "@core/input/mouse";
 

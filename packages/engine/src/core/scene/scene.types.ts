@@ -1,7 +1,7 @@
 // packages/engine/src/core/scene/scene.types.ts
-import type { UserWorld } from "../../ecs/world";
-import type { SystemFactoryTuple } from "../system";
-import type { SceneContext } from "./scene-context";
+import type { UserWorld } from "@ecs/world";
+import type { SystemFactoryTuple } from "@core/system";
+import type { SceneContext } from "@core/scene/scene-context";
 
 /**
  * Internal symbol used to identify scene definitions.

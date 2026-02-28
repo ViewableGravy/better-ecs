@@ -1,6 +1,6 @@
 import { expectTypeOf } from "vitest";
-import { createAssetLoader, type AssetAdapter, type ShaderSourceAsset } from "../../asset";
-import { createEngine } from "../../core";
+import { createAssetLoader, type AssetAdapter, type ShaderSourceAsset } from "@assets";
+import { createEngine } from "@core";
 
 const shaderAdapter: AssetAdapter<ShaderSourceAsset, "shader"> = {
   type: "shader",

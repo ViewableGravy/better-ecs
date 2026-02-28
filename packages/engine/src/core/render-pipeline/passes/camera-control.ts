@@ -1,6 +1,6 @@
-import { applyActiveCameraToRenderer } from "../../../components/camera-utils";
-import { FromRender, fromContext } from "../../../context";
-import { createRenderPass } from "../pass";
+import { applyActiveCameraToRenderer } from "@components/camera-utils";
+import { FromRender, fromContext } from "@context";
+import { createRenderPass } from "@core/render-pipeline/pass";
 
 export const CameraControlPass = createRenderPass("camera-control")({
   scope: "world",

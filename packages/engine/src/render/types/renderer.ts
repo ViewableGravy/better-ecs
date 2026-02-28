@@ -1,16 +1,16 @@
-import type { ShaderSourceAsset } from "../../asset";
-import type { LooseAssetManager } from "../../asset/AssetManager";
-import type { Camera } from "../../components/camera";
-import type { Shape } from "../../components/shape";
-import type { Color, Sprite } from "../../components/sprite";
-import type { Texture } from "../../components/texture";
-import type { ShaderTransform2D, Transform2D } from "../../components/transform";
-import type { TextureCache, TextureCacheConfig } from "../textureCache/texture-cache";
-import type { ShapeRenderData } from "./low-level";
+import type { ShaderSourceAsset } from "@assets";
+import type { LooseAssetManager } from "@assets/AssetManager";
+import type { Camera } from "@components/camera";
+import type { Shape } from "@components/shape";
+import type { Color, Sprite } from "@components/sprite";
+import type { Texture } from "@components/texture";
+import type { ShaderTransform2D, Transform2D } from "@components/transform";
+import type { TextureCache, TextureCacheConfig } from "@render/textureCache/texture-cache";
+import type { ShapeRenderData } from "@render/types/low-level";
 
-export { type TextureCacheConfig } from "../textureCache/texture-cache";
-export type { TextureHandle, TextureInfo, TextureState, TextureStatus } from "../textureCache/texture-cache";
-export type { ShapeRenderData, SpriteRenderData, TexturedQuadRenderData } from "./low-level";
+export { type TextureCacheConfig } from "@render/textureCache/texture-cache";
+export type { TextureHandle, TextureInfo, TextureState, TextureStatus } from "@render/textureCache/texture-cache";
+export type { ShapeRenderData, SpriteRenderData, TexturedQuadRenderData } from "@render/types/low-level";
 
 export type Renderable = Sprite | Shape;
 export type Settable = Camera;

@@ -1,6 +1,6 @@
-import type { EngineClass } from "./engine";
-import type { RegisteredEngine } from "./engine-types";
-import type { SceneContext } from "./scene/scene-context";
+import type { EngineClass } from "@core/engine";
+import type { RegisteredEngine } from "@core/engine-types";
+import type { SceneContext } from "@core/scene/scene-context";
 
 /***** TYPE DEFINITIONS *****/
 type Context = {

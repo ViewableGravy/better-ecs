@@ -1,7 +1,7 @@
-import { AssetManager } from "../../asset/AssetManager";
-import type { RenderPipeline } from "../render-pipeline";
-import type { SceneDefinitionTuple, SceneName } from "../scene/scene.types";
-import type { EngineInitializationSystem, SystemFactoryTuple } from "../system/types";
+import { AssetManager } from "@assets/AssetManager";
+import type { RenderPipeline } from "@core/render-pipeline";
+import type { SceneDefinitionTuple, SceneName } from "@core/scene/scene.types";
+import type { EngineInitializationSystem, SystemFactoryTuple } from "@core/system/types";
 
 export type CreateEngineOptions<
 	TSystems extends SystemFactoryTuple,

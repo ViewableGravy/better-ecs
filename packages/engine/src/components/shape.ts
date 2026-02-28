@@ -1,4 +1,4 @@
-import { Color } from "./sprite";
+import { Color } from "@components/sprite";
 
 export type ShapeType = "rectangle" | "circle" | "line";
 

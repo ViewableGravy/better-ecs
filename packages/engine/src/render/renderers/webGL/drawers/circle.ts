@@ -1,5 +1,5 @@
-import { createDrawer } from "./create";
-import { buildCircleQuadVertices } from "./geometry";
+import { createDrawer } from "@render/renderers/webGL/drawers/create";
+import { buildCircleQuadVertices } from "@render/renderers/webGL/drawers/geometry";
 
 const CIRCLE_UV = new Float32Array([
   0, 1,

@@ -1,8 +1,8 @@
 import { EventPool } from "@repo/utils";
-import { fromContext, OverrideSystem } from "../../context";
-import { createSystem, type EngineSystem } from "../../core/system";
-import { InputStateSchema } from "./input.types";
-import { createMatchKeybind } from "./keybind/keybind";
+import { fromContext, OverrideSystem } from "@context";
+import { createSystem, type EngineSystem } from "@core/system";
+import { InputStateSchema } from "@/systems/input/input.types";
+import { createMatchKeybind } from "@/systems/input/keybind/keybind";
 
 /***** SYSTEM START *****/
 export const inputSystem = createSystem("engine:input")({

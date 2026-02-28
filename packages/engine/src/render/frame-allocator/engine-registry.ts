@@ -1,7 +1,7 @@
-import { Color } from "../../components/sprite";
-import type { ShapeRenderData } from "../types/low-level";
-import type { RenderCommand } from "../queue/render-queue";
-import type { FramePoolFactory } from "./types";
+import { Color } from "@components/sprite";
+import type { ShapeRenderData } from "@render/types/low-level";
+import type { RenderCommand } from "@render/queue/render-queue";
+import type { FramePoolFactory } from "@render/frame-allocator/types";
 
 type ShapeCommandFactory = FramePoolFactory<ShapeRenderData, readonly []>;
 type NumberArrayFactory = FramePoolFactory<number[], readonly []>;

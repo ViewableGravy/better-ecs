@@ -1,6 +1,6 @@
-import { Color } from "../../../components/sprite";
-import { fromContext, FromRender } from "../../../context";
-import { createRenderPass } from "../pass";
+import { Color } from "@components/sprite";
+import { fromContext, FromRender } from "@context";
+import { createRenderPass } from "@core/render-pipeline/pass";
 
 const DEFAULT_CLEAR_COLOR = new Color(0.1, 0.1, 0.15, 1);
 

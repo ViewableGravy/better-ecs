@@ -51,7 +51,7 @@
     }
   },
   "scripts": {
-    "build": "npx tsc -p tsconfig.lib.json && bun x vite build --config vite.config.ts",
+    "build": "npx tsc -p tsconfig.lib.json && bun x tsc-alias -p tsconfig.lib.json && bun x vite build --config vite.config.ts",
     "clean": "rm -rf dist tsconfig.lib.tsbuildinfo",
     "lint": "bun x eslint .",
     "typecheck": "npx tsc --noEmit",
@@ -71,9 +71,10 @@
     "vite-tsconfig-paths": "^6.1.1"
   },
   "devDependencies": {
+    "@standard-schema/spec": "^1.1.0",
     "@types/react": "^19.1.11",
     "@types/react-dom": "^19.1.7",
-    "@standard-schema/spec": "^1.1.0",
+    "tsc-alias": "^1.8.16",
     "typescript": "^5.9.3"
   }
 }

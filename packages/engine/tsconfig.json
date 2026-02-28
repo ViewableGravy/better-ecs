@@ -7,11 +7,25 @@
     "skipLibCheck": true,
     "typeRoots": ["../../node_modules/@types"],
     "paths": {
+      "@assets": ["./src/asset/index.ts"],
+      "@assets/*": ["./src/asset/*"],
+      "@components": ["./src/components/index.ts"],
+      "@components/*": ["./src/components/*"],
+      "@context": ["./src/context/index.ts"],
+      "@context/*": ["./src/context/*"],
+      "@core": ["./src/core/index.ts"],
+      "@core/*": ["./src/core/*"],
+      "@ecs/*": ["./src/ecs/*"],
+      "@render": ["./src/render/index.ts"],
+      "@render/*": ["./src/render/*"],
+      "@tests/*": ["./src/tests/*"],
+      "@ui": ["./src/ui/index.tsx"],
       "@ui/*": ["./src/ui/*"],
       "@/*": ["./src/*"]
     }
   },
   "files": [],
+  "exclude": ["dist", "node_modules"],
   "references": [
     {
       "path": "./tsconfig.lib.json"

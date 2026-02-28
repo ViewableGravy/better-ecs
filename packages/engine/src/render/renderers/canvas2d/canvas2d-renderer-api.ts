@@ -1,6 +1,6 @@
-import { Color } from "../../../components/sprite";
-import type { ShapeRenderData, SpriteRenderData, TexturedQuadRenderData } from "../../types/low-level";
-import type { RendererAPI } from "../../types/renderer-api";
+import { Color } from "@components/sprite";
+import type { ShapeRenderData, SpriteRenderData, TexturedQuadRenderData } from "@render/types/low-level";
+import type { RendererAPI } from "@render/types/renderer-api";
 
 /**
  * Canvas 2D implementation of the low-level renderer.

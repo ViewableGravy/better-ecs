@@ -10,7 +10,7 @@
  *   const frame   = new Texture(source, 0, 0, 32, 32); // sprite-sheet cell
  */
 
-import { TextureSource, type TextureSourceData } from "./texture-source";
+import { TextureSource, type TextureSourceData } from "@components/texture/texture-source";
 
 export class Texture {
   private static nextId = 1;

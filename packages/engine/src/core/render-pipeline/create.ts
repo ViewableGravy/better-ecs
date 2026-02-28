@@ -1,21 +1,21 @@
-import type { LooseAssetManager } from "../../asset/AssetManager";
-import { Engine, fromContext } from "../../context";
-import type { UserWorld } from "../../ecs/world";
-import type { Renderer } from "../../render";
+import type { LooseAssetManager } from "@assets/AssetManager";
+import { Engine, fromContext } from "@context";
+import type { UserWorld } from "@ecs/world";
+import type { Renderer } from "@render";
 import {
 	FrameAllocator,
 	type EngineFrameAllocatorRegistry,
 	type FrameAllocatorRegistry,
 	type InternalFrameAllocator,
-} from "../../render";
-import { setContextRender } from "../context";
-import { RenderPipelineContext } from "./context";
-import type { RenderPass } from "./pass";
-import { BeginFramePass } from "./passes/begin-frame";
-import { CameraControlPass } from "./passes/camera-control";
-import { EndFramePass } from "./passes/end-frame";
-import { RenderWorldPass } from "./passes/render-world";
-import type { RenderPipeline, WorldProvider } from "./types";
+} from "@render";
+import { setContextRender } from "@core/context";
+import { RenderPipelineContext } from "@core/render-pipeline/context";
+import type { RenderPass } from "@core/render-pipeline/pass";
+import { BeginFramePass } from "@core/render-pipeline/passes/begin-frame";
+import { CameraControlPass } from "@core/render-pipeline/passes/camera-control";
+import { EndFramePass } from "@core/render-pipeline/passes/end-frame";
+import { RenderWorldPass } from "@core/render-pipeline/passes/render-world";
+import type { RenderPipeline, WorldProvider } from "@core/render-pipeline/types";
 
 type CorePassOverrides<
 	TRegistry extends FrameAllocatorRegistry,

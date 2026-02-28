@@ -1,16 +1,16 @@
-import { getContextEngine, getContextRender } from "../core/context";
+import { getContextEngine, getContextRender } from "@core/context";
 import type {
   AllSceneNames,
   RegisteredAssetManager,
   RegisteredEngine,
   RegisteredSystems,
   SystemNames,
-} from "../core/engine-types";
-import type { AnyRenderPipelineContext } from "../core/render-pipeline/context";
-import type { SceneContext } from "../core/scene/scene-context";
-import type { EngineSystem } from "../core/system";
-import type { UserWorld } from "../ecs/world";
-import { mouseApi, type Mouse as MouseInterface } from "../systems/input/mouse";
+} from "@core/engine-types";
+import type { AnyRenderPipelineContext } from "@core/render-pipeline/context";
+import type { SceneContext } from "@core/scene/scene-context";
+import type { EngineSystem } from "@core/system";
+import type { UserWorld } from "@ecs/world";
+import { mouseApi, type Mouse as MouseInterface } from "@/systems/input/mouse";
 
 /***** TYPE DEFINITIONS *****/
 export type EngineContextOptions<T> = {

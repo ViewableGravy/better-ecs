@@ -1,5 +1,5 @@
-import type { ShapeRenderData } from "../../../types/low-level";
-import type { Vec2 } from "./types";
+import type { ShapeRenderData } from "@render/types/low-level";
+import type { Vec2 } from "@render/renderers/webGL/drawers/types";
 
 function screenToNdc(canvas: HTMLCanvasElement, x: number, y: number): Vec2 {
   return {

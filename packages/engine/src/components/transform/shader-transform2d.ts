@@ -1,4 +1,4 @@
-import { Transform2D } from "./transform2d";
+import { Transform2D } from "@components/transform/transform2d";
 
 export class ShaderTransform2D extends Transform2D {
   public width: number;

@@ -1,10 +1,10 @@
-import type { UserWorld } from "../../ecs/world";
-import { EngineCamera } from "../engine-camera";
-import type { EngineInput } from "../input";
-import { createEngineRunningState, type EngineRunningState } from "../running-state";
-import { GizmoInputManager } from "./gizmo-input-manager";
-import { EngineEditorGizmoManager } from "./gizmo-manager";
-import { EngineEditorSelectionManager } from "./selection-manager";
+import type { UserWorld } from "@ecs/world";
+import { EngineCamera } from "@core/engine-camera";
+import type { EngineInput } from "@core/input";
+import { createEngineRunningState, type EngineRunningState } from "@core/running-state";
+import { GizmoInputManager } from "@core/engine-editor/gizmo-input-manager";
+import { EngineEditorGizmoManager } from "@core/engine-editor/gizmo-manager";
+import { EngineEditorSelectionManager } from "@core/engine-editor/selection-manager";
 
 type EngineEditorHost = {
   scene: {

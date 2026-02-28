@@ -1,12 +1,12 @@
-import type { ShaderSourceAsset } from "../../asset";
-import type { LooseAssetManager } from "../../asset/AssetManager";
-import { Camera } from "../../components/camera";
-import { Shape } from "../../components/shape";
-import { Color, Sprite } from "../../components/sprite";
-import type { Texture } from "../../components/texture";
-import type { ShaderTransform2D, Transform2D } from "../../components/transform";
-import { RenderCommand } from "../render-command";
-import { TextureCache } from "../textureCache/texture-cache";
+import type { ShaderSourceAsset } from "@assets";
+import type { LooseAssetManager } from "@assets/AssetManager";
+import { Camera } from "@components/camera";
+import { Shape } from "@components/shape";
+import { Color, Sprite } from "@components/sprite";
+import type { Texture } from "@components/texture";
+import type { ShaderTransform2D, Transform2D } from "@components/transform";
+import { RenderCommand } from "@render/render-command";
+import { TextureCache } from "@render/textureCache/texture-cache";
 import type {
     Renderable,
     Renderer,
@@ -17,8 +17,8 @@ import type {
     SpriteRenderData,
     TexturedQuadDrawData,
     TexturedQuadRenderData,
-} from "../types/renderer";
-import type { RendererAPI } from "../types/renderer-api";
+} from "@render/types/renderer";
+import type { RendererAPI } from "@render/types/renderer-api";
 
 const FALLBACK_PENDING_COLOR = new Color(1, 0, 1, 0.4);
 const FALLBACK_ERROR_COLOR = new Color(1, 0, 0, 0.6);

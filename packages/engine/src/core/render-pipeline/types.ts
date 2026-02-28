@@ -1,4 +1,4 @@
-import type { UserWorld } from "../../ecs/world";
+import type { UserWorld } from "@ecs/world";
 
 export type RenderPassScope = "frame" | "world";
 

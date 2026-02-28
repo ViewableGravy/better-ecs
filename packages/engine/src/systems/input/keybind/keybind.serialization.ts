@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { KeyBind } from "./keybind.types";
+import type { KeyBind } from "@/systems/input/keybind/keybind.types";
 
 /**
  * Schema for serializing/deserializing KeyBind objects to JSON.

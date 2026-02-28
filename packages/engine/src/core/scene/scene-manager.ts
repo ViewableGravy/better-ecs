@@ -1,10 +1,10 @@
 // packages/engine/src/core/scene/scene-manager.ts
-import { UserWorld, World } from "../../ecs/world";
-import { executeWithContext } from "../context";
-import type { EngineClass } from "../engine";
-import { SystemsManager } from "../engine/systems";
-import { SceneContext } from "./scene-context";
-import type { SceneDefinition, SceneDefinitionTuple, SceneName } from "./scene.types";
+import { UserWorld, World } from "@ecs/world";
+import { executeWithContext } from "@core/context";
+import type { EngineClass } from "@core/engine";
+import { SystemsManager } from "@core/engine/systems";
+import { SceneContext } from "@core/scene/scene-context";
+import type { SceneDefinition, SceneDefinitionTuple, SceneName } from "@core/scene/scene.types";
 
 /**
  * Manages scene lifecycle, transitions, and world isolation.

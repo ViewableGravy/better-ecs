@@ -1,18 +1,17 @@
 import { resolve } from "node:path";
 import { defineConfig } from "vite";
 import { libInjectCss } from "vite-plugin-lib-inject-css";
+import tsconfigPaths from "vite-tsconfig-paths";
 import { shadersPlugin } from "./plugins/shaders";
 
 export default defineConfig({
-  plugins: [libInjectCss(), shadersPlugin()],
-  resolve: {
-    alias: [
-      // Map @/* → @repo/engine/* so these imports stay external in the bundle,
-      // preserving class identity when the consuming app provides the package.
-      { find: /^@\/(.*)$/, replacement: "@repo/engine/$1" },
-      { find: "@ui", replacement: resolve(__dirname, "src/ui") },
-    ],
-  },
+  plugins: [
+    tsconfigPaths({
+      projects: [resolve(__dirname, "tsconfig.json"), resolve(__dirname, "tsconfig.lib.json")],
+    }),
+    libInjectCss(),
+    shadersPlugin(),
+  ],
   build: {
     outDir: "dist/src/ui",
     emptyOutDir: false,

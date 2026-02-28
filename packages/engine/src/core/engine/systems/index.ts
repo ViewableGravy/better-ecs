@@ -1,6 +1,6 @@
-import type { SceneDefinitionTuple } from "../../scene/scene.types";
-import type { EngineSystem } from "../../system";
-import { executeSystemCleanup, executeSystemInitialize } from "../../system";
+import type { SceneDefinitionTuple } from "@core/scene/scene.types";
+import type { EngineSystem } from "@core/system";
+import { executeSystemCleanup, executeSystemInitialize } from "@core/system";
 
 type SceneSystemEntry = {
   all: EngineSystem[];

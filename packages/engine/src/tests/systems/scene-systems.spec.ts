@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { createEngine, createScene, createSystem } from "../../core";
-import { fromContext, Scene } from "../../context";
+import { createEngine, createScene, createSystem } from "@core";
+import { fromContext, Scene } from "@context";
 
 describe("Scene-level systems", () => {
   it("should run scene systems after engine systems (update phase)", async () => {

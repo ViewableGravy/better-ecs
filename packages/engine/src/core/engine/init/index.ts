@@ -1,4 +1,4 @@
-import type { EngineInitializationSystem } from "../../system";
+import type { EngineInitializationSystem } from "@core/system";
 
 export class InitState {
   #initializationSystem: EngineInitializationSystem | null = null;

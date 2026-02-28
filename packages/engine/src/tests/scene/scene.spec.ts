@@ -4,8 +4,8 @@
  */
 
 import { describe, expect, it, vi } from "vitest";
-import { createEngine, createScene } from "../../core";
-import { SCENE_BRAND } from "../../core/scene/scene.types";
+import { createEngine, createScene } from "@core";
+import { SCENE_BRAND } from "@core/scene/scene.types";
 
 describe("createScene", () => {
   it("should create a scene definition with correct name", () => {

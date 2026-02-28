@@ -14,8 +14,8 @@ import { EntityRow } from "@ui/layout/sidebar/worldViewer/entityRow";
 import { EngineUiContext } from "@ui/utilities/engine-context";
 import { useInvariantContext } from "@ui/utilities/hooks/use-invariant-context";
 import React, { useCallback } from "react";
-import { EntityTreeNodes } from "./entityTreeNodes";
-import { NodeComponents } from "./nodeComponents";
+import { EntityTreeNodes } from "@ui/layout/sidebar/panels/hierarchy/components/entityTreeNodes";
+import { NodeComponents } from "@ui/layout/sidebar/panels/hierarchy/components/nodeComponents";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS

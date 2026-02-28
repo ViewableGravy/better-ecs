@@ -1,7 +1,7 @@
-import { Texture, TextureSource } from "../components/texture";
-import type { AssetType } from "./asset";
-import { AssetAdapter } from "./asset";
-import { AssetManager } from "./AssetManager";
+import { Texture, TextureSource } from "@components/texture";
+import type { AssetType } from "@assets/asset";
+import { AssetAdapter } from "@assets/asset";
+import { AssetManager } from "@assets/AssetManager";
 
 export type ShaderSourceAsset = {
   type: "shader";

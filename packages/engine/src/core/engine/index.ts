@@ -1,21 +1,21 @@
-import { AssetManager } from "../../asset/AssetManager";
-import type { UserWorld } from "../../ecs/world";
-import { CanvasManager } from "../canvas";
-import { executeWithContext } from "../context";
-import { EngineEditor } from "../engine-editor";
-import { EngineUtils } from "../engine-utils";
-import { EngineInput } from "../input";
-import type { RenderPipeline } from "../render-pipeline";
-import { RenderManager } from "../render-pipeline";
-import { SceneManager } from "../scene/scene-manager";
-import type { SceneDefinitionTuple } from "../scene/scene.types";
-import type { EngineInitializationSystem, EngineSystem, SystemFactoryTuple } from "../system/types";
-import { DeltaState } from "./delta";
-import { InitState } from "./init";
-import { Meta } from "./meta";
-import { PhaseState } from "./phase";
-import { SystemsManager } from "./systems";
-import type { AllSystems, ScenesTupleToRecord, StartEngineGenerator, StartEngineOpts } from "./types";
+import { AssetManager } from "@assets/AssetManager";
+import type { UserWorld } from "@ecs/world";
+import { CanvasManager } from "@core/canvas";
+import { executeWithContext } from "@core/context";
+import { EngineEditor } from "@core/engine-editor";
+import { EngineUtils } from "@core/engine-utils";
+import { EngineInput } from "@core/input";
+import type { RenderPipeline } from "@core/render-pipeline";
+import { RenderManager } from "@core/render-pipeline";
+import { SceneManager } from "@core/scene/scene-manager";
+import type { SceneDefinitionTuple } from "@core/scene/scene.types";
+import type { EngineInitializationSystem, EngineSystem, SystemFactoryTuple } from "@core/system/types";
+import { DeltaState } from "@core/engine/delta";
+import { InitState } from "@core/engine/init";
+import { Meta } from "@core/engine/meta";
+import { PhaseState } from "@core/engine/phase";
+import { SystemsManager } from "@core/engine/systems";
+import type { AllSystems, ScenesTupleToRecord, StartEngineGenerator, StartEngineOpts } from "@core/engine/types";
 
 export class EngineClass<
 	TSystems extends SystemFactoryTuple,

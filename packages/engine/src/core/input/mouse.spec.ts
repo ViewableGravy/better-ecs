@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { Parent, Transform2D } from "../../components";
-import { UserWorld, World } from "../../ecs/world";
-import { getEntityAtWorldPoint } from "./mouse";
+import { Parent, Transform2D } from "@components";
+import { UserWorld, World } from "@ecs/world";
+import { getEntityAtWorldPoint } from "@core/input/mouse";
 
 describe("getEntityAtWorldPoint", () => {
   it("prefers parent by default when child and parent are both selectable", () => {

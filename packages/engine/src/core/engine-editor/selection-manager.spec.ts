@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { Parent, Transform2D } from "../../components";
-import { UserWorld, World } from "../../ecs/world";
-import { EngineEditorSelectionManager } from "./selection-manager";
+import { Parent, Transform2D } from "@components";
+import { UserWorld, World } from "@ecs/world";
+import { EngineEditorSelectionManager } from "@core/engine-editor/selection-manager";
 
 describe("EngineEditorSelectionManager", () => {
   it("prefers parent by default when parent and child overlap", () => {

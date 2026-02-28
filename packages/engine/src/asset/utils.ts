@@ -1,4 +1,4 @@
-import type { ShaderSourceAsset } from "./loaders";
+import type { ShaderSourceAsset } from "@assets/loaders";
 
 export function isShaderSourceAsset(value: unknown): value is ShaderSourceAsset {
   if (!value || typeof value !== "object") {

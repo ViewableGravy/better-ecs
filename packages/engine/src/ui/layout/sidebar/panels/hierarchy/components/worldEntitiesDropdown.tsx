@@ -8,7 +8,7 @@ import { WorldIdContext } from "@ui/layout/sidebar/worldViewer/context";
 import { EngineUiContext } from "@ui/utilities/engine-context";
 import { useInvariantContext } from "@ui/utilities/hooks/use-invariant-context";
 import { useCallback } from "react";
-import { EntityTreeNodes } from "./entityTreeNodes";
+import { EntityTreeNodes } from "@ui/layout/sidebar/panels/hierarchy/components/entityTreeNodes";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { createMatchKeybind } from './keybind';
-import type { InputState } from '../input.types';
-import type { Match } from './keybind.types';
+import { createMatchKeybind } from '@/systems/input/keybind/keybind';
+import type { InputState } from '@/systems/input/input.types';
+import type { Match } from '@/systems/input/keybind/keybind.types';
 
 /**
  * Helper function to create a mock InputState for testing

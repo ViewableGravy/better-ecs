@@ -1,5 +1,5 @@
 import styles from "@ui/layout/components/styles.module.css";
-import type { RegionProps } from "../types";
+import type { RegionProps } from "@ui/layout/components/engineEditorLayout/types";
 
 /**********************************************************************************************************
  *   COMPONENT START

@@ -1,4 +1,4 @@
-import type { RenderPipeline } from "./types";
+import type { RenderPipeline } from "@core/render-pipeline/types";
 
 export class RenderManager {
   readonly #renderPipeline: RenderPipeline | null;

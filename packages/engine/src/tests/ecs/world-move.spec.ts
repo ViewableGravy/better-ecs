@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { Parent } from "../../components";
-import { UserWorld, World } from "../../ecs/world";
+import { Parent } from "@components";
+import { UserWorld, World } from "@ecs/world";
 
 class Marker {
   constructor(public value: string) {}

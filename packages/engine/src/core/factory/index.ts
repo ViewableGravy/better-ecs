@@ -1,19 +1,19 @@
 /// <reference types="vite/client" />
 
-import { AssetManager } from "../../asset/AssetManager";
-import { inputSystem } from "../../systems/input";
-import { transformSnapshotSystem } from "../../systems/transformSnapshot";
-import { attachCanvas } from "../../ui/utilities/attach-canvas";
-import type { EngineUiContextValue } from "../../ui/utilities/engine-context";
-import { executeWithContext } from "../context";
-import { EngineClass } from "../engine";
-import type { SceneDefinition, SceneDefinitionTuple, SceneName } from "../scene/scene.types";
+import { AssetManager } from "@assets/AssetManager";
+import { inputSystem } from "@/systems/input";
+import { transformSnapshotSystem } from "@/systems/transformSnapshot";
+import { attachCanvas } from "@ui/utilities/attach-canvas";
+import type { EngineUiContextValue } from "@ui/utilities/engine-context";
+import { executeWithContext } from "@core/context";
+import { EngineClass } from "@core/engine";
+import type { SceneDefinition, SceneDefinitionTuple, SceneName } from "@core/scene/scene.types";
 import {
 	executeSystemCleanup as runSystemCleanup,
 	executeSystemInitialize as runSystemInitialize,
-} from "../system";
-import type { EngineSystem, SystemFactoryTuple } from "../system/types";
-import type { CreateEngineOptions } from "./types";
+} from "@core/system";
+import type { EngineSystem, SystemFactoryTuple } from "@core/system/types";
+import type { CreateEngineOptions } from "@core/factory/types";
 
 export function createEngine<
 	TSystems extends SystemFactoryTuple,
@@ -52,7 +52,7 @@ export function createEngine<
 		const engineUiContextValue: EngineUiContextValue = engine;
 
 		if (import.meta.env.DEV) {
-			void import("../../ui").then((uiModule) => {
+			void import("@ui").then((uiModule) => {
 				uiModule.mountEngineEditorUi({
 					rootElement,
 					engine: engineUiContextValue,
@@ -118,5 +118,5 @@ export function createEngine<
 	return engine;
 }
 
-export type { CreateEngineOptions } from "./types";
+export type { CreateEngineOptions } from "@core/factory/types";
 
