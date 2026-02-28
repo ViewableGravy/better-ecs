@@ -233,5 +233,5 @@ export class EngineInput {
 }
 
 export { EngineMouseEvent, getEntityAtPoint } from "./mouse";
-export type { EngineInputHost, EngineMouseEventName, Point2D } from "./mouse";
+export type { EngineInputHost, EngineMouseEventName, EntityAtPointOptions, Point2D } from "./mouse";
 

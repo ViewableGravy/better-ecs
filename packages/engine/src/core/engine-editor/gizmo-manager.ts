@@ -78,16 +78,28 @@ export class EngineEditorGizmoManager {
     const sceneContext = this.#getSceneContext();
 
     for (const [, world] of sceneContext.worldEntries) {
-      const gizmo = world.get(entityId, Gizmo);
-      if (!gizmo) {
-        continue;
-      }
+      const gizmo = world.require(entityId, Gizmo);
 
       if (gizmo.hoveredHandle === handle) {
         return;
       }
 
       gizmo.hoveredHandle = handle;
+      return;
+    }
+  }
+
+  public setActiveHandle(entityId: EntityId, handle: GizmoHandle | null): void {
+    const sceneContext = this.#getSceneContext();
+
+    for (const [, world] of sceneContext.worldEntries) {
+      const gizmo = world.require(entityId, Gizmo);
+
+      if (gizmo.activeHandle === handle) {
+        return;
+      }
+
+      gizmo.activeHandle = handle;
       return;
     }
   }

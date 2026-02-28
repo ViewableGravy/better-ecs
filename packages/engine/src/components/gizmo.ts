@@ -14,6 +14,7 @@ export const GIZMO_PLANE_HANDLE_SIZE_WORLD = 12;
 
 export class Gizmo {
 	public hoveredHandle: GizmoHandle | null;
+	public activeHandle: GizmoHandle | null;
 	public rotateStartDeltaX: number | null;
 	public rotateStartDeltaY: number | null;
 	public rotateCurrentDeltaX: number | null;
@@ -22,6 +23,7 @@ export class Gizmo {
 
 	constructor() {
 		this.hoveredHandle = null;
+		this.activeHandle = null;
 		this.rotateStartDeltaX = null;
 		this.rotateStartDeltaY = null;
 		this.rotateCurrentDeltaX = null;

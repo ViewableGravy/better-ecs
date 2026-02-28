@@ -1,4 +1,4 @@
-import { Transform2D } from "../../components";
+import { Parent, Transform2D } from "../../components";
 import type { EntityId } from "../../ecs/entity";
 import { resolveWorldTransform2D } from "../../ecs/hierarchy";
 import type { UserWorld } from "../../ecs/world";
@@ -21,6 +21,10 @@ export type EngineInputHost = EngineClass<
   SceneDefinitionTuple,
   Record<string, unknown>
 >;
+
+export type EntityAtPointOptions = {
+  preferParent?: boolean;
+};
 
 const SHARED_TRANSFORM2D = new Transform2D();
 
@@ -94,7 +98,11 @@ export class EngineMouseEvent {
     this.#event.preventDefault();
   }
 
-  public entityAtPoint(maxDistancePixels: number, world: UserWorld = this.#engine.scene.world): EntityId | null {
+  public entityAtPoint(
+    maxDistancePixels: number,
+    world: UserWorld = this.#engine.scene.world,
+    options?: EntityAtPointOptions,
+  ): EntityId | null {
     return getEntityAtPoint(
       this.#engine,
       world,
@@ -103,6 +111,7 @@ export class EngineMouseEvent {
         y: this.worldY,
       },
       maxDistancePixels,
+      options,
     );
   }
 
@@ -130,6 +139,7 @@ export function getEntityAtPoint(
   world: UserWorld,
   point: Point2D,
   maxDistancePixels: number,
+  options?: EntityAtPointOptions,
 ): EntityId | null {
   if (maxDistancePixels <= 0) {
     return null;
@@ -137,7 +147,20 @@ export function getEntityAtPoint(
 
   const cameraView = engine.utils.activeCameraView(world);
   const maxDistanceWorld = maxDistancePixels / cameraView.zoom;
-  const maxDistanceSquared = maxDistanceWorld * maxDistanceWorld;
+  return getEntityAtWorldPoint(world, point, maxDistanceWorld, options);
+}
+
+export function getEntityAtWorldPoint(
+  world: UserWorld,
+  point: Point2D,
+  maxDistance: number,
+  options?: EntityAtPointOptions,
+): EntityId | null {
+  if (maxDistance <= 0) {
+    return null;
+  }
+
+  const maxDistanceSquared = maxDistance * maxDistance;
 
   let nearestEntityId: EntityId | null = null;
   let nearestDistanceSquared = maxDistanceSquared;
@@ -158,5 +181,45 @@ export function getEntityAtPoint(
     nearestEntityId = entityId;
   }
 
-  return nearestEntityId;
+  if (nearestEntityId === null) {
+    return null;
+  }
+
+  const preferParent = options?.preferParent ?? true;
+  if (!preferParent) {
+    return nearestEntityId;
+  }
+
+  return resolveHierarchyPreferredEntity(world, point, nearestEntityId, nearestDistanceSquared);
+}
+
+function resolveHierarchyPreferredEntity(
+  world: UserWorld,
+  point: Point2D,
+  entityId: EntityId,
+  maxPreferredDistanceSquared: number,
+): EntityId {
+  let preferredEntityId = entityId;
+  let currentDistanceSquared = maxPreferredDistanceSquared;
+
+  while (true) {
+    const parent = world.get(preferredEntityId, Parent);
+    if (!parent) {
+      return preferredEntityId;
+    }
+
+    if (!resolveWorldTransform2D(world, parent.entityId, SHARED_TRANSFORM2D)) {
+      return preferredEntityId;
+    }
+
+    const deltaX = SHARED_TRANSFORM2D.curr.pos.x - point.x;
+    const deltaY = SHARED_TRANSFORM2D.curr.pos.y - point.y;
+    const distanceSquared = deltaX * deltaX + deltaY * deltaY;
+    if (distanceSquared > currentDistanceSquared) {
+      return preferredEntityId;
+    }
+
+    preferredEntityId = parent.entityId;
+    currentDistanceSquared = distanceSquared;
+  }
 }

@@ -1,16 +1,16 @@
 import {
-    Gizmo,
-    GIZMO_AXIS_HIT_THICKNESS_WORLD,
-    GIZMO_AXIS_LENGTH_WORLD,
-    GIZMO_PLANE_HANDLE_OFFSET_X_WORLD,
-    GIZMO_PLANE_HANDLE_OFFSET_Y_WORLD,
-    GIZMO_PLANE_HANDLE_SIZE_WORLD,
-    GIZMO_RING_HIT_THICKNESS_WORLD,
-    GIZMO_RING_RADIUS_WORLD,
-    GIZMO_ROTATE_RING_RADIUS_WORLD,
-    GIZMO_SCALE_MIN_DISTANCE_WORLD,
-    Transform2D,
-    type GizmoHandle,
+  Gizmo,
+  GIZMO_AXIS_HIT_THICKNESS_WORLD,
+  GIZMO_AXIS_LENGTH_WORLD,
+  GIZMO_PLANE_HANDLE_OFFSET_X_WORLD,
+  GIZMO_PLANE_HANDLE_OFFSET_Y_WORLD,
+  GIZMO_PLANE_HANDLE_SIZE_WORLD,
+  GIZMO_RING_HIT_THICKNESS_WORLD,
+  GIZMO_RING_RADIUS_WORLD,
+  GIZMO_ROTATE_RING_RADIUS_WORLD,
+  GIZMO_SCALE_MIN_DISTANCE_WORLD,
+  Transform2D,
+  type GizmoHandle,
 } from "../../components";
 import type { EntityId } from "../../ecs/entity";
 import { resolveWorldTransform2D } from "../../ecs/hierarchy";
@@ -127,6 +127,7 @@ export class GizmoInputManager {
 
     if (this.#dragState) {
       this.#gizmo.setHoveredHandle(this.#dragState.entityId, null);
+      this.#gizmo.setActiveHandle(this.#dragState.entityId, null);
       this.#dragState = null;
     }
 
@@ -180,6 +181,7 @@ export class GizmoInputManager {
       }
 
       this.#gizmo.setHoveredHandle(this.#dragState.entityId, null);
+      this.#gizmo.setActiveHandle(this.#dragState.entityId, null);
       this.#dragState = null;
     }
 
@@ -284,6 +286,7 @@ export class GizmoInputManager {
     }
 
     this.#gizmo.setHoveredHandle(this.#dragState.entityId, null);
+    this.#gizmo.setActiveHandle(this.#dragState.entityId, null);
     this.#dragState = null;
   }
 
@@ -316,11 +319,8 @@ export class GizmoInputManager {
       return false;
     }
 
-    const transform = world.get(gizmoEntityId, Transform2D);
-    const gizmo = world.get(gizmoEntityId, Gizmo);
-    if (!transform || !gizmo) {
-      return false;
-    }
+    const transform = world.require(gizmoEntityId, Transform2D);
+    const gizmo = world.require(gizmoEntityId, Gizmo);
 
     if (!resolveWorldTransform2D(world, gizmoEntityId, this.#SHARED_TRANSFORM2D)) {
       return false;
@@ -343,6 +343,7 @@ export class GizmoInputManager {
       };
 
       gizmo.hoveredHandle = "plane-xy";
+      this.#gizmo.setActiveHandle(gizmoEntityId, "plane-xy");
       return true;
     }
 
@@ -363,6 +364,7 @@ export class GizmoInputManager {
       };
 
       gizmo.hoveredHandle = "axis-x";
+      this.#gizmo.setActiveHandle(gizmoEntityId, "axis-x");
       return true;
     }
 
@@ -383,6 +385,7 @@ export class GizmoInputManager {
       };
 
       gizmo.hoveredHandle = "axis-y";
+      this.#gizmo.setActiveHandle(gizmoEntityId, "axis-y");
       return true;
     }
 
@@ -405,6 +408,7 @@ export class GizmoInputManager {
       gizmo.rotateCurrentDeltaY = startDeltaY;
       gizmo.rotateAngleDelta = 0;
       gizmo.hoveredHandle = "ring-rotate";
+      this.#gizmo.setActiveHandle(gizmoEntityId, "ring-rotate");
       return true;
     }
 
@@ -419,6 +423,7 @@ export class GizmoInputManager {
       };
 
       gizmo.hoveredHandle = "ring-scale";
+      this.#gizmo.setActiveHandle(gizmoEntityId, "ring-scale");
       return true;
     }
 

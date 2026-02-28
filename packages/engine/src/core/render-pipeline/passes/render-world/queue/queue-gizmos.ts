@@ -1,23 +1,24 @@
 import {
-  Gizmo,
-  GIZMO_ARROW_HEAD_WORLD,
-  GIZMO_AXIS_LENGTH_WORLD,
-  GIZMO_PLANE_HANDLE_OFFSET_X_WORLD,
-  GIZMO_PLANE_HANDLE_OFFSET_Y_WORLD,
-  GIZMO_PLANE_HANDLE_SIZE_WORLD,
-  GIZMO_RING_RADIUS_WORLD,
-  GIZMO_ROTATE_RING_RADIUS_WORLD,
+    Gizmo,
+    GIZMO_ARROW_HEAD_WORLD,
+    GIZMO_AXIS_LENGTH_WORLD,
+    GIZMO_PLANE_HANDLE_OFFSET_X_WORLD,
+    GIZMO_PLANE_HANDLE_OFFSET_Y_WORLD,
+    GIZMO_PLANE_HANDLE_SIZE_WORLD,
+    GIZMO_RING_RADIUS_WORLD,
+    GIZMO_ROTATE_RING_RADIUS_WORLD,
+    type GizmoHandle,
 } from "../../../../../components/gizmo";
 import { Color } from "../../../../../components/sprite";
 import { Transform2D } from "../../../../../components/transform";
 import { resolveWorldTransform2D } from "../../../../../ecs/hierarchy";
 import type { UserWorld } from "../../../../../ecs/world";
 import type {
-  EngineFrameAllocatorRegistry,
-  InternalFrameAllocator,
-  Renderer,
-  RenderQueue,
-  ShapeRenderData,
+    EngineFrameAllocatorRegistry,
+    InternalFrameAllocator,
+    Renderer,
+    RenderQueue,
+    ShapeRenderData,
 } from "../../../../../render";
 
 /**********************************************************************************************************
@@ -30,6 +31,7 @@ const PLANE_CORNER_RADIUS_RATIO = 0.05;
 const PLANE_CORNER_SEGMENTS = 4;
 const ROTATE_DASH_LENGTH_SCREEN = 8;
 const ROTATE_GAP_LENGTH_SCREEN = 6;
+const INACTIVE_HANDLE_ALPHA = 0.2;
 
 const RING_SEGMENTS = 48;
 
@@ -43,6 +45,16 @@ const RING_SCALE_STROKE_HOVER = new Color(1, 0.9, 0.45, 1);
 const RING_ROTATE_STROKE_HOVER = new Color(0.5, 0.75, 1, 1);
 const PLANE_STROKE = new Color(0.95, 0.95, 0.95, 1);
 const PLANE_STROKE_HOVER = new Color(1, 0.9, 0.45, 1);
+const AXIS_RED_INACTIVE = new Color(1, 0.25, 0.25, INACTIVE_HANDLE_ALPHA);
+const AXIS_GREEN_INACTIVE = new Color(0.45, 1, 0.45, INACTIVE_HANDLE_ALPHA);
+const RING_SCALE_STROKE_INACTIVE = new Color(0.92, 0.92, 0.92, INACTIVE_HANDLE_ALPHA);
+const RING_ROTATE_STROKE_INACTIVE = new Color(0.3, 0.6, 1, INACTIVE_HANDLE_ALPHA);
+const AXIS_RED_HOVER_INACTIVE = new Color(1, 0.75, 0.35, INACTIVE_HANDLE_ALPHA);
+const AXIS_GREEN_HOVER_INACTIVE = new Color(0.85, 1, 0.45, INACTIVE_HANDLE_ALPHA);
+const RING_SCALE_STROKE_HOVER_INACTIVE = new Color(1, 0.9, 0.45, INACTIVE_HANDLE_ALPHA);
+const RING_ROTATE_STROKE_HOVER_INACTIVE = new Color(0.5, 0.75, 1, INACTIVE_HANDLE_ALPHA);
+const PLANE_STROKE_INACTIVE = new Color(0.95, 0.95, 0.95, INACTIVE_HANDLE_ALPHA);
+const PLANE_STROKE_HOVER_INACTIVE = new Color(1, 0.9, 0.45, INACTIVE_HANDLE_ALPHA);
 
 const TRANSPARENT_FILL = new Color(0, 0, 0, 0);
 
@@ -53,7 +65,7 @@ const SHARED_TRANSFORM = new Transform2D();
  **********************************************************************************************************/
 export function queueGizmos(
   world: UserWorld,
-  renderer: Renderer,
+  renderer: Pick<Renderer, "getCameraZoom">,
   queue: RenderQueue,
   frameAllocator: InternalFrameAllocator<EngineFrameAllocatorRegistry>,
 ): void {
@@ -78,6 +90,18 @@ export function queueGizmos(
     const centerX = SHARED_TRANSFORM.curr.pos.x;
     const centerY = SHARED_TRANSFORM.curr.pos.y;
     const rotation = SHARED_TRANSFORM.curr.rotation;
+    const activeHandle = gizmo.activeHandle;
+
+    const axisXStroke = resolveHandleStroke(
+      gizmo.hoveredHandle === "axis-x" ? AXIS_RED_HOVER : AXIS_RED,
+      activeHandle,
+      "axis-x",
+    );
+    const axisYStroke = resolveHandleStroke(
+      gizmo.hoveredHandle === "axis-y" ? AXIS_GREEN_HOVER : AXIS_GREEN,
+      activeHandle,
+      "axis-y",
+    );
 
     queueAxis(
       queue,
@@ -86,7 +110,7 @@ export function queueGizmos(
       centerY,
       centerX + Math.cos(rotation) * axisLength,
       centerY + Math.sin(rotation) * axisLength,
-      gizmo.hoveredHandle === "axis-x" ? AXIS_RED_HOVER : AXIS_RED,
+      axisXStroke,
       arrowHead,
       strokeWidthWorld,
     );
@@ -98,7 +122,7 @@ export function queueGizmos(
       centerY,
       centerX + Math.sin(rotation) * axisLength,
       centerY - Math.cos(rotation) * axisLength,
-      gizmo.hoveredHandle === "axis-y" ? AXIS_GREEN_HOVER : AXIS_GREEN,
+      axisYStroke,
       arrowHead,
       strokeWidthWorld,
     );
@@ -112,6 +136,7 @@ export function queueGizmos(
       rotateRingRadius,
       rotation,
       gizmo.hoveredHandle,
+      activeHandle,
       strokeWidthWorld,
     );
 
@@ -136,7 +161,11 @@ export function queueGizmos(
         + GIZMO_PLANE_HANDLE_OFFSET_X_WORLD * Math.sin(rotation)
         + GIZMO_PLANE_HANDLE_OFFSET_Y_WORLD * Math.cos(rotation),
       GIZMO_PLANE_HANDLE_SIZE_WORLD,
-      gizmo.hoveredHandle === "plane-xy" ? PLANE_STROKE_HOVER : PLANE_STROKE,
+      resolveHandleStroke(
+        gizmo.hoveredHandle === "plane-xy" ? PLANE_STROKE_HOVER : PLANE_STROKE,
+        activeHandle,
+        "plane-xy",
+      ),
       strokeWidthWorld,
     );
   }
@@ -269,6 +298,7 @@ function queueRing(
   rotateRingRadius: number,
   rotation: number,
   hoveredHandle: Gizmo["hoveredHandle"],
+  activeHandle: Gizmo["activeHandle"],
   strokeWidth: number,
 ): void {
   const step = (Math.PI * 2) / RING_SEGMENTS;
@@ -282,7 +312,11 @@ function queueRing(
     const endX = centerX + Math.cos(angleEnd + rotation) * scaleRingRadius;
     const endY = centerY + Math.sin(angleEnd + rotation) * scaleRingRadius;
 
-    const stroke = hoveredHandle === "ring-scale" ? RING_SCALE_STROKE_HOVER : RING_SCALE_STROKE;
+    const stroke = resolveHandleStroke(
+      hoveredHandle === "ring-scale" ? RING_SCALE_STROKE_HOVER : RING_SCALE_STROKE,
+      activeHandle,
+      "ring-scale",
+    );
     queueLine(queue, frameAllocator, startX, startY, endX, endY, stroke, strokeWidth);
   }
 
@@ -304,10 +338,66 @@ function queueRing(
     const endX = centerX + Math.cos(angleEnd + rotation) * rotateRingRadius;
     const endY = centerY + Math.sin(angleEnd + rotation) * rotateRingRadius;
 
-    const stroke = hoveredHandle === "ring-rotate" ? RING_ROTATE_STROKE_HOVER : RING_ROTATE_STROKE;
+    const stroke = resolveHandleStroke(
+      hoveredHandle === "ring-rotate" ? RING_ROTATE_STROKE_HOVER : RING_ROTATE_STROKE,
+      activeHandle,
+      "ring-rotate",
+    );
 
     queueLine(queue, frameAllocator, startX, startY, endX, endY, stroke, strokeWidth);
   }
+}
+
+function resolveHandleStroke(
+  stroke: Color,
+  activeHandle: Gizmo["activeHandle"],
+  handle: GizmoHandle,
+): Color {
+  if (activeHandle === null || activeHandle === handle) {
+    return stroke;
+  }
+
+  if (stroke === AXIS_RED) {
+    return AXIS_RED_INACTIVE;
+  }
+
+  if (stroke === AXIS_RED_HOVER) {
+    return AXIS_RED_HOVER_INACTIVE;
+  }
+
+  if (stroke === AXIS_GREEN) {
+    return AXIS_GREEN_INACTIVE;
+  }
+
+  if (stroke === AXIS_GREEN_HOVER) {
+    return AXIS_GREEN_HOVER_INACTIVE;
+  }
+
+  if (stroke === RING_SCALE_STROKE) {
+    return RING_SCALE_STROKE_INACTIVE;
+  }
+
+  if (stroke === RING_SCALE_STROKE_HOVER) {
+    return RING_SCALE_STROKE_HOVER_INACTIVE;
+  }
+
+  if (stroke === RING_ROTATE_STROKE) {
+    return RING_ROTATE_STROKE_INACTIVE;
+  }
+
+  if (stroke === RING_ROTATE_STROKE_HOVER) {
+    return RING_ROTATE_STROKE_HOVER_INACTIVE;
+  }
+
+  if (stroke === PLANE_STROKE) {
+    return PLANE_STROKE_INACTIVE;
+  }
+
+  if (stroke === PLANE_STROKE_HOVER) {
+    return PLANE_STROKE_HOVER_INACTIVE;
+  }
+
+  return stroke;
 }
 
 function queueRotatePreview(
