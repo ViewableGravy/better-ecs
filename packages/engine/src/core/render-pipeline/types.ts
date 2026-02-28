@@ -1,4 +1,4 @@
-import type { UserWorld } from "../../ecs/world";
+import type { UserWorld } from "@ecs/world";
 
 export type RenderPassScope = "frame" | "world";
 
@@ -7,6 +7,6 @@ export interface WorldProvider {
 }
 
 export interface RenderPipeline {
-	initialize(): void;
+	initialize(): Promise<void>;
 	render(): void;
 }

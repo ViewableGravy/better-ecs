@@ -1,19 +1,21 @@
-import { Engine, fromContext } from "../../context";
-import type { UserWorld } from "../../ecs/world";
+import type { LooseAssetManager } from "@assets/AssetManager";
+import { Engine, fromContext } from "@context";
+import type { UserWorld } from "@ecs/world";
+import type { Renderer } from "@render";
 import {
-    FrameAllocator,
-    type EngineFrameAllocatorRegistry,
-    type FrameAllocatorRegistry,
-    type InternalFrameAllocator,
-} from "../../render";
-import type { Renderer } from "../../render";
-import { RenderPipelineContext } from "./context";
-import type { RenderPass } from "./pass";
-import { BeginFramePass } from "./passes/begin-frame";
-import { CameraControlPass } from "./passes/camera-control";
-import { EndFramePass } from "./passes/end-frame";
-import { RenderWorldPass } from "./passes/render-world";
-import type { RenderPipeline, WorldProvider } from "./types";
+	FrameAllocator,
+	type EngineFrameAllocatorRegistry,
+	type FrameAllocatorRegistry,
+	type InternalFrameAllocator,
+} from "@render";
+import { setContextRender } from "@core/context";
+import { RenderPipelineContext } from "@core/render-pipeline/context";
+import type { RenderPass } from "@core/render-pipeline/pass";
+import { BeginFramePass } from "@core/render-pipeline/passes/begin-frame";
+import { CameraControlPass } from "@core/render-pipeline/passes/camera-control";
+import { EndFramePass } from "@core/render-pipeline/passes/end-frame";
+import { RenderWorldPass } from "@core/render-pipeline/passes/render-world";
+import type { RenderPipeline, WorldProvider } from "@core/render-pipeline/types";
 
 type CorePassOverrides<
 	TRegistry extends FrameAllocatorRegistry,
@@ -25,18 +27,25 @@ type CorePassOverrides<
 	endFrame?: RenderPass<TRegistry, TState> | false;
 };
 
-type CreateRenderPipelineContext<TState extends object> = {
+export type CreateRenderPipelineContext<TState extends object = Record<string, never>> = {
 	renderer: Renderer;
 	worldProvider?: WorldProvider;
 	frameAllocator?: InternalFrameAllocator<FrameAllocatorRegistry>;
 	state?: TState;
 };
 
+type InitializeRenderContextOptions = {
+	canvas: HTMLCanvasElement;
+	assets: LooseAssetManager;
+};
+
 type CreateRenderPipelineOptions<
 	TRegistry extends FrameAllocatorRegistry,
-	TState extends object,
+	TState extends object = Record<string, never>,
 > = {
-	initializeContext: () => CreateRenderPipelineContext<TState>;
+	initializeContext: (
+		options: InitializeRenderContextOptions,
+	) => Promise<CreateRenderPipelineContext<TState>> | CreateRenderPipelineContext<TState>;
 	passes?: readonly RenderPass<TRegistry, TState>[];
 	beforeWorldPasses?: readonly RenderPass<TRegistry, TState>[];
 	afterWorldPasses?: readonly RenderPass<TRegistry, TState>[];
@@ -54,29 +63,52 @@ export function createRenderPipeline<
 	TState extends object = Record<string, never>,
 >(options: CreateRenderPipelineOptions<TRegistry, TState>): RenderPipeline {
 	let context: RenderPipelineContext<TRegistry, TState> | null = null;
+	let contextPromise: Promise<RenderPipelineContext<TRegistry, TState>> | null = null;
 
-	const getOrInitializeContext = (): RenderPipelineContext<TRegistry, TState> => {
+	const getOrInitializeContext = async (): Promise<RenderPipelineContext<TRegistry, TState>> => {
 		if (context) {
 			return context;
 		}
 
-		const initialized = options.initializeContext();
-		const frameAllocator =
-			(initialized.frameAllocator as InternalFrameAllocator<TRegistry> | undefined) ??
-			// The default path creates an engine allocator with built-in pools.
-			// This cast is isolated to the initialization boundary when user code omits a custom allocator.
-			(new FrameAllocator() as unknown as InternalFrameAllocator<TRegistry>);
-		const worldProvider = initialized.worldProvider ?? new DefaultWorldProvider();
+		if (contextPromise) {
+			return contextPromise;
+		}
 
-		context = new RenderPipelineContext({
-			renderer: initialized.renderer,
-			frameAllocator,
-			worldProvider,
-			// `state` defaults to an empty object and is optionally extended by user code.
-			// This cast is localized to the initialization boundary.
-			state: (initialized.state ?? {}) as TState,
-			world: fromContext(Engine).world,
+		const engine = fromContext(Engine);
+
+		contextPromise = Promise.resolve(
+			options.initializeContext({
+				canvas: engine.canvas,
+				assets: engine.assets,
+			}),
+		).then((initialized) => {
+			const frameAllocator =
+				(initialized.frameAllocator as InternalFrameAllocator<TRegistry> | undefined) ??
+				// The default path creates an engine allocator with built-in pools.
+				// This cast is isolated to the initialization boundary when user code omits a custom allocator.
+				(new FrameAllocator() as unknown as InternalFrameAllocator<TRegistry>);
+			const worldProvider = initialized.worldProvider ?? new DefaultWorldProvider();
+
+			context = new RenderPipelineContext({
+				renderer: initialized.renderer,
+				frameAllocator,
+				worldProvider,
+				// `state` defaults to an empty object and is optionally extended by user code.
+				// This cast is localized to the initialization boundary.
+				state: (initialized.state ?? {}) as TState,
+				world: fromContext(Engine).world,
+			});
+
+			return context;
 		});
+
+		return contextPromise;
+	};
+
+	const requireContext = (): RenderPipelineContext<TRegistry, TState> => {
+		if (!context) {
+			throw new Error("Render pipeline context is not initialized. Ensure initialize() is awaited before render().");
+		}
 
 		return context;
 	};
@@ -122,11 +154,11 @@ export function createRenderPipeline<
 		];
 
 	return {
-		initialize(): void {
-			getOrInitializeContext();
+		async initialize(): Promise<void> {
+			await getOrInitializeContext();
 		},
 		render(): void {
-			const passContext = getOrInitializeContext();
+			const passContext = requireContext();
 			const engine = fromContext(Engine);
 
 			// 1) Build interpolation alpha from the latest fixed-step update timing.
@@ -140,6 +172,7 @@ export function createRenderPipeline<
 			// 3) Reset per-frame pipeline state and allocator pools.
 			passContext.queue.clear();
 			passContext.frameAllocator.beginFrame();
+			const previousRenderContext = setContextRender(passContext);
 
 			try {
 				// 4) Execute passes with world-pass block interleaving:
@@ -169,7 +202,8 @@ export function createRenderPipeline<
 					index = blockEnd;
 				}
 			} finally {
-				passContext.world = fromContext(Engine).world;
+				setContextRender(previousRenderContext);
+				passContext.world = engine.world;
 				passContext.frameAllocator.endFrame();
 			}
 		},

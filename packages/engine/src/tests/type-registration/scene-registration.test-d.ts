@@ -12,7 +12,7 @@ import {
   createScene,
   createSystem,
   type SceneDefinition,
-} from "../../core";
+} from "@core";
 
 // ============================================================
 // Setup: Create test scenes and systems
@@ -147,7 +147,7 @@ expectTypeOf(engineNoScenes.world).not.toBeUndefined();
 // Test: AllSceneNames resolves correctly with module augmentation
 // ============================================================
 
-import { AllSceneNames } from "../../core/engine-types";
+import { AllSceneNames } from "@core/engine-types";
 
 // When Register is properly augmented with an engine...
 // Define a test register interface
@@ -173,7 +173,7 @@ expectTypeOf<"pause">().toExtend<TestSceneNames>();
 // Test: AllSystemNames resolves correctly
 // ============================================================
 
-import { AllSystemNames } from "../../core/engine-types";
+import { AllSystemNames } from "@core/engine-types";
 
 type TestSystemNames = AllSystemNames<TestRegister>;
 

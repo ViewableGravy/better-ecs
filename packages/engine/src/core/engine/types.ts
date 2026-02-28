@@ -1,7 +1,7 @@
-import type { EngineSystemTypes } from "../../systems/engine-system-types";
-import type { SceneDefinition, SceneDefinitionTuple, SceneName } from "../scene/scene.types";
-import type { SystemFactoryTuple } from "../system/types";
-import type { EngineFrame, EngineUpdate } from "../types";
+import type { EngineSystemTypes } from "@/systems/engine-system-types";
+import type { SceneDefinition, SceneDefinitionTuple, SceneName } from "@core/scene/scene.types";
+import type { SystemFactoryTuple } from "@core/system/types";
+import type { EngineFrame, EngineUpdate } from "@core/types";
 
 export type StartEngineOpts = {
 	fps?: number;

@@ -1,13 +1,15 @@
 import { SceneManager } from ".";
-import { AssetManager } from "../asset";
-import type { inputSystem } from "../systems/input";
-import type { transformSnapshotSystem } from "../systems/transformSnapshot";
-import type { EngineClass } from "./engine";
-import type { EngineEditor } from "./engine-editor";
-import type { RenderPipeline } from "./render-pipeline";
-import type { SceneDefinition, SceneDefinitionTuple } from "./scene/scene.types";
-import type { EngineSystem, SystemFactory, SystemFactoryTuple } from "./system";
-import type { InferStandardSchema, StandardSchema } from "./types";
+import { AssetManager } from "@assets";
+import type { inputSystem } from "@/systems/input";
+import type { transformSnapshotSystem } from "@/systems/transformSnapshot";
+import type { EngineClass } from "@core/engine";
+import type { EngineEditor } from "@core/engine-editor";
+import type { EngineUtils } from "@core/engine-utils";
+import type { EngineInput } from "@core/input";
+import type { RenderPipeline } from "@core/render-pipeline";
+import type { SceneDefinition, SceneDefinitionTuple } from "@core/scene/scene.types";
+import type { EngineSystem, SystemFactory, SystemFactoryTuple } from "@core/system";
+import type { InferStandardSchema, StandardSchema } from "@core/types";
 
 // --- Type Registration (via module augmentation) ---
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type, @typescript-eslint/no-empty-interface
@@ -29,6 +31,8 @@ export type AnyEngine = {
   assets: AssetManager<any>;
   render: RenderPipeline | null;
   editor: EngineEditor;
+  input: EngineInput;
+  utils: EngineUtils;
   canvas: HTMLCanvasElement;
 };
 
@@ -69,6 +73,7 @@ export type UserlandSystems<TEngine extends AnyEngine = RegisteredEngine> =
   TEngine extends EngineClass<
     infer TSystems extends SystemFactoryTuple,
     infer TScenes extends SceneDefinitionTuple,
+    Record<string, unknown>,
     Record<string, unknown>
   >
     ? TSystems[number] | SceneSystemFactories<TScenes>

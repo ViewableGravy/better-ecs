@@ -1,24 +1,27 @@
-import { AssetManager } from "../../asset/AssetManager";
-import type { UserWorld } from "../../ecs/world";
-import { CanvasManager } from "../canvas";
-import { executeWithContext } from "../context";
-import { EngineEditor } from "../engine-editor";
-import type { RenderPipeline } from "../render-pipeline";
-import { RenderManager } from "../render-pipeline";
-import { SceneManager } from "../scene/scene-manager";
-import type { SceneDefinitionTuple } from "../scene/scene.types";
-import type { EngineInitializationSystem, EngineSystem, SystemFactoryTuple } from "../system/types";
-import { DeltaState } from "./delta";
-import { InitState } from "./init";
-import { Meta } from "./meta";
-import { PhaseState } from "./phase";
-import { SystemsManager } from "./systems";
-import type { AllSystems, ScenesTupleToRecord, StartEngineGenerator, StartEngineOpts } from "./types";
+import { AssetManager } from "@assets/AssetManager";
+import type { UserWorld } from "@ecs/world";
+import { CanvasManager } from "@core/canvas";
+import { executeWithContext } from "@core/context";
+import { EngineEditor } from "@core/engine-editor";
+import { EngineUtils } from "@core/engine-utils";
+import { EngineInput } from "@core/input";
+import type { RenderPipeline } from "@core/render-pipeline";
+import { RenderManager } from "@core/render-pipeline";
+import { SceneManager } from "@core/scene/scene-manager";
+import type { SceneDefinitionTuple } from "@core/scene/scene.types";
+import type { EngineInitializationSystem, EngineSystem, SystemFactoryTuple } from "@core/system/types";
+import { DeltaState } from "@core/engine/delta";
+import { InitState } from "@core/engine/init";
+import { Meta } from "@core/engine/meta";
+import { PhaseState } from "@core/engine/phase";
+import { SystemsManager } from "@core/engine/systems";
+import type { AllSystems, ScenesTupleToRecord, StartEngineGenerator, StartEngineOpts } from "@core/engine/types";
 
 export class EngineClass<
 	TSystems extends SystemFactoryTuple,
 	TScenes extends SceneDefinitionTuple = [],
 	TAssets extends Record<string, unknown> = Record<string, unknown>,
+	TAssetTypes extends Record<string, unknown> = Record<string, unknown>,
 > {
 	#systemsManager: SystemsManager;
 	#systemsView: Record<string, EngineSystem<any>>;
@@ -30,13 +33,15 @@ export class EngineClass<
 	#delta: DeltaState = new DeltaState();
 
 	public readonly scene: SceneManager<TScenes>;
-	public readonly editor = new EngineEditor();
+	public readonly editor: EngineEditor;
+	public readonly input: EngineInput;
+	public readonly utils: EngineUtils;
 	public readonly meta: Meta = new Meta(this.#phase.is);
 
 	public constructor(
 		systems: Record<string, EngineSystem<any>>,
 		scenes: SceneDefinitionTuple = [],
-		public readonly assets: AssetManager<TAssets>,
+		public readonly assets: AssetManager<TAssets, TAssetTypes>,
 		public readonly render: RenderPipeline | null,
 		canvas: HTMLCanvasElement | null,
 		awaitCanvasBeforeStart = false,
@@ -45,6 +50,12 @@ export class EngineClass<
 		this.scene = new SceneManager<TScenes>(scenes, this.#systemsManager).setEngineRef(this);
 		this.#canvasManager = new CanvasManager(canvas, awaitCanvasBeforeStart);
 		this.#renderManager = new RenderManager(this.render);
+		this.utils = new EngineUtils(this);
+		this.input = new EngineInput({
+			resolveCanvas: () => this.canvas,
+			getEngine: () => this,
+		});
+		this.editor = new EngineEditor(this);
 
 		this.#systemsView = this.#systemsManager.createSystemsView((name) => {
 			return this.#systemsManager.getSceneSystem(this.scene.definition?.name ?? null, name);
@@ -98,7 +109,7 @@ export class EngineClass<
 
 			this.#systemsManager.initializeEngineSystems();
 
-			this.#renderManager.initialize();
+			await this.#renderManager.initialize();
 		});
 
 		this.#init.markInitialized();

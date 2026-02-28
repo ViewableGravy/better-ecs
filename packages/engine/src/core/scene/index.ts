@@ -1,7 +1,7 @@
 // packages/engine/src/core/scene/index.ts
-export { createScene } from "./scene";
-export { SceneContext } from "./scene-context";
-export { SceneManager } from "./scene-manager";
+export { createScene } from "@core/scene/scene";
+export { SceneContext } from "@core/scene/scene-context";
+export { SceneManager } from "@core/scene/scene-manager";
 
 // Export types but NOT the SCENE_BRAND symbol (internal use only)
 export type {
@@ -10,5 +10,5 @@ export type {
   SceneDefinitionTuple,
   SceneName,
   ScenesTupleToNames,
-} from "./scene.types";
+} from "@core/scene/scene.types";
 

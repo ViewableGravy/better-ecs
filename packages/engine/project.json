@@ -8,7 +8,7 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx tsc -p tsconfig.lib.json && bun x vite build --config vite.config.ts",
+        "command": "npx tsc -p tsconfig.lib.json && bun x tsc-alias -p tsconfig.lib.json && bun x vite build --config vite.config.ts",
         "cwd": "packages/engine"
       },
       "inputs": ["default", "^default"],
@@ -21,6 +21,7 @@
         "parallel": true,
         "commands": [
           "npx tsc -p tsconfig.lib.json --watch",
+          "bun x tsc-alias -p tsconfig.lib.json --watch",
           "bun x vite build --config vite.config.ts --watch"
         ],
         "cwd": "packages/engine"

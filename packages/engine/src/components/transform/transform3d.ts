@@ -1,4 +1,4 @@
-import { Vec3 } from "../../math/vec/vec3";
+import { Vec3 } from "@/math/vec/vec3";
 
 export class TransformState3D {
   public pos: Vec3;

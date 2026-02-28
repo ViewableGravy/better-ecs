@@ -1,8 +1,8 @@
-import type { MouseEvent } from "react";
-import { EngineUiContext } from "@ui/utilities/engine-context";
-import { useInvariantContext } from "@ui/utilities/hooks/use-invariant-context";
 import styles from "@ui/layout/sidebar/styles.module.css";
 import { EntityIdContext, WorldIdContext } from "@ui/layout/sidebar/worldViewer/context";
+import { EngineUiContext } from "@ui/utilities/engine-context";
+import { useInvariantContext } from "@ui/utilities/hooks/use-invariant-context";
+import type { MouseEvent } from "react";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -32,7 +32,7 @@ export const Delete: React.FC<DeleteProps> = ({ className }) => {
   return (
     <button
       aria-label={`Delete entity ${entityId}`}
-      className={className ?? styles.worldsEntitiesDeleteEntityButton}
+      className={className ?? `${styles.worldsEntitiesEntityActionButton} ${styles.worldsEntitiesDeleteEntityButton}`}
       onClick={onDelete}
       title="Delete entity"
       type="button"

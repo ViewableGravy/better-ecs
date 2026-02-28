@@ -1,3 +1,3 @@
-export * from './keybind';
-export * from './keybind.types';
-export * from './keybind.serialization';
+export * from '@/systems/input/keybind/keybind';
+export * from '@/systems/input/keybind/keybind.types';
+export * from '@/systems/input/keybind/keybind.serialization';

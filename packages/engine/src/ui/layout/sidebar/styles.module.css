@@ -158,10 +158,11 @@
   align-items: center;
   gap: 4px;
   margin-left: auto;
+  margin-right: 6px;
   flex: 0 0 auto;
 }
 
-.worldsEntitiesDeleteEntityButton {
+.worldsEntitiesEntityActionButton {
   border: none;
   background: transparent;
   color: #91a1c4;
@@ -172,21 +173,28 @@
   justify-content: center;
   cursor: pointer;
   border-radius: 4px;
-  margin-right: 6px;
   flex: 0 0 auto;
   opacity: 0;
   transition: opacity 120ms ease;
 }
 
-.worldsEntitiesEntityToggleButton:hover .worldsEntitiesDeleteEntityButton {
+.worldsEntitiesDeleteEntityButton {
+}
+
+.worldsEntitiesEntityToggleButton:hover .worldsEntitiesEntityActionButton {
   opacity: 1;
+}
+
+.worldsEntitiesEntityActionButton:hover {
+  color: #d6ddf1;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .worldsEntitiesDeleteEntityButton:hover {
   color: #f6a5a5;
-  background: rgba(255, 255, 255, 0.08);
 }
 
+.worldsEntitiesEntityActionIcon,
 .worldsEntitiesDeleteEntityIcon {
   width: 14px;
   height: 14px;

@@ -1,6 +1,6 @@
-import type { EngineFrameAllocatorRegistry, FrameAllocatorRegistry } from "../../render";
-import type { RenderPassContext } from "./context";
-import type { RenderPassScope } from "./types";
+import type { EngineFrameAllocatorRegistry, FrameAllocatorRegistry } from "@render";
+import type { RenderPassContext } from "@core/render-pipeline/context";
+import type { RenderPassScope } from "@core/render-pipeline/types";
 
 export type RenderPass<
 	TRegistry extends FrameAllocatorRegistry = EngineFrameAllocatorRegistry,

@@ -1,12 +1,12 @@
-import type { UserWorld } from "../../ecs/world";
+import type { UserWorld } from "@ecs/world";
+import type { Renderer } from "@render";
 import {
-	type EngineFrameAllocatorRegistry,
-	type FrameAllocatorRegistry,
-	type InternalFrameAllocator,
-} from "../../render";
-import { RenderQueue } from "../../render";
-import type { Renderer } from "../../render";
-import type { WorldProvider } from "./types";
+    RenderQueue,
+    type EngineFrameAllocatorRegistry,
+    type FrameAllocatorRegistry,
+    type InternalFrameAllocator,
+} from "@render";
+import type { WorldProvider } from "@core/render-pipeline/types";
 
 export class RenderPipelineContext<
 	TRegistry extends FrameAllocatorRegistry = EngineFrameAllocatorRegistry,
@@ -41,3 +41,8 @@ export type RenderPassContext<
 	TRegistry extends FrameAllocatorRegistry = EngineFrameAllocatorRegistry,
 	TState extends object = Record<string, never>,
 > = RenderPipelineContext<TRegistry, TState>;
+
+export type AnyRenderPipelineContext = RenderPipelineContext<
+	FrameAllocatorRegistry,
+	Record<string, unknown>
+>;

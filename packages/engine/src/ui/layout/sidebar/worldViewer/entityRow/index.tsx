@@ -1,4 +1,5 @@
 import { Actions } from "@ui/layout/sidebar/worldViewer/entityRow/actions";
+import { CenterCamera } from "@ui/layout/sidebar/worldViewer/entityRow/centerCamera";
 import { DebugName } from "@ui/layout/sidebar/worldViewer/entityRow/debugName";
 import { Delete } from "@ui/layout/sidebar/worldViewer/entityRow/delete";
 import { DropdownButton } from "@ui/layout/sidebar/worldViewer/entityRow/dropdownButton";
@@ -11,5 +12,6 @@ export const EntityRow = {
   Icon,
   DebugName,
   Actions,
+  CenterCamera,
   Delete,
 };

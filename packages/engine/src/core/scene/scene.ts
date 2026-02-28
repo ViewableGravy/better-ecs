@@ -1,6 +1,6 @@
 // packages/engine/src/core/scene/scene.ts
-import type { SystemFactoryTuple } from "../system";
-import { SCENE_BRAND, type SceneConfig, type SceneDefinition } from "./scene.types";
+import type { SystemFactoryTuple } from "@core/system";
+import { SCENE_BRAND, type SceneConfig, type SceneDefinition } from "@core/scene/scene.types";
 
 /**
  * Creates a scene definition with the given name and configuration.

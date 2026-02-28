@@ -1,6 +1,6 @@
 // packages/engine/src/ecs/storage.ts
-import type { EntityId } from "./entity";
-import { getEntityIndex } from "./entity";
+import type { EntityId } from "@ecs/entity";
+import { getEntityIndex } from "@ecs/entity";
 
 /**
  * Sparse-set component storage.

@@ -1,4 +1,4 @@
-import type { CanvasReadyResolver } from "./types";
+import type { CanvasReadyResolver } from "@core/canvas/types";
 
 export class CanvasManager {
   #canvas: HTMLCanvasElement | null;
@@ -60,4 +60,4 @@ export class CanvasManager {
   }
 }
 
-export type { CanvasReadyResolver } from "./types";
+export type { CanvasReadyResolver } from "@core/canvas/types";

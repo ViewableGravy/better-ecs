@@ -1,6 +1,7 @@
-import type { Color } from "../components/sprite";
-import type { ShapeRenderData, SpriteRenderData } from "./types/low-level";
-import type { RendererAPI } from "./types/renderer-api";
+import type { LooseAssetManager } from "@assets/AssetManager";
+import type { Color } from "@components/sprite";
+import type { ShapeRenderInput, SpriteRenderData, TexturedQuadRenderData } from "@render/types/low-level";
+import type { RendererAPI } from "@render/types/renderer-api";
 
 export class RenderCommand {
   readonly #rendererApi: RendererAPI;
@@ -9,8 +10,8 @@ export class RenderCommand {
     this.#rendererApi = rendererApi;
   }
 
-  initialize(canvas: HTMLCanvasElement): void {
-    this.#rendererApi.initialize(canvas);
+  initialize(canvas: HTMLCanvasElement, assets: LooseAssetManager): Promise<void> | void {
+    return this.#rendererApi.initialize(canvas, assets);
   }
 
   beginFrame(): void {
@@ -29,6 +30,10 @@ export class RenderCommand {
     this.#rendererApi.setCamera(x, y, zoom);
   }
 
+  setMeshOverlayEnabled(enabled: boolean): void {
+    this.#rendererApi.setMeshOverlayEnabled(enabled);
+  }
+
   getCameraX(): number {
     return this.#rendererApi.getCameraX();
   }
@@ -45,7 +50,11 @@ export class RenderCommand {
     this.#rendererApi.drawSprite(data);
   }
 
-  drawShape(data: ShapeRenderData): void {
+  drawTexturedQuad(data: TexturedQuadRenderData): void {
+    this.#rendererApi.drawTexturedQuad(data);
+  }
+
+  drawShape(data: ShapeRenderInput): void {
     this.#rendererApi.drawShape(data);
   }
 

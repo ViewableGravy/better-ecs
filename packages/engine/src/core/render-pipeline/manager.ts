@@ -1,4 +1,4 @@
-import type { RenderPipeline } from "./types";
+import type { RenderPipeline } from "@core/render-pipeline/types";
 
 export class RenderManager {
   readonly #renderPipeline: RenderPipeline | null;
@@ -7,8 +7,12 @@ export class RenderManager {
     this.#renderPipeline = renderPipeline;
   }
 
-  initialize(): void {
-    this.#renderPipeline?.initialize();
+  async initialize(): Promise<void> {
+    if (!this.#renderPipeline) {
+      return;
+    }
+
+    await this.#renderPipeline.initialize();
   }
 
   render(): void {

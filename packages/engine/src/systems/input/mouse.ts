@@ -1,4 +1,4 @@
-import { getContextEngine } from "../../core/context";
+import { getContextEngine } from "@core/context";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS

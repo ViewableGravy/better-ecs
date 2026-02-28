@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { createSystem } from "../../core";
+import { createSystem } from "@core";
 
 describe("createSystem", () => {
   it("should default schema/data to an empty object when schema is omitted", () => {

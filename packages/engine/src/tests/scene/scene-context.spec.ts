@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { SceneContext } from "../../core";
-import { World } from "../../ecs/world";
+import { SceneContext } from "@core";
+import { World } from "@ecs/world";
 
 class TestComponent {
   constructor(public value: string) {}

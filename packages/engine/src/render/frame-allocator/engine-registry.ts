@@ -1,9 +1,9 @@
-import { Color } from "../../components/sprite";
-import type { ShapeRenderData } from "../types/low-level";
-import type { RenderCommand } from "../queue/render-queue";
-import type { FramePoolFactory } from "./types";
+import { Color } from "@components/sprite";
+import type { DenseShapeRenderData } from "@render/types/low-level";
+import type { RenderCommand } from "@render/queue/render-queue";
+import type { FramePoolFactory } from "@render/frame-allocator/types";
 
-type ShapeCommandFactory = FramePoolFactory<ShapeRenderData, readonly []>;
+type ShapeCommandFactory = FramePoolFactory<DenseShapeRenderData, readonly []>;
 type NumberArrayFactory = FramePoolFactory<number[], readonly []>;
 type RenderCommandFactory = FramePoolFactory<RenderCommand, readonly []>;
 
@@ -27,6 +27,11 @@ export const engineFrameAllocatorRegistry: EngineFrameAllocatorRegistry = {
       fill: new Color(1, 1, 1, 1),
       stroke: null,
       strokeWidth: 0,
+      fillEnabled: true,
+      arcEnabled: false,
+      arcStart: 0,
+      arcEnd: Math.PI * 2,
+      cornerRadius: 0,
     }),
     reset: (value) => {
       value.type = "rectangle";
@@ -43,6 +48,11 @@ export const engineFrameAllocatorRegistry: EngineFrameAllocatorRegistry = {
       value.fill.a = 1;
       value.stroke = null;
       value.strokeWidth = 0;
+      value.fillEnabled = true;
+      value.arcEnabled = false;
+      value.arcStart = 0;
+      value.arcEnd = Math.PI * 2;
+      value.cornerRadius = 0;
     },
   },
   "engine:number-array": {

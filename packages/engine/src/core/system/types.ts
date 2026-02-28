@@ -1,5 +1,5 @@
 import type { StandardSchemaV1 } from "@standard-schema/spec";
-import type { InferStandardSchema, StandardSchema } from "../types";
+import type { InferStandardSchema, StandardSchema } from "@core/types";
 
 export type SystemPriority = number;
 export type SystemCleanup = () => void;

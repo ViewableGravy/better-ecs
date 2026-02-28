@@ -1,4 +1,4 @@
-import { UserWorld, World } from "../../ecs/world";
+import { UserWorld, World } from "@ecs/world";
 
 const DEFAULT_WORLD_ID = "default" as const;
 

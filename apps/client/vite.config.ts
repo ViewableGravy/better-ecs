@@ -2,11 +2,12 @@ import { engineHmr } from "@repo/hmr";
 import tailwindcss from "@tailwindcss/vite";
 import { resolve } from "node:path";
 import { defineConfig } from "vite";
+import glsl from "vite-plugin-glsl";
 import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
   root: __dirname,
-  plugins: [tsconfigPaths(), tailwindcss(), engineHmr()],
+  plugins: [tsconfigPaths(), tailwindcss(), engineHmr(), glsl()],
   server: {
     port: 3000,
     host: "127.0.0.1",

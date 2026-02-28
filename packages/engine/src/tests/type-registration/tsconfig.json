@@ -3,9 +3,27 @@
   "compilerOptions": {
     "strict": true,
     "noEmit": true,
+    "ignoreDeprecations": "5.0",
     "rootDir": "../../../../../",
     "lib": ["ESNext", "DOM"],
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "paths": {
+      "@assets": ["../../asset/index.ts"],
+      "@assets/*": ["../../asset/*"],
+      "@components": ["../../components/index.ts"],
+      "@components/*": ["../../components/*"],
+      "@context": ["../../context/index.ts"],
+      "@context/*": ["../../context/*"],
+      "@core": ["../../core/index.ts"],
+      "@core/*": ["../../core/*"],
+      "@ecs/*": ["../../ecs/*"],
+      "@render": ["../../render/index.ts"],
+      "@render/*": ["../../render/*"],
+      "@tests/*": ["../../tests/*"],
+      "@ui": ["../../ui/index.tsx"],
+      "@ui/*": ["../../ui/*"],
+      "@/*": ["../../*"]
+    }
   },
   "include": [
     "./**/*.ts",

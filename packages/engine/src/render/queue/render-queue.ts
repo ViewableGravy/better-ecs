@@ -1,11 +1,11 @@
-import type { EntityId } from "../../ecs/entity";
-import type { UserWorld } from "../../ecs/world";
-import type { ShapeRenderData } from "../types/low-level";
+import type { EntityId } from "@ecs/entity";
+import type { UserWorld } from "@ecs/world";
+import type { ShapeRenderInput } from "@render/types/low-level";
 
 /**
  * The kind of render command stored in {@link RenderQueue}.
  */
-export type RenderCommandType = "sprite-entity" | "shape-entity" | "shape-draw";
+export type RenderCommandType = "sprite-entity" | "shader-entity" | "shape-entity" | "shape-draw";
 
 /**
  * A single render command entry.
@@ -14,7 +14,7 @@ export type RenderCommand = {
   type: RenderCommandType;
   world: UserWorld | null;
   entityId: EntityId | null;
-  shape: ShapeRenderData | null;
+  shape: ShapeRenderInput | null;
   layer: number;
   zOrder: number;
   sequence: number;

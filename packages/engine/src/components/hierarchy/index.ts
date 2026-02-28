@@ -1,2 +1,2 @@
-export * from "./parent";
+export * from "@components/hierarchy/parent";
 

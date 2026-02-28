@@ -1,4 +1,4 @@
-import type { MetaStats } from "../../types";
+import type { MetaStats } from "@core/types";
 
 export class Meta implements MetaStats {
   public updateDelta = 0;

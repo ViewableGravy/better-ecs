@@ -1,6 +1,12 @@
-import { Color } from "../../../components/sprite";
-import type { ShapeRenderData, SpriteRenderData } from "../../types/low-level";
-import type { RendererAPI } from "../../types/renderer-api";
+import { Color } from "@components/sprite";
+import type {
+    CircleShapeRenderData,
+    DenseShapeRenderData,
+    ShapeRenderInput,
+    SpriteRenderData,
+    TexturedQuadRenderData,
+} from "@render/types/low-level";
+import type { RendererAPI } from "@render/types/renderer-api";
 
 /**
  * Canvas 2D implementation of the low-level renderer.
@@ -49,6 +55,10 @@ export class Canvas2DRenderAPI implements RendererAPI {
     this.cameraX = x;
     this.cameraY = y;
     this.cameraZoom = zoom;
+  }
+
+  setMeshOverlayEnabled(): void {
+    return;
   }
 
   getCameraX(): number {
@@ -115,7 +125,33 @@ export class Canvas2DRenderAPI implements RendererAPI {
     this.ctx.restore();
   }
 
-  drawShape(data: ShapeRenderData): void {
+  drawTexturedQuad(data: TexturedQuadRenderData): void {
+    if (!data.image) {
+      return;
+    }
+
+    this.drawSprite({
+      image: data.image,
+      x: data.x,
+      y: data.y,
+      width: data.width,
+      height: data.height,
+      rotation: data.rotation,
+      scaleX: data.scaleX,
+      scaleY: data.scaleY,
+      anchorX: data.anchorX,
+      anchorY: data.anchorY,
+      sourceX: data.sourceX,
+      sourceY: data.sourceY,
+      sourceWidth: data.sourceWidth,
+      sourceHeight: data.sourceHeight,
+      flipX: data.flipX,
+      flipY: data.flipY,
+      tint: data.tint,
+    });
+  }
+
+  drawShape(data: ShapeRenderInput): void {
     if (!this.ctx || !this.canvas) return;
 
     const screenX = (data.x - this.cameraX) * this.cameraZoom + this.canvas.width / 2;
@@ -138,19 +174,68 @@ export class Canvas2DRenderAPI implements RendererAPI {
       this.ctx.lineWidth = data.strokeWidth;
     }
 
+    const hasArcSlice = isCircleShapeData(data) && (data.arcEnabled ?? false);
+    const arcStart = isCircleShapeData(data) ? (data.arcStart ?? 0) : 0;
+    let arcEnd = isCircleShapeData(data) ? (data.arcEnd ?? Math.PI * 2) : Math.PI * 2;
+    if (hasArcSlice && arcEnd < arcStart) {
+      arcEnd += Math.PI * 2;
+    }
+
     switch (data.type) {
       case "rectangle":
         this.ctx.beginPath();
         this.ctx.rect(-scaledW / 2, -scaledH / 2, scaledW, scaledH);
-        this.ctx.fill();
+        if (data.fillEnabled ?? true) {
+          this.ctx.fill();
+        }
         if (data.stroke) this.ctx.stroke();
         break;
 
+      case "rounded-rectangle": {
+        const halfW = scaledW / 2;
+        const halfH = scaledH / 2;
+        const maxRadius = Math.min(halfW, halfH);
+        const cornerRadius = Math.max(
+          0,
+          Math.min((data.cornerRadius ?? 0) * this.cameraZoom, maxRadius),
+        );
+
+        this.ctx.beginPath();
+        this.ctx.roundRect(-halfW, -halfH, scaledW, scaledH, cornerRadius);
+        if (data.fillEnabled ?? true) {
+          this.ctx.fill();
+        }
+        if (data.stroke) {
+          this.ctx.stroke();
+        }
+        break;
+      }
+
       case "circle":
         this.ctx.beginPath();
+        if (hasArcSlice) {
+          if (data.fillEnabled ?? true) {
+            this.ctx.moveTo(0, 0);
+            this.ctx.arc(0, 0, scaledW / 2, arcStart, arcEnd);
+            this.ctx.closePath();
+            this.ctx.fill();
+          }
+
+          if (data.stroke) {
+            this.ctx.beginPath();
+            this.ctx.arc(0, 0, scaledW / 2, arcStart, arcEnd);
+            this.ctx.stroke();
+          }
+          break;
+        }
+
         this.ctx.arc(0, 0, scaledW / 2, 0, Math.PI * 2);
-        this.ctx.fill();
-        if (data.stroke) this.ctx.stroke();
+        if (data.fillEnabled ?? true) {
+          this.ctx.fill();
+        }
+        if (data.stroke) {
+          this.ctx.stroke();
+        }
         break;
 
       case "line":
@@ -175,4 +260,8 @@ export class Canvas2DRenderAPI implements RendererAPI {
   getHeight(): number {
     return this.canvas?.height ?? 0;
   }
+}
+
+function isCircleShapeData(data: ShapeRenderInput): data is CircleShapeRenderData | DenseShapeRenderData {
+  return data.type === "circle";
 }

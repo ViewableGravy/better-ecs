@@ -1,4 +1,6 @@
-export interface AssetAdapter<T> {
+export type AssetType = "image" | "shader" | "text" | "texture";
+
+export interface AssetAdapter<T, TType extends AssetType = AssetType> {
   load: (path: string) => Promise<T>;
-  // Future: metadata, parser options, etc.
+  type: TType;
 }

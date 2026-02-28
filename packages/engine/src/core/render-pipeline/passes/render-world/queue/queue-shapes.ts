@@ -1,18 +1,17 @@
-import { Shape } from "../../../../../components";
-import type { UserWorld } from "../../../../../ecs/world";
-import type { EngineFrameAllocatorRegistry, InternalFrameAllocator } from "../../../../../render";
-import type { RenderQueue } from "../../../../../render";
+import { Shape } from "@components";
+import { FromRender, fromContext } from "@context";
+import type { UserWorld } from "@ecs/world";
+import type { EngineFrameAllocatorRegistry, InternalFrameAllocator, RenderQueue } from "@render";
 
 export function queueShapes(
-  world: UserWorld,
-  queue: RenderQueue,
-  frameAllocator: InternalFrameAllocator<EngineFrameAllocatorRegistry>,
+  world: UserWorld = fromContext(FromRender.World),
+  queue: RenderQueue = fromContext(FromRender.Queue),
+  frameAllocator: InternalFrameAllocator<EngineFrameAllocatorRegistry> = fromContext(
+    FromRender.FrameAllocator,
+  ),
 ): void {
   for (const id of world.query(Shape)) {
-    const shape = world.get(id, Shape);
-    if (!shape) {
-      continue;
-    }
+    const shape = world.require(id, Shape);
 
     const command = frameAllocator.acquire("engine:render-command");
     command.type = "shape-entity";

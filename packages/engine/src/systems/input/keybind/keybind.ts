@@ -1,6 +1,6 @@
-import type { InputState } from "../input.types";
-import type { KeyBind, KeyBindGroup, Match, MatchList } from "./keybind.types";
-import { parseKeybindString } from "./keybind.types";
+import type { InputState } from "@/systems/input/input.types";
+import type { KeyBind, KeyBindGroup, Match, MatchList } from "@/systems/input/keybind/keybind.types";
+import { parseKeybindString } from "@/systems/input/keybind/keybind.types";
 
 /**
  * Internal implementation: Match a physical key-based keybind against the provided `InputState`.

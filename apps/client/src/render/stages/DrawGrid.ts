@@ -4,11 +4,11 @@ import { type UserWorld } from "@repo/engine";
 import { Color, Shape, Transform2D } from "@repo/engine/components";
 import { System as ContextSystem, fromContext } from "@repo/engine/context";
 import type {
-  EngineFrameAllocatorRegistry,
-  InternalFrameAllocator,
-  RenderQueue,
-  Renderer,
-  ShapeRenderData,
+    DenseShapeRenderData,
+    EngineFrameAllocatorRegistry,
+    InternalFrameAllocator,
+    RenderQueue,
+    Renderer,
 } from "@repo/engine/render";
 
 const GRID_COLOR = new Color(1, 0.1, 0.75, 1);
@@ -171,7 +171,7 @@ function getGridBounds(world: UserWorld):
 }
 
 function writeLineShape(
-  shape: ShapeRenderData,
+  shape: DenseShapeRenderData,
   template: {
     type: "line";
     height: number;

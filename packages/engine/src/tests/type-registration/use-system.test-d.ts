@@ -6,8 +6,8 @@ import {
   type EngineSystemFactory,
   type InferEngineSystem,
   type SystemNames,
-} from "../../core";
-import { fromContext, System } from "../../context";
+} from "@core";
+import { fromContext, System } from "@context";
 
 const CounterSystem = createSystem("app:counter")({
   schema: {

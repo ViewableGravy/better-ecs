@@ -1,14 +1,12 @@
-import { Engine, fromContext } from "../context";
-import type { EntityId, UserWorld } from "../index";
-import type { Renderer } from "../render";
-import { Camera } from "./camera";
-import { Transform2D } from "./transform";
+import { Engine, fromContext } from "@context";
+import type { EngineInputHost, EntityId, UserWorld } from "@/index";
+import type { CameraView } from "@/internal/utils";
+import { resolveActiveCameraViewFromEngine as resolveActiveCameraViewFromEngineInternal } from "@/internal/utils";
+import type { Renderer } from "@render";
+import { Camera } from "@components/camera";
+import { Transform2D } from "@components/transform";
 
-export type CameraView = {
-  x: number;
-  y: number;
-  zoom: number;
-};
+export type { CameraView } from "@/internal/utils";
 
 export type CameraSelection = {
   camera: Camera;
@@ -80,21 +78,12 @@ export function resolveCameraView(
   return cameraViewBuffer;
 }
 
-export function resolveActiveCameraView(
+export function resolveActiveCameraViewFromEngine(
+  engine: EngineInputHost,
   world: UserWorld,
   cameraEntityId?: EntityId,
 ): CameraView {
-  const engine = fromContext(Engine);
-  const camera = engine.editor.camera;
-
-  if (camera.mode === "engine") {
-    cameraViewBuffer.x = camera.x;
-    cameraViewBuffer.y = camera.y;
-    cameraViewBuffer.zoom = camera.zoom > 0 ? camera.zoom : 1;
-    return cameraViewBuffer;
-  }
-
-  return resolveCameraView(world, cameraEntityId);
+  return resolveActiveCameraViewFromEngineInternal(engine, world, cameraEntityId);
 }
 
 export function applyActiveCameraToRenderer(

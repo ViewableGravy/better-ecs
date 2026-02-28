@@ -1,6 +1,6 @@
 import { invariantById } from "@/utilities/selectors";
 import { createInitializationSystem } from "@repo/engine";
-import { fromContext, Engine, SetScene } from "@repo/engine/context";
+import { Engine, fromContext, SetScene } from "@repo/engine/context";
 
 export const System = createInitializationSystem(() => {
   const setScene = fromContext(SetScene);
@@ -19,6 +19,21 @@ export const System = createInitializationSystem(() => {
 
   const sceneSwitcherRoot = invariantById("scene-switcher");
 
+  const pauseToggleKeydownHandler = (event: KeyboardEvent): void => {
+    if (event.repeat) {
+      return;
+    }
+
+    if (event.code !== "Space" || !event.ctrlKey || !event.shiftKey) {
+      return;
+    }
+
+    event.preventDefault();
+    engine.editor.runningState.toggle();
+  };
+
+  window.addEventListener("keydown", pauseToggleKeydownHandler);
+
   // Setup simple scene switcher UI
   sceneSwitcherRoot.innerHTML = `
     <div style="position: absolute; top: 10px; left: 10px; z-index: 1000; display: flex; gap: 10px; flex-direction: column; align-items: flex-start;">
@@ -35,5 +50,9 @@ export const System = createInitializationSystem(() => {
 
   invariantById("to-main").onclick = () => {
     setScene("MainScene");
+  };
+
+  return () => {
+    window.removeEventListener("keydown", pauseToggleKeydownHandler);
   };
 });

@@ -1,4 +1,4 @@
-import { Vec2 } from "../vec/vec2";
+import { Vec2 } from "@/math/vec/vec2";
 
 export class Rectangle {
   public constructor(

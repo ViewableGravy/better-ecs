@@ -1,5 +1,5 @@
 import { GridBounds } from "@/components/grid-bounds";
-import { RENDER_LAYERS } from "@/render/layers";
+import { RENDER_LAYERS } from "@/consts";
 import type { UserWorld } from "@repo/engine";
 import { Color, Debug, Shape, Transform2D } from "@repo/engine/components";
 import { OUTSIDE, RenderVisibility, type RenderVisibilityRole } from "../components/render-visibility";

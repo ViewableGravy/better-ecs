@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { AssetManager } from "./AssetManager";
-import { AssetAdapter } from "./asset";
+import { AssetManager } from "@assets/AssetManager";
+import { AssetAdapter } from "@assets/asset";
 
 describe("AssetManager", () => {
   it("should throw when getting non-existent asset strictly", () => {
@@ -10,7 +10,7 @@ describe("AssetManager", () => {
 
   it("should trigger load when getting loosely", async () => {
     const loadMock = vi.fn().mockResolvedValue("data");
-    const adapter: AssetAdapter<string> = { load: loadMock };
+    const adapter: AssetAdapter<string> = { type: "text", load: loadMock };
     const registry = { assets: { test: adapter } };
     const manager = new AssetManager(registry);
 
@@ -28,7 +28,7 @@ describe("AssetManager", () => {
 
   it("should deduplicate loads", () => {
     const loadMock = vi.fn().mockReturnValue(new Promise(() => undefined)); // Never resolves
-    const adapter: AssetAdapter<string> = { load: loadMock };
+    const adapter: AssetAdapter<string> = { type: "text", load: loadMock };
     const registry = { assets: { test: adapter } };
     const manager = new AssetManager(registry);
 
@@ -40,7 +40,7 @@ describe("AssetManager", () => {
 
   it("should throw correct errors for states", async () => {
     const loadMock = vi.fn().mockResolvedValue("data");
-    const adapter: AssetAdapter<string> = { load: loadMock };
+    const adapter: AssetAdapter<string> = { type: "text", load: loadMock };
     const registry = { assets: { test: adapter } };
     const manager = new AssetManager(registry);
 
@@ -52,7 +52,7 @@ describe("AssetManager", () => {
 
   it("should handle errors", async () => {
     const loadMock = vi.fn().mockRejectedValue(new Error("Fail"));
-    const adapter: AssetAdapter<string> = { load: loadMock };
+    const adapter: AssetAdapter<string> = { type: "text", load: loadMock };
     const registry = { assets: { test: adapter } };
     const manager = new AssetManager(registry);
 
@@ -77,9 +77,9 @@ describe("AssetManager", () => {
 
     const registry = {
       assets: {
-        sheet: { load: loadParent },
-        "sheet:100_a": { load: loadChildA },
-        "sheet:80_a": { load: loadChildB },
+        sheet: { type: "text" as const, load: loadParent },
+        "sheet:100_a": { type: "text" as const, load: loadChildA },
+        "sheet:80_a": { type: "text" as const, load: loadChildB },
       },
     };
 

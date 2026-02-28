@@ -22,7 +22,7 @@ import {
     type UserlandSystemMethods,
     type UserlandSystemNames,
     type UserlandSystems,
-} from "../../core";
+} from "@core";
 
 const GlobalSystem = createSystem("app:global")({
   schema: {

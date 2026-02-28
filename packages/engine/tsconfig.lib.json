@@ -1,7 +1,6 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "baseUrl": ".",
     "outDir": "./dist",
     "lib": ["DOM", "ES2022"],
     "jsx": "react-jsx",
@@ -14,12 +13,27 @@
     "noEmit": false,
     "typeRoots": ["../../node_modules/@types"],
     "paths": {
+      "@assets": ["./src/asset/index.ts"],
+      "@assets/*": ["./src/asset/*"],
+      "@components": ["./src/components/index.ts"],
+      "@components/*": ["./src/components/*"],
+      "@context": ["./src/context/index.ts"],
+      "@context/*": ["./src/context/*"],
+      "@core": ["./src/core/index.ts"],
+      "@core/*": ["./src/core/*"],
+      "@ecs/*": ["./src/ecs/*"],
+      "@render": ["./src/render/index.ts"],
+      "@render/*": ["./src/render/*"],
+      "@tests/*": ["./src/tests/*"],
+      "@ui": ["./src/ui/index.tsx"],
       "@ui/*": ["./src/ui/*"],
       "@/*": ["./src/*"]
     }
   },
   "include": ["src/**/*"],
   "exclude": [
+    "dist",
+    "node_modules",
     "src/**/*.spec.ts",
     "src/**/*.test.ts",
     "src/ui/layout/sidebar/panels/hierarchy/worldViewer/**/*"

@@ -1,3 +1,3 @@
 
 
-export { Serializable, serializable } from './serializable';
+export { Serializable, serializable } from '@/serialization/serializable';

@@ -2,7 +2,7 @@ import type { EntityId } from "@/ecs/entity";
 import styles from "@ui/layout/sidebar/styles.module.css";
 import { EntityIdContext } from "@ui/layout/sidebar/worldViewer/context";
 import React from "react";
-import { EntityTreeNode } from "./entityTreeNode";
+import { EntityTreeNode } from "@ui/layout/sidebar/panels/hierarchy/components/entityTreeNode";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
