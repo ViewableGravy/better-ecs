@@ -1,15 +1,15 @@
 import type { LooseAssetManager } from "@assets/AssetManager";
 import { isShaderSourceAsset } from "@assets/utils";
-import { EditorHoverHighlight, ShaderQuad, Shape, Sprite } from "@components";
-import { Color } from "@components/sprite";
+import { AnimatedSprite, EditorHoverHighlight, ShaderQuad, Shape, Sprite } from "@components";
+import { Color } from "@components/sprite/sprite";
 import { Transform2D } from "@components/transform";
 import { fromContext, FromEngine, FromRender } from "@context";
 import { resolveWorldTransform2D } from "@ecs/hierarchy";
 import type {
-    EngineFrameAllocatorRegistry,
-    InternalFrameAllocator,
-    Renderer,
-    RenderQueue,
+  EngineFrameAllocatorRegistry,
+  InternalFrameAllocator,
+  Renderer,
+  RenderQueue,
 } from "@render";
 
 const SHARED_RENDER_TRANSFORM = new Transform2D();
@@ -46,7 +46,7 @@ export function renderCommands(
     }
 
     if (command.type === "sprite-entity") {
-      const sprite = world.get(entityId, Sprite);
+      const sprite = world.get(entityId, Sprite) ?? world.get(entityId, AnimatedSprite);
       if (!sprite) {
         continue;
       }

@@ -1,5 +1,5 @@
+import { Color } from "@components/sprite/sprite";
 import type { RegisteredAssets } from "@core";
-import { Color } from "@components/sprite";
 
 /**
  * ShaderQuad component — a custom shader rendered onto a quad attached to an entity.

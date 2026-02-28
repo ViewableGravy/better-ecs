@@ -1,5 +1,5 @@
 import type { ShaderSourceAsset } from "@assets";
-import type { Color } from "@components/sprite";
+import type { Color } from "@components/sprite/sprite";
 
 /**
  * Data required to draw a sprite at the low level.

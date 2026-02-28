@@ -2,7 +2,7 @@ import type { ShaderSourceAsset } from "@assets";
 import type { LooseAssetManager } from "@assets/AssetManager";
 import type { Camera } from "@components/camera";
 import type { Shape } from "@components/shape";
-import type { Color, Sprite } from "@components/sprite";
+import type { Color, Sprite } from "@components/sprite/sprite";
 import type { Texture } from "@components/texture";
 import type { ShaderTransform2D, Transform2D } from "@components/transform";
 import type { TextureCache, TextureCacheConfig } from "@render/textureCache/texture-cache";
@@ -11,11 +11,11 @@ import type { ShapeRenderInput } from "@render/types/low-level";
 export { type TextureCacheConfig } from "@render/textureCache/texture-cache";
 export type { TextureHandle, TextureInfo, TextureState, TextureStatus } from "@render/textureCache/texture-cache";
 export type {
-    DenseShapeRenderData,
-    ShapeRenderData,
-    ShapeRenderInput,
-    SpriteRenderData,
-    TexturedQuadRenderData
+  DenseShapeRenderData,
+  ShapeRenderData,
+  ShapeRenderInput,
+  SpriteRenderData,
+  TexturedQuadRenderData
 } from "@render/types/low-level";
 
 export type Renderable = Sprite | Shape;

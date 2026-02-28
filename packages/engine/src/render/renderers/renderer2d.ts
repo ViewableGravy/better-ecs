@@ -2,22 +2,22 @@ import type { ShaderSourceAsset } from "@assets";
 import type { LooseAssetManager } from "@assets/AssetManager";
 import { Camera } from "@components/camera";
 import { Shape } from "@components/shape";
-import { Color, Sprite } from "@components/sprite";
+import { Color, Sprite } from "@components/sprite/sprite";
 import type { Texture } from "@components/texture";
 import type { ShaderTransform2D, Transform2D } from "@components/transform";
 import { RenderCommand } from "@render/render-command";
 import { TextureCache } from "@render/textureCache/texture-cache";
 import type {
-    DenseShapeRenderData,
-    Renderable,
-    Renderer,
-    RendererConfig,
-    Settable,
-    ShaderQuadOptions,
-    ShapeRenderInput,
-    SpriteRenderData,
-    TexturedQuadDrawData,
-    TexturedQuadRenderData,
+  DenseShapeRenderData,
+  Renderable,
+  Renderer,
+  RendererConfig,
+  Settable,
+  ShaderQuadOptions,
+  ShapeRenderInput,
+  SpriteRenderData,
+  TexturedQuadDrawData,
+  TexturedQuadRenderData,
 } from "@render/types/renderer";
 import type { RendererAPI } from "@render/types/renderer-api";
 

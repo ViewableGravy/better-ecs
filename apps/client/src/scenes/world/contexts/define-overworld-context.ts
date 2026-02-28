@@ -6,6 +6,7 @@ import { spawnDemoShaderQuad } from "../factories/spawnDemoShaderQuad";
 import { spawnDoor } from "../factories/spawnDoor";
 import { spawnHouse } from "../factories/spawnHouse";
 import { spawnOreField } from "../factories/spawnOreField";
+import { spawnTransportBelt } from "../factories/spawnTransportBelt";
 import { spawnTree } from "../factories/spawnTree";
 import { spawnWall } from "../factories/spawnWall";
 import { createHouseLayout } from "../utilities/house-layout";
@@ -98,6 +99,26 @@ export function defineOverworldContext(options: OverworldContextOptions) {
       spawnOreField(world, {
         centerX: 700,
         centerY: 360,
+      });
+
+      spawnTransportBelt(world, {
+        x: -260,
+        y: 40,
+      });
+
+      spawnTransportBelt(world, {
+        x: -288,
+        y: 40,
+      });
+
+      spawnTransportBelt(world, {
+        x: -316,
+        y: 40,
+      });
+
+      spawnTransportBelt(world, {
+        x: -344,
+        y: 40,
       });
     },
   });

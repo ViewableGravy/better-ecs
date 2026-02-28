@@ -1,7 +1,7 @@
 import type { ShaderSourceAsset } from "@assets";
 import type { LooseAssetManager } from "@assets/AssetManager";
 import { isShaderSourceAsset } from "@assets/utils";
-import { Color } from "@components/sprite";
+import { Color } from "@components/sprite/sprite";
 import { ShaderCompiler } from "@render/renderers/webGL/compiler";
 import { shapeDrawers, type ShapeDrawerContext, type Vec2 } from "@render/renderers/webGL/drawers";
 import { GPUTextureManager } from "@render/renderers/webGL/gpu-texture-manager";

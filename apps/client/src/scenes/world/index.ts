@@ -1,5 +1,6 @@
 import { sceneConfig } from "@/scenes/world/const";
 import { System as BuildModeSystem } from "@/scenes/world/systems/build-mode";
+import { fromContext, FromEngine } from "@repo/engine/context";
 import {
   createContextScene
 } from "@repo/spatial-contexts";
@@ -39,9 +40,28 @@ export const Scene = createContextScene("MainScene")({
       dungeonId: sceneConfig.contextIds.dungeon,
     }),
   ],
-  setup(_world, manager) {
+  async setup(_world, manager) {
     manager.ensureWorldLoaded(sceneConfig.contextIds.house);
     manager.ensureWorldLoaded(sceneConfig.contextIds.dungeon);
     manager.setFocusedContextId(sceneConfig.contextIds.overworld);
+
+    await fromContext(FromEngine.Assets).loadMany([
+      "transport-belt:horizontal-right_1",
+      "transport-belt:horizontal-right_2",
+      "transport-belt:horizontal-right_3",
+      "transport-belt:horizontal-right_4",
+      "transport-belt:horizontal-right_5",
+      "transport-belt:horizontal-right_6",
+      "transport-belt:horizontal-right_7",
+      "transport-belt:horizontal-right_8",
+      "transport-belt:horizontal-right_9",
+      "transport-belt:horizontal-right_10",
+      "transport-belt:horizontal-right_11",
+      "transport-belt:horizontal-right_12",
+      "transport-belt:horizontal-right_13",
+      "transport-belt:horizontal-right_14",
+      "transport-belt:horizontal-right_15",
+      "transport-belt:horizontal-right_16",
+    ])
   },
 });

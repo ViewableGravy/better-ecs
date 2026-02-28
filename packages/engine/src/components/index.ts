@@ -6,7 +6,7 @@ export * from "@components/gizmo";
 export * from "@components/hierarchy";
 export * from "@components/shader-quad";
 export * from "@components/shape";
-export * from "@components/sprite";
+export * from "@components/sprite/index";
 export * from "@components/texture";
 export * from "@components/transform";
 
