@@ -82,6 +82,8 @@ export function buildLineVertices(canvas: HTMLCanvasElement, center: Vec2, data:
 export function buildCircleQuadVertices(canvas: HTMLCanvasElement, center: Vec2, data: ShapeRenderData, cameraZoom: number): Float32Array {
   const radiusX = (data.width * data.scaleX * cameraZoom) / 2;
   const radiusY = (data.height * data.scaleY * cameraZoom) / 2;
+  const cos = Math.cos(data.rotation);
+  const sin = Math.sin(data.rotation);
 
   const corners = [
     { x: -radiusX, y: -radiusY },
@@ -94,8 +96,10 @@ export function buildCircleQuadVertices(canvas: HTMLCanvasElement, center: Vec2,
   const centerScreenY = (1 - center.y) * 0.5 * canvas.height;
 
   const vertices = corners.map((corner) => {
-    const screenX = centerScreenX + corner.x;
-    const screenY = centerScreenY + corner.y;
+    const rotatedX = corner.x * cos - corner.y * sin;
+    const rotatedY = corner.x * sin + corner.y * cos;
+    const screenX = centerScreenX + rotatedX;
+    const screenY = centerScreenY + rotatedY;
     return screenToNdc(canvas, screenX, screenY);
   });
 

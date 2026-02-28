@@ -36,6 +36,11 @@ const SHARED_SHAPE_DATA: ShapeRenderData = {
   fill: new Color(),
   stroke: null,
   strokeWidth: 0,
+  fillEnabled: true,
+  arcEnabled: false,
+  arcStart: 0,
+  arcEnd: Math.PI * 2,
+  cornerRadius: 0,
 };
 
 const SHARED_FALLBACK_SHAPE_DATA: ShapeRenderData = {
@@ -50,6 +55,11 @@ const SHARED_FALLBACK_SHAPE_DATA: ShapeRenderData = {
   fill: new Color(),
   stroke: new Color(),
   strokeWidth: 2,
+  fillEnabled: true,
+  arcEnabled: false,
+  arcStart: 0,
+  arcEnd: Math.PI * 2,
+  cornerRadius: 0,
 };
 
 export class Renderer2D implements Renderer {
@@ -287,6 +297,11 @@ export class Renderer2D implements Renderer {
     SHARED_SHAPE_DATA.fill = shape.fill;
     SHARED_SHAPE_DATA.stroke = shape.stroke;
     SHARED_SHAPE_DATA.strokeWidth = shape.strokeWidth;
+    SHARED_SHAPE_DATA.fillEnabled = true;
+    SHARED_SHAPE_DATA.arcEnabled = false;
+    SHARED_SHAPE_DATA.arcStart = 0;
+    SHARED_SHAPE_DATA.arcEnd = Math.PI * 2;
+    SHARED_SHAPE_DATA.cornerRadius = 0;
 
     this.#command.drawShape(SHARED_SHAPE_DATA);
   }
@@ -320,6 +335,11 @@ export class Renderer2D implements Renderer {
     }
 
     SHARED_FALLBACK_SHAPE_DATA.strokeWidth = 2;
+    SHARED_FALLBACK_SHAPE_DATA.fillEnabled = true;
+    SHARED_FALLBACK_SHAPE_DATA.arcEnabled = false;
+    SHARED_FALLBACK_SHAPE_DATA.arcStart = 0;
+    SHARED_FALLBACK_SHAPE_DATA.arcEnd = Math.PI * 2;
+    SHARED_FALLBACK_SHAPE_DATA.cornerRadius = 0;
 
     this.#command.drawShape(SHARED_FALLBACK_SHAPE_DATA);
   }

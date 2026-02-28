@@ -152,6 +152,11 @@ export function renderCommands(
     }
 
     shapeCommand.strokeWidth = shape.strokeWidth;
+    shapeCommand.fillEnabled = true;
+    shapeCommand.arcEnabled = false;
+    shapeCommand.arcStart = 0;
+    shapeCommand.arcEnd = Math.PI * 2;
+    shapeCommand.cornerRadius = 0;
 
     renderer.drawShape(shapeCommand);
   }

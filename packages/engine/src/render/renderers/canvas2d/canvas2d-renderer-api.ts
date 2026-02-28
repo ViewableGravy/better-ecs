@@ -164,19 +164,65 @@ export class Canvas2DRenderAPI implements RendererAPI {
       this.ctx.lineWidth = data.strokeWidth;
     }
 
+    const hasArcSlice = data.arcEnabled;
+    const arcStart = data.arcStart;
+    let arcEnd = data.arcEnd;
+    if (hasArcSlice && arcEnd < arcStart) {
+      arcEnd += Math.PI * 2;
+    }
+
     switch (data.type) {
       case "rectangle":
         this.ctx.beginPath();
         this.ctx.rect(-scaledW / 2, -scaledH / 2, scaledW, scaledH);
-        this.ctx.fill();
+        if (data.fillEnabled) {
+          this.ctx.fill();
+        }
         if (data.stroke) this.ctx.stroke();
         break;
 
+      case "rounded-rectangle": {
+        const halfW = scaledW / 2;
+        const halfH = scaledH / 2;
+        const maxRadius = Math.min(halfW, halfH);
+        const cornerRadius = Math.max(0, Math.min(data.cornerRadius * this.cameraZoom, maxRadius));
+
+        this.ctx.beginPath();
+        this.ctx.roundRect(-halfW, -halfH, scaledW, scaledH, cornerRadius);
+        if (data.fillEnabled) {
+          this.ctx.fill();
+        }
+        if (data.stroke) {
+          this.ctx.stroke();
+        }
+        break;
+      }
+
       case "circle":
         this.ctx.beginPath();
+        if (hasArcSlice) {
+          if (data.fillEnabled) {
+            this.ctx.moveTo(0, 0);
+            this.ctx.arc(0, 0, scaledW / 2, arcStart, arcEnd);
+            this.ctx.closePath();
+            this.ctx.fill();
+          }
+
+          if (data.stroke) {
+            this.ctx.beginPath();
+            this.ctx.arc(0, 0, scaledW / 2, arcStart, arcEnd);
+            this.ctx.stroke();
+          }
+          break;
+        }
+
         this.ctx.arc(0, 0, scaledW / 2, 0, Math.PI * 2);
-        this.ctx.fill();
-        if (data.stroke) this.ctx.stroke();
+        if (data.fillEnabled) {
+          this.ctx.fill();
+        }
+        if (data.stroke) {
+          this.ctx.stroke();
+        }
         break;
 
       case "line":

@@ -30,16 +30,17 @@ const GIZMO_LAYER = 10_000;
 const GIZMO_Z_ORDER = 10_000;
 const GIZMO_STROKE_WIDTH_SCREEN = 2;
 const PLANE_CORNER_RADIUS_RATIO = 0.05;
-const PLANE_CORNER_SEGMENTS = 4;
 const ROTATE_DASH_LENGTH_SCREEN = 8;
 const ROTATE_GAP_LENGTH_SCREEN = 6;
 const SCALE_DASH_LENGTH_SCREEN = 6;
 const SCALE_GAP_LENGTH_SCREEN = 6;
 const SCALE_PREVIEW_FILL_ALPHA = 0.3;
+const ROTATE_PREVIEW_FILL_ALPHA = 0.2;
 const MIN_DONUT_THICKNESS_WORLD = 0.25;
 const INACTIVE_HANDLE_ALPHA = 0.2;
 
 const RING_SEGMENTS = 48;
+const FULL_ARC = Math.PI * 2;
 
 const AXIS_RED = new Color(1, 0.25, 0.25, 1);
 const AXIS_GREEN = new Color(0.45, 1, 0.45, 1);
@@ -62,6 +63,7 @@ const RING_ROTATE_STROKE_HOVER_INACTIVE = new Color(0.5, 0.75, 1, INACTIVE_HANDL
 const PLANE_STROKE_INACTIVE = new Color(0.95, 0.95, 0.95, INACTIVE_HANDLE_ALPHA);
 const PLANE_STROKE_HOVER_INACTIVE = new Color(1, 0.9, 0.45, INACTIVE_HANDLE_ALPHA);
 const SCALE_PREVIEW_FILL = new Color(1, 1, 1, SCALE_PREVIEW_FILL_ALPHA);
+const ROTATE_PREVIEW_FILL = new Color(0.3, 0.6, 1, ROTATE_PREVIEW_FILL_ALPHA);
 
 const TRANSPARENT_FILL = new Color(0, 0, 0, 0);
 
@@ -202,105 +204,41 @@ function queuePlaneHandle(
   stroke: Color,
   strokeWidth: number,
 ): void {
-  const half = size * 0.5;
-  const cosRotation = Math.cos(rotation);
-  const sinRotation = Math.sin(rotation);
+  if (!import.meta.env.DEV) {
+    const half = size * 0.5;
+    const cosRotation = Math.cos(rotation);
+    const sinRotation = Math.sin(rotation);
+
+    const topLeftX = centerX + (-half * cosRotation - -half * sinRotation);
+    const topLeftY = centerY + (-half * sinRotation + -half * cosRotation);
+    const topRightX = centerX + (half * cosRotation - -half * sinRotation);
+    const topRightY = centerY + (half * sinRotation + -half * cosRotation);
+    const bottomRightX = centerX + (half * cosRotation - half * sinRotation);
+    const bottomRightY = centerY + (half * sinRotation + half * cosRotation);
+    const bottomLeftX = centerX + (-half * cosRotation - half * sinRotation);
+    const bottomLeftY = centerY + (-half * sinRotation + half * cosRotation);
+
+    queueLine(queue, frameAllocator, topLeftX, topLeftY, topRightX, topRightY, stroke, strokeWidth);
+    queueLine(queue, frameAllocator, topRightX, topRightY, bottomRightX, bottomRightY, stroke, strokeWidth);
+    queueLine(queue, frameAllocator, bottomRightX, bottomRightY, bottomLeftX, bottomLeftY, stroke, strokeWidth);
+    queueLine(queue, frameAllocator, bottomLeftX, bottomLeftY, topLeftX, topLeftY, stroke, strokeWidth);
+    return;
+  }
+
   const cornerRadius = size * PLANE_CORNER_RADIUS_RATIO;
 
-  const [topStartX, topStartY] = rotateLocalPoint(-half + cornerRadius, -half, centerX, centerY, cosRotation, sinRotation);
-  const [topEndX, topEndY] = rotateLocalPoint(half - cornerRadius, -half, centerX, centerY, cosRotation, sinRotation);
-  const [rightStartX, rightStartY] = rotateLocalPoint(half, -half + cornerRadius, centerX, centerY, cosRotation, sinRotation);
-  const [rightEndX, rightEndY] = rotateLocalPoint(half, half - cornerRadius, centerX, centerY, cosRotation, sinRotation);
-  const [bottomStartX, bottomStartY] = rotateLocalPoint(half - cornerRadius, half, centerX, centerY, cosRotation, sinRotation);
-  const [bottomEndX, bottomEndY] = rotateLocalPoint(-half + cornerRadius, half, centerX, centerY, cosRotation, sinRotation);
-  const [leftStartX, leftStartY] = rotateLocalPoint(-half, half - cornerRadius, centerX, centerY, cosRotation, sinRotation);
-  const [leftEndX, leftEndY] = rotateLocalPoint(-half, -half + cornerRadius, centerX, centerY, cosRotation, sinRotation);
-
-  queueLine(queue, frameAllocator, topStartX, topStartY, topEndX, topEndY, stroke, strokeWidth);
-  queueLine(queue, frameAllocator, rightStartX, rightStartY, rightEndX, rightEndY, stroke, strokeWidth);
-  queueLine(queue, frameAllocator, bottomStartX, bottomStartY, bottomEndX, bottomEndY, stroke, strokeWidth);
-  queueLine(queue, frameAllocator, leftStartX, leftStartY, leftEndX, leftEndY, stroke, strokeWidth);
-
-  const [topLeftCenterX, topLeftCenterY] = rotateLocalPoint(
-    -half + cornerRadius,
-    -half + cornerRadius,
-    centerX,
-    centerY,
-    cosRotation,
-    sinRotation,
-  );
-  const [topRightCenterX, topRightCenterY] = rotateLocalPoint(
-    half - cornerRadius,
-    -half + cornerRadius,
-    centerX,
-    centerY,
-    cosRotation,
-    sinRotation,
-  );
-  const [bottomRightCenterX, bottomRightCenterY] = rotateLocalPoint(
-    half - cornerRadius,
-    half - cornerRadius,
-    centerX,
-    centerY,
-    cosRotation,
-    sinRotation,
-  );
-  const [bottomLeftCenterX, bottomLeftCenterY] = rotateLocalPoint(
-    -half + cornerRadius,
-    half - cornerRadius,
-    centerX,
-    centerY,
-    cosRotation,
-    sinRotation,
-  );
-
-  queueCornerArc(
+  queueRoundedRectangle(
     queue,
     frameAllocator,
-    topLeftCenterX,
-    topLeftCenterY,
-    cornerRadius,
-    Math.PI,
-    Math.PI * 1.5,
+    centerX,
+    centerY,
+    size,
+    size,
     rotation,
+    TRANSPARENT_FILL,
     stroke,
     strokeWidth,
-  );
-  queueCornerArc(
-    queue,
-    frameAllocator,
-    topRightCenterX,
-    topRightCenterY,
     cornerRadius,
-    Math.PI * 1.5,
-    Math.PI * 2,
-    rotation,
-    stroke,
-    strokeWidth,
-  );
-  queueCornerArc(
-    queue,
-    frameAllocator,
-    bottomRightCenterX,
-    bottomRightCenterY,
-    cornerRadius,
-    0,
-    Math.PI * 0.5,
-    rotation,
-    stroke,
-    strokeWidth,
-  );
-  queueCornerArc(
-    queue,
-    frameAllocator,
-    bottomLeftCenterX,
-    bottomLeftCenterY,
-    cornerRadius,
-    Math.PI * 0.5,
-    Math.PI,
-    rotation,
-    stroke,
-    strokeWidth,
   );
 }
 
@@ -353,6 +291,21 @@ function queueAxis(
     stroke,
     strokeWidth,
   );
+
+  queueCircle(
+    queue,
+    frameAllocator,
+    endX,
+    endY,
+    Math.max(strokeWidth * 1.1, 0.001),
+    stroke,
+    null,
+    0,
+    false,
+    false,
+    0,
+    FULL_ARC,
+  );
 }
 
 function queueRing(
@@ -367,51 +320,47 @@ function queueRing(
   activeHandle: Gizmo["activeHandle"],
   strokeWidth: number,
 ): void {
-  const step = (Math.PI * 2) / RING_SEGMENTS;
+  const scaleStroke = resolveHandleStroke(
+    hoveredHandle === "ring-scale" ? RING_SCALE_STROKE_HOVER : RING_SCALE_STROKE,
+    activeHandle,
+    "ring-scale",
+  );
 
-  for (let index = 0; index < RING_SEGMENTS; index += 1) {
-    const angleStart = index * step;
-    const angleEnd = angleStart + step;
+  queueCircle(
+    queue,
+    frameAllocator,
+    centerX,
+    centerY,
+    scaleRingRadius * 2,
+    TRANSPARENT_FILL,
+    scaleStroke,
+    strokeWidth,
+    false,
+    false,
+    0,
+    FULL_ARC,
+  );
 
-    const startX = centerX + Math.cos(angleStart + rotation) * scaleRingRadius;
-    const startY = centerY + Math.sin(angleStart + rotation) * scaleRingRadius;
-    const endX = centerX + Math.cos(angleEnd + rotation) * scaleRingRadius;
-    const endY = centerY + Math.sin(angleEnd + rotation) * scaleRingRadius;
+  const rotateStroke = resolveHandleStroke(
+    hoveredHandle === "ring-rotate" ? RING_ROTATE_STROKE_HOVER : RING_ROTATE_STROKE,
+    activeHandle,
+    "ring-rotate",
+  );
 
-    const stroke = resolveHandleStroke(
-      hoveredHandle === "ring-scale" ? RING_SCALE_STROKE_HOVER : RING_SCALE_STROKE,
-      activeHandle,
-      "ring-scale",
-    );
-    queueLine(queue, frameAllocator, startX, startY, endX, endY, stroke, strokeWidth);
-  }
-
-  for (let index = 0; index < RING_SEGMENTS; index += 1) {
-    const angleStart = index * step;
-    const angleEnd = angleStart + step;
-
-    const midpointAngle = angleStart + step * 0.5;
-    const midX = Math.cos(midpointAngle);
-    const midY = Math.sin(midpointAngle);
-    const isRotateQuadrant = midX >= 0 && midY <= 0;
-
-    if (!isRotateQuadrant) {
-      continue;
-    }
-
-    const startX = centerX + Math.cos(angleStart + rotation) * rotateRingRadius;
-    const startY = centerY + Math.sin(angleStart + rotation) * rotateRingRadius;
-    const endX = centerX + Math.cos(angleEnd + rotation) * rotateRingRadius;
-    const endY = centerY + Math.sin(angleEnd + rotation) * rotateRingRadius;
-
-    const stroke = resolveHandleStroke(
-      hoveredHandle === "ring-rotate" ? RING_ROTATE_STROKE_HOVER : RING_ROTATE_STROKE,
-      activeHandle,
-      "ring-rotate",
-    );
-
-    queueLine(queue, frameAllocator, startX, startY, endX, endY, stroke, strokeWidth);
-  }
+  queueCircle(
+    queue,
+    frameAllocator,
+    centerX,
+    centerY,
+    rotateRingRadius * 2,
+    TRANSPARENT_FILL,
+    rotateStroke,
+    strokeWidth,
+    false,
+    true,
+    rotation,
+    rotation - Math.PI * 0.5,
+  );
 }
 
 function resolveHandleStroke(
@@ -508,16 +457,19 @@ function queueRotatePreview(
 
   const startAngle = Math.atan2(gizmo.rotateStartDeltaY, gizmo.rotateStartDeltaX);
   const radius = Math.hypot(gizmo.rotateStartDeltaX, gizmo.rotateStartDeltaY);
-  queueArc(
+  queueCircle(
     queue,
     frameAllocator,
     centerX,
     centerY,
-    radius,
-    startAngle,
-    startAngle + gizmo.rotateAngleDelta,
+    radius * 2,
+    ROTATE_PREVIEW_FILL,
     RING_ROTATE_STROKE_HOVER,
     strokeWidth,
+    true,
+    true,
+    startAngle,
+    startAngle + gizmo.rotateAngleDelta,
   );
 }
 
@@ -594,32 +546,6 @@ function queueDottedLine(
   }
 }
 
-function queueCornerArc(
-  queue: RenderQueue,
-  frameAllocator: InternalFrameAllocator<EngineFrameAllocatorRegistry>,
-  centerX: number,
-  centerY: number,
-  radius: number,
-  startAngle: number,
-  endAngle: number,
-  angleOffset: number,
-  stroke: Color,
-  strokeWidth: number,
-): void {
-  const step = (endAngle - startAngle) / PLANE_CORNER_SEGMENTS;
-  for (let index = 0; index < PLANE_CORNER_SEGMENTS; index += 1) {
-    const angleA = startAngle + step * index;
-    const angleB = angleA + step;
-
-    const startX = centerX + Math.cos(angleA + angleOffset) * radius;
-    const startY = centerY + Math.sin(angleA + angleOffset) * radius;
-    const endX = centerX + Math.cos(angleB + angleOffset) * radius;
-    const endY = centerY + Math.sin(angleB + angleOffset) * radius;
-
-    queueLine(queue, frameAllocator, startX, startY, endX, endY, stroke, strokeWidth);
-  }
-}
-
 function queueScalePreview(
   queue: RenderQueue,
   frameAllocator: InternalFrameAllocator<EngineFrameAllocatorRegistry>,
@@ -641,16 +567,19 @@ function queueScalePreview(
   const donutThickness = outerRadius - innerRadius;
 
   if (donutThickness >= MIN_DONUT_THICKNESS_WORLD) {
-    queueArc(
+    queueCircle(
       queue,
       frameAllocator,
       centerX,
       centerY,
-      innerRadius + donutThickness * 0.5,
-      0,
-      Math.PI * 2,
+      outerRadius * 2,
+      SCALE_PREVIEW_FILL,
       SCALE_PREVIEW_FILL,
       donutThickness,
+      false,
+      false,
+      0,
+      FULL_ARC,
     );
   }
 
@@ -666,16 +595,19 @@ function queueScalePreview(
     gapLength,
   );
 
-  queueArc(
+  queueCircle(
     queue,
     frameAllocator,
     centerX,
     centerY,
-    currentRadius,
-    0,
-    Math.PI * 2,
+    currentRadius * 2,
+    TRANSPARENT_FILL,
     RING_SCALE_STROKE_HOVER,
     strokeWidth,
+    false,
+    false,
+    0,
+    FULL_ARC,
   );
 }
 
@@ -711,20 +643,6 @@ function queueDottedArc(
   }
 }
 
-function rotateLocalPoint(
-  localX: number,
-  localY: number,
-  centerX: number,
-  centerY: number,
-  cosRotation: number,
-  sinRotation: number,
-): [number, number] {
-  return [
-    centerX + localX * cosRotation - localY * sinRotation,
-    centerY + localX * sinRotation + localY * cosRotation,
-  ];
-}
-
 function queueLine(
   queue: RenderQueue,
   frameAllocator: InternalFrameAllocator<EngineFrameAllocatorRegistry>,
@@ -740,6 +658,84 @@ function queueLine(
 
   const shape = frameAllocator.acquire("engine:shape-command");
   writeLineShape(shape, startX, startY, deltaX, deltaY, stroke, strokeWidth);
+
+  const command = frameAllocator.acquire("engine:render-command");
+  command.type = "shape-draw";
+  command.world = null;
+  command.entityId = null;
+  command.shape = shape;
+  command.layer = GIZMO_LAYER;
+  command.zOrder = GIZMO_Z_ORDER;
+
+  queue.add(command);
+}
+
+function queueCircle(
+  queue: RenderQueue,
+  frameAllocator: InternalFrameAllocator<EngineFrameAllocatorRegistry>,
+  centerX: number,
+  centerY: number,
+  diameter: number,
+  fill: Color,
+  stroke: Color | null,
+  strokeWidth: number,
+  fillEnabled: boolean,
+  arcEnabled: boolean,
+  arcStart: number,
+  arcEnd: number,
+): void {
+  const shape = frameAllocator.acquire("engine:shape-command");
+  writeCircleShape(
+    shape,
+    centerX,
+    centerY,
+    diameter,
+    fill,
+    stroke,
+    strokeWidth,
+    fillEnabled,
+    arcEnabled,
+    arcStart,
+    arcEnd,
+  );
+
+  const command = frameAllocator.acquire("engine:render-command");
+  command.type = "shape-draw";
+  command.world = null;
+  command.entityId = null;
+  command.shape = shape;
+  command.layer = GIZMO_LAYER;
+  command.zOrder = GIZMO_Z_ORDER;
+
+  queue.add(command);
+}
+
+function queueRoundedRectangle(
+  queue: RenderQueue,
+  frameAllocator: InternalFrameAllocator<EngineFrameAllocatorRegistry>,
+  centerX: number,
+  centerY: number,
+  width: number,
+  height: number,
+  rotation: number,
+  fill: Color,
+  stroke: Color | null,
+  strokeWidth: number,
+  cornerRadius: number,
+): void {
+  const shape = frameAllocator.acquire("engine:shape-command");
+  writeRoundedRectangleShape(
+    shape,
+    centerX,
+    centerY,
+    width,
+    height,
+    rotation,
+    fill,
+    stroke,
+    strokeWidth,
+    cornerRadius,
+  );
 
   const command = frameAllocator.acquire("engine:render-command");
   command.type = "shape-draw";
@@ -775,4 +771,79 @@ function writeLineShape(
   shape.fill.a = TRANSPARENT_FILL.a;
   shape.stroke = stroke;
   shape.strokeWidth = strokeWidth;
+  shape.fillEnabled = false;
+  shape.arcEnabled = false;
+  shape.arcStart = 0;
+  shape.arcEnd = FULL_ARC;
+  shape.cornerRadius = 0;
+}
+
+function writeCircleShape(
+  shape: ShapeRenderData,
+  centerX: number,
+  centerY: number,
+  diameter: number,
+  fill: Color,
+  stroke: Color | null,
+  strokeWidth: number,
+  fillEnabled: boolean,
+  arcEnabled: boolean,
+  arcStart: number,
+  arcEnd: number,
+): void {
+  const normalizedArcStart = arcEnabled ? -arcStart : arcStart;
+  const normalizedArcEnd = arcEnabled ? -arcEnd : arcEnd;
+
+  shape.type = "circle";
+  shape.x = centerX;
+  shape.y = centerY;
+  shape.width = diameter;
+  shape.height = diameter;
+  shape.rotation = 0;
+  shape.scaleX = 1;
+  shape.scaleY = 1;
+  shape.fill.r = fill.r;
+  shape.fill.g = fill.g;
+  shape.fill.b = fill.b;
+  shape.fill.a = fill.a;
+  shape.stroke = stroke;
+  shape.strokeWidth = strokeWidth;
+  shape.fillEnabled = fillEnabled;
+  shape.arcEnabled = arcEnabled;
+  shape.arcStart = normalizedArcStart;
+  shape.arcEnd = normalizedArcEnd;
+  shape.cornerRadius = 0;
+}
+
+function writeRoundedRectangleShape(
+  shape: ShapeRenderData,
+  centerX: number,
+  centerY: number,
+  width: number,
+  height: number,
+  rotation: number,
+  fill: Color,
+  stroke: Color | null,
+  strokeWidth: number,
+  cornerRadius: number,
+): void {
+  shape.type = "rounded-rectangle";
+  shape.x = centerX;
+  shape.y = centerY;
+  shape.width = width;
+  shape.height = height;
+  shape.rotation = rotation;
+  shape.scaleX = 1;
+  shape.scaleY = 1;
+  shape.fill.r = fill.r;
+  shape.fill.g = fill.g;
+  shape.fill.b = fill.b;
+  shape.fill.a = fill.a;
+  shape.stroke = stroke;
+  shape.strokeWidth = strokeWidth;
+  shape.fillEnabled = fill.a > 0;
+  shape.arcEnabled = false;
+  shape.arcStart = 0;
+  shape.arcEnd = FULL_ARC;
+  shape.cornerRadius = cornerRadius;
 }

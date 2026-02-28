@@ -1,9 +1,9 @@
 import invariant from "tiny-invariant";
-import circleFragmentShaderSource from "@render/renderers/webGL/shaders/circle.frag";
-import circleVertexShaderSource from "@render/renderers/webGL/shaders/circle.vert";
+import roundedRectangleFragmentShaderSource from "@render/renderers/webGL/shaders/rounded-rectangle.frag";
+import roundedRectangleVertexShaderSource from "@render/renderers/webGL/shaders/rounded-rectangle.vert";
 import { createProgram } from "@render/renderers/webGL/registry/create";
 
-export interface CircleProgram {
+export interface RoundedRectangleProgram {
   program: WebGLProgram;
   positionBuffer: WebGLBuffer;
   uvBuffer: WebGLBuffer;
@@ -13,25 +13,23 @@ export interface CircleProgram {
   hasStrokeUniformLocation: WebGLUniformLocation | null;
   strokeThicknessUniformLocation: WebGLUniformLocation | null;
   fillEnabledUniformLocation: WebGLUniformLocation | null;
-  arcEnabledUniformLocation: WebGLUniformLocation | null;
-  arcStartUniformLocation: WebGLUniformLocation | null;
-  arcEndUniformLocation: WebGLUniformLocation | null;
-  arcDirectionUniformLocation: WebGLUniformLocation | null;
+  sizeUniformLocation: WebGLUniformLocation | null;
+  cornerRadiusUniformLocation: WebGLUniformLocation | null;
 }
 
-export const createCircleProgram = createProgram<CircleProgram>((gl, compiler) => {
+export const createRoundedRectangleProgram = createProgram<RoundedRectangleProgram>((gl, compiler) => {
   const program = compiler.createProgram(
-    compiler.compile(gl.VERTEX_SHADER, circleVertexShaderSource, "circle.vert"), 
-    compiler.compile(gl.FRAGMENT_SHADER, circleFragmentShaderSource, "circle.frag")
+    compiler.compile(gl.VERTEX_SHADER, roundedRectangleVertexShaderSource, "rounded-rectangle.vert"),
+    compiler.compile(gl.FRAGMENT_SHADER, roundedRectangleFragmentShaderSource, "rounded-rectangle.frag"),
   );
 
   const positionBuffer = gl.createBuffer();
   const uvBuffer = gl.createBuffer();
   const vertexArray = gl.createVertexArray();
 
-  invariant(positionBuffer, "Failed to create position buffer for circle program");
-  invariant(uvBuffer, "Failed to create UV buffer for circle program");
-  invariant(vertexArray, "Failed to create vertex array for circle program");
+  invariant(positionBuffer, "Failed to create position buffer for rounded rectangle program");
+  invariant(uvBuffer, "Failed to create UV buffer for rounded rectangle program");
+  invariant(vertexArray, "Failed to create vertex array for rounded rectangle program");
 
   gl.bindVertexArray(vertexArray);
 
@@ -55,9 +53,7 @@ export const createCircleProgram = createProgram<CircleProgram>((gl, compiler) =
     hasStrokeUniformLocation: gl.getUniformLocation(program, "uHasStroke"),
     strokeThicknessUniformLocation: gl.getUniformLocation(program, "uStrokeThickness"),
     fillEnabledUniformLocation: gl.getUniformLocation(program, "uFillEnabled"),
-    arcEnabledUniformLocation: gl.getUniformLocation(program, "uArcEnabled"),
-    arcStartUniformLocation: gl.getUniformLocation(program, "uArcStart"),
-    arcEndUniformLocation: gl.getUniformLocation(program, "uArcEnd"),
-    arcDirectionUniformLocation: gl.getUniformLocation(program, "uArcDirection"),
+    sizeUniformLocation: gl.getUniformLocation(program, "uSize"),
+    cornerRadiusUniformLocation: gl.getUniformLocation(program, "uCornerRadius"),
   };
 });

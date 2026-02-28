@@ -88,9 +88,9 @@ describe("queueGizmos", () => {
 
     queueGizmos(world, renderer, queue, frameAllocator);
 
-    const hasDiagonalPlaneLine = queue.commands.some((command) => {
+    const hasRotatedPlaneHandle = queue.commands.some((command) => {
       const shape = command.shape;
-      if (!shape || shape.type !== "line" || !shape.stroke) {
+      if (!shape || shape.type !== "rounded-rectangle" || !shape.stroke) {
         return false;
       }
 
@@ -103,7 +103,7 @@ describe("queueGizmos", () => {
       return normalizedRotation > 0.15;
     });
 
-    expect(hasDiagonalPlaneLine).toBe(true);
+    expect(hasRotatedPlaneHandle).toBe(true);
   });
 
   it("renders scale preview donut fill at 30% opacity", () => {
