@@ -1,16 +1,16 @@
 import {
-  Gizmo,
-  GIZMO_AXIS_HIT_THICKNESS_WORLD,
-  GIZMO_AXIS_LENGTH_WORLD,
-  GIZMO_PLANE_HANDLE_OFFSET_X_WORLD,
-  GIZMO_PLANE_HANDLE_OFFSET_Y_WORLD,
-  GIZMO_PLANE_HANDLE_SIZE_WORLD,
-  GIZMO_RING_HIT_THICKNESS_WORLD,
-  GIZMO_RING_RADIUS_WORLD,
-  GIZMO_ROTATE_RING_RADIUS_WORLD,
-  GIZMO_SCALE_MIN_DISTANCE_WORLD,
-  Transform2D,
-  type GizmoHandle,
+    Gizmo,
+    GIZMO_AXIS_HIT_THICKNESS_WORLD,
+    GIZMO_AXIS_LENGTH_WORLD,
+    GIZMO_PLANE_HANDLE_OFFSET_X_WORLD,
+    GIZMO_PLANE_HANDLE_OFFSET_Y_WORLD,
+    GIZMO_PLANE_HANDLE_SIZE_WORLD,
+    GIZMO_RING_HIT_THICKNESS_WORLD,
+    GIZMO_RING_RADIUS_WORLD,
+    GIZMO_ROTATE_RING_RADIUS_WORLD,
+    GIZMO_SCALE_MIN_DISTANCE_WORLD,
+    Transform2D,
+    type GizmoHandle,
 } from "../../components";
 import type { EntityId } from "../../ecs/entity";
 import { resolveWorldTransform2D } from "../../ecs/hierarchy";
@@ -177,7 +177,7 @@ export class GizmoInputManager {
       const world = this.#getWorld();
       const gizmo = world.get(this.#dragState.entityId, Gizmo);
       if (gizmo) {
-        gizmo.clearRotatePreview();
+        gizmo.clearInteractionPreview();
       }
 
       this.#gizmo.setHoveredHandle(this.#dragState.entityId, null);
@@ -271,6 +271,12 @@ export class GizmoInputManager {
 
     transform.curr.scale.set(nextScaleX, nextScaleY);
     transform.prev.scale.set(nextScaleX, nextScaleY);
+
+    const gizmo = world.get(this.#dragState.entityId, Gizmo);
+    if (gizmo) {
+      gizmo.scaleCurrentDistance = Math.max(currentDistance, GIZMO_SCALE_MIN_DISTANCE_WORLD);
+    }
+
     this.#updateHoveredHandle(event);
   }
 
@@ -282,7 +288,7 @@ export class GizmoInputManager {
     const world = this.#getWorld();
     const gizmo = world.get(this.#dragState.entityId, Gizmo);
     if (gizmo) {
-      gizmo.clearRotatePreview();
+      gizmo.clearInteractionPreview();
     }
 
     this.#gizmo.setHoveredHandle(this.#dragState.entityId, null);
@@ -413,15 +419,23 @@ export class GizmoInputManager {
     }
 
     if (handle === "ring-scale") {
+      const startPointerDistance = Math.max(
+        Math.hypot(event.worldX - centerX, event.worldY - centerY),
+        GIZMO_SCALE_MIN_DISTANCE_WORLD,
+      );
+
       this.#dragState = {
         mode: "scale",
         entityId: gizmoEntityId,
-        startPointerDistance: Math.hypot(event.worldX - centerX, event.worldY - centerY),
+        startPointerDistance,
         startScaleX: transform.curr.scale.x,
         startScaleY: transform.curr.scale.y,
         pointerId: event.pointerId,
       };
 
+      gizmo.clearRotatePreview();
+      gizmo.scaleStartDistance = startPointerDistance;
+      gizmo.scaleCurrentDistance = startPointerDistance;
       gizmo.hoveredHandle = "ring-scale";
       this.#gizmo.setActiveHandle(gizmoEntityId, "ring-scale");
       return true;
@@ -454,12 +468,18 @@ export class GizmoInputManager {
 
     const planeCenterX = centerX + planeOffsetX;
     const planeCenterY = centerY + planeOffsetY;
-    const planeMinX = planeCenterX - planeHalfSize;
-    const planeMaxX = planeCenterX + planeHalfSize;
-    const planeMinY = planeCenterY - planeHalfSize;
-    const planeMaxY = planeCenterY + planeHalfSize;
 
-    if (worldX >= planeMinX && worldX <= planeMaxX && worldY >= planeMinY && worldY <= planeMaxY) {
+    const planeDeltaX = worldX - planeCenterX;
+    const planeDeltaY = worldY - planeCenterY;
+    const planeLocalX = planeDeltaX * cosRotation + planeDeltaY * sinRotation;
+    const planeLocalY = planeDeltaX * sinRotation - planeDeltaY * cosRotation;
+
+    if (
+      planeLocalX >= -planeHalfSize
+      && planeLocalX <= planeHalfSize
+      && planeLocalY >= -planeHalfSize
+      && planeLocalY <= planeHalfSize
+    ) {
       return "plane-xy";
     }
 

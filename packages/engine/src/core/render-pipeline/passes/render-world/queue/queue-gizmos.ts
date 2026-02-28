@@ -1,24 +1,25 @@
 import {
-    Gizmo,
-    GIZMO_ARROW_HEAD_WORLD,
-    GIZMO_AXIS_LENGTH_WORLD,
-    GIZMO_PLANE_HANDLE_OFFSET_X_WORLD,
-    GIZMO_PLANE_HANDLE_OFFSET_Y_WORLD,
-    GIZMO_PLANE_HANDLE_SIZE_WORLD,
-    GIZMO_RING_RADIUS_WORLD,
-    GIZMO_ROTATE_RING_RADIUS_WORLD,
-    type GizmoHandle,
+  Gizmo,
+  GIZMO_ARROW_HEAD_WORLD,
+  GIZMO_AXIS_LENGTH_WORLD,
+  GIZMO_PLANE_HANDLE_OFFSET_X_WORLD,
+  GIZMO_PLANE_HANDLE_OFFSET_Y_WORLD,
+  GIZMO_PLANE_HANDLE_SIZE_WORLD,
+  GIZMO_RING_RADIUS_WORLD,
+  GIZMO_ROTATE_RING_RADIUS_WORLD,
+  GIZMO_SCALE_MIN_DISTANCE_WORLD,
+  type GizmoHandle,
 } from "../../../../../components/gizmo";
 import { Color } from "../../../../../components/sprite";
 import { Transform2D } from "../../../../../components/transform";
 import { resolveWorldTransform2D } from "../../../../../ecs/hierarchy";
 import type { UserWorld } from "../../../../../ecs/world";
 import type {
-    EngineFrameAllocatorRegistry,
-    InternalFrameAllocator,
-    Renderer,
-    RenderQueue,
-    ShapeRenderData,
+  EngineFrameAllocatorRegistry,
+  InternalFrameAllocator,
+  Renderer,
+  RenderQueue,
+  ShapeRenderData,
 } from "../../../../../render";
 
 /**********************************************************************************************************
@@ -31,6 +32,10 @@ const PLANE_CORNER_RADIUS_RATIO = 0.05;
 const PLANE_CORNER_SEGMENTS = 4;
 const ROTATE_DASH_LENGTH_SCREEN = 8;
 const ROTATE_GAP_LENGTH_SCREEN = 6;
+const SCALE_DASH_LENGTH_SCREEN = 6;
+const SCALE_GAP_LENGTH_SCREEN = 6;
+const SCALE_PREVIEW_FILL_ALPHA = 0.3;
+const MIN_DONUT_THICKNESS_WORLD = 0.25;
 const INACTIVE_HANDLE_ALPHA = 0.2;
 
 const RING_SEGMENTS = 48;
@@ -55,6 +60,7 @@ const RING_SCALE_STROKE_HOVER_INACTIVE = new Color(1, 0.9, 0.45, INACTIVE_HANDLE
 const RING_ROTATE_STROKE_HOVER_INACTIVE = new Color(0.5, 0.75, 1, INACTIVE_HANDLE_ALPHA);
 const PLANE_STROKE_INACTIVE = new Color(0.95, 0.95, 0.95, INACTIVE_HANDLE_ALPHA);
 const PLANE_STROKE_HOVER_INACTIVE = new Color(1, 0.9, 0.45, INACTIVE_HANDLE_ALPHA);
+const SCALE_PREVIEW_FILL = new Color(1, 1, 1, SCALE_PREVIEW_FILL_ALPHA);
 
 const TRANSPARENT_FILL = new Color(0, 0, 0, 0);
 
@@ -151,6 +157,17 @@ export function queueGizmos(
       strokeWidthWorld,
     );
 
+    queueScalePreview(
+      queue,
+      frameAllocator,
+      centerX,
+      centerY,
+      gizmo,
+      SCALE_DASH_LENGTH_SCREEN / cameraZoom,
+      SCALE_GAP_LENGTH_SCREEN / cameraZoom,
+      strokeWidthWorld,
+    );
+
     queuePlaneHandle(
       queue,
       frameAllocator,
@@ -160,6 +177,7 @@ export function queueGizmos(
       centerY
         + GIZMO_PLANE_HANDLE_OFFSET_X_WORLD * Math.sin(rotation)
         + GIZMO_PLANE_HANDLE_OFFSET_Y_WORLD * Math.cos(rotation),
+      rotation,
       GIZMO_PLANE_HANDLE_SIZE_WORLD,
       resolveHandleStroke(
         gizmo.hoveredHandle === "plane-xy" ? PLANE_STROKE_HOVER : PLANE_STROKE,
@@ -176,63 +194,108 @@ function queuePlaneHandle(
   frameAllocator: InternalFrameAllocator<EngineFrameAllocatorRegistry>,
   centerX: number,
   centerY: number,
+  rotation: number,
   size: number,
   stroke: Color,
   strokeWidth: number,
 ): void {
   const half = size * 0.5;
-  const minX = centerX - half;
-  const maxX = centerX + half;
-  const minY = centerY - half;
-  const maxY = centerY + half;
+  const cosRotation = Math.cos(rotation);
+  const sinRotation = Math.sin(rotation);
   const cornerRadius = size * PLANE_CORNER_RADIUS_RATIO;
 
-  queueLine(queue, frameAllocator, minX + cornerRadius, minY, maxX - cornerRadius, minY, stroke, strokeWidth);
-  queueLine(queue, frameAllocator, maxX, minY + cornerRadius, maxX, maxY - cornerRadius, stroke, strokeWidth);
-  queueLine(queue, frameAllocator, maxX - cornerRadius, maxY, minX + cornerRadius, maxY, stroke, strokeWidth);
-  queueLine(queue, frameAllocator, minX, maxY - cornerRadius, minX, minY + cornerRadius, stroke, strokeWidth);
+  const [topStartX, topStartY] = rotateLocalPoint(-half + cornerRadius, -half, centerX, centerY, cosRotation, sinRotation);
+  const [topEndX, topEndY] = rotateLocalPoint(half - cornerRadius, -half, centerX, centerY, cosRotation, sinRotation);
+  const [rightStartX, rightStartY] = rotateLocalPoint(half, -half + cornerRadius, centerX, centerY, cosRotation, sinRotation);
+  const [rightEndX, rightEndY] = rotateLocalPoint(half, half - cornerRadius, centerX, centerY, cosRotation, sinRotation);
+  const [bottomStartX, bottomStartY] = rotateLocalPoint(half - cornerRadius, half, centerX, centerY, cosRotation, sinRotation);
+  const [bottomEndX, bottomEndY] = rotateLocalPoint(-half + cornerRadius, half, centerX, centerY, cosRotation, sinRotation);
+  const [leftStartX, leftStartY] = rotateLocalPoint(-half, half - cornerRadius, centerX, centerY, cosRotation, sinRotation);
+  const [leftEndX, leftEndY] = rotateLocalPoint(-half, -half + cornerRadius, centerX, centerY, cosRotation, sinRotation);
+
+  queueLine(queue, frameAllocator, topStartX, topStartY, topEndX, topEndY, stroke, strokeWidth);
+  queueLine(queue, frameAllocator, rightStartX, rightStartY, rightEndX, rightEndY, stroke, strokeWidth);
+  queueLine(queue, frameAllocator, bottomStartX, bottomStartY, bottomEndX, bottomEndY, stroke, strokeWidth);
+  queueLine(queue, frameAllocator, leftStartX, leftStartY, leftEndX, leftEndY, stroke, strokeWidth);
+
+  const [topLeftCenterX, topLeftCenterY] = rotateLocalPoint(
+    -half + cornerRadius,
+    -half + cornerRadius,
+    centerX,
+    centerY,
+    cosRotation,
+    sinRotation,
+  );
+  const [topRightCenterX, topRightCenterY] = rotateLocalPoint(
+    half - cornerRadius,
+    -half + cornerRadius,
+    centerX,
+    centerY,
+    cosRotation,
+    sinRotation,
+  );
+  const [bottomRightCenterX, bottomRightCenterY] = rotateLocalPoint(
+    half - cornerRadius,
+    half - cornerRadius,
+    centerX,
+    centerY,
+    cosRotation,
+    sinRotation,
+  );
+  const [bottomLeftCenterX, bottomLeftCenterY] = rotateLocalPoint(
+    -half + cornerRadius,
+    half - cornerRadius,
+    centerX,
+    centerY,
+    cosRotation,
+    sinRotation,
+  );
 
   queueCornerArc(
     queue,
     frameAllocator,
-    minX + cornerRadius,
-    minY + cornerRadius,
+    topLeftCenterX,
+    topLeftCenterY,
     cornerRadius,
     Math.PI,
     Math.PI * 1.5,
+    rotation,
     stroke,
     strokeWidth,
   );
   queueCornerArc(
     queue,
     frameAllocator,
-    maxX - cornerRadius,
-    minY + cornerRadius,
+    topRightCenterX,
+    topRightCenterY,
     cornerRadius,
     Math.PI * 1.5,
     Math.PI * 2,
+    rotation,
     stroke,
     strokeWidth,
   );
   queueCornerArc(
     queue,
     frameAllocator,
-    maxX - cornerRadius,
-    maxY - cornerRadius,
+    bottomRightCenterX,
+    bottomRightCenterY,
     cornerRadius,
     0,
     Math.PI * 0.5,
+    rotation,
     stroke,
     strokeWidth,
   );
   queueCornerArc(
     queue,
     frameAllocator,
-    minX + cornerRadius,
-    maxY - cornerRadius,
+    bottomLeftCenterX,
+    bottomLeftCenterY,
     cornerRadius,
     Math.PI * 0.5,
     Math.PI,
+    rotation,
     stroke,
     strokeWidth,
   );
@@ -536,6 +599,7 @@ function queueCornerArc(
   radius: number,
   startAngle: number,
   endAngle: number,
+  angleOffset: number,
   stroke: Color,
   strokeWidth: number,
 ): void {
@@ -544,13 +608,118 @@ function queueCornerArc(
     const angleA = startAngle + step * index;
     const angleB = angleA + step;
 
-    const startX = centerX + Math.cos(angleA) * radius;
-    const startY = centerY + Math.sin(angleA) * radius;
-    const endX = centerX + Math.cos(angleB) * radius;
-    const endY = centerY + Math.sin(angleB) * radius;
+    const startX = centerX + Math.cos(angleA + angleOffset) * radius;
+    const startY = centerY + Math.sin(angleA + angleOffset) * radius;
+    const endX = centerX + Math.cos(angleB + angleOffset) * radius;
+    const endY = centerY + Math.sin(angleB + angleOffset) * radius;
 
     queueLine(queue, frameAllocator, startX, startY, endX, endY, stroke, strokeWidth);
   }
+}
+
+function queueScalePreview(
+  queue: RenderQueue,
+  frameAllocator: InternalFrameAllocator<EngineFrameAllocatorRegistry>,
+  centerX: number,
+  centerY: number,
+  gizmo: Gizmo,
+  dashLength: number,
+  gapLength: number,
+  strokeWidth: number,
+): void {
+  if (gizmo.scaleStartDistance === null || gizmo.scaleCurrentDistance === null) {
+    return;
+  }
+
+  const startRadius = Math.max(gizmo.scaleStartDistance, GIZMO_SCALE_MIN_DISTANCE_WORLD);
+  const currentRadius = Math.max(gizmo.scaleCurrentDistance, GIZMO_SCALE_MIN_DISTANCE_WORLD);
+  const innerRadius = Math.min(startRadius, currentRadius);
+  const outerRadius = Math.max(startRadius, currentRadius);
+  const donutThickness = outerRadius - innerRadius;
+
+  if (donutThickness >= MIN_DONUT_THICKNESS_WORLD) {
+    queueArc(
+      queue,
+      frameAllocator,
+      centerX,
+      centerY,
+      innerRadius + donutThickness * 0.5,
+      0,
+      Math.PI * 2,
+      SCALE_PREVIEW_FILL,
+      donutThickness,
+    );
+  }
+
+  queueDottedArc(
+    queue,
+    frameAllocator,
+    centerX,
+    centerY,
+    startRadius,
+    RING_SCALE_STROKE,
+    strokeWidth,
+    dashLength,
+    gapLength,
+  );
+
+  queueArc(
+    queue,
+    frameAllocator,
+    centerX,
+    centerY,
+    currentRadius,
+    0,
+    Math.PI * 2,
+    RING_SCALE_STROKE_HOVER,
+    strokeWidth,
+  );
+}
+
+function queueDottedArc(
+  queue: RenderQueue,
+  frameAllocator: InternalFrameAllocator<EngineFrameAllocatorRegistry>,
+  centerX: number,
+  centerY: number,
+  radius: number,
+  stroke: Color,
+  strokeWidth: number,
+  dashLength: number,
+  gapLength: number,
+): void {
+  const circumference = Math.PI * 2 * radius;
+  const period = dashLength + gapLength;
+
+  if (circumference <= 0 || period <= 0) {
+    return;
+  }
+
+  const dashAngle = (dashLength / circumference) * Math.PI * 2;
+  const gapAngle = (gapLength / circumference) * Math.PI * 2;
+  const stepAngle = dashAngle + gapAngle;
+
+  let angle = 0;
+  while (angle < Math.PI * 2) {
+    const dashStart = angle;
+    const dashEnd = Math.min(angle + dashAngle, Math.PI * 2);
+
+    queueArc(queue, frameAllocator, centerX, centerY, radius, dashStart, dashEnd, stroke, strokeWidth);
+    angle += stepAngle;
+  }
+}
+
+function rotateLocalPoint(
+  localX: number,
+  localY: number,
+  centerX: number,
+  centerY: number,
+  cosRotation: number,
+  sinRotation: number,
+): [number, number] {
+  return [
+    centerX + localX * cosRotation - localY * sinRotation,
+    centerY + localX * sinRotation + localY * cosRotation,
+  ];
 }
 
 function queueLine(

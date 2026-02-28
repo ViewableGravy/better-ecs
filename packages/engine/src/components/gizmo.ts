@@ -20,6 +20,8 @@ export class Gizmo {
 	public rotateCurrentDeltaX: number | null;
 	public rotateCurrentDeltaY: number | null;
 	public rotateAngleDelta: number | null;
+	public scaleStartDistance: number | null;
+	public scaleCurrentDistance: number | null;
 
 	constructor() {
 		this.hoveredHandle = null;
@@ -29,6 +31,8 @@ export class Gizmo {
 		this.rotateCurrentDeltaX = null;
 		this.rotateCurrentDeltaY = null;
 		this.rotateAngleDelta = null;
+		this.scaleStartDistance = null;
+		this.scaleCurrentDistance = null;
 	}
 
 	public clearRotatePreview(): void {
@@ -37,5 +41,15 @@ export class Gizmo {
 		this.rotateCurrentDeltaX = null;
 		this.rotateCurrentDeltaY = null;
 		this.rotateAngleDelta = null;
+	}
+
+	public clearScalePreview(): void {
+		this.scaleStartDistance = null;
+		this.scaleCurrentDistance = null;
+	}
+
+	public clearInteractionPreview(): void {
+		this.clearRotatePreview();
+		this.clearScalePreview();
 	}
 }
