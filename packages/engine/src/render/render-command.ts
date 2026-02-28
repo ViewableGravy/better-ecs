@@ -30,6 +30,10 @@ export class RenderCommand {
     this.#rendererApi.setCamera(x, y, zoom);
   }
 
+  setMeshOverlayEnabled(enabled: boolean): void {
+    this.#rendererApi.setMeshOverlayEnabled(enabled);
+  }
+
   getCameraX(): number {
     return this.#rendererApi.getCameraX();
   }

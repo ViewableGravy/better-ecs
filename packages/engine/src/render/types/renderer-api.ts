@@ -10,6 +10,7 @@ export interface RendererAPI {
   clear(color: Color): void;
 
   setCamera(x: number, y: number, zoom: number): void;
+  setMeshOverlayEnabled(enabled: boolean): void;
   getCameraX(): number;
   getCameraY(): number;
   getCameraZoom(): number;

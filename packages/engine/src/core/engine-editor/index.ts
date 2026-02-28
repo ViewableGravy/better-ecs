@@ -2,9 +2,10 @@ import { EngineCamera } from "@core/engine-camera";
 import { GizmoInputManager } from "@core/engine-editor/gizmo-input-manager";
 import { EngineEditorGizmoManager } from "@core/engine-editor/gizmo-manager";
 import { EngineEditorSelectionManager } from "@core/engine-editor/selection-manager";
-import type { EngineInput } from "@core/input";
+import type { EngineInput, EngineKeyboardEvent } from "@core/input";
 import { createEngineRunningState, type EngineRunningState } from "@core/running-state";
 import type { UserWorld } from "@ecs/world";
+import { proxy } from "valtio";
 
 type EngineEditorHost = {
   scene: {
@@ -24,6 +25,9 @@ export class EngineEditor {
   #previewMode = false;
 
   public readonly runningState: EngineRunningState;
+  public readonly viewState = proxy({
+    showQuadOutlines: false,
+  });
   public readonly camera: EngineCamera;
   public readonly gizmo: EngineEditorGizmoManager;
   public readonly selection: EngineEditorSelectionManager;
@@ -58,6 +62,16 @@ export class EngineEditor {
       getWorld: () => this.#engine.scene.world,
       gizmo: this.gizmo,
     });
+
+    if (typeof window !== "undefined") {
+      this.#engine.input.addEventListener({
+        event: { code: "KeyM", modifiers: { ctrl: true, shift: true } },
+        callback: (event: EngineKeyboardEvent) => {
+          event.preventDefault();
+          this.toggleQuadOutlines();
+        },
+      });
+    }
   }
 
   public get running(): EngineRunningState {
@@ -66,6 +80,15 @@ export class EngineEditor {
 
   public setPreviewMode(previewMode: boolean): void {
     this.#previewMode = previewMode;
+  }
+
+  public setQuadOutlines(showQuadOutlines: boolean): void {
+    this.viewState.showQuadOutlines = showQuadOutlines;
+  }
+
+  public toggleQuadOutlines(): boolean {
+    this.viewState.showQuadOutlines = !this.viewState.showQuadOutlines;
+    return this.viewState.showQuadOutlines;
   }
 
   private onPause(): void {

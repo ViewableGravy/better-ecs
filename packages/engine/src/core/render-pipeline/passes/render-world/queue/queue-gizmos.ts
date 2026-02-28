@@ -1,14 +1,14 @@
 import {
-    Gizmo,
-    GIZMO_ARROW_HEAD_WORLD,
-    GIZMO_AXIS_LENGTH_WORLD,
-    GIZMO_PLANE_HANDLE_OFFSET_X_WORLD,
-    GIZMO_PLANE_HANDLE_OFFSET_Y_WORLD,
-    GIZMO_PLANE_HANDLE_SIZE_WORLD,
-    GIZMO_RING_RADIUS_WORLD,
-    GIZMO_ROTATE_RING_RADIUS_WORLD,
-    GIZMO_SCALE_MIN_DISTANCE_WORLD,
-    type GizmoHandle,
+  Gizmo,
+  GIZMO_ARROW_HEAD_WORLD,
+  GIZMO_AXIS_LENGTH_WORLD,
+  GIZMO_PLANE_HANDLE_OFFSET_X_WORLD,
+  GIZMO_PLANE_HANDLE_OFFSET_Y_WORLD,
+  GIZMO_PLANE_HANDLE_SIZE_WORLD,
+  GIZMO_RING_RADIUS_WORLD,
+  GIZMO_ROTATE_RING_RADIUS_WORLD,
+  GIZMO_SCALE_MIN_DISTANCE_WORLD,
+  type GizmoHandle,
 } from "@components/gizmo";
 import { Color } from "@components/sprite";
 import { Transform2D } from "@components/transform";
@@ -16,11 +16,11 @@ import { fromContext, FromRender } from "@context";
 import { resolveWorldTransform2D } from "@ecs/hierarchy";
 import type { UserWorld } from "@ecs/world";
 import type {
-    DenseShapeRenderData,
-    EngineFrameAllocatorRegistry,
-    InternalFrameAllocator,
-    Renderer,
-    RenderQueue,
+  DenseShapeRenderData,
+  EngineFrameAllocatorRegistry,
+  InternalFrameAllocator,
+  Renderer,
+  RenderQueue,
 } from "@render";
 
 /**********************************************************************************************************

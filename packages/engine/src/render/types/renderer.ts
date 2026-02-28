@@ -82,6 +82,7 @@ export interface Renderer {
   drawShaderQuad(shader: ShaderSourceAsset, transform: ShaderTransform2D, options?: ShaderQuadOptions): void;
 
   setCamera(x: number, y: number, zoom: number): void;
+  setMeshOverlayEnabled(enabled: boolean): void;
   getCameraX(): number;
   getCameraY(): number;
   getCameraZoom(): number;

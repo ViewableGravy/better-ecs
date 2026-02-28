@@ -11,6 +11,8 @@ export interface ShapeDrawerContext {
   cameraZoom: number;
   programs: WebGLProgramRegistry;
   drawColorTriangles(vertices: Float32Array, color: Color): void;
+  drawMeshLinesFromTriangles(vertices: Float32Array): void;
+  drawMeshLinesFromTriangleStrip(vertices: Float32Array): void;
 }
 
 export interface ShapeDrawerRegistry {

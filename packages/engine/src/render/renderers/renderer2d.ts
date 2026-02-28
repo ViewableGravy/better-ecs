@@ -206,6 +206,10 @@ export class Renderer2D implements Renderer {
     this.#command.setCamera(x, y, zoom);
   }
 
+  setMeshOverlayEnabled(enabled: boolean): void {
+    this.#command.setMeshOverlayEnabled(enabled);
+  }
+
   getCameraX(): number {
     return this.#command.getCameraX();
   }

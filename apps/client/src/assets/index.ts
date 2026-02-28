@@ -8,5 +8,8 @@ const demoShaderFragmentPath = new URL("./shaders/editor-quad.frag", import.meta
 export const Loader = createAssetLoader({
   "player-sprite": createLoadTexture(PlayerSprite),
   "iron-ore": ironOreSheet,
-  "editor:demo-quad-shader": createLoadShaderSource(demoShaderVertexPath, demoShaderFragmentPath),
+  "editor:demo-quad-shader": createLoadShaderSource(
+    demoShaderVertexPath, 
+    demoShaderFragmentPath
+  ),
 });

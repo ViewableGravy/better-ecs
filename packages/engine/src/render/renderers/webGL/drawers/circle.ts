@@ -71,5 +71,6 @@ export const circleDrawer = createDrawer((context, data) => {
   );
 
   context.gl.drawArrays(context.gl.TRIANGLE_STRIP, 0, 4);
+  context.drawMeshLinesFromTriangleStrip(quadVertices);
   context.gl.bindVertexArray(null);
 });

@@ -32,6 +32,9 @@ export class WebGLRenderAPI implements RendererAPI {
   #shaderCompiler: ShaderCompiler | null = null;
   #customTexturedShaders = new WeakMap<ShaderSourceAsset, TexturedShaderProgram>();
   #assets: LooseAssetManager | null;
+  #meshOverlayEnabled = false;
+
+  static readonly #MESH_OVERLAY_COLOR = new Color(1, 1, 1, 0.5);
 
   constructor(assets?: LooseAssetManager) {
     this.#assets = assets ?? null;
@@ -94,6 +97,10 @@ export class WebGLRenderAPI implements RendererAPI {
     this.#cameraX = x;
     this.#cameraY = y;
     this.#cameraZoom = zoom;
+  }
+
+  setMeshOverlayEnabled(enabled: boolean): void {
+    this.#meshOverlayEnabled = enabled;
   }
 
   getCameraX(): number {
@@ -196,6 +203,10 @@ export class WebGLRenderAPI implements RendererAPI {
 
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
+    if (this.#meshOverlayEnabled) {
+      this.#drawMeshLinesFromTriangleStrip(quad);
+    }
+
     gl.bindVertexArray(null);
   }
 
@@ -291,6 +302,11 @@ export class WebGLRenderAPI implements RendererAPI {
     gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.DYNAMIC_DRAW);
     gl.uniform4f(colorProgram.colorUniformLocation, color.r, color.g, color.b, color.a);
     gl.drawArrays(gl.TRIANGLES, 0, vertices.length / 2);
+
+    if (this.#meshOverlayEnabled) {
+      this.#drawMeshLinesFromTriangles(vertices);
+    }
+
     gl.bindVertexArray(null);
   }
 
@@ -308,7 +324,117 @@ export class WebGLRenderAPI implements RendererAPI {
       drawColorTriangles: (vertices, color) => {
         this.#drawColorTriangles(vertices, color);
       },
+      drawMeshLinesFromTriangles: (vertices) => {
+        this.#drawMeshLinesFromTriangles(vertices);
+      },
+      drawMeshLinesFromTriangleStrip: (vertices) => {
+        this.#drawMeshLinesFromTriangleStrip(vertices);
+      },
     };
+  }
+
+  #drawMeshLinesFromTriangles(vertices: Float32Array): void {
+    if (!this.#meshOverlayEnabled) {
+      return;
+    }
+
+    const edgeSegments = this.#buildUniqueEdgeSegments(vertices, "triangles");
+    if (edgeSegments.length === 0) {
+      return;
+    }
+
+    this.#drawColorLines(edgeSegments, WebGLRenderAPI.#MESH_OVERLAY_COLOR);
+  }
+
+  #drawMeshLinesFromTriangleStrip(vertices: Float32Array): void {
+    if (!this.#meshOverlayEnabled) {
+      return;
+    }
+
+    const edgeSegments = this.#buildUniqueEdgeSegments(vertices, "triangle-strip");
+    if (edgeSegments.length === 0) {
+      return;
+    }
+
+    this.#drawColorLines(edgeSegments, WebGLRenderAPI.#MESH_OVERLAY_COLOR);
+  }
+
+  #buildUniqueEdgeSegments(
+    vertices: Float32Array,
+    mode: "triangles" | "triangle-strip",
+  ): Float32Array {
+    const edgeMap = new Map<string, [number, number, number, number]>();
+    const vertexCount = vertices.length / 2;
+
+    const addEdge = (firstIndex: number, secondIndex: number): void => {
+      const firstBase = firstIndex * 2;
+      const secondBase = secondIndex * 2;
+
+      const x1 = vertices[firstBase];
+      const y1 = vertices[firstBase + 1];
+      const x2 = vertices[secondBase];
+      const y2 = vertices[secondBase + 1];
+
+      const isForward = x1 < x2 || (x1 === x2 && y1 <= y2);
+      const key = isForward
+        ? `${x1}|${y1}|${x2}|${y2}`
+        : `${x2}|${y2}|${x1}|${y1}`;
+
+      if (edgeMap.has(key)) {
+        return;
+      }
+
+      edgeMap.set(key, [x1, y1, x2, y2]);
+    };
+
+    if (mode === "triangles") {
+      for (let i = 0; i + 2 < vertexCount; i += 3) {
+        addEdge(i, i + 1);
+        addEdge(i + 1, i + 2);
+        addEdge(i + 2, i);
+      }
+    } else {
+      for (let i = 0; i + 2 < vertexCount; i += 1) {
+        addEdge(i, i + 1);
+        addEdge(i + 1, i + 2);
+        addEdge(i + 2, i);
+      }
+    }
+
+    const result = new Float32Array(edgeMap.size * 4);
+    let offset = 0;
+
+    for (const [x1, y1, x2, y2] of edgeMap.values()) {
+      result[offset] = x1;
+      result[offset + 1] = y1;
+      result[offset + 2] = x2;
+      result[offset + 3] = y2;
+      offset += 4;
+    }
+
+    return result;
+  }
+
+  #drawColorLines(vertices: Float32Array, color: Color): void {
+    const gl = this.#gl;
+    if (!gl) {
+      return;
+    }
+
+    const colorProgram = registry.get("color");
+    if (!colorProgram.colorUniformLocation) {
+      return;
+    }
+
+    gl.useProgram(colorProgram.program);
+    gl.bindVertexArray(colorProgram.vertexArray);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, colorProgram.positionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.DYNAMIC_DRAW);
+    gl.uniform4f(colorProgram.colorUniformLocation, color.r, color.g, color.b, color.a);
+    gl.drawArrays(gl.LINES, 0, vertices.length / 2);
+
+    gl.bindVertexArray(null);
   }
 
   #worldToScreen(x: number, y: number): Vec2 {

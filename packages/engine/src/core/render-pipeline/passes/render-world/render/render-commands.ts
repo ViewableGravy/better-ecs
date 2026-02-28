@@ -6,10 +6,10 @@ import { Transform2D } from "@components/transform";
 import { fromContext, FromEngine, FromRender } from "@context";
 import { resolveWorldTransform2D } from "@ecs/hierarchy";
 import type {
-  EngineFrameAllocatorRegistry,
-  InternalFrameAllocator,
-  Renderer,
-  RenderQueue,
+    EngineFrameAllocatorRegistry,
+    InternalFrameAllocator,
+    Renderer,
+    RenderQueue,
 } from "@render";
 
 const SHARED_RENDER_TRANSFORM = new Transform2D();
@@ -23,6 +23,10 @@ export function renderCommands(
   alpha: number = fromContext(FromRender.Alpha),
   frameAllocator: InternalFrameAllocator<EngineFrameAllocatorRegistry> = fromContext(FromRender.FrameAllocator,),
 ): void {
+  const engine = fromContext(FromEngine.Engine);
+  const showQuadOutlines = engine.editor.viewState.showQuadOutlines;
+  renderer.setMeshOverlayEnabled(showQuadOutlines);
+
   for (const command of queue.commands) {
     if (command.type === "shape-draw") {
       if (command.shape) {
@@ -66,6 +70,7 @@ export function renderCommands(
       sprite.tint.r = originalR;
       sprite.tint.g = originalG;
       sprite.tint.b = originalB;
+
       continue;
     }
 
@@ -101,6 +106,7 @@ export function renderCommands(
         tint,
         time: shaderQuad.useTime ? performance.now() : 0,
       });
+
       continue;
     }
 

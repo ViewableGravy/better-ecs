@@ -57,6 +57,10 @@ export class Canvas2DRenderAPI implements RendererAPI {
     this.cameraZoom = zoom;
   }
 
+  setMeshOverlayEnabled(): void {
+    return;
+  }
+
   getCameraX(): number {
     return this.cameraX;
   }

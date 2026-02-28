@@ -40,6 +40,7 @@ export const DefaultEngineEditorView: React.FC<DefaultEngineEditorViewProps> = (
 						<EngineEditorLayout.Root>
 							<EngineEditorLayout.QuickActions>
 								<QuickActions.PauseToggle />
+								<QuickActions.QuadOutlineToggle />
 								<QuickActions.PreviewModeToggle />
 								<QuickActions.ReloadCanvas />
 								<QuickActions.ReloadEngine />
