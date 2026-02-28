@@ -6,17 +6,20 @@ import type { SceneContext } from "./scene/scene-context";
 type Context = {
   engine: RegisteredEngine | null;
   scene: SceneContext | null;
+  render: object | null;
 };
 
 type LooseContext = {
   engine: EngineClass<any, any, any, any> | null;
   scene: SceneContext | null;
+  render: object | null;
 };
 
 /***** CONSTS *****/
 const context: Context = {
   engine: null,
   scene: null,
+  render: null,
 };
 
 export function setContext(cb: (ctx: Context) => void) {
@@ -27,7 +30,22 @@ function resetContext() {
   setContext((ctx) => {
     ctx.engine = null;
     ctx.scene = null;
+    ctx.render = null;
   });
+}
+
+function assignContextValue<TKey extends keyof Context>(key: TKey, value: Context[TKey]) {
+  setContext((ctx) => {
+    ctx[key] = value;
+  });
+}
+
+export function setContextRender<TRenderContext extends object>(
+  render: TRenderContext | null,
+): object | null {
+  const previous = context.render;
+  assignContextValue("render", render);
+  return previous;
 }
 
 export function executeWithContext<T>(context: Partial<LooseContext>, fn: () => T): T {
@@ -64,4 +82,16 @@ export function getContextEngine(): RegisteredEngine {
   }
 
   return context.engine;
+}
+
+/**
+ * Returns the render context from the current execution context.
+ * Throws if called outside of render pipeline execution.
+ */
+export function getContextRender(): object {
+  if (!context.render) {
+    throw new Error('fromContext({ type: "render" }) called outside of render pipeline execution context');
+  }
+
+  return context.render;
 }

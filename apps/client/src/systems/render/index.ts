@@ -1,5 +1,6 @@
 import { FPSPass } from "@/plugins/fps";
-import { createRenderPipeline } from "@repo/engine";
+import { createRenderPipeline, type CreateRenderPipelineContext } from "@repo/engine";
+import { Assets, Engine, fromContext } from "@repo/engine/context";
 import {
   DEFAULT_RENDERER_CONFIG,
   FrameAllocator,
@@ -12,14 +13,19 @@ import { DrawGridPass } from "./passes/DrawGridPass";
 import { ActiveWorldProvider } from "./world-provider";
 
 export const Render = createRenderPipeline({
-  async initializeContext({ canvas, assets }) {
-    await assets.loadLoose("editor:demo-quad-shader");
+  async initializeContext(): Promise<CreateRenderPipelineContext> {
+    const assets = fromContext(Assets);
+    const { canvas } = fromContext(Engine);
+
+    // load shaders used by render pass
+    await assets.load("editor:demo-quad-shader");
 
     const renderer = new Renderer2D(
       new WebGLRenderAPI(assets),
       DEFAULT_RENDERER_CONFIG,
     );
 
+    // initialize the renderer to compile shaders and warm up pipelines before the first frame
     await renderer.initialize(canvas, assets);
 
     return {

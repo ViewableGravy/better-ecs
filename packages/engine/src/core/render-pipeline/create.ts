@@ -8,6 +8,7 @@ import {
 	type FrameAllocatorRegistry,
 	type InternalFrameAllocator,
 } from "../../render";
+import { setContextRender } from "../context";
 import { RenderPipelineContext } from "./context";
 import type { RenderPass } from "./pass";
 import { BeginFramePass } from "./passes/begin-frame";
@@ -26,7 +27,7 @@ type CorePassOverrides<
 	endFrame?: RenderPass<TRegistry, TState> | false;
 };
 
-type CreateRenderPipelineContext<TState extends object> = {
+export type CreateRenderPipelineContext<TState extends object = Record<string, never>> = {
 	renderer: Renderer;
 	worldProvider?: WorldProvider;
 	frameAllocator?: InternalFrameAllocator<FrameAllocatorRegistry>;
@@ -40,7 +41,7 @@ type InitializeRenderContextOptions = {
 
 type CreateRenderPipelineOptions<
 	TRegistry extends FrameAllocatorRegistry,
-	TState extends object,
+	TState extends object = Record<string, never>,
 > = {
 	initializeContext: (
 		options: InitializeRenderContextOptions,
@@ -171,6 +172,7 @@ export function createRenderPipeline<
 			// 3) Reset per-frame pipeline state and allocator pools.
 			passContext.queue.clear();
 			passContext.frameAllocator.beginFrame();
+			const previousRenderContext = setContextRender(passContext);
 
 			try {
 				// 4) Execute passes with world-pass block interleaving:
@@ -200,7 +202,8 @@ export function createRenderPipeline<
 					index = blockEnd;
 				}
 			} finally {
-				passContext.world = fromContext(Engine).world;
+				setContextRender(previousRenderContext);
+				passContext.world = engine.world;
 				passContext.frameAllocator.endFrame();
 			}
 		},

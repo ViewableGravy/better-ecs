@@ -213,6 +213,27 @@ export class AssetManager<
     return loaded;
   }
 
+  /**
+   * Loads multiple assets by their keys. Returns a promise that resolves when all assets are loaded.
+   * @param keys Array of asset keys to load. Keys that are already loading or loaded will be ignored.
+   * @returns A promise that resolves to an object mapping each requested key to its loaded asset. Keys that failed to load will be rejected, causing the entire promise to reject.
+   */
+  public loadMany<K extends AssetKey<TAssets>>(keys: K[]): Promise<{ [P in K]: TAssets[P] }> {
+    const loadPromises = keys.map((key) => this.load(key).then((asset) => ({ key, asset })));
+    return Promise.all(loadPromises).then((loadedAssets) => {
+      const result = {} as { [P in K]: TAssets[P] };
+      loadedAssets.forEach(({ key, asset }) => {
+        result[key] = asset;
+      });
+      return result;
+    });
+  }
+
+  /**
+   * Loads an asset by key. Returns a promise that resolves when the asset is loaded.
+   * @param key The asset key to load.
+   * @returns A promise that resolves to the loaded asset.
+   */
   public load<K extends AssetKey<TAssets>>(key: K): Promise<TAssets[K]> {
     const existing = this.requests[key];
 
