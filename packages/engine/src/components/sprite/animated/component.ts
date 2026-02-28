@@ -1,3 +1,4 @@
+import { setFrame } from "@components/sprite/animated/utility";
 import { Color, Sprite } from "@components/sprite/sprite";
 import type { RegisteredAssets } from "@core";
 
@@ -26,8 +27,6 @@ function isAnimatedSpriteConfig(
   return !Array.isArray(value);
 }
 
-const DEFAULT_FRAME_TIME_MS = 1000 / 60;
-
 export class AnimatedSprite extends Sprite {
   public readonly frames: readonly SpriteAssetId[];
 
@@ -40,8 +39,10 @@ export class AnimatedSprite extends Sprite {
   public onLoop: ((sprite: AnimatedSprite) => void) | null = null;
   public onComplete: ((sprite: AnimatedSprite) => void) | null = null;
 
-  #accumulatedMs = 0;
-  #completed = false;
+  /** @private */
+  public accumulatedMs = 0;
+  /** @private */
+  public completed = false;
 
   constructor(frames: readonly SpriteAssetId[]);
   constructor(config: AnimatedSpriteConfig);
@@ -88,89 +89,7 @@ export class AnimatedSprite extends Sprite {
     }
 
     if (config?.currentIndex !== undefined) {
-      this.setFrame(config.currentIndex);
+      setFrame(this, config.currentIndex);
     }
-  }
-
-  public setFrame(index: number): void {
-    const normalizedIndex = this.#normalizeIndex(index);
-    this.currentIndex = normalizedIndex;
-    this.assetId = this.frames[normalizedIndex];
-    this.onFrameChange?.(this, this.assetId, normalizedIndex);
-  }
-
-  public reset(): void {
-    this.#accumulatedMs = 0;
-    this.#completed = false;
-    this.playing = true;
-    this.setFrame(0);
-  }
-
-  public update(deltaMs: number): void {
-    if (!this.playing) {
-      return;
-    }
-
-    if (deltaMs <= 0) {
-      return;
-    }
-
-    const scaledDelta = deltaMs * this.playbackRate;
-    if (scaledDelta <= 0) {
-      return;
-    }
-
-    this.#accumulatedMs += scaledDelta;
-    const frameSteps = Math.floor(this.#accumulatedMs / DEFAULT_FRAME_TIME_MS);
-
-    if (frameSteps <= 0) {
-      return;
-    }
-
-    this.#accumulatedMs -= frameSteps * DEFAULT_FRAME_TIME_MS;
-    this.#advance(frameSteps);
-  }
-
-  #advance(frameSteps: number): void {
-    if (this.frames.length <= 1) {
-      return;
-    }
-
-    if (this.loop) {
-      const nextIndex = (this.currentIndex + frameSteps) % this.frames.length;
-      const wrapped = this.currentIndex + frameSteps >= this.frames.length;
-      this.setFrame(nextIndex);
-
-      if (wrapped) {
-        this.onLoop?.(this);
-      }
-
-      return;
-    }
-
-    const nextIndex = Math.min(this.currentIndex + frameSteps, this.frames.length - 1);
-    this.setFrame(nextIndex);
-
-    if (nextIndex === this.frames.length - 1) {
-      this.playing = false;
-
-      if (!this.#completed) {
-        this.#completed = true;
-        this.onComplete?.(this);
-      }
-    }
-  }
-
-  #normalizeIndex(index: number): number {
-    if (this.loop) {
-      const count = this.frames.length;
-      return ((index % count) + count) % count;
-    }
-
-    if (index <= 0) {
-      return 0;
-    }
-
-    return Math.min(index, this.frames.length - 1);
   }
 }
