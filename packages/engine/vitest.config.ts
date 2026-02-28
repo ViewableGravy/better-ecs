@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url';
-import { defineConfig } from 'vitest/config';
 import tsconfigPaths from 'vite-tsconfig-paths';
+import { defineConfig } from 'vitest/config';
 import { shadersPlugin } from './plugins/shaders';
 
 export default defineConfig({
