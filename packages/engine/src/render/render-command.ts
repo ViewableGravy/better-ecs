@@ -1,6 +1,6 @@
 import type { Color } from "@components/sprite";
 import type { LooseAssetManager } from "@assets/AssetManager";
-import type { ShapeRenderData, SpriteRenderData, TexturedQuadRenderData } from "@render/types/low-level";
+import type { ShapeRenderInput, SpriteRenderData, TexturedQuadRenderData } from "@render/types/low-level";
 import type { RendererAPI } from "@render/types/renderer-api";
 
 export class RenderCommand {
@@ -50,7 +50,7 @@ export class RenderCommand {
     this.#rendererApi.drawTexturedQuad(data);
   }
 
-  drawShape(data: ShapeRenderData): void {
+  drawShape(data: ShapeRenderInput): void {
     this.#rendererApi.drawShape(data);
   }
 

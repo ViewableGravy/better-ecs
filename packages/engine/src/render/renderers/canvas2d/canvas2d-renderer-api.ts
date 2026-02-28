@@ -1,5 +1,11 @@
 import { Color } from "@components/sprite";
-import type { ShapeRenderData, SpriteRenderData, TexturedQuadRenderData } from "@render/types/low-level";
+import type {
+  CircleShapeRenderData,
+  DenseShapeRenderData,
+  ShapeRenderInput,
+  SpriteRenderData,
+  TexturedQuadRenderData,
+} from "@render/types/low-level";
 import type { RendererAPI } from "@render/types/renderer-api";
 
 /**
@@ -141,7 +147,7 @@ export class Canvas2DRenderAPI implements RendererAPI {
     });
   }
 
-  drawShape(data: ShapeRenderData): void {
+  drawShape(data: ShapeRenderInput): void {
     if (!this.ctx || !this.canvas) return;
 
     const screenX = (data.x - this.cameraX) * this.cameraZoom + this.canvas.width / 2;
@@ -164,9 +170,9 @@ export class Canvas2DRenderAPI implements RendererAPI {
       this.ctx.lineWidth = data.strokeWidth;
     }
 
-    const hasArcSlice = data.arcEnabled;
-    const arcStart = data.arcStart;
-    let arcEnd = data.arcEnd;
+    const hasArcSlice = isCircleShapeData(data) && (data.arcEnabled ?? false);
+    const arcStart = isCircleShapeData(data) ? (data.arcStart ?? 0) : 0;
+    let arcEnd = isCircleShapeData(data) ? (data.arcEnd ?? Math.PI * 2) : Math.PI * 2;
     if (hasArcSlice && arcEnd < arcStart) {
       arcEnd += Math.PI * 2;
     }
@@ -175,7 +181,7 @@ export class Canvas2DRenderAPI implements RendererAPI {
       case "rectangle":
         this.ctx.beginPath();
         this.ctx.rect(-scaledW / 2, -scaledH / 2, scaledW, scaledH);
-        if (data.fillEnabled) {
+        if (data.fillEnabled ?? true) {
           this.ctx.fill();
         }
         if (data.stroke) this.ctx.stroke();
@@ -185,11 +191,14 @@ export class Canvas2DRenderAPI implements RendererAPI {
         const halfW = scaledW / 2;
         const halfH = scaledH / 2;
         const maxRadius = Math.min(halfW, halfH);
-        const cornerRadius = Math.max(0, Math.min(data.cornerRadius * this.cameraZoom, maxRadius));
+        const cornerRadius = Math.max(
+          0,
+          Math.min((data.cornerRadius ?? 0) * this.cameraZoom, maxRadius),
+        );
 
         this.ctx.beginPath();
         this.ctx.roundRect(-halfW, -halfH, scaledW, scaledH, cornerRadius);
-        if (data.fillEnabled) {
+        if (data.fillEnabled ?? true) {
           this.ctx.fill();
         }
         if (data.stroke) {
@@ -201,7 +210,7 @@ export class Canvas2DRenderAPI implements RendererAPI {
       case "circle":
         this.ctx.beginPath();
         if (hasArcSlice) {
-          if (data.fillEnabled) {
+          if (data.fillEnabled ?? true) {
             this.ctx.moveTo(0, 0);
             this.ctx.arc(0, 0, scaledW / 2, arcStart, arcEnd);
             this.ctx.closePath();
@@ -217,7 +226,7 @@ export class Canvas2DRenderAPI implements RendererAPI {
         }
 
         this.ctx.arc(0, 0, scaledW / 2, 0, Math.PI * 2);
-        if (data.fillEnabled) {
+        if (data.fillEnabled ?? true) {
           this.ctx.fill();
         }
         if (data.stroke) {
@@ -247,4 +256,8 @@ export class Canvas2DRenderAPI implements RendererAPI {
   getHeight(): number {
     return this.canvas?.height ?? 0;
   }
+}
+
+function isCircleShapeData(data: ShapeRenderInput): data is CircleShapeRenderData | DenseShapeRenderData {
+  return data.type === "circle";
 }

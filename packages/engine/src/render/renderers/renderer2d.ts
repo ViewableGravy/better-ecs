@@ -8,12 +8,13 @@ import type { ShaderTransform2D, Transform2D } from "@components/transform";
 import { RenderCommand } from "@render/render-command";
 import { TextureCache } from "@render/textureCache/texture-cache";
 import type {
+  DenseShapeRenderData,
     Renderable,
     Renderer,
     RendererConfig,
     Settable,
     ShaderQuadOptions,
-    ShapeRenderData,
+  ShapeRenderInput,
     SpriteRenderData,
     TexturedQuadDrawData,
     TexturedQuadRenderData,
@@ -24,7 +25,7 @@ const FALLBACK_PENDING_COLOR = new Color(1, 0, 1, 0.4);
 const FALLBACK_ERROR_COLOR = new Color(1, 0, 0, 0.6);
 const DEFAULT_SHADER_QUAD_TINT = new Color(1, 1, 1, 1);
 
-const SHARED_SHAPE_DATA: ShapeRenderData = {
+const SHARED_SHAPE_DATA: DenseShapeRenderData = {
   type: "rectangle",
   x: 0,
   y: 0,
@@ -43,7 +44,7 @@ const SHARED_SHAPE_DATA: ShapeRenderData = {
   cornerRadius: 0,
 };
 
-const SHARED_FALLBACK_SHAPE_DATA: ShapeRenderData = {
+const SHARED_FALLBACK_SHAPE_DATA: DenseShapeRenderData = {
   type: "rectangle",
   x: 0,
   y: 0,
@@ -124,7 +125,7 @@ export class Renderer2D implements Renderer {
     this.setCamera(x, y, zoom);
   }
 
-  drawShape(data: ShapeRenderData): void {
+  drawShape(data: ShapeRenderInput): void {
     this.#command.drawShape(data);
   }
 

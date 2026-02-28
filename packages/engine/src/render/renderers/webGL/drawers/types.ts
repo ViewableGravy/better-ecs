@@ -1,10 +1,8 @@
 import type { Color } from "@components/sprite";
-import type { ShapeRenderData } from "@render/types/low-level";
+import type { ShapeRenderInput, ShapeType } from "@render/types/low-level";
 import type { WebGLProgramRegistry } from "@render/renderers/webGL/registry";
 
 export type Vec2 = { x: number; y: number };
-
-export type ShapeType = ShapeRenderData["type"];
 
 export interface ShapeDrawerContext {
   gl: WebGL2RenderingContext;
@@ -17,12 +15,12 @@ export interface ShapeDrawerContext {
 
 export interface ShapeDrawerRegistry {
   get(type: ShapeType): ShapeDrawer;
-  draw(context: ShapeDrawerContext, data: ShapeRenderData): void;
+  draw(context: ShapeDrawerContext, data: ShapeRenderInput): void;
 }
 
 export type ShapeDrawer = (
   context: ShapeDrawerContext,
-  data: ShapeRenderData,
+  data: ShapeRenderInput,
   registry: ShapeDrawerRegistry,
 ) => void;
 

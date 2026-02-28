@@ -1,7 +1,9 @@
 // ── Public types ─────────────────────────────────────────────────
 export type {
+    DenseShapeRenderData,
     Renderable,
     RendererConfig, Settable, ShaderQuadOptions, ShapeRenderData,
+    ShapeRenderInput,
     SpriteRenderData, TextureCacheConfig,
     TextureHandle,
     TextureInfo,

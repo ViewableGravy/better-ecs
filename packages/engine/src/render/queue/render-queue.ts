@@ -1,6 +1,6 @@
 import type { EntityId } from "@ecs/entity";
 import type { UserWorld } from "@ecs/world";
-import type { ShapeRenderData } from "@render/types/low-level";
+import type { ShapeRenderInput } from "@render/types/low-level";
 
 /**
  * The kind of render command stored in {@link RenderQueue}.
@@ -14,7 +14,7 @@ export type RenderCommand = {
   type: RenderCommandType;
   world: UserWorld | null;
   entityId: EntityId | null;
-  shape: ShapeRenderData | null;
+  shape: ShapeRenderInput | null;
   layer: number;
   zOrder: number;
   sequence: number;

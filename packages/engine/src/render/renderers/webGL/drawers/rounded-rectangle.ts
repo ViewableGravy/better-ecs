@@ -1,5 +1,6 @@
 import { createDrawer } from "@render/renderers/webGL/drawers/create";
 import { buildCircleQuadVertices } from "@render/renderers/webGL/drawers/geometry";
+import invariant from "tiny-invariant";
 
 const ROUNDED_RECTANGLE_UV = new Float32Array([
   0, 1,
@@ -9,6 +10,8 @@ const ROUNDED_RECTANGLE_UV = new Float32Array([
 ]);
 
 export const roundedRectangleDrawer = createDrawer((context, data) => {
+  invariant(data.type === "rounded-rectangle", "Expected shape type to be rounded-rectangle");
+
   const roundedRectangleProgram = context.programs.get("roundedRectangle");
 
   if (
@@ -55,11 +58,11 @@ export const roundedRectangleDrawer = createDrawer((context, data) => {
     roundedRectangleProgram.strokeThicknessUniformLocation,
     Math.max(0, data.strokeWidth * context.cameraZoom),
   );
-  context.gl.uniform1f(roundedRectangleProgram.fillEnabledUniformLocation, data.fillEnabled ? 1 : 0);
+  context.gl.uniform1f(roundedRectangleProgram.fillEnabledUniformLocation, (data.fillEnabled ?? true) ? 1 : 0);
   context.gl.uniform2f(roundedRectangleProgram.sizeUniformLocation, widthPixels, heightPixels);
   context.gl.uniform1f(
     roundedRectangleProgram.cornerRadiusUniformLocation,
-    Math.max(0, data.cornerRadius * context.cameraZoom),
+    Math.max(0, (data.cornerRadius ?? 0) * context.cameraZoom),
   );
 
   context.gl.drawArrays(context.gl.TRIANGLE_STRIP, 0, 4);

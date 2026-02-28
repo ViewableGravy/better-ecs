@@ -6,11 +6,17 @@ import type { Color, Sprite } from "@components/sprite";
 import type { Texture } from "@components/texture";
 import type { ShaderTransform2D, Transform2D } from "@components/transform";
 import type { TextureCache, TextureCacheConfig } from "@render/textureCache/texture-cache";
-import type { ShapeRenderData } from "@render/types/low-level";
+import type { DenseShapeRenderData, ShapeRenderData, ShapeRenderInput } from "@render/types/low-level";
 
 export { type TextureCacheConfig } from "@render/textureCache/texture-cache";
 export type { TextureHandle, TextureInfo, TextureState, TextureStatus } from "@render/textureCache/texture-cache";
-export type { ShapeRenderData, SpriteRenderData, TexturedQuadRenderData } from "@render/types/low-level";
+export type {
+  DenseShapeRenderData,
+  ShapeRenderData,
+  ShapeRenderInput,
+  SpriteRenderData,
+  TexturedQuadRenderData,
+} from "@render/types/low-level";
 
 export type Renderable = Sprite | Shape;
 export type Settable = Camera;
@@ -71,7 +77,7 @@ export interface Renderer {
   render(renderable: Renderable, transform: Transform2D, alpha: number): void;
   set(value: Settable, transform: Transform2D, alpha: number): void;
 
-  drawShape(data: ShapeRenderData): void;
+  drawShape(data: ShapeRenderInput): void;
   drawTexturedQuad(data: TexturedQuadDrawData): void;
   drawShaderQuad(shader: ShaderSourceAsset, transform: ShaderTransform2D, options?: ShaderQuadOptions): void;
 

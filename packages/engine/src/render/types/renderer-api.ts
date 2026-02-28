@@ -1,6 +1,6 @@
 import type { LooseAssetManager } from "@assets/AssetManager";
 import type { Color } from "@components/sprite";
-import type { ShapeRenderData, SpriteRenderData, TexturedQuadRenderData } from "@render/types/low-level";
+import type { ShapeRenderInput, SpriteRenderData, TexturedQuadRenderData } from "@render/types/low-level";
 
 export interface RendererAPI {
   initialize(canvas: HTMLCanvasElement, assets: LooseAssetManager): Promise<void> | void;
@@ -16,7 +16,7 @@ export interface RendererAPI {
 
   drawSprite(data: SpriteRenderData): void;
   drawTexturedQuad(data: TexturedQuadRenderData): void;
-  drawShape(data: ShapeRenderData): void;
+  drawShape(data: ShapeRenderInput): void;
 
   getWidth(): number;
   getHeight(): number;

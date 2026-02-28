@@ -3,7 +3,7 @@ import type { ShaderSourceAsset } from "@assets";
 import type { LooseAssetManager } from "@assets/AssetManager";
 import { isShaderSourceAsset } from "@assets/utils";
 import { Color } from "@components/sprite";
-import type { ShapeRenderData, SpriteRenderData, TexturedQuadRenderData } from "@render/types/low-level";
+import type { ShapeRenderInput, SpriteRenderData, TexturedQuadRenderData } from "@render/types/low-level";
 import type { RendererAPI } from "@render/types/renderer-api";
 import { ShaderCompiler } from "@render/renderers/webGL/compiler";
 import { shapeDrawers, type ShapeDrawerContext, type Vec2 } from "@render/renderers/webGL/drawers";
@@ -252,7 +252,7 @@ export class WebGLRenderAPI implements RendererAPI {
     }
   }
 
-  drawShape(data: ShapeRenderData): void {
+  drawShape(data: ShapeRenderInput): void {
     const gl = this.#gl;
     const canvas = this.#canvas;
     if (!gl || !canvas) {

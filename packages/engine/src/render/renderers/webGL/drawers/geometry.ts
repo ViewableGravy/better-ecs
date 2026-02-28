@@ -1,4 +1,4 @@
-import type { ShapeRenderData } from "@render/types/low-level";
+import type { ShapeRenderInput } from "@render/types/low-level";
 import type { Vec2 } from "@render/renderers/webGL/drawers/types";
 
 function screenToNdc(canvas: HTMLCanvasElement, x: number, y: number): Vec2 {
@@ -8,7 +8,12 @@ function screenToNdc(canvas: HTMLCanvasElement, x: number, y: number): Vec2 {
   };
 }
 
-export function buildRectangleVertices(canvas: HTMLCanvasElement, center: Vec2, data: ShapeRenderData, cameraZoom: number): Float32Array {
+export function buildRectangleVertices(
+  canvas: HTMLCanvasElement,
+  center: Vec2,
+  data: ShapeRenderInput,
+  cameraZoom: number,
+): Float32Array {
   const widthPixels = data.width * data.scaleX * cameraZoom;
   const heightPixels = data.height * data.scaleY * cameraZoom;
 
@@ -44,7 +49,12 @@ export function buildRectangleVertices(canvas: HTMLCanvasElement, center: Vec2, 
   ]);
 }
 
-export function buildLineVertices(canvas: HTMLCanvasElement, center: Vec2, data: ShapeRenderData, cameraZoom: number): Float32Array {
+export function buildLineVertices(
+  canvas: HTMLCanvasElement,
+  center: Vec2,
+  data: ShapeRenderInput,
+  cameraZoom: number,
+): Float32Array {
   const length = data.width * data.scaleX * cameraZoom;
   const thickness = Math.max(1, data.strokeWidth) * cameraZoom;
 
@@ -79,7 +89,12 @@ export function buildLineVertices(canvas: HTMLCanvasElement, center: Vec2, data:
   ]);
 }
 
-export function buildCircleQuadVertices(canvas: HTMLCanvasElement, center: Vec2, data: ShapeRenderData, cameraZoom: number): Float32Array {
+export function buildCircleQuadVertices(
+  canvas: HTMLCanvasElement,
+  center: Vec2,
+  data: ShapeRenderInput,
+  cameraZoom: number,
+): Float32Array {
   const radiusX = (data.width * data.scaleX * cameraZoom) / 2;
   const radiusY = (data.height * data.scaleY * cameraZoom) / 2;
   const cos = Math.cos(data.rotation);

@@ -1,4 +1,4 @@
-import type { ShapeRenderData } from "@render/types/low-level";
+import type { ShapeRenderInput } from "@render/types/low-level";
 import type {
   ShapeDrawer,
   ShapeDrawerContext,
@@ -16,7 +16,7 @@ export function createShapeDrawerRegistry(drawers: ShapeDrawerMap): ShapeDrawerR
       return drawers[type];
     },
 
-    draw(context: ShapeDrawerContext, data: ShapeRenderData): void {
+    draw(context: ShapeDrawerContext, data: ShapeRenderInput): void {
       const drawer = drawers[data.type];
       drawer(context, data, this);
     },
