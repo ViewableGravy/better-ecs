@@ -18,6 +18,7 @@
       "@repo/client": ["./apps/client/src/main.ts"],
       "@repo/server": ["./apps/server/src/main.ts"],
       "@repo/engine": ["./packages/engine/src/index.ts"],
+      "@repo/engine/*": ["./packages/engine/src/*"],
       "@repo/fps": ["./packages/features/fps/src/index.ts"],
       "@repo/hmr": ["./packages/tooling/hmr/src/index.ts"],
       "@repo/physics": ["./packages/foundation/physics/src/index.ts"],

@@ -9,8 +9,8 @@ import { EngineClass } from "@core/engine";
 import type { CreateEngineOptions } from "@core/factory/types";
 import type { SceneDefinition, SceneDefinitionTuple, SceneName } from "@core/scene/scene.types";
 import {
-	executeSystemCleanup as runSystemCleanup,
-	executeSystemInitialize as runSystemInitialize,
+    executeSystemCleanup as runSystemCleanup,
+    executeSystemInitialize as runSystemInitialize,
 } from "@core/system";
 import type { EngineSystem, SystemFactoryTuple } from "@core/system/types";
 import type { EngineUiContextValue } from "@ui/utilities/engine-context";
@@ -44,7 +44,7 @@ export function createEngine<
 		scenes,
 		assets,
 		opts.render ?? null,
-		opts.renderCulling,
+		opts.config?.render?.culling,
 		null,
 		shouldBootstrapCanvasFromRoot,
 	);

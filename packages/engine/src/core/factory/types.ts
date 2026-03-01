@@ -10,6 +10,12 @@ export type EngineRenderCullingOptions = {
 	debugOutline?: boolean;
 };
 
+export type EngineConfigOptions = {
+	render?: {
+		culling?: EngineRenderCullingOptions;
+	};
+};
+
 export type CreateEngineOptions<
 	TSystems extends SystemFactoryTuple,
 	TScenes extends SceneDefinitionTuple,
@@ -23,6 +29,6 @@ export type CreateEngineOptions<
 	initialization?: EngineInitializationSystem;
 	assetLoader?: AssetManager<TAssets, TAssetTypes>;
 	render?: RenderPipeline;
-	renderCulling?: EngineRenderCullingOptions;
+	config?: EngineConfigOptions;
 };
 
