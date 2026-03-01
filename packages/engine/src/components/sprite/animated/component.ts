@@ -1,4 +1,3 @@
-import { setFrame } from "@components/sprite/animated/utility";
 import { Color, Sprite } from "@components/sprite/sprite";
 import type { RegisteredAssets } from "@core";
 
@@ -15,10 +14,8 @@ type AnimatedSpriteConfig = {
   tint?: Color;
   zOrder?: number;
   layer?: number;
-  loop?: boolean;
   playbackRate?: number;
-  playing?: boolean;
-  currentIndex?: number;
+  startTime?: number;
 };
 
 function isAnimatedSpriteConfig(
@@ -30,19 +27,8 @@ function isAnimatedSpriteConfig(
 export class AnimatedSprite extends Sprite {
   public readonly frames: readonly SpriteAssetId[];
 
-  public currentIndex = 0;
-  public loop = true;
   public playbackRate = 1;
-  public playing = true;
-
-  public onFrameChange: ((sprite: AnimatedSprite, nextAssetId: SpriteAssetId, nextIndex: number) => void) | null = null;
-  public onLoop: ((sprite: AnimatedSprite) => void) | null = null;
-  public onComplete: ((sprite: AnimatedSprite) => void) | null = null;
-
-  /** @private */
-  public accumulatedMs = 0;
-  /** @private */
-  public completed = false;
+  public startTime = performance.now();
 
   constructor(frames: readonly SpriteAssetId[]);
   constructor(config: AnimatedSpriteConfig);
@@ -76,20 +62,12 @@ export class AnimatedSprite extends Sprite {
 
     this.frames = frames;
 
-    if (config?.loop !== undefined) {
-      this.loop = config.loop;
-    }
-
     if (config?.playbackRate !== undefined) {
       this.playbackRate = config.playbackRate;
     }
 
-    if (config?.playing !== undefined) {
-      this.playing = config.playing;
-    }
-
-    if (config?.currentIndex !== undefined) {
-      setFrame(this, config.currentIndex);
+    if (config?.startTime !== undefined) {
+      this.startTime = config.startTime;
     }
   }
 }
