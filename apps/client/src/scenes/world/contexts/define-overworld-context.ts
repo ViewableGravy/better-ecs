@@ -21,7 +21,7 @@ type OverworldContextOptions = {
   houseHalfHeight: number;
 };
 
-const BELT_SPACING = 49;
+const BELT_SPACING = 28;
 
 function spawnBeltRow(
   world: UserWorld,
@@ -96,7 +96,7 @@ function spawnBeltLoop(
 
   for (let offset = 1; offset < maxOffset; offset += 1) {
     spawnTransportBelt(world, {
-      x: options.x + offset * BELT_SPACING,
+      x: options.x + offset * (BELT_SPACING),
       y: options.y,
       variant: options.top,
     });
@@ -222,8 +222,8 @@ export function defineOverworldContext(options: OverworldContextOptions) {
       });
 
       spawnBeltLoop(world, {
-        x: 180,
-        y: 220,
+        x: 80,
+        y: 420,
         sideLength: 5,
         top: "horizontal-right",
         right: "vertical-down",
@@ -236,8 +236,8 @@ export function defineOverworldContext(options: OverworldContextOptions) {
       });
 
       spawnBeltLoop(world, {
-        x: 540,
-        y: 220,
+        x: 340,
+        y: 420,
         sideLength: 5,
         top: "horizontal-left",
         right: "vertical-up",
