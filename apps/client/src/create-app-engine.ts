@@ -37,8 +37,8 @@ export const createAppEngine = () => {
     render: Render,
     renderCulling: {
       enabled: true,
-      viewportScaleX: 0.8,
-      viewportScaleY: 0.8,
+      viewportScaleX: 0.95,
+      viewportScaleY: 0.95,
       debugOutline: false,
     },
     scenes: [

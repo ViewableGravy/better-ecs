@@ -1,4 +1,5 @@
 import { Transform2D } from "@/components";
+import { resolveWorldTransform2D } from "@/ecs/hierarchy";
 import styles from "@ui/layout/sidebar/styles.module.css";
 import { EntityIdContext, WorldIdContext } from "@ui/layout/sidebar/worldViewer/context";
 import { EngineUiContext } from "@ui/utilities/engine-context";
@@ -11,6 +12,8 @@ import type { MouseEvent } from "react";
 type CenterCameraProps = {
   className?: string;
 };
+
+const SHARED_TARGET_TRANSFORM = new Transform2D();
 
 /**********************************************************************************************************
  *   COMPONENT START
@@ -28,14 +31,16 @@ export const CenterCamera: React.FC<CenterCameraProps> = ({ className }) => {
     engine.editor.running.pause();
 
     const world = engine.scene.context.requireWorld(worldId);
-    const transform = world.get(entityId, Transform2D);
-    if (!transform) {
+    engine.editor.gizmo.create(entityId, worldId);
+
+    if (!resolveWorldTransform2D(world, entityId, SHARED_TARGET_TRANSFORM)) {
       return;
     }
 
-    engine.editor.gizmo.create(entityId, worldId);
-
-    engine.editor.camera.setPosition(transform.curr.pos.x, transform.curr.pos.y);
+    engine.editor.camera.setPosition(
+      SHARED_TARGET_TRANSFORM.curr.pos.x,
+      SHARED_TARGET_TRANSFORM.curr.pos.y,
+    );
   };
 
   /***** RENDER *****/

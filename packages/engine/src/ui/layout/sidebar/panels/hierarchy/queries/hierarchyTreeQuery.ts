@@ -1,4 +1,4 @@
-import { EditorHoverHighlight, Gizmo, Parent } from "@/components";
+import { Debug, EditorHoverHighlight, Gizmo, Parent } from "@/components";
 import type { EntityId } from "@/ecs/entity";
 import type { UserWorld } from "@/ecs/world";
 import { type EngineUiContextValue } from "@ui/utilities/engine-context";
@@ -13,6 +13,7 @@ export type ComponentTreeNode = {
 };
 
 export type HierarchyEntityNode = {
+  debugName: string | null;
   childEntityIds: EntityId[];
   components: ComponentTreeNode[];
 };
@@ -180,6 +181,7 @@ function buildWorldTree(
   for (const entityId of visibleEntityIds) {
     const entityIdKey = entityId.toString();
     const previousNode = previousWorldTree?.entitiesById[entityIdKey];
+    const debugName = world.get(entityId, Debug)?.name ?? null;
     const components = world
       .getComponentTypes(entityId)
       .filter((componentType) => componentType !== EditorHoverHighlight)
@@ -195,12 +197,14 @@ function buildWorldTree(
 
     if (
       previousNode &&
+      previousNode.debugName === debugName &&
       previousNode.childEntityIds === stableChildEntityIds &&
       previousNode.components === stableComponents
     ) {
       entitiesById[entityIdKey] = previousNode;
     } else {
       entitiesById[entityIdKey] = {
+        debugName,
         childEntityIds: stableChildEntityIds,
         components: stableComponents,
       };

@@ -8,8 +8,8 @@ import { InitState } from "@core/engine/init";
 import { Meta } from "@core/engine/meta";
 import { PhaseState } from "@core/engine/phase";
 import {
-    resolveEngineRenderCullingSettings,
-    type EngineRenderCullingSettings,
+	resolveEngineRenderCullingSettings,
+	type EngineRenderCullingSettings,
 } from "@core/engine/render-culling";
 import { SystemsManager } from "@core/engine/systems";
 import type { AllSystems, ScenesTupleToRecord, StartEngineGenerator, StartEngineOpts } from "@core/engine/types";
@@ -169,11 +169,17 @@ export class EngineClass<
 					if (frameState.shouldUpdate) {
 						this.runRenderPipeline(frameState.shouldUpdate);
 					}
-					if (updateState.shouldUpdate && !this.editor.runningState.paused) {
-						this.runUpdateSystems(updateState.shouldUpdate);
-						this.#delta.markUpdated(now);
-						this.meta.markUpdated(now);
-						(updateState as any).shouldUpdate = false;
+					if (updateState.shouldUpdate) {
+						if (this.editor.runningState.paused) {
+							this.#delta.markUpdated(now);
+							this.meta.markUpdated(now);
+							(updateState as any).shouldUpdate = false;
+						} else {
+							this.runUpdateSystems(updateState.shouldUpdate);
+							this.#delta.markUpdated(now);
+							this.meta.markUpdated(now);
+							(updateState as any).shouldUpdate = false;
+						}
 					}
 				}
 
