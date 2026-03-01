@@ -1,21 +1,26 @@
 import { AssetManager } from "@assets/AssetManager";
-import type { UserWorld } from "@ecs/world";
 import { CanvasManager } from "@core/canvas";
 import { executeWithContext } from "@core/context";
 import { EngineEditor } from "@core/engine-editor";
 import { EngineUtils } from "@core/engine-utils";
+import { DeltaState } from "@core/engine/delta";
+import { InitState } from "@core/engine/init";
+import { Meta } from "@core/engine/meta";
+import { PhaseState } from "@core/engine/phase";
+import {
+    resolveEngineRenderCullingSettings,
+    type EngineRenderCullingSettings,
+} from "@core/engine/render-culling";
+import { SystemsManager } from "@core/engine/systems";
+import type { AllSystems, ScenesTupleToRecord, StartEngineGenerator, StartEngineOpts } from "@core/engine/types";
+import type { EngineRenderCullingOptions } from "@core/factory/types";
 import { EngineInput } from "@core/input";
 import type { RenderPipeline } from "@core/render-pipeline";
 import { RenderManager } from "@core/render-pipeline";
 import { SceneManager } from "@core/scene/scene-manager";
 import type { SceneDefinitionTuple } from "@core/scene/scene.types";
 import type { EngineInitializationSystem, EngineSystem, SystemFactoryTuple } from "@core/system/types";
-import { DeltaState } from "@core/engine/delta";
-import { InitState } from "@core/engine/init";
-import { Meta } from "@core/engine/meta";
-import { PhaseState } from "@core/engine/phase";
-import { SystemsManager } from "@core/engine/systems";
-import type { AllSystems, ScenesTupleToRecord, StartEngineGenerator, StartEngineOpts } from "@core/engine/types";
+import type { UserWorld } from "@ecs/world";
 
 export class EngineClass<
 	TSystems extends SystemFactoryTuple,
@@ -37,12 +42,14 @@ export class EngineClass<
 	public readonly input: EngineInput;
 	public readonly utils: EngineUtils;
 	public readonly meta: Meta = new Meta(this.#phase.is);
+	public readonly renderCulling: EngineRenderCullingSettings;
 
 	public constructor(
 		systems: Record<string, EngineSystem<any>>,
 		scenes: SceneDefinitionTuple = [],
 		public readonly assets: AssetManager<TAssets, TAssetTypes>,
 		public readonly render: RenderPipeline | null,
+		renderCulling: EngineRenderCullingOptions | undefined,
 		canvas: HTMLCanvasElement | null,
 		awaitCanvasBeforeStart = false,
 	) {
@@ -55,6 +62,7 @@ export class EngineClass<
 			resolveCanvas: () => this.canvas,
 			getEngine: () => this,
 		});
+		this.renderCulling = resolveEngineRenderCullingSettings(renderCulling);
 		this.editor = new EngineEditor(this);
 
 		this.#systemsView = this.#systemsManager.createSystemsView((name) => {

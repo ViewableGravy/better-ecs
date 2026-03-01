@@ -28,6 +28,8 @@
 }
 
 .engineEditorLayoutQuickActionsBase {
+  --quickActionButtonSize: 44px;
+  --quickActionButtonGap: 8px;
   grid-column: 1;
   grid-row: 1;
   background: #171a21;
@@ -37,11 +39,14 @@
   min-width: 0;
   min-height: 0;
   box-sizing: border-box;
+  width: fit-content;
+  max-width: calc((var(--quickActionButtonSize) * 5) + (var(--quickActionButtonGap) * 4) + 16px);
 }
 
 .engineEditorLayoutQuickActionsGrid {
   display: flex;
-  gap: 8px;
+  gap: var(--quickActionButtonGap);
+  flex-wrap: wrap;
   align-content: start;
 }
 

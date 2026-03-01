@@ -44,6 +44,7 @@ export function createEngine<
 		scenes,
 		assets,
 		opts.render ?? null,
+		opts.renderCulling,
 		null,
 		shouldBootstrapCanvasFromRoot,
 	);

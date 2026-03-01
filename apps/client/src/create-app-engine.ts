@@ -35,6 +35,12 @@ export const createAppEngine = () => {
       PhysicsDebugSystem,
     ],
     render: Render,
+    renderCulling: {
+      enabled: true,
+      viewportScaleX: 0.8,
+      viewportScaleY: 0.8,
+      debugOutline: false,
+    },
     scenes: [
       MainScene,
       E2eScene,
