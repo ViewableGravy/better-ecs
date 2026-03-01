@@ -8,10 +8,10 @@ import { ActiveCameraView } from "@repo/engine/context-utils";
 import { SpatialContexts, type ContextId } from "@repo/spatial-contexts";
 import { GhostPreview, Placeable } from "./components";
 import {
-  TRANSPORT_BELT_OFFSET_X,
-  TRANSPORT_BELT_OFFSET_Y,
   buildModeStateDefault,
   buildModeStateSchema,
+  TRANSPORT_BELT_OFFSET_X,
+  TRANSPORT_BELT_OFFSET_Y,
 } from "./const";
 import { BuildModeDomEvents, HUD } from "./dom";
 import * as Keybinds from './input';
@@ -97,9 +97,14 @@ export const System = createSystem("main:build-mode")({
         }
 
         if (data.selectedItem === "transport-belt-horizontal-right") {
+          const beltX = snappedX + TRANSPORT_BELT_OFFSET_X;
+          const beltY = snappedY + TRANSPORT_BELT_OFFSET_Y;
+
+          Placement.replaceTransportBeltAt(placementTarget.world, beltX, beltY);
+
           const beltEntityId = spawnTransportBelt(placementTarget.world, {
-            x: snappedX + TRANSPORT_BELT_OFFSET_X,
-            y: snappedY + TRANSPORT_BELT_OFFSET_Y,
+            x: beltX,
+            y: beltY,
             variant: "horizontal-right",
           });
 
