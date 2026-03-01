@@ -1,13 +1,5 @@
 import type { LooseAssetManager } from "@assets/AssetManager";
 import { Engine, fromContext } from "@context";
-import type { UserWorld } from "@ecs/world";
-import type { Renderer } from "@render";
-import {
-	FrameAllocator,
-	type EngineFrameAllocatorRegistry,
-	type FrameAllocatorRegistry,
-	type InternalFrameAllocator,
-} from "@render";
 import { setContextRender } from "@core/context";
 import { RenderPipelineContext } from "@core/render-pipeline/context";
 import type { RenderPass } from "@core/render-pipeline/pass";
@@ -16,6 +8,14 @@ import { CameraControlPass } from "@core/render-pipeline/passes/camera-control";
 import { EndFramePass } from "@core/render-pipeline/passes/end-frame";
 import { RenderWorldPass } from "@core/render-pipeline/passes/render-world";
 import type { RenderPipeline, WorldProvider } from "@core/render-pipeline/types";
+import type { UserWorld } from "@ecs/world";
+import type { Renderer } from "@render";
+import {
+	FrameAllocator,
+	type EngineFrameAllocatorRegistry,
+	type FrameAllocatorRegistry,
+	type InternalFrameAllocator,
+} from "@render";
 
 type CorePassOverrides<
 	TRegistry extends FrameAllocatorRegistry,
@@ -164,7 +164,7 @@ export function createRenderPipeline<
 			// 1) Build interpolation alpha from the latest fixed-step update timing.
 			const updateTimeMs = 1000 / engine.meta.ups;
 			const timeSinceLastUpdate = performance.now() - engine.meta.lastUpdateTime;
-			passContext.alpha = Math.min(timeSinceLastUpdate / updateTimeMs, 1);
+			passContext.interpolationAlpha = Math.min(timeSinceLastUpdate / updateTimeMs, 1);
 
 			// 2) Resolve worlds that should be rendered this frame.
 			passContext.visibleWorlds = passContext.worldProvider.getVisibleWorlds();

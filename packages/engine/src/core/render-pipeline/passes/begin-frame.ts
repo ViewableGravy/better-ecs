@@ -1,4 +1,4 @@
-import { Color } from "@components/sprite";
+import { Color } from "@components/sprite/sprite";
 import { fromContext, FromRender } from "@context";
 import { createRenderPass } from "@core/render-pipeline/pass";
 

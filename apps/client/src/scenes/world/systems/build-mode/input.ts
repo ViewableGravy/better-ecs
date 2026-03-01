@@ -1,8 +1,8 @@
 import { fromContext, System } from "@repo/engine/context";
 import {
+  HOTBAR_SLOT_CONVEYOR_HORIZONTAL_RIGHT,
   GRID_TOGGLE_CTRL,
   GRID_TOGGLE_META,
-  HOTBAR_SLOT_BOX,
   HOTBAR_SLOT_EMPTY,
 } from "./const";
 
@@ -13,8 +13,8 @@ export function matchKeybinds(): void {
   const { data } = fromContext(System("main:build-mode"));
   const input = fromContext(System("engine:input"));
 
-  if (input.matchKeybind(HOTBAR_SLOT_BOX)) {
-    data.selectedItem = "box";
+  if (input.matchKeybind(HOTBAR_SLOT_CONVEYOR_HORIZONTAL_RIGHT)) {
+    data.selectedItem = "transport-belt-horizontal-right";
   }
 
   if (input.matchKeybind(HOTBAR_SLOT_EMPTY)) {

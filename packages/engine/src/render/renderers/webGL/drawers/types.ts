@@ -1,4 +1,4 @@
-import type { Color } from "@components/sprite";
+import type { Color } from "@components/sprite/sprite";
 import type { WebGLProgramRegistry } from "@render/renderers/webGL/registry";
 import type { ShapeRenderInput, ShapeType } from "@render/types/low-level";
 

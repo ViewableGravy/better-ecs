@@ -1,9 +1,9 @@
 // packages/engine/src/ecs/world.ts
-import type { Class } from "type-fest";
 import { Parent } from "@components";
 import type { EntityId } from "@ecs/entity";
 import { createEntityId, invalidateEntity } from "@ecs/entity";
 import { ComponentStore } from "@ecs/storage";
+import type { Class } from "type-fest";
 
 export interface IUserWorld {
   create(): EntityId;

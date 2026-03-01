@@ -1,10 +1,12 @@
 import type { EntityId } from "@/ecs/entity";
 import { useQuery } from "@tanstack/react-query";
+import { EntityTreeNodes } from "@ui/layout/sidebar/panels/hierarchy/components/entityTreeNodes";
+import { NodeComponents } from "@ui/layout/sidebar/panels/hierarchy/components/nodeComponents";
 import {
-  createHierarchyTreeQueryOptions,
-  type ComponentTreeNode,
-  type HierarchyEntityNode,
-  type HierarchyTreeSnapshot,
+    createHierarchyTreeQueryOptions,
+    type ComponentTreeNode,
+    type HierarchyEntityNode,
+    type HierarchyTreeSnapshot,
 } from "@ui/layout/sidebar/panels/hierarchy/queries/hierarchyTreeQuery";
 import styles from "@ui/layout/sidebar/styles.module.css";
 import { EntityIdContext, WorldIdContext } from "@ui/layout/sidebar/worldViewer/context";
@@ -14,8 +16,6 @@ import { EntityRow } from "@ui/layout/sidebar/worldViewer/entityRow";
 import { EngineUiContext } from "@ui/utilities/engine-context";
 import { useInvariantContext } from "@ui/utilities/hooks/use-invariant-context";
 import React, { useCallback } from "react";
-import { EntityTreeNodes } from "@ui/layout/sidebar/panels/hierarchy/components/entityTreeNodes";
-import { NodeComponents } from "@ui/layout/sidebar/panels/hierarchy/components/nodeComponents";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -66,7 +66,7 @@ export const EntityTreeNode: React.FC<EntityTreeNodeProps> = React.memo(({
           <EntityRow.DropdownButton depth={depth} hasContent={hasContent}>
             <EntityRow.Root>
               <EntityRow.Icon.Entity />
-              <EntityRow.DebugName />
+              <EntityRow.DebugName name={nodeData?.debugName} />
               <EntityRow.Actions>
                 <EntityRow.CenterCamera />
                 <EntityRow.Delete />

@@ -9,7 +9,15 @@ export const GRID_CELL_SIZE = 20;
 export const BOX_SIZE = GRID_CELL_SIZE;
 export const HALF_BOX_SIZE = BOX_SIZE / 2;
 
-export const HOTBAR_SLOT_BOX: KeyBind = {
+const TRANSPORT_BELT_ALIGNMENT_SAMPLE_X = -450;
+const TRANSPORT_BELT_ALIGNMENT_SAMPLE_Y = 287;
+
+export const TRANSPORT_BELT_OFFSET_X =
+  ((TRANSPORT_BELT_ALIGNMENT_SAMPLE_X % GRID_CELL_SIZE) + GRID_CELL_SIZE) % GRID_CELL_SIZE;
+export const TRANSPORT_BELT_OFFSET_Y =
+  ((TRANSPORT_BELT_ALIGNMENT_SAMPLE_Y % GRID_CELL_SIZE) + GRID_CELL_SIZE) % GRID_CELL_SIZE;
+
+export const HOTBAR_SLOT_CONVEYOR_HORIZONTAL_RIGHT: KeyBind = {
   code: "Digit1",
   modifiers: {},
 };
@@ -40,7 +48,7 @@ export const HOTBAR_INDICATOR_ID = "build-hotbar-indicator";
 /**********************************************************************************************************
 *   STATE
 **********************************************************************************************************/
-export type BuildItemType = "box";
+export type BuildItemType = "box" | "transport-belt-horizontal-right";
 
 export type BuildModeState = {
   selectedItem: BuildItemType | null;
@@ -59,7 +67,7 @@ export const buildModeStateDefault: BuildModeState = {
 };
 
 export const buildModeStateSchema = z.object({
-  selectedItem: z.literal("box").nullable(),
+  selectedItem: z.enum(["box", "transport-belt-horizontal-right"]).nullable(),
   gridVisible: z.boolean(),
   pendingPlace: z.boolean(),
   pendingDelete: z.boolean(),

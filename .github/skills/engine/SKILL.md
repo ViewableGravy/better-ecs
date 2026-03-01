@@ -27,6 +27,12 @@ You should use this skill when:
 
 ## Instructions
 
+### 0. Engine Import Policy
+
+- Inside `packages/engine/src`, always use aliased imports (for example `@core/...`, `@render/...`, `@components/...`, `@ui/...`, `@/...`).
+- Do not add relative imports like `./` or `../` in engine source files.
+- Keep this consistent so `tsc` + `tsc-alias` can rewrite internal aliases to relative paths in `packages/engine/dist` during build.
+
 ### 1. Ensure Type Safety
 
 Userland applications **must** augment the global `Register` interface to inject their specific engine configuration. This enables type inference for `useSystem`, `useWorld`, and other hooks throughout the application.

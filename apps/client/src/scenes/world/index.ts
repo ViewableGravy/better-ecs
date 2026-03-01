@@ -1,11 +1,13 @@
 import { sceneConfig } from "@/scenes/world/const";
 import { System as BuildModeSystem } from "@/scenes/world/systems/build-mode";
+import { fromContext, FromEngine } from "@repo/engine/context";
 import {
   createContextScene
 } from "@repo/spatial-contexts";
 import { defineDungeonContext } from "./contexts/define-dungeon-context";
 import { defineHouseContext } from "./contexts/define-house-context";
 import { defineOverworldContext } from "./contexts/define-overworld-context";
+import { getAllTransportBeltAssetIds } from "./factories/spawnTransportBelt";
 import { DebugOverlaySystem } from "./systems/debug-overlay.system";
 import { HouseContextSystem } from "./systems/houseTransition/house-context.system";
 import { PlayerOrbitSystem } from "./systems/player-orbit.system";
@@ -39,9 +41,11 @@ export const Scene = createContextScene("MainScene")({
       dungeonId: sceneConfig.contextIds.dungeon,
     }),
   ],
-  setup(_world, manager) {
+  async setup(_world, manager) {
     manager.ensureWorldLoaded(sceneConfig.contextIds.house);
     manager.ensureWorldLoaded(sceneConfig.contextIds.dungeon);
     manager.setFocusedContextId(sceneConfig.contextIds.overworld);
+
+    await fromContext(FromEngine.Assets).loadMany(getAllTransportBeltAssetIds())
   },
 });

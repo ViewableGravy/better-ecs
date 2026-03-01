@@ -1,12 +1,18 @@
 import type { RenderVisibilityRole } from "@/scenes/world/components/render-visibility";
 import { HOUSE_INTERIOR, OUTSIDE } from "@/scenes/world/components/render-visibility";
 import { spawnBox } from "@/scenes/world/factories/spawnBox";
+import { spawnTransportBelt } from "@/scenes/world/factories/spawnTransportBelt";
 import { createSystem, type RegisteredEngine, type RegisteredSystems } from "@repo/engine";
 import { System as ContextSystem, Engine, fromContext, Mouse } from "@repo/engine/context";
 import { ActiveCameraView } from "@repo/engine/context-utils";
 import { SpatialContexts, type ContextId } from "@repo/spatial-contexts";
-import { GhostPreview } from "./components";
-import { buildModeStateDefault, buildModeStateSchema } from "./const";
+import { GhostPreview, Placeable } from "./components";
+import {
+  buildModeStateDefault,
+  buildModeStateSchema,
+  TRANSPORT_BELT_OFFSET_X,
+  TRANSPORT_BELT_OFFSET_Y,
+} from "./const";
 import { BuildModeDomEvents, HUD } from "./dom";
 import * as Keybinds from './input';
 import { Placement } from "./placement";
@@ -76,21 +82,43 @@ export const System = createSystem("main:build-mode")({
     }
 
     if (placementTarget.world) {
-      if (shouldSpawnBox(shouldPlace, placementTarget, data, snappedX, snappedY)) {
-        spawnBox(placementTarget.world, {
-          snappedX,
-          snappedY,
-          renderVisibilityRole: resolvePlacementRenderVisibilityRole(
-            engine, 
-            placementTarget.contextId
-          ),
-        });
+      if (shouldSpawnPlacement(shouldPlace, placementTarget, data, snappedX, snappedY)) {
+        const renderVisibilityRole = resolvePlacementRenderVisibilityRole(
+          engine,
+          placementTarget.contextId,
+        );
+
+        if (data.selectedItem === "box") {
+          spawnBox(placementTarget.world, {
+            snappedX,
+            snappedY,
+            renderVisibilityRole,
+          });
+        }
+
+        if (data.selectedItem === "transport-belt-horizontal-right") {
+          const beltX = snappedX + TRANSPORT_BELT_OFFSET_X;
+          const beltY = snappedY + TRANSPORT_BELT_OFFSET_Y;
+
+          Placement.replaceTransportBeltAt(placementTarget.world, beltX, beltY);
+
+          const beltEntityId = spawnTransportBelt(placementTarget.world, {
+            x: beltX,
+            y: beltY,
+            variant: "horizontal-right",
+          });
+
+          placementTarget.world.add(
+            beltEntityId,
+            new Placeable("transport-belt-horizontal-right"),
+          );
+        }
       }
     }
   },
 });
 
-function shouldSpawnBox(
+function shouldSpawnPlacement(
   shouldPlace: boolean,
   placementTarget: PlacementWorldResolution,
   data: RegisteredSystems["main:build-mode"]["data"],
@@ -102,8 +130,8 @@ function shouldSpawnBox(
     return false;
   }
 
-  // User must have selected a box to place from the hotbar (1)
-  if (data.selectedItem !== "box") {
+  // User must have selected an item to place from the hotbar (1)
+  if (data.selectedItem === null) {
     return false;
   }
 

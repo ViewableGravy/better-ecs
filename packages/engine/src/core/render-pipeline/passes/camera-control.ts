@@ -7,8 +7,8 @@ export const CameraControlPass = createRenderPass("camera-control")({
   execute() {
     const world = fromContext(FromRender.World);
     const renderer = fromContext(FromRender.Renderer);
-    const alpha = fromContext(FromRender.Alpha);
+    const interpolationAlpha = fromContext(FromRender.InterpolationAlpha);
 
-    applyActiveCameraToRenderer(world, renderer, alpha);
+    applyActiveCameraToRenderer(world, renderer, interpolationAlpha);
   },
 });

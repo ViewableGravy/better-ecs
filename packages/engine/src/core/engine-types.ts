@@ -1,15 +1,16 @@
-import { SceneManager } from ".";
-import { AssetManager } from "@assets";
 import type { inputSystem } from "@/systems/input";
 import type { transformSnapshotSystem } from "@/systems/transformSnapshot";
+import { AssetManager } from "@assets";
 import type { EngineClass } from "@core/engine";
 import type { EngineEditor } from "@core/engine-editor";
 import type { EngineUtils } from "@core/engine-utils";
+import type { EngineRenderCullingSettings } from "@core/engine/render-culling";
 import type { EngineInput } from "@core/input";
 import type { RenderPipeline } from "@core/render-pipeline";
 import type { SceneDefinition, SceneDefinitionTuple } from "@core/scene/scene.types";
 import type { EngineSystem, SystemFactory, SystemFactoryTuple } from "@core/system";
 import type { InferStandardSchema, StandardSchema } from "@core/types";
+import { SceneManager } from ".";
 
 // --- Type Registration (via module augmentation) ---
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type, @typescript-eslint/no-empty-interface
@@ -30,6 +31,7 @@ export type AnyEngine = {
   scene: SceneManager<any>;
   assets: AssetManager<any>;
   render: RenderPipeline | null;
+  renderCulling: EngineRenderCullingSettings;
   editor: EngineEditor;
   input: EngineInput;
   utils: EngineUtils;

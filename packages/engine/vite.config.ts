@@ -24,18 +24,34 @@ export default defineConfig({
       cssFileName: "styles",
     },
     rollupOptions: {
-      external: [
-        /^@repo\/engine(\/.*)?$/,
-        "react",
-        "react-dom",
-        "react/jsx-runtime",
-        "@headlessui/react",
-        "@phosphor-icons/react",
-        "classnames",
-        "tiny-invariant",
-        "valtio",
-      ],
+      external: (id) => {
+        if (id === "@components" || id.startsWith("@components/")) {
+          return true;
+        }
+
+        if (/^@repo\/engine(\/.*)?$/.test(id)) {
+          return true;
+        }
+
+        return [
+          "react",
+          "react-dom",
+          "react/jsx-runtime",
+          "@headlessui/react",
+          "@phosphor-icons/react",
+          "classnames",
+          "tiny-invariant",
+          "valtio",
+        ].includes(id);
+      },
       output: {
+        paths: (id) => {
+          if (id === "@components" || id.startsWith("@components/")) {
+            return "@repo/engine/components";
+          }
+
+          return id;
+        },
         entryFileNames: "index.js",
         chunkFileNames: "chunks/[name]-[hash].js",
         assetFileNames: "[name][extname]",

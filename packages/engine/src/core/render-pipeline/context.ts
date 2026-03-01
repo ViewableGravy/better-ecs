@@ -1,3 +1,4 @@
+import type { WorldProvider } from "@core/render-pipeline/types";
 import type { UserWorld } from "@ecs/world";
 import type { Renderer } from "@render";
 import {
@@ -6,7 +7,6 @@ import {
     type FrameAllocatorRegistry,
     type InternalFrameAllocator,
 } from "@render";
-import type { WorldProvider } from "@core/render-pipeline/types";
 
 export class RenderPipelineContext<
 	TRegistry extends FrameAllocatorRegistry = EngineFrameAllocatorRegistry,
@@ -20,7 +20,7 @@ export class RenderPipelineContext<
 
 	visibleWorlds: readonly UserWorld[] = [];
 	world: UserWorld;
-	alpha = 1;
+	interpolationAlpha = 1;
 
 	constructor(options: {
 		renderer: Renderer;

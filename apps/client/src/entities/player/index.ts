@@ -1,5 +1,6 @@
 import { OrbitMotion } from "@/components/orbit-motion";
 import { PlayerComponent } from "@/components/player";
+import { RENDER_LAYERS } from "@/consts";
 import type { EntityId, UserWorld } from "@repo/engine";
 import {
   Color,
@@ -29,6 +30,8 @@ export function spawnPlayer(world: UserWorld): EntityId {
 
   // Create a sprite component referencing the asset by key
   const sprite = new Sprite("player-sprite", 40, 40);
+  sprite.layer = RENDER_LAYERS.world;
+  sprite.zOrder = 1;
 
   world.add(player, transform);
   world.add(player, playerComponent);

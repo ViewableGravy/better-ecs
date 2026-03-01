@@ -11,6 +11,8 @@ The `@repo/engine` package is the core ECS engine providing:
 
 ## Architecture Guidelines
 
+- Before adding any new helper/function in engine code, search for an existing implementation first and reuse/extend it when possible.
+
 ### Manager Pattern for Engine Features
 
 When adding new features to the engine, prefer creating a dedicated **Manager class** over adding methods directly to `EngineClass`:

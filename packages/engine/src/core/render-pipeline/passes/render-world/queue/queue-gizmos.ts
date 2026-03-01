@@ -10,7 +10,7 @@ import {
   GIZMO_SCALE_MIN_DISTANCE_WORLD,
   type GizmoHandle,
 } from "@components/gizmo";
-import { Color } from "@components/sprite";
+import { Color } from "@components/sprite/sprite";
 import { Transform2D } from "@components/transform";
 import { fromContext, FromRender } from "@context";
 import { resolveWorldTransform2D } from "@ecs/hierarchy";

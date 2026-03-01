@@ -1,5 +1,6 @@
 import type { EngineClass } from "@core/engine";
 import type { RegisteredEngine } from "@core/engine-types";
+import type { AnyRenderPipelineContext } from "@core/render-pipeline";
 import type { SceneContext } from "@core/scene/scene-context";
 
 /***** TYPE DEFINITIONS *****/
@@ -88,10 +89,10 @@ export function getContextEngine(): RegisteredEngine {
  * Returns the render context from the current execution context.
  * Throws if called outside of render pipeline execution.
  */
-export function getContextRender(): object {
+export function getContextRender(): AnyRenderPipelineContext {
   if (!context.render) {
     throw new Error('fromContext({ type: "render" }) called outside of render pipeline execution context');
   }
 
-  return context.render;
+  return context.render as AnyRenderPipelineContext;
 }
