@@ -1,3 +1,4 @@
+import { TRANSPORT_BELT_VARIANTS } from "@/assets/conveyor";
 import { Color } from "@repo/engine/components";
 import { defineContext, type ContextId } from "@repo/spatial-contexts";
 import { OUTSIDE } from "../components/render-visibility";
@@ -101,25 +102,17 @@ export function defineOverworldContext(options: OverworldContextOptions) {
         centerY: 360,
       });
 
-      spawnTransportBelt(world, {
-        x: -260,
-        y: 40,
-      });
+      const beltStartX = -420;
+      const beltSpacing = 64;
+      const beltY = 280;
 
-      spawnTransportBelt(world, {
-        x: -288,
-        y: 40,
-      });
-
-      spawnTransportBelt(world, {
-        x: -316,
-        y: 40,
-      });
-
-      spawnTransportBelt(world, {
-        x: -344,
-        y: 40,
-      });
+      for (const [index, variant] of TRANSPORT_BELT_VARIANTS.entries()) {
+        spawnTransportBelt(world, {
+          x: beltStartX + index * beltSpacing,
+          y: beltY,
+          variant,
+        });
+      }
     },
   });
 }
