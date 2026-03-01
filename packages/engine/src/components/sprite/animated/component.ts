@@ -16,6 +16,7 @@ type AnimatedSpriteConfig = {
   layer?: number;
   playbackRate?: number;
   startTime?: number;
+  useGlobalOffset?: boolean;
 };
 
 function isAnimatedSpriteConfig(
@@ -29,6 +30,7 @@ export class AnimatedSprite extends Sprite {
 
   public playbackRate = 1;
   public startTime = performance.now();
+  public useGlobalOffset = false;
 
   constructor(frames: readonly SpriteAssetId[]);
   constructor(config: AnimatedSpriteConfig);
@@ -68,6 +70,10 @@ export class AnimatedSprite extends Sprite {
 
     if (config?.startTime !== undefined) {
       this.startTime = config.startTime;
+    }
+
+    if (config?.useGlobalOffset !== undefined) {
+      this.useGlobalOffset = config.useGlobalOffset;
     }
   }
 }

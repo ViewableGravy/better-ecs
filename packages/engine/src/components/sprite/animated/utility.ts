@@ -2,6 +2,7 @@
 import type { AnimatedSprite } from "@components/sprite/animated/component";
 
 const DEFAULT_FRAME_TIME_MS = 1000 / 60;
+const GLOBAL_ANIMATION_START_TIME_MS = performance.now();
 
 /**
  * Returns the current animation frame index for the provided time.
@@ -19,7 +20,8 @@ export function getFrameIndexAtTime(sprite: AnimatedSprite, timeMs: number): num
     return 0;
   }
 
-  const elapsedMs = timeMs - sprite.startTime;
+  const startTime = sprite.useGlobalOffset ? GLOBAL_ANIMATION_START_TIME_MS : sprite.startTime;
+  const elapsedMs = timeMs - startTime;
   // Convert elapsed milliseconds to 60 FPS frame steps before sampling.
   const sampledFrame = (elapsedMs * sprite.playbackRate) / DEFAULT_FRAME_TIME_MS;
   const wrappedFrame = ((sampledFrame % duration) + duration) % duration;

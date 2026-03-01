@@ -21,7 +21,7 @@ type OverworldContextOptions = {
   houseHalfHeight: number;
 };
 
-const BELT_SPACING = 28;
+const BELT_SPACING = 20;
 
 function spawnBeltRow(
   world: UserWorld,
@@ -199,8 +199,8 @@ export function defineOverworldContext(options: OverworldContextOptions) {
         centerY: 360,
       });
 
-      const demoStartX = -440;
-      const leftRowY = 280;
+      const demoStartX = -450;
+      const leftRowY = 287;
       const rightRowY = 336;
 
       spawnBeltRow(world, {
@@ -222,8 +222,8 @@ export function defineOverworldContext(options: OverworldContextOptions) {
       });
 
       spawnBeltLoop(world, {
-        x: 80,
-        y: 420,
+        x: demoStartX,
+        y: 426,
         sideLength: 5,
         top: "horizontal-right",
         right: "vertical-down",

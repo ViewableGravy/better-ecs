@@ -1,5 +1,5 @@
 import { RENDER_LAYERS } from "@/consts";
-import type { UserWorld } from "@repo/engine";
+import type { EntityId, UserWorld } from "@repo/engine";
 import { AnimatedSprite, Debug, Transform2D } from "@repo/engine/components";
 import { OUTSIDE, RenderVisibility } from "../components/render-visibility";
 
@@ -35,7 +35,7 @@ const TRANSPORT_BELT_FRAMES = [
 type TransportBeltFrame = (typeof TRANSPORT_BELT_FRAMES)[number];
 type TransportBeltAssetId = `transport-belt:${TransportBeltVariant}_${TransportBeltFrame}`;
 
-const TRANSPORT_BELT_QUAD_SIZE = 56;
+const TRANSPORT_BELT_QUAD_SIZE = 40;
 const TRANSPORT_BELT_FRAME_SIZE = 128;
 
 function createTransportBeltAssetId(variant: TransportBeltVariant, frame: TransportBeltFrame): TransportBeltAssetId {
@@ -70,7 +70,7 @@ type SpawnTransportBeltOptions = {
   variant?: TransportBeltVariant;
 };
 
-export function spawnTransportBelt(world: UserWorld, options: SpawnTransportBeltOptions): number {
+export function spawnTransportBelt(world: UserWorld, options: SpawnTransportBeltOptions): EntityId {
   const variant = options.variant ?? "horizontal-right";
   const scale = TRANSPORT_BELT_QUAD_SIZE / TRANSPORT_BELT_FRAME_SIZE;
 
@@ -79,6 +79,7 @@ export function spawnTransportBelt(world: UserWorld, options: SpawnTransportBelt
     assets: getTransportBeltAnimationAssets(variant),
     width: TRANSPORT_BELT_FRAME_SIZE * scale,
     height: TRANSPORT_BELT_FRAME_SIZE * scale,
+    useGlobalOffset: true,
   });
 
   sprite.playbackRate = 0.5;
