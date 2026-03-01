@@ -1,4 +1,4 @@
-import { TRANSPORT_BELT_VARIANTS } from "@/assets/conveyor";
+import type { UserWorld } from "@repo/engine";
 import { Color } from "@repo/engine/components";
 import { defineContext, type ContextId } from "@repo/spatial-contexts";
 import { OUTSIDE } from "../components/render-visibility";
@@ -7,7 +7,7 @@ import { spawnDemoShaderQuad } from "../factories/spawnDemoShaderQuad";
 import { spawnDoor } from "../factories/spawnDoor";
 import { spawnHouse } from "../factories/spawnHouse";
 import { spawnOreField } from "../factories/spawnOreField";
-import { spawnTransportBelt } from "../factories/spawnTransportBelt";
+import { spawnTransportBelt, type TransportBeltVariant } from "../factories/spawnTransportBelt";
 import { spawnTree } from "../factories/spawnTree";
 import { spawnWall } from "../factories/spawnWall";
 import { createHouseLayout } from "../utilities/house-layout";
@@ -20,6 +20,103 @@ type OverworldContextOptions = {
   houseHalfWidth: number;
   houseHalfHeight: number;
 };
+
+const BELT_SPACING = 49;
+
+function spawnBeltRow(
+  world: UserWorld,
+  options: {
+    x: number;
+    y: number;
+    bodyCount: number;
+    leftEdge: TransportBeltVariant;
+    body: TransportBeltVariant;
+    rightEdge: TransportBeltVariant;
+  },
+) {
+  spawnTransportBelt(world, {
+    x: options.x,
+    y: options.y,
+    variant: options.leftEdge,
+  });
+
+  for (let index = 0; index < options.bodyCount; index += 1) {
+    spawnTransportBelt(world, {
+      x: options.x + (index + 1) * BELT_SPACING,
+      y: options.y,
+      variant: options.body,
+    });
+  }
+
+  spawnTransportBelt(world, {
+    x: options.x + (options.bodyCount + 1) * BELT_SPACING,
+    y: options.y,
+    variant: options.rightEdge,
+  });
+}
+
+function spawnBeltLoop(
+  world: UserWorld,
+  options: {
+    x: number;
+    y: number;
+    sideLength: number;
+    top: TransportBeltVariant;
+    right: TransportBeltVariant;
+    bottom: TransportBeltVariant;
+    left: TransportBeltVariant;
+    topLeft: TransportBeltVariant;
+    topRight: TransportBeltVariant;
+    bottomRight: TransportBeltVariant;
+    bottomLeft: TransportBeltVariant;
+  },
+) {
+  const maxOffset = options.sideLength - 1;
+
+  spawnTransportBelt(world, {
+    x: options.x,
+    y: options.y,
+    variant: options.topLeft,
+  });
+  spawnTransportBelt(world, {
+    x: options.x + maxOffset * BELT_SPACING,
+    y: options.y,
+    variant: options.topRight,
+  });
+  spawnTransportBelt(world, {
+    x: options.x + maxOffset * BELT_SPACING,
+    y: options.y + maxOffset * BELT_SPACING,
+    variant: options.bottomRight,
+  });
+  spawnTransportBelt(world, {
+    x: options.x,
+    y: options.y + maxOffset * BELT_SPACING,
+    variant: options.bottomLeft,
+  });
+
+  for (let offset = 1; offset < maxOffset; offset += 1) {
+    spawnTransportBelt(world, {
+      x: options.x + offset * BELT_SPACING,
+      y: options.y,
+      variant: options.top,
+    });
+    spawnTransportBelt(world, {
+      x: options.x + maxOffset * BELT_SPACING,
+      y: options.y + offset * BELT_SPACING,
+      variant: options.right,
+    });
+    spawnTransportBelt(world, {
+      x: options.x + offset * BELT_SPACING,
+      y: options.y + maxOffset * BELT_SPACING,
+      variant: options.bottom,
+    });
+    spawnTransportBelt(world, {
+      x: options.x,
+      y: options.y + offset * BELT_SPACING,
+      variant: options.left,
+    });
+  }
+}
 
 export function defineOverworldContext(options: OverworldContextOptions) {
   return defineContext({
@@ -102,17 +199,55 @@ export function defineOverworldContext(options: OverworldContextOptions) {
         centerY: 360,
       });
 
-      const beltStartX = -420;
-      const beltSpacing = 64;
-      const beltY = 280;
+      const demoStartX = -440;
+      const leftRowY = 280;
+      const rightRowY = 336;
 
-      for (const [index, variant] of TRANSPORT_BELT_VARIANTS.entries()) {
-        spawnTransportBelt(world, {
-          x: beltStartX + index * beltSpacing,
-          y: beltY,
-          variant,
-        });
-      }
+      spawnBeltRow(world, {
+        x: demoStartX,
+        y: leftRowY,
+        bodyCount: 8,
+        leftEdge: "end-left",
+        body: "horizontal-left",
+        rightEdge: "start-right",
+      });
+
+      spawnBeltRow(world, {
+        x: demoStartX,
+        y: rightRowY,
+        bodyCount: 8,
+        leftEdge: "start-left",
+        body: "horizontal-right",
+        rightEdge: "end-right",
+      });
+
+      spawnBeltLoop(world, {
+        x: 180,
+        y: 220,
+        sideLength: 5,
+        top: "horizontal-right",
+        right: "vertical-down",
+        bottom: "horizontal-left",
+        left: "vertical-up",
+        topLeft: "angled-bottom-right",
+        topRight: "angled-left-bottom",
+        bottomRight: "angled-top-left",
+        bottomLeft: "angled-right-up",
+      });
+
+      spawnBeltLoop(world, {
+        x: 540,
+        y: 220,
+        sideLength: 5,
+        top: "horizontal-left",
+        right: "vertical-up",
+        bottom: "horizontal-right",
+        left: "vertical-down",
+        topLeft: "angled-right-bottom",
+        topRight: "angled-bottom-left",
+        bottomRight: "angled-left-up",
+        bottomLeft: "angled-up-right",
+      });
     },
   });
 }

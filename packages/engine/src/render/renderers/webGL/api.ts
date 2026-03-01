@@ -165,10 +165,13 @@ export class WebGLRenderAPI implements RendererAPI {
     const frameWidth = data.sourceWidth > 0 ? data.sourceWidth : srcW;
     const frameHeight = data.sourceHeight > 0 ? data.sourceHeight : srcH;
 
-    const u0 = data.sourceX / srcW;
-    const v0 = data.sourceY / srcH;
-    const u1 = (data.sourceX + frameWidth) / srcW;
-    const v1 = (data.sourceY + frameHeight) / srcH;
+    const insetX = frameWidth > 1 ? 0.5 : 0;
+    const insetY = frameHeight > 1 ? 0.5 : 0;
+
+    const u0 = (data.sourceX + insetX) / srcW;
+    const v0 = (data.sourceY + insetY) / srcH;
+    const u1 = (data.sourceX + frameWidth - insetX) / srcW;
+    const v1 = (data.sourceY + frameHeight - insetY) / srcH;
 
     const uv = new Float32Array([
       u0, v1,
