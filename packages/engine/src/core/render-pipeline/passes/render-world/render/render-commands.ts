@@ -2,10 +2,10 @@ import { Transform2D } from "@components/transform";
 import { fromContext, FromEngine, FromRender } from "@context";
 import { drawCullingBoundsOverlay } from "@core/render-pipeline/passes/render-world/render/culling/overlay";
 import {
-    CullingBounds,
-    isCommandWithinCullingBounds,
-    isEntityRenderCommand,
-    isShapeDrawRenderCommand,
+  CullingBounds,
+  isCommandWithinCullingBounds,
+  isEntityRenderCommand,
+  isShapeDrawRenderCommand,
 } from "@core/render-pipeline/passes/render-world/render/culling/utils";
 import { handleShaderEntityCommand } from "@core/render-pipeline/passes/render-world/render/handlers/shader-entity";
 import { handleShapeDrawCommand } from "@core/render-pipeline/passes/render-world/render/handlers/shape-draw";
@@ -32,6 +32,8 @@ export function renderCommands(
 
   renderer.setMeshOverlayEnabled(showQuadOutlines);
 
+
+  
   for (const command of queue.commands) {
     /***** RAW DRAW COMMANDS *****/
     if (isShapeDrawRenderCommand(command)) {
@@ -72,6 +74,8 @@ export function renderCommands(
 
     console.warn(`[Render Commands] Unhandled render command type: ${command.type}`);
   }
+
+
 
   if (isLastVisibleWorld && showCullingBounds && cullingBounds) {
     drawCullingBoundsOverlay(renderer, cullingBounds);
