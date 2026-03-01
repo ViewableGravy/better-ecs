@@ -9,11 +9,11 @@ import { EngineClass } from "@core/engine";
 import type { CreateEngineOptions } from "@core/factory/types";
 import type { SceneDefinition, SceneDefinitionTuple, SceneName } from "@core/scene/scene.types";
 import {
-    executeSystemCleanup as runSystemCleanup,
-    executeSystemInitialize as runSystemInitialize,
+	executeSystemCleanup as runSystemCleanup,
+	executeSystemInitialize as runSystemInitialize,
 } from "@core/system";
 import type { EngineSystem, SystemFactoryTuple } from "@core/system/types";
-import type { EngineUiContextValue } from "../../ui/utilities/engine-context";
+import type { EngineUiContextValue } from "@ui/utilities/engine-context";
 
 export function createEngine<
 	TSystems extends SystemFactoryTuple,
@@ -53,7 +53,7 @@ export function createEngine<
 		const engineUiContextValue: EngineUiContextValue = engine;
 
 		if (import.meta.env.DEV) {
-			void import("../../ui/index.js").then((uiModule) => {
+			void import("@/ui/index").then((uiModule) => {
 				uiModule.mountEngineEditorUi({
 					rootElement,
 					engine: engineUiContextValue,

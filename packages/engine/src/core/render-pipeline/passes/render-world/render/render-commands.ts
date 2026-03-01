@@ -1,46 +1,34 @@
-import type { LooseAssetManager } from "@assets/AssetManager";
-import { isShaderSourceAsset } from "@assets/utils";
-import { AnimatedSprite, EditorHoverHighlight, ShaderQuad, Shape, Sprite } from "@components";
-import { getFrameAssetIdAtTime } from "@components/sprite/animated";
-import { Color } from "@components/sprite/sprite";
 import { Transform2D } from "@components/transform";
 import { fromContext, FromEngine, FromRender } from "@context";
 import { drawCullingBoundsOverlay } from "@core/render-pipeline/passes/render-world/render/culling/overlay";
 import {
-  CullingBounds,
-  isCommandWithinCullingBounds,
-  isEntityRenderCommand,
-  isShapeDrawRenderCommand,
+    CullingBounds,
+    isCommandWithinCullingBounds,
+    isEntityRenderCommand,
+    isShapeDrawRenderCommand,
 } from "@core/render-pipeline/passes/render-world/render/culling/utils";
+import { handleShaderEntityCommand } from "@core/render-pipeline/passes/render-world/render/handlers/shader-entity";
+import { handleShapeDrawCommand } from "@core/render-pipeline/passes/render-world/render/handlers/shape-draw";
+import { handleShapeEntityCommand } from "@core/render-pipeline/passes/render-world/render/handlers/shape-entity";
+import { handleSpriteEntityCommand } from "@core/render-pipeline/passes/render-world/render/handlers/sprite-entity";
 import { resolveWorldTransform2D } from "@ecs/hierarchy";
-import type {
-  EngineFrameAllocatorRegistry,
-  InternalFrameAllocator,
-  Renderer,
-  RenderQueue,
-} from "@render";
+import type { RenderQueue } from "@render";
 
 const SHARED_RENDER_TRANSFORM = new Transform2D();
-const HOVER_TINT_COLOR = new Color(1, 1, 0, 1);
-const SHARED_HOVER_TINT = new Color(1, 1, 1, 1);
-let SHARED_ANIMATED_RENDER_SPRITE: Sprite | null = null;
 
 export function renderCommands(
-  queue: RenderQueue = fromContext(FromRender.Queue),
-  renderer: Renderer = fromContext(FromRender.Renderer),
-  assets: LooseAssetManager = fromContext(FromEngine.Assets),
-  alpha: number = fromContext(FromRender.Alpha),
-  frameAllocator: InternalFrameAllocator<EngineFrameAllocatorRegistry> = fromContext(FromRender.FrameAllocator,),
 ): void {
-  const now = performance.now();
+  const queue: RenderQueue = fromContext(FromRender.Queue);
+  const renderer = fromContext(FromRender.Renderer);
+  const interpolationAlpha = fromContext(FromRender.InterpolationAlpha);
   const engine = fromContext(FromEngine.Engine);
   const activeRenderWorld = fromContext(FromRender.World);
   const visibleWorlds = fromContext(FromRender.VisibleWorlds);
-  const isLastVisibleWorld =
-    visibleWorlds.length === 0 || visibleWorlds[visibleWorlds.length - 1] === activeRenderWorld;
+  const cullingBounds = fromContext(CullingBounds);
+  
+  const isLastVisibleWorld = visibleWorlds.length === 0 || visibleWorlds[visibleWorlds.length - 1] === activeRenderWorld;
   const showQuadOutlines = engine.editor.viewState.showQuadOutlines;
   const showCullingBounds = engine.editor.viewState.showCullingBounds || engine.renderCulling.debugOutline;
-  const cullingBounds = fromContext(CullingBounds);
 
   renderer.setMeshOverlayEnabled(showQuadOutlines);
 
@@ -51,197 +39,42 @@ export function renderCommands(
         continue;
       }
 
-      renderer.drawShape(command.shape);
-
+      handleShapeDrawCommand(command);
       continue;
     }
 
-    // verify that the command includes world and entityId for the subsequent render types.
-    if (!isEntityRenderCommand(command)) {
+    /***** ECS RENDER COMMANDS *****/
+    if (!isEntityRenderCommand(command))
       continue;
-    }
 
     const { world, entityId } = command;
 
-    if (!resolveWorldTransform2D(world, entityId, SHARED_RENDER_TRANSFORM)) {
+    if (!resolveWorldTransform2D(world, entityId, SHARED_RENDER_TRANSFORM))
       continue;
-    }
 
-    if (!isCommandWithinCullingBounds(command, cullingBounds, SHARED_RENDER_TRANSFORM, alpha)) {
+    if (!isCommandWithinCullingBounds(command, cullingBounds, SHARED_RENDER_TRANSFORM, interpolationAlpha))
       continue;
-    }
 
     if (command.type === "sprite-entity") {
-      const staticSprite = world.get(entityId, Sprite);
-      const sprite = staticSprite ?? projectAnimatedSprite(world.get(entityId, AnimatedSprite), now);
-      if (!sprite) {
-        continue;
-      }
-
-      const hoverHighlight = world.get(entityId, EditorHoverHighlight);
-      if (!hoverHighlight) {
-        renderer.render(sprite, SHARED_RENDER_TRANSFORM, alpha);
-        continue;
-      }
-
-      const originalR = sprite.tint.r;
-      const originalG = sprite.tint.g;
-      const originalB = sprite.tint.b;
-
-      sprite.tint.r = blendChannel(sprite.tint.r, HOVER_TINT_COLOR.r, hoverHighlight.amount);
-      sprite.tint.g = blendChannel(sprite.tint.g, HOVER_TINT_COLOR.g, hoverHighlight.amount);
-      sprite.tint.b = blendChannel(sprite.tint.b, HOVER_TINT_COLOR.b, hoverHighlight.amount);
-
-      renderer.render(sprite, SHARED_RENDER_TRANSFORM, alpha);
-
-      sprite.tint.r = originalR;
-      sprite.tint.g = originalG;
-      sprite.tint.b = originalB;
-
+      handleSpriteEntityCommand(command, SHARED_RENDER_TRANSFORM);
       continue;
     }
 
     if (command.type === "shader-entity") {
-      const shaderQuad = world.get(entityId, ShaderQuad);
-      if (!shaderQuad) {
-        continue;
-      }
-
-      const loadedShader = assets.getLoose(shaderQuad.assetId);
-      if (!isShaderSourceAsset(loadedShader)) {
-        continue;
-      }
-
-      const hoverHighlight = world.get(entityId, EditorHoverHighlight);
-      const tint = hoverHighlight
-        ? blendColor(shaderQuad.tint, HOVER_TINT_COLOR, hoverHighlight.amount)
-        : shaderQuad.tint;
-
-      renderer.drawTexturedQuad({
-        shader: loadedShader,
-        x: SHARED_RENDER_TRANSFORM.prev.pos.x +
-          (SHARED_RENDER_TRANSFORM.curr.pos.x - SHARED_RENDER_TRANSFORM.prev.pos.x) * alpha,
-        y: SHARED_RENDER_TRANSFORM.prev.pos.y +
-          (SHARED_RENDER_TRANSFORM.curr.pos.y - SHARED_RENDER_TRANSFORM.prev.pos.y) * alpha,
-        width: shaderQuad.width,
-        height: shaderQuad.height,
-        rotation: SHARED_RENDER_TRANSFORM.curr.rotation,
-        scaleX: SHARED_RENDER_TRANSFORM.curr.scale.x,
-        scaleY: SHARED_RENDER_TRANSFORM.curr.scale.y,
-        anchorX: shaderQuad.anchorX,
-        anchorY: shaderQuad.anchorY,
-        tint,
-        time: shaderQuad.useTime ? performance.now() : 0,
-      });
-
+      handleShaderEntityCommand(command, SHARED_RENDER_TRANSFORM);
       continue;
     }
 
-    const shape = world.get(entityId, Shape);
-    if (!shape) {
+    if (command.type === "shape-entity") {
+      handleShapeEntityCommand(command, SHARED_RENDER_TRANSFORM);
       continue;
     }
 
-    const shapeCommand = frameAllocator.acquire("engine:shape-command");
-    shapeCommand.type = shape.type;
-    shapeCommand.x = SHARED_RENDER_TRANSFORM.prev.pos.x +
-      (SHARED_RENDER_TRANSFORM.curr.pos.x - SHARED_RENDER_TRANSFORM.prev.pos.x) * alpha;
-    shapeCommand.y = SHARED_RENDER_TRANSFORM.prev.pos.y +
-      (SHARED_RENDER_TRANSFORM.curr.pos.y - SHARED_RENDER_TRANSFORM.prev.pos.y) * alpha;
-    shapeCommand.width = shape.width;
-    shapeCommand.height = shape.height;
-    shapeCommand.rotation = SHARED_RENDER_TRANSFORM.curr.rotation;
-    shapeCommand.scaleX = SHARED_RENDER_TRANSFORM.curr.scale.x;
-    shapeCommand.scaleY = SHARED_RENDER_TRANSFORM.curr.scale.y;
-    shapeCommand.fill.r = shape.fill.r;
-    shapeCommand.fill.g = shape.fill.g;
-    shapeCommand.fill.b = shape.fill.b;
-    shapeCommand.fill.a = shape.fill.a;
-
-    const hoverHighlight = world.get(entityId, EditorHoverHighlight);
-    if (hoverHighlight) {
-      shapeCommand.fill.r = blendChannel(shapeCommand.fill.r, HOVER_TINT_COLOR.r, hoverHighlight.amount);
-      shapeCommand.fill.g = blendChannel(shapeCommand.fill.g, HOVER_TINT_COLOR.g, hoverHighlight.amount);
-      shapeCommand.fill.b = blendChannel(shapeCommand.fill.b, HOVER_TINT_COLOR.b, hoverHighlight.amount);
-    }
-
-    if (shape.stroke) {
-      if (shapeCommand.stroke === null) {
-        shapeCommand.stroke = new Color(shape.stroke.r, shape.stroke.g, shape.stroke.b, shape.stroke.a);
-      } else {
-        shapeCommand.stroke.r = shape.stroke.r;
-        shapeCommand.stroke.g = shape.stroke.g;
-        shapeCommand.stroke.b = shape.stroke.b;
-        shapeCommand.stroke.a = shape.stroke.a;
-      }
-
-      if (hoverHighlight && shapeCommand.stroke) {
-        shapeCommand.stroke.r = blendChannel(shapeCommand.stroke.r, HOVER_TINT_COLOR.r, hoverHighlight.amount);
-        shapeCommand.stroke.g = blendChannel(shapeCommand.stroke.g, HOVER_TINT_COLOR.g, hoverHighlight.amount);
-        shapeCommand.stroke.b = blendChannel(shapeCommand.stroke.b, HOVER_TINT_COLOR.b, hoverHighlight.amount);
-      }
-    } else {
-      shapeCommand.stroke = null;
-    }
-
-    shapeCommand.strokeWidth = shape.strokeWidth;
-    shapeCommand.fillEnabled = true;
-    shapeCommand.arcEnabled = false;
-    shapeCommand.arcStart = 0;
-    shapeCommand.arcEnd = Math.PI * 2;
-    shapeCommand.cornerRadius = 0;
-
-    renderer.drawShape(shapeCommand);
+    console.warn(`[Render Commands] Unhandled render command type: ${command.type}`);
   }
 
   if (isLastVisibleWorld && showCullingBounds && cullingBounds) {
     drawCullingBoundsOverlay(renderer, cullingBounds);
   }
-}
-
-/**
- * Creates a frame-projected sprite view from an animated sprite at a specific time.
- *
- * This avoids mutating ECS animation state while still allowing the renderer to
- * consume the standard `Sprite` interface.
- */
-function projectAnimatedSprite(animatedSprite: AnimatedSprite | undefined, timeMs: number): Sprite | null {
-  if (!animatedSprite) {
-    return null;
-  }
-
-  const sampledAssetId = getFrameAssetIdAtTime(animatedSprite, timeMs);
-  if (!SHARED_ANIMATED_RENDER_SPRITE) {
-    SHARED_ANIMATED_RENDER_SPRITE = new Sprite(sampledAssetId);
-  }
-
-  const projected = SHARED_ANIMATED_RENDER_SPRITE;
-  projected.assetId = sampledAssetId;
-  projected.width = animatedSprite.width;
-  projected.height = animatedSprite.height;
-  projected.anchorX = animatedSprite.anchorX;
-  projected.anchorY = animatedSprite.anchorY;
-  projected.flipX = animatedSprite.flipX;
-  projected.flipY = animatedSprite.flipY;
-  projected.layer = animatedSprite.layer;
-  projected.zOrder = animatedSprite.zOrder;
-  projected.tint.r = animatedSprite.tint.r;
-  projected.tint.g = animatedSprite.tint.g;
-  projected.tint.b = animatedSprite.tint.b;
-  projected.tint.a = animatedSprite.tint.a;
-  return projected;
-}
-
-function blendChannel(base: number, tint: number, amount: number): number {
-  return base + (tint - base) * amount;
-}
-
-function blendColor(base: Color, tint: Color, amount: number): Color {
-  const color = SHARED_HOVER_TINT;
-  color.r = blendChannel(base.r, tint.r, amount);
-  color.g = blendChannel(base.g, tint.g, amount);
-  color.b = blendChannel(base.b, tint.b, amount);
-  color.a = base.a;
-  return color;
 }
 

@@ -24,13 +24,29 @@ type CullingViewport = {
   halfHeight: number;
 };
 
-type EntityCommandType = "sprite-entity" | "shader-entity" | "shape-entity";
-type EntityRenderCommand = RenderCommand & {
-  type: EntityCommandType;
+export type SpriteEntityRenderCommand = RenderCommand & {
+  type: "sprite-entity";
   world: NonNullable<RenderCommand["world"]>;
   entityId: NonNullable<RenderCommand["entityId"]>;
 };
-type ShapeDrawRenderCommand = RenderCommand & {
+
+export type ShaderEntityRenderCommand = RenderCommand & {
+  type: "shader-entity";
+  world: NonNullable<RenderCommand["world"]>;
+  entityId: NonNullable<RenderCommand["entityId"]>;
+};
+
+export type ShapeEntityRenderCommand = RenderCommand & {
+  type: "shape-entity";
+  world: NonNullable<RenderCommand["world"]>;
+  entityId: NonNullable<RenderCommand["entityId"]>;
+};
+
+export type EntityRenderCommand =
+  | SpriteEntityRenderCommand
+  | ShaderEntityRenderCommand
+  | ShapeEntityRenderCommand;
+export type ShapeDrawRenderCommand = RenderCommand & {
   type: "shape-draw";
   shape: ShapeRenderInput;
 };
@@ -96,7 +112,7 @@ export const CullingBounds: EngineAndRenderContextOptions<CullingBounds | null> 
 };
 
 export function isCommandWithinCullingBounds(command: ShapeDrawRenderCommand, bounds: CullingBounds | null): boolean;
-export function isCommandWithinCullingBounds(command: EntityRenderCommand, bounds: CullingBounds | null, transform: Transform2D, alpha: number,): boolean;
+export function isCommandWithinCullingBounds(command: EntityRenderCommand, bounds: CullingBounds | null, transform: Transform2D, alpha: number): boolean;
 export function isCommandWithinCullingBounds(
   command: ShapeDrawRenderCommand | EntityRenderCommand,
   bounds: CullingBounds | null,
@@ -140,7 +156,7 @@ export function isEntityRenderCommand(command: RenderCommand): command is Entity
 }
 
 function intersectsSpriteEntity(
-  command: EntityRenderCommand & { type: "sprite-entity" },
+  command: SpriteEntityRenderCommand,
   bounds: CullingBounds,
   transform: Transform2D,
   alpha: number,
@@ -177,7 +193,7 @@ function intersectsSpriteEntity(
 }
 
 function intersectsShaderEntity(
-  command: EntityRenderCommand & { type: "shader-entity" },
+  command: ShaderEntityRenderCommand,
   bounds: CullingBounds,
   transform: Transform2D,
   alpha: number,
@@ -213,7 +229,7 @@ function intersectsShaderEntity(
 }
 
 function intersectsShapeEntity(
-  command: EntityRenderCommand & { type: "shape-entity" },
+  command: ShapeEntityRenderCommand,
   bounds: CullingBounds,
   transform: Transform2D,
   alpha: number,

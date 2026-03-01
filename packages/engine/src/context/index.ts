@@ -138,9 +138,9 @@ export const RenderState: RenderContextOptions<DefaultRenderContext["state"]> = 
   select: (renderContext) => renderContext.state,
 };
 
-export const RenderAlpha: RenderContextOptions<DefaultRenderContext["alpha"]> = {
+export const RenderInterpolationAlpha: RenderContextOptions<DefaultRenderContext["interpolationAlpha"]> = {
   type: "render",
-  select: (renderContext) => renderContext.alpha,
+  select: (renderContext) => renderContext.interpolationAlpha,
 };
 
 /** Context option that returns a function to transition to a scene by name. */
@@ -175,7 +175,7 @@ export const FromRender = {
   World: RenderWorld,
   VisibleWorlds: RenderVisibleWorlds,
   State: RenderState,
-  Alpha: RenderAlpha,
+  InterpolationAlpha: RenderInterpolationAlpha,
 }
 
 /***** FACTORY FUNCTIONS *****/

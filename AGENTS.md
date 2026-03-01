@@ -24,6 +24,7 @@ This is the single source of truth for agent behavior and coding conventions in 
 
 - Prefer targeted search over broad config edits.
 - Use symbol/text search first, then follow usages.
+- Before creating any new helper/function, always search for an existing implementation and reuse/extend it when viable.
 - Good first patterns:
   - API names (`requireWorld`, `invariantQuery`, `resolveWorldTransform2D`)
   - System definitions (`createSystem("...")`)
