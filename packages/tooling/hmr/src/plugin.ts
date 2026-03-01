@@ -1,37 +1,85 @@
-import type { Plugin } from "vite";
+import type { Plugin, ViteDevServer } from "vite";
+
+type EngineHmrOptions = {
+  sourceRoots?: readonly string[];
+  distRoots?: readonly string[];
+  debounceMs?: number;
+  sourceAwaitDistMs?: number;
+  distSettleMs?: number;
+};
+
+const DEFAULT_SOURCE_ROOTS = ["/packages/engine/src/"] as const;
+const DEFAULT_DIST_ROOTS = ["/packages/engine/dist/"] as const;
+const DEFAULT_DEBOUNCE_MS = 60;
+const DEFAULT_SOURCE_AWAIT_DIST_MS = 4000;
+const DEFAULT_DIST_SETTLE_MS = 450;
 
 /**
- * Vite plugin that enables Hot Module Replacement for ECS systems.
+ * Vite plugin that disables in-place HMR for engine source files and performs
+ * a single debounced full page reload instead.
  *
- * Any module that uses `createSystem` or `createRenderPipeline` becomes an
- * HMR boundary. When you save that file (or any of its dependencies), only
- * the changed system's behaviour is swapped — its state is preserved and all
- * other systems continue running untouched.
- *
- * How it works:
- *   1. An inline script in the HTML initializes the HMR runtime on
- *      `globalThis.__ENGINE_HMR__` before any application code loads.
- *   2. `createEngine` calls `runtime.register(systems)` so the runtime
- *      has a live reference to the systems record.
- *   3. Each system module gets `import.meta.hot.accept()` injected,
- *      making it a self-accepting HMR boundary.
- *   4. On HMR update, the module re-executes `createSystem(name)(opts)`.
- *      `createSystem` calls `runtime.onSystemCreated(fresh)` which swaps
- *      the live system's behaviour while keeping its state/data intact.
+ * This avoids module identity drift (e.g. component constructor references
+ * changing in-place) when the client and engine live in the same dev graph.
  *
  * Usage:
  *   import { engineHmr } from '@repo/hmr';
  *   export default defineConfig({ plugins: [engineHmr()] });
  */
-export function engineHmr(): Plugin {
+export function engineHmr(options: EngineHmrOptions = {}): Plugin {
+  const sourceRoots = options.sourceRoots ?? DEFAULT_SOURCE_ROOTS;
+  const distRoots = options.distRoots ?? DEFAULT_DIST_ROOTS;
+  const debounceMs = options.debounceMs ?? DEFAULT_DEBOUNCE_MS;
+  const sourceAwaitDistMs = options.sourceAwaitDistMs ?? DEFAULT_SOURCE_AWAIT_DIST_MS;
+  const distSettleMs = options.distSettleMs ?? DEFAULT_DIST_SETTLE_MS;
+  let pendingFullReloadTimeout: ReturnType<typeof setTimeout> | null = null;
+  let pendingSourceFallbackTimeout: ReturnType<typeof setTimeout> | null = null;
+  let pendingDistSettleTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  const clearTimers = () => {
+    if (pendingFullReloadTimeout !== null) {
+      clearTimeout(pendingFullReloadTimeout);
+      pendingFullReloadTimeout = null;
+    }
+
+    if (pendingSourceFallbackTimeout !== null) {
+      clearTimeout(pendingSourceFallbackTimeout);
+      pendingSourceFallbackTimeout = null;
+    }
+
+    if (pendingDistSettleTimeout !== null) {
+      clearTimeout(pendingDistSettleTimeout);
+      pendingDistSettleTimeout = null;
+    }
+  };
+
+  const scheduleFullReload = (server: ViteDevServer, delayMs = debounceMs) => {
+    if (pendingFullReloadTimeout !== null) {
+      clearTimeout(pendingFullReloadTimeout);
+    }
+
+    pendingFullReloadTimeout = setTimeout(() => {
+      server.ws.send({ type: "full-reload" });
+      pendingFullReloadTimeout = null;
+    }, delayMs);
+  };
+
+  const scheduleDistSettleReload = (server: ViteDevServer) => {
+    if (pendingDistSettleTimeout !== null) {
+      clearTimeout(pendingDistSettleTimeout);
+    }
+
+    pendingDistSettleTimeout = setTimeout(() => {
+      pendingDistSettleTimeout = null;
+      scheduleFullReload(server);
+    }, distSettleMs);
+  };
+
   return {
     name: "engine-hmr",
+    enforce: "pre",
     apply: "serve",
 
     transformIndexHtml() {
-      // Inject the HMR runtime initialization before any app modules load.
-      // This ensures `globalThis.__ENGINE_HMR__` exists when `createEngine`
-      // calls `register()` on first load.
       return [
         {
           tag: "script",
@@ -49,19 +97,16 @@ globalThis.__ENGINE_HMR__ = (() => {
       const existing = runtime.systems[fresh.name];
       if (!existing) return false;
 
-      // Run previous cleanup before swapping lifecycle behaviour
       if (runtime.callbacks) {
         runtime.callbacks.executeSystemCleanup(existing);
       }
 
-      // Swap behaviour, preserve state (data/schema)
       existing.system = fresh.system;
       existing.initialize = fresh.initialize;
       existing.react = undefined;
       existing.priority = fresh.priority;
       existing.enabled = fresh.enabled;
 
-      // Re-initialize with new behaviour
       if (runtime.callbacks) {
         runtime.callbacks.executeSystemInitialize(existing);
       }
@@ -88,24 +133,85 @@ globalThis.__ENGINE_HMR__ = (() => {
       if (!/\.[tj]sx?$/.test(id)) return;
       if (id.includes("node_modules")) return;
 
+      const changedFileType = classifyEngineFile(id, sourceRoots, distRoots);
+      if (changedFileType !== "other") {
+        return;
+      }
+
       const isSystemModule =
         code.includes("createSystem(") || code.includes("createRenderPipeline(");
-
       const isSceneModule =
         code.includes("createScene(") || code.includes("createContextScene(");
 
-      if (!isSystemModule && !isSceneModule) return;
+      if (!isSystemModule && !isSceneModule) {
+        return;
+      }
 
-      // Make this module an HMR boundary. When it (or any dependency)
-      // changes, Vite re-executes just this module. The engine's
-      // createSystem detects the HMR runtime and hot-swaps the system
-      // behaviour while keeping state intact.
-      const hmrSnippet = `
+      const hotAcceptSnippet = `
 if (import.meta.hot) {
   import.meta.hot.accept();
 }
 `;
-      return { code: code + hmrSnippet, map: null };
+
+      return {
+        code: code + hotAcceptSnippet,
+        map: null,
+      };
+    },
+
+    handleHotUpdate({ file, server }) {
+      const changedFileType = classifyEngineFile(file, sourceRoots, distRoots);
+      if (changedFileType === "other") {
+        return;
+      }
+
+      if (changedFileType === "dist") {
+        if (pendingSourceFallbackTimeout !== null) {
+          clearTimeout(pendingSourceFallbackTimeout);
+          pendingSourceFallbackTimeout = null;
+        }
+
+        scheduleDistSettleReload(server);
+        return [];
+      }
+
+      if (distRoots.length === 0) {
+        scheduleFullReload(server);
+        return [];
+      }
+
+      if (pendingSourceFallbackTimeout !== null) {
+        clearTimeout(pendingSourceFallbackTimeout);
+      }
+
+      pendingSourceFallbackTimeout = setTimeout(() => {
+        pendingSourceFallbackTimeout = null;
+        scheduleFullReload(server);
+      }, sourceAwaitDistMs);
+
+      return [];
+    },
+
+    closeBundle() {
+      clearTimers();
     },
   };
+}
+
+function classifyEngineFile(
+  path: string,
+  sourceRoots: readonly string[],
+  distRoots: readonly string[],
+): "source" | "dist" | "other" {
+  const normalizedPath = path.replace(/\\/g, "/");
+
+  if (distRoots.some((reloadRoot) => normalizedPath.includes(reloadRoot))) {
+    return "dist";
+  }
+
+  if (sourceRoots.some((reloadRoot) => normalizedPath.includes(reloadRoot))) {
+    return "source";
+  }
+
+  return "other";
 }
