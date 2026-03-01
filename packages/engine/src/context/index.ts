@@ -1,3 +1,4 @@
+import { mouseApi, type Mouse as MouseInterface } from "@/systems/input/mouse";
 import { getContextEngine, getContextRender } from "@core/context";
 import type {
   AllSceneNames,
@@ -10,7 +11,6 @@ import type { AnyRenderPipelineContext } from "@core/render-pipeline/context";
 import type { SceneContext } from "@core/scene/scene-context";
 import type { EngineSystem } from "@core/system";
 import type { UserWorld } from "@ecs/world";
-import { mouseApi, type Mouse as MouseInterface } from "@/systems/input/mouse";
 
 /***** TYPE DEFINITIONS *****/
 export type EngineContextOptions<T> = {
@@ -23,7 +23,15 @@ export type RenderContextOptions<T> = {
   select: (renderContext: AnyRenderPipelineContext) => T;
 };
 
-export type ContextOptions<T> = EngineContextOptions<T> | RenderContextOptions<T>;
+export type EngineAndRenderContextOptions<T> = {
+  type: "engine+render";
+  select: (engine: RegisteredEngine, renderContext: AnyRenderPipelineContext) => T;
+};
+
+export type ContextOptions<T> =
+  | EngineContextOptions<T>
+  | RenderContextOptions<T>
+  | EngineAndRenderContextOptions<T>;
 
 type DefaultRenderContext = AnyRenderPipelineContext;
 
@@ -43,9 +51,17 @@ type DefaultRenderContext = AnyRenderPipelineContext;
  */
 export function fromContext<T>(options: EngineContextOptions<T>): T;
 export function fromContext<T>(options: RenderContextOptions<T>): T;
+export function fromContext<T>(options: EngineAndRenderContextOptions<T>): T;
 export function fromContext<T>(options: ContextOptions<T>): T {
   if (options.type === "render") {
     return options.select(getContextRender() as AnyRenderPipelineContext);
+  }
+
+  if (options.type === "engine+render") {
+    return options.select(
+      getContextEngine(),
+      getContextRender(),
+    );
   }
 
   // TODO: ensure that this is only called when type is engine, and throw if type is missing

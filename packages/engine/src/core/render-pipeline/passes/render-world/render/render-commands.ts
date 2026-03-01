@@ -5,9 +5,14 @@ import { getFrameAssetIdAtTime } from "@components/sprite/animated";
 import { Color } from "@components/sprite/sprite";
 import { Transform2D } from "@components/transform";
 import { fromContext, FromEngine, FromRender } from "@context";
-import type { EntityId } from "@ecs/entity";
+import { drawCullingBoundsOverlay } from "@core/render-pipeline/passes/render-world/render/culling/overlay";
+import {
+  CullingBounds,
+  isCommandWithinCullingBounds,
+  isEntityRenderCommand,
+  isShapeDrawRenderCommand,
+} from "@core/render-pipeline/passes/render-world/render/culling/utils";
 import { resolveWorldTransform2D } from "@ecs/hierarchy";
-import type { UserWorld } from "@ecs/world";
 import type {
   EngineFrameAllocatorRegistry,
   InternalFrameAllocator,
@@ -15,24 +20,9 @@ import type {
   RenderQueue,
 } from "@render";
 
-type CullingBounds = {
-  minX: number;
-  maxX: number;
-  minY: number;
-  maxY: number;
-};
-
-type CullingViewport = {
-  centerX: number;
-  centerY: number;
-  halfWidth: number;
-  halfHeight: number;
-};
-
 const SHARED_RENDER_TRANSFORM = new Transform2D();
 const HOVER_TINT_COLOR = new Color(1, 1, 0, 1);
 const SHARED_HOVER_TINT = new Color(1, 1, 1, 1);
-const CULLING_DEBUG_STROKE = new Color(0, 1, 0.2, 0.9);
 let SHARED_ANIMATED_RENDER_SPRITE: Sprite | null = null;
 
 export function renderCommands(
@@ -50,38 +40,34 @@ export function renderCommands(
     visibleWorlds.length === 0 || visibleWorlds[visibleWorlds.length - 1] === activeRenderWorld;
   const showQuadOutlines = engine.editor.viewState.showQuadOutlines;
   const showCullingBounds = engine.editor.viewState.showCullingBounds || engine.renderCulling.debugOutline;
-  const canvasRect = engine.canvas.getBoundingClientRect();
-  const cullingBounds = resolveCullingBounds(
-    renderer,
-    engine.renderCulling,
-    canvasRect.width > 0 ? canvasRect.width : renderer.getWidth(),
-    canvasRect.height > 0 ? canvasRect.height : renderer.getHeight(),
-  );
+  const cullingBounds = fromContext(CullingBounds);
 
   renderer.setMeshOverlayEnabled(showQuadOutlines);
 
   for (const command of queue.commands) {
-    if (command.type === "shape-draw") {
-      if (command.shape) {
-        renderer.drawShape(command.shape);
+    /***** RAW DRAW COMMANDS *****/
+    if (isShapeDrawRenderCommand(command)) {
+      if (!isCommandWithinCullingBounds(command, cullingBounds)) {
+        continue;
       }
+
+      renderer.drawShape(command.shape);
+
       continue;
     }
 
-    const world = command.world;
-    const entityId = command.entityId;
-    if (!world || entityId === null) {
+    // verify that the command includes world and entityId for the subsequent render types.
+    if (!isEntityRenderCommand(command)) {
       continue;
     }
+
+    const { world, entityId } = command;
 
     if (!resolveWorldTransform2D(world, entityId, SHARED_RENDER_TRANSFORM)) {
       continue;
     }
 
-    if (
-      cullingBounds
-      && !isCommandWithinCullingBounds(command.type, world, entityId, SHARED_RENDER_TRANSFORM, alpha, cullingBounds)
-    ) {
+    if (!isCommandWithinCullingBounds(command, cullingBounds, SHARED_RENDER_TRANSFORM, alpha)) {
       continue;
     }
 
@@ -209,246 +195,8 @@ export function renderCommands(
   }
 
   if (isLastVisibleWorld && showCullingBounds && cullingBounds) {
-    drawCullingBounds(renderer, cullingBounds);
+    drawCullingBoundsOverlay(renderer, cullingBounds);
   }
-}
-
-function resolveCullingBounds(
-  renderer: Pick<Renderer, "getWidth" | "getHeight" | "getCameraX" | "getCameraY" | "getCameraZoom">,
-  culling: { enabled: boolean; viewportScaleX: number; viewportScaleY: number },
-  viewportWidth: number,
-  viewportHeight: number,
-): CullingBounds | null {
-  if (!culling.enabled) {
-    return null;
-  }
-
-  const zoom = renderer.getCameraZoom();
-  if (zoom <= 0) {
-    return null;
-  }
-
-  const width = viewportWidth;
-  const height = viewportHeight;
-
-  if (width <= 0 || height <= 0) {
-    return null;
-  }
-
-  const halfWidth = (width * culling.viewportScaleX) / (zoom * 2);
-  const halfHeight = (height * culling.viewportScaleY) / (zoom * 2);
-
-  const centerX = renderer.getCameraX();
-  const centerY = renderer.getCameraY();
-
-  return {
-    minX: centerX - halfWidth,
-    maxX: centerX + halfWidth,
-    minY: centerY - halfHeight,
-    maxY: centerY + halfHeight,
-  };
-}
-
-function drawCullingBounds(
-  renderer: Pick<Renderer, "drawShape">,
-  bounds: CullingBounds,
-): void {
-  const minX = bounds.minX;
-  const maxX = bounds.maxX;
-  const minY = bounds.minY;
-  const maxY = bounds.maxY;
-
-  drawCullingLine(renderer, minX, minY, maxX, minY);
-  drawCullingLine(renderer, maxX, minY, maxX, maxY);
-  drawCullingLine(renderer, maxX, maxY, minX, maxY);
-  drawCullingLine(renderer, minX, maxY, minX, minY);
-}
-
-function drawCullingLine(
-  renderer: Pick<Renderer, "drawShape">,
-  fromX: number,
-  fromY: number,
-  toX: number,
-  toY: number,
-): void {
-  const deltaX = toX - fromX;
-  const deltaY = toY - fromY;
-  const length = Math.hypot(deltaX, deltaY);
-
-  if (length <= 0) {
-    return;
-  }
-
-  renderer.drawShape({
-    type: "line",
-    x: (fromX + toX) * 0.5,
-    y: (fromY + toY) * 0.5,
-    width: length,
-    height: 1,
-    rotation: Math.atan2(deltaY, deltaX),
-    scaleX: 1,
-    scaleY: 1,
-    fill: CULLING_DEBUG_STROKE,
-    stroke: CULLING_DEBUG_STROKE,
-    strokeWidth: 2,
-  });
-}
-
-function isCommandWithinCullingBounds(
-  commandType: "sprite-entity" | "shader-entity" | "shape-entity" | "shape-draw",
-  world: UserWorld,
-  entityId: EntityId,
-  transform: Transform2D,
-  alpha: number,
-  bounds: CullingBounds,
-): boolean {
-  if (commandType === "shape-draw") {
-    return true;
-  }
-
-  const worldX = lerp(transform.prev.pos.x, transform.curr.pos.x, alpha);
-  const worldY = lerp(transform.prev.pos.y, transform.curr.pos.y, alpha);
-
-  if (commandType === "sprite-entity") {
-    const staticSprite = world.get(entityId, Sprite);
-    const sprite = staticSprite ?? world.get(entityId, AnimatedSprite);
-    if (!sprite) {
-      return true;
-    }
-
-    const spriteViewport = resolveAnchorViewport(
-      worldX,
-      worldY,
-      transform,
-      sprite.width,
-      sprite.height,
-      sprite.anchorX,
-      sprite.anchorY,
-    );
-
-    if (!spriteViewport) {
-      return true;
-    }
-
-    return intersects(bounds, spriteViewport);
-  }
-
-  if (commandType === "shader-entity") {
-    const shaderQuad = world.get(entityId, ShaderQuad);
-    if (!shaderQuad) {
-      return true;
-    }
-
-    const quadViewport = resolveAnchorViewport(
-      worldX,
-      worldY,
-      transform,
-      shaderQuad.width,
-      shaderQuad.height,
-      shaderQuad.anchorX,
-      shaderQuad.anchorY,
-    );
-
-    if (!quadViewport) {
-      return true;
-    }
-
-    return intersects(bounds, quadViewport);
-  }
-
-  const shape = world.get(entityId, Shape);
-  if (!shape) {
-    return true;
-  }
-
-  const shapeViewport = resolveCenteredViewport(worldX, worldY, transform, shape.width, shape.height);
-  if (!shapeViewport) {
-    return true;
-  }
-
-  return intersects(bounds, shapeViewport);
-}
-
-function resolveAnchorViewport(
-  pivotX: number,
-  pivotY: number,
-  transform: Transform2D,
-  width: number,
-  height: number,
-  anchorX: number,
-  anchorY: number,
-): CullingViewport | null {
-  const absoluteWidth = Math.abs(width * transform.curr.scale.x);
-  const absoluteHeight = Math.abs(height * transform.curr.scale.y);
-
-  if (absoluteWidth <= 0 || absoluteHeight <= 0) {
-    return null;
-  }
-
-  const centerOffsetX = (0.5 - anchorX) * absoluteWidth;
-  const centerOffsetY = (0.5 - anchorY) * absoluteHeight;
-
-  const sin = Math.sin(transform.curr.rotation);
-  const cos = Math.cos(transform.curr.rotation);
-
-  const centerX = pivotX + centerOffsetX * cos - centerOffsetY * sin;
-  const centerY = pivotY + centerOffsetX * sin + centerOffsetY * cos;
-
-  const halfWidth = absoluteWidth * 0.5;
-  const halfHeight = absoluteHeight * 0.5;
-
-  const aabbHalfWidth = Math.abs(cos) * halfWidth + Math.abs(sin) * halfHeight;
-  const aabbHalfHeight = Math.abs(sin) * halfWidth + Math.abs(cos) * halfHeight;
-
-  return {
-    centerX,
-    centerY,
-    halfWidth: aabbHalfWidth,
-    halfHeight: aabbHalfHeight,
-  };
-}
-
-function resolveCenteredViewport(
-  centerX: number,
-  centerY: number,
-  transform: Transform2D,
-  width: number,
-  height: number,
-): CullingViewport | null {
-  const absoluteWidth = Math.abs(width * transform.curr.scale.x);
-  const absoluteHeight = Math.abs(height * transform.curr.scale.y);
-
-  if (absoluteWidth <= 0 || absoluteHeight <= 0) {
-    return null;
-  }
-
-  const halfWidth = absoluteWidth * 0.5;
-  const halfHeight = absoluteHeight * 0.5;
-  const sin = Math.sin(transform.curr.rotation);
-  const cos = Math.cos(transform.curr.rotation);
-
-  return {
-    centerX,
-    centerY,
-    halfWidth: Math.abs(cos) * halfWidth + Math.abs(sin) * halfHeight,
-    halfHeight: Math.abs(sin) * halfWidth + Math.abs(cos) * halfHeight,
-  };
-}
-
-function intersects(bounds: CullingBounds, viewport: CullingViewport): boolean {
-  const minX = viewport.centerX - viewport.halfWidth;
-  const maxX = viewport.centerX + viewport.halfWidth;
-  const minY = viewport.centerY - viewport.halfHeight;
-  const maxY = viewport.centerY + viewport.halfHeight;
-
-  return minX <= bounds.maxX
-    && maxX >= bounds.minX
-    && minY <= bounds.maxY
-    && maxY >= bounds.minY;
-}
-
-function lerp(previous: number, current: number, alpha: number): number {
-  return previous + (current - previous) * alpha;
 }
 
 /**
