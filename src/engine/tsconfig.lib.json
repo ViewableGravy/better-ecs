@@ -2,7 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./.types",
-    "rootDir": ".",
+    "rootDir": "./src",
     "lib": ["DOM", "ES2022"],
     "jsx": "react-jsx",
     "skipLibCheck": true,
@@ -14,7 +14,7 @@
     "noEmit": false,
     "typeRoots": ["../../node_modules/@types"]
   },
-  "include": ["**/*"],
+  "include": ["src/**/*"],
   "exclude": [
     ".types",
     "dist",

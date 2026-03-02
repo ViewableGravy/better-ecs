@@ -1,7 +1,7 @@
 {
   "name": "spatial-contexts",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "src/libs/spatial-contexts",
+  "sourceRoot": "src/libs/spatial-contexts/src",
   "projectType": "library",
   "tags": ["type:foundation", "domain:spatial-contexts"],
   "targets": {

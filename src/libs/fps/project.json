@@ -1,7 +1,7 @@
 {
   "name": "fps",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "src/libs/fps",
+  "sourceRoot": "src/libs/fps/src",
   "projectType": "library",
   "tags": ["type:feature", "domain:fps"],
   "targets": {

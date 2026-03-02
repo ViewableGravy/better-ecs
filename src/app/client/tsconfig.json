@@ -10,7 +10,7 @@
     "composite": false,
     "strict": true
   },
-  "include": ["**/*.ts", "**/*.tsx", "**/*.d.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.d.ts"],
   "exclude": ["e2e/**/*"],
   "references": [
     {

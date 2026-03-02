@@ -1,7 +1,7 @@
 {
   "name": "server",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "src/app/server",
+  "sourceRoot": "src/app/server/src",
   "projectType": "application",
   "tags": ["type:server"],
   "targets": {
@@ -11,7 +11,7 @@
         "parallel": true,
         "commands": [
           "NX_DAEMON=false bun x nx run-many --target=build:watch --projects=$(bun x nx graph --print | jq -r '[.graph.dependencies[\"server\"][]?.target] | unique | join(\",\")') --outputStyle=static",
-          "node --watch main.ts"
+          "node --watch src/main.ts"
         ],
         "cwd": "src/app/server"
       }

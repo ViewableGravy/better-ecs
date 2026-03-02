@@ -1,7 +1,7 @@
 {
   "name": "client",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "src/app/client",
+  "sourceRoot": "src/app/client/src",
   "projectType": "application",
   "tags": ["type:client"],
   "targets": {

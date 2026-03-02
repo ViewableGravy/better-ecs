@@ -1,7 +1,7 @@
 {
   "name": "physics",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "src/libs/physics",
+  "sourceRoot": "src/libs/physics/src",
   "projectType": "library",
   "tags": ["type:foundation", "domain:physics"],
   "targets": {

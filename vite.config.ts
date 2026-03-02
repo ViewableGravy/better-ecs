@@ -9,11 +9,13 @@ export default defineConfig({
   plugins: [tsconfigPaths(), tailwindcss(), glsl()],
   resolve: {
     alias: {
-      "@client": resolve(__dirname, "src/app/client"),
-      "@server": resolve(__dirname, "src/app/server"),
-      "@engine": resolve(__dirname, "src/engine"),
-      "@lib": resolve(__dirname, "src/libs"),
-      "@utils": resolve(__dirname, "src/utils"),
+      "@client": resolve(__dirname, "src/app/client/src"),
+      "@server": resolve(__dirname, "src/app/server/src"),
+      "@engine": resolve(__dirname, "src/engine/src"),
+      "@libs/fps": resolve(__dirname, "src/libs/fps/src"),
+      "@libs/physics": resolve(__dirname, "src/libs/physics/src"),
+      "@libs/spatial-contexts": resolve(__dirname, "src/libs/spatial-contexts/src"),
+      "@utils": resolve(__dirname, "src/utils/src"),
     },
   },
   server: {

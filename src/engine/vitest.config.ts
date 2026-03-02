@@ -13,15 +13,15 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@engine': fileURLToPath(new URL('./', import.meta.url)),
+      '@engine': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
   test: {
-    include: ['**/*.spec.ts'],
+    include: ['src/**/*.spec.ts'],
     typecheck: {
       enabled: false,
-      include: ['**/*.spec-d.ts', '**/*.test-d.ts'],
-      tsconfig: './tests/type-registration/tsconfig.json',
+      include: ['src/**/*.spec-d.ts', 'src/**/*.test-d.ts'],
+      tsconfig: './src/tests/type-registration/tsconfig.json',
     },
   },
 });

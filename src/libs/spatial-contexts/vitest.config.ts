@@ -11,6 +11,6 @@ export default defineConfig({
     glsl(),
   ],
   test: {
-    include: ["**/*.spec.ts"],
+    include: ["src/**/*.spec.ts"],
   },
 });
