@@ -8,8 +8,8 @@ type EngineHmrOptions = {
   distSettleMs?: number;
 };
 
-const DEFAULT_SOURCE_ROOTS = ["/packages/engine/src/"] as const;
-const DEFAULT_DIST_ROOTS = ["/packages/engine/dist/"] as const;
+const DEFAULT_SOURCE_ROOTS = ["/src/engine/"] as const;
+const DEFAULT_DIST_ROOTS: readonly string[] = [];
 const DEFAULT_DEBOUNCE_MS = 60;
 const DEFAULT_SOURCE_AWAIT_DIST_MS = 4000;
 const DEFAULT_DIST_SETTLE_MS = 450;

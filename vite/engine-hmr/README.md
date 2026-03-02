@@ -13,8 +13,8 @@ When the engine and client run in a shared Vite graph, in-place HMR can replace 
 
 - initializing a runtime cache on `globalThis.__ENGINE_HMR__`
 - hot-swapping system/scene modules in-place for non-engine files (state retained)
-- suppressing in-place updates for engine source and engine dist files
-- waiting briefly for dist output after source edits
+- suppressing in-place updates for engine source files
+- optionally coordinating source + dist change bursts when dist roots are configured
 - emitting one debounced `full-reload` event for engine change bursts
 
 This keeps module identity stable by rebuilding app state from a clean reload whenever engine code changes.
@@ -49,7 +49,7 @@ List of normalized source path fragments treated as engine-source changes.
 Default:
 
 ```ts
-["/packages/engine/src/"]
+["/src/engine/"]
 ```
 
 ### `distRoots`
@@ -59,7 +59,7 @@ List of normalized dist path fragments treated as engine-build output changes.
 Default:
 
 ```ts
-["/packages/engine/dist/"]
+[]
 ```
 
 ### `debounceMs`
@@ -86,6 +86,7 @@ Default: `450`
 ## Behavior summary
 
 - **App system/scene edit** (outside configured engine roots) → in-place HMR boundary, system/scene behavior swapped while existing system state is preserved
-- **Engine source edit** in `packages/engine/src/**` + dist burst in `packages/engine/dist/**` → one full reload after dist settles
+- **Engine source edit** in `src/engine/**` → one full reload
+- **Engine source edit** + dist burst (when `distRoots` are configured) → one full reload after dist settles
 - **Engine source edit without dist follow-up** in time → one fallback full reload
 - **Non-system/non-scene app edit** outside configured engine roots → standard Vite HMR behavior
