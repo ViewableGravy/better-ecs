@@ -3,16 +3,16 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
     },
     "./portal": {
-      "types": "./dist/portal/index.d.ts",
-      "default": "./dist/portal/index.js"
+      "types": "./src/portal/index.ts",
+      "default": "./src/portal/index.ts"
     }
   },
   "scripts": {

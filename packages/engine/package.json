@@ -2,52 +2,52 @@
   "name": "@repo/engine",
   "version": "0.0.0",
   "type": "module",
-  "main": "./dist/src/index.js",
-  "types": "./dist/src/index.d.ts",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
-      "default": "./dist/src/index.js"
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
     },
     "./context": {
-      "types": "./dist/src/context/index.d.ts",
-      "default": "./dist/src/context/index.js"
+      "types": "./src/context/index.ts",
+      "default": "./src/context/index.ts"
     },
     "./core": {
-      "types": "./dist/src/core/index.d.ts",
-      "default": "./dist/src/core/index.js"
+      "types": "./src/core/index.ts",
+      "default": "./src/core/index.ts"
     },
     "./components": {
-      "types": "./dist/src/components/index.d.ts",
-      "default": "./dist/src/components/index.js"
+      "types": "./src/components/index.ts",
+      "default": "./src/components/index.ts"
     },
     "./context-utils": {
-      "types": "./dist/src/context-utils/index.d.ts",
-      "default": "./dist/src/context-utils/index.js"
+      "types": "./src/context-utils/index.ts",
+      "default": "./src/context-utils/index.ts"
     },
     "./internal/utils": {
-      "types": "./dist/src/internal/utils/index.d.ts",
-      "default": "./dist/src/internal/utils/index.js"
+      "types": "./src/internal/utils/index.ts",
+      "default": "./src/internal/utils/index.ts"
     },
     "./ecs/hierarchy": {
-      "types": "./dist/src/ecs/hierarchy.d.ts",
-      "default": "./dist/src/ecs/hierarchy.js"
+      "types": "./src/ecs/hierarchy.ts",
+      "default": "./src/ecs/hierarchy.ts"
     },
     "./render": {
-      "types": "./dist/src/render/index.d.ts",
-      "default": "./dist/src/render/index.js"
+      "types": "./src/render/index.ts",
+      "default": "./src/render/index.ts"
     },
     "./asset": {
-      "types": "./dist/src/asset/index.d.ts",
-      "default": "./dist/src/asset/index.js"
+      "types": "./src/asset/index.ts",
+      "default": "./src/asset/index.ts"
     },
     "./texture": {
-      "types": "./dist/src/texture/index.d.ts",
-      "default": "./dist/src/texture/index.js"
+      "types": "./src/texture/index.ts",
+      "default": "./src/texture/index.ts"
     },
     "./ui": {
-      "types": "./dist/src/ui/index.d.ts",
-      "default": "./dist/src/ui/index.js"
+      "types": "./src/ui/index.ts",
+      "default": "./src/ui/index.ts"
     }
   },
   "scripts": {

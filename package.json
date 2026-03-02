@@ -8,6 +8,9 @@
     "packages/*/*"
   ],
   "scripts": {
+    "predev": "test -x node_modules/.bin/nx || bun install",
+    "preclient:dev": "test -x node_modules/.bin/nx || bun install",
+    "preserver:dev": "test -x node_modules/.bin/nx || bun install",
     "dev": "NX_DAEMON=false nx run client:dev",
     "client:dev": "NX_DAEMON=false nx run client:dev",
     "server:dev": "NX_DAEMON=false nx run server:dev",
