@@ -1,0 +1,53 @@
+{
+  "name": "fps",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "src/libs/fps",
+  "projectType": "library",
+  "tags": ["type:feature", "domain:fps"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun x tsc -p tsconfig.lib.json --emitDeclarationOnly",
+        "cwd": "src/libs/fps"
+      },
+      "inputs": ["default", "^default"]
+    },
+    "build:watch": {
+      "continuous": true,
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun x tsc -p tsconfig.lib.json --watch",
+        "cwd": "src/libs/fps"
+      }
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rm -rf .types dist tsconfig.lib.tsbuildinfo",
+        "cwd": "src/libs/fps"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun x eslint .",
+        "cwd": "src/libs/fps"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun x tsc --noEmit",
+        "cwd": "src/libs/fps"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun x vitest run --passWithNoTests",
+        "cwd": "src/libs/fps"
+      }
+    }
+  }
+}

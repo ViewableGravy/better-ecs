@@ -1,0 +1,46 @@
+{
+  "name": "hmr",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "vite/engine-hmr",
+  "projectType": "library",
+  "tags": ["type:hmr"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun x tsc -p tsconfig.lib.json --emitDeclarationOnly",
+        "cwd": "vite/engine-hmr"
+      },
+      "inputs": ["default", "^default"]
+    },
+    "build:watch": {
+      "continuous": true,
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun x tsc -p tsconfig.lib.json --watch",
+        "cwd": "vite/engine-hmr"
+      }
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rm -rf .types dist tsconfig.lib.tsbuildinfo",
+        "cwd": "vite/engine-hmr"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun x eslint .",
+        "cwd": "vite/engine-hmr"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun x tsc --noEmit",
+        "cwd": "vite/engine-hmr"
+      }
+    }
+  }
+}

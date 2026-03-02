@@ -1,0 +1,21 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./.types",
+    "rootDir": ".",
+    "lib": ["DOM", "ESNext"],
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "noEmit": false,
+    "skipLibCheck": true
+  },
+  "include": ["**/*.ts"],
+  "exclude": [
+    ".types",
+    "dist",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ]
+}

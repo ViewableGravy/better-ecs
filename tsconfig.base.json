@@ -15,15 +15,20 @@
     "declarationMap": true,
     "sourceMap": true,
     "paths": {
-      "@repo/client": ["./apps/client/src/main.ts"],
-      "@repo/server": ["./apps/server/src/main.ts"],
-      "@repo/engine": ["./packages/engine/src/index.ts"],
-      "@repo/engine/*": ["./packages/engine/src/*"],
-      "@repo/fps": ["./packages/features/fps/src/index.ts"],
-      "@repo/hmr": ["./packages/tooling/hmr/src/index.ts"],
-      "@repo/physics": ["./packages/foundation/physics/src/index.ts"],
-      "@repo/spatial-contexts": ["./packages/foundation/spatial-contexts/src/index.ts"],
-      "@repo/utils": ["./packages/utils/src/index.ts"]
+      "@client": ["./src/app/client/index.ts"],
+      "@client/*": ["./src/app/client/*"],
+      "@server": ["./src/app/server/main.ts"],
+      "@server/*": ["./src/app/server/*"],
+      "@engine": ["./src/engine/index.ts"],
+      "@engine/*": ["./src/engine/*"],
+      "@lib/fps": ["./src/libs/fps/index.ts"],
+      "@lib/fps/*": ["./src/libs/fps/*"],
+      "@lib/physics": ["./src/libs/physics/index.ts"],
+      "@lib/physics/*": ["./src/libs/physics/*"],
+      "@lib/spatial-contexts": ["./src/libs/spatial-contexts/index.ts"],
+      "@lib/spatial-contexts/*": ["./src/libs/spatial-contexts/*"],
+      "@utils": ["./src/utils/index.ts"],
+      "@utils/*": ["./src/utils/*"]
     }
   },
   "exclude": ["node_modules", "dist"]

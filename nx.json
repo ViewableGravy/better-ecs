@@ -35,7 +35,7 @@
     },
     {
       "plugin": "@nx/vite/plugin",
-      "include": ["apps/client/**"],
+      "include": ["src/app/client/**"],
       "options": {
         "buildTargetName": "vite:build",
         "testTargetName": "vite:test",
@@ -48,7 +48,7 @@
     },
     {
       "plugin": "@nx/vitest",
-      "include": ["packages/engine/**"],
+      "include": ["src/engine/**"],
       "options": {
         "testTargetName": "test",
         "ciTargetName": "test-ci"
