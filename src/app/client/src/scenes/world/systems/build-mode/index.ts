@@ -2,10 +2,6 @@ import type { RenderVisibilityRole } from "@client/scenes/world/components/rende
 import { HOUSE_INTERIOR, OUTSIDE } from "@client/scenes/world/components/render-visibility";
 import { spawnBox } from "@client/scenes/world/factories/spawnBox";
 import { spawnTransportBelt } from "@client/scenes/world/factories/spawnTransportBelt";
-import { createSystem, type RegisteredEngine, type RegisteredSystems } from "@engine";
-import { System as ContextSystem, Engine, fromContext, Mouse } from "@engine/context";
-import { ActiveCameraView } from "@engine/context-utils";
-import { SpatialContexts, type ContextId } from "@libs/spatial-contexts";
 import { GhostPreview, Placeable } from "@client/scenes/world/systems/build-mode/components";
 import {
   buildModeStateDefault,
@@ -14,9 +10,14 @@ import {
   TRANSPORT_BELT_OFFSET_Y,
 } from "@client/scenes/world/systems/build-mode/const";
 import { BuildModeDomEvents, HUD } from "@client/scenes/world/systems/build-mode/dom";
+import { GridSingleton, type GridCoordinates } from "@client/scenes/world/systems/build-mode/grid-singleton";
 import * as Keybinds from '@client/scenes/world/systems/build-mode/input';
 import { Placement } from "@client/scenes/world/systems/build-mode/placement";
 import { resolvePlacementWorld, type PlacementWorldResolution } from "@client/scenes/world/systems/build-mode/placement-target";
+import { createSystem, type RegisteredEngine, type RegisteredSystems } from "@engine";
+import { System as ContextSystem, Engine, fromContext, Mouse } from "@engine/context";
+import { ActiveCameraView } from "@engine/context-utils";
+import { SpatialContexts, type ContextId } from "@libs/spatial-contexts";
 
 export const System = createSystem("main:build-mode")({
   schema: {
@@ -47,8 +48,8 @@ export const System = createSystem("main:build-mode")({
     const camera = fromContext(ActiveCameraView(focusedWorld));
     const worldPointer = mouse.world(camera);
 
-    const snappedX = Placement.snapToGrid(worldPointer.x);
-    const snappedY = Placement.snapToGrid(worldPointer.y);
+    const gridCoordinates = GridSingleton.worldToGridCoordinates(worldPointer.x, worldPointer.y);
+    const [snappedX, snappedY] = GridSingleton.gridCoordinatesToWorldOrigin(gridCoordinates);
     const placementTarget = resolvePlacementWorld(engine, worldPointer);
     const placementWorld = placementTarget.world;
 
@@ -82,7 +83,7 @@ export const System = createSystem("main:build-mode")({
     }
 
     if (placementTarget.world) {
-      if (shouldSpawnPlacement(shouldPlace, placementTarget, data, snappedX, snappedY)) {
+      if (shouldSpawnPlacement(shouldPlace, placementTarget, data, gridCoordinates)) {
         const renderVisibilityRole = resolvePlacementRenderVisibilityRole(
           engine,
           placementTarget.contextId,
@@ -122,8 +123,7 @@ function shouldSpawnPlacement(
   shouldPlace: boolean,
   placementTarget: PlacementWorldResolution,
   data: RegisteredSystems["main:build-mode"]["data"],
-  snappedX: number,
-  snappedY: number,
+  gridCoordinates: GridCoordinates,
 ): boolean {
   // Early exit if the place action wasn't triggered to avoid unnecessary checks
   if (!shouldPlace) {
@@ -146,7 +146,7 @@ function shouldSpawnPlacement(
   }
 
   // The box must not collide with anything in the world (4)
-  if (!Placement.canSpawnBox(placementTarget.world, snappedX, snappedY)) {
+  if (!Placement.canSpawnBox(placementTarget.world, gridCoordinates)) {
     return false;
   }
 

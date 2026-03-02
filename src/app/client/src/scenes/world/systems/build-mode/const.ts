@@ -1,3 +1,4 @@
+import { GridSingleton } from "@client/scenes/world/systems/build-mode/grid-singleton";
 import type { EntityId, KeyBind } from "@engine";
 import { Color } from "@engine/components";
 import z from "zod";
@@ -5,9 +6,9 @@ import z from "zod";
 /**********************************************************************************************************
 *   CONSTS
 **********************************************************************************************************/
-export const GRID_CELL_SIZE = 20;
+export const GRID_CELL_SIZE = GridSingleton.cellSize;
 export const BOX_SIZE = GRID_CELL_SIZE;
-export const HALF_BOX_SIZE = BOX_SIZE / 2;
+export const HALF_BOX_SIZE = GridSingleton.halfCellSize;
 
 const TRANSPORT_BELT_ALIGNMENT_SAMPLE_X = -450;
 const TRANSPORT_BELT_ALIGNMENT_SAMPLE_Y = 287;

@@ -1,14 +1,14 @@
 import { GridBounds } from "@client/components/grid-bounds";
-import { GRID_CELL_SIZE } from "@client/scenes/world/systems/build-mode/const";
+import { GridSingleton } from "@client/scenes/world/systems/build-mode/grid-singleton";
 import { type UserWorld } from "@engine";
 import { Color, Shape, Transform2D } from "@engine/components";
 import { System as ContextSystem, fromContext } from "@engine/context";
 import type {
-    DenseShapeRenderData,
-    EngineFrameAllocatorRegistry,
-    InternalFrameAllocator,
-    RenderQueue,
-    Renderer,
+  DenseShapeRenderData,
+  EngineFrameAllocatorRegistry,
+  InternalFrameAllocator,
+  RenderQueue,
+  Renderer,
 } from "@engine/render";
 
 const GRID_COLOR = new Color(1, 0.1, 0.75, 1);
@@ -71,10 +71,10 @@ export function drawGrid(
   const halfWidth = viewportWidth / (2 * cameraZoom);
   const halfHeight = viewportHeight / (2 * cameraZoom);
 
-  const viewportMinX = Math.floor((cameraX - halfWidth) / GRID_CELL_SIZE) * GRID_CELL_SIZE;
-  const viewportMaxX = Math.ceil((cameraX + halfWidth) / GRID_CELL_SIZE) * GRID_CELL_SIZE;
-  const viewportMinY = Math.floor((cameraY - halfHeight) / GRID_CELL_SIZE) * GRID_CELL_SIZE;
-  const viewportMaxY = Math.ceil((cameraY + halfHeight) / GRID_CELL_SIZE) * GRID_CELL_SIZE;
+  const viewportMinX = alignDown(cameraX - halfWidth);
+  const viewportMaxX = alignUp(cameraX + halfWidth);
+  const viewportMinY = alignDown(cameraY - halfHeight);
+  const viewportMaxY = alignUp(cameraY + halfHeight);
 
   const bounds = getGridBounds(world);
 
@@ -87,14 +87,14 @@ export function drawGrid(
     return;
   }
 
-  const rawColumns = Math.max(1, Math.ceil((maxX - minX) / GRID_CELL_SIZE));
-  const rawRows = Math.max(1, Math.ceil((maxY - minY) / GRID_CELL_SIZE));
+  const rawColumns = Math.max(1, Math.ceil((maxX - minX) / GridSingleton.cellSize));
+  const rawRows = Math.max(1, Math.ceil((maxY - minY) / GridSingleton.cellSize));
 
   const xStride = Math.max(1, Math.ceil(rawColumns / MAX_LINES_PER_AXIS));
   const yStride = Math.max(1, Math.ceil(rawRows / MAX_LINES_PER_AXIS));
 
-  const xStep = GRID_CELL_SIZE * xStride;
-  const yStep = GRID_CELL_SIZE * yStride;
+  const xStep = GridSingleton.cellSize * xStride;
+  const yStep = GridSingleton.cellSize * yStride;
 
   const worldWidth = maxX - minX;
   const worldHeight = maxY - minY;
@@ -133,11 +133,17 @@ export function drawGrid(
 }
 
 function alignDown(value: number): number {
-  return Math.floor(value / GRID_CELL_SIZE) * GRID_CELL_SIZE;
+  return (
+    Math.floor((value + GridSingleton.halfCellSize) / GridSingleton.cellSize) * GridSingleton.cellSize
+    - GridSingleton.halfCellSize
+  );
 }
 
 function alignUp(value: number): number {
-  return Math.ceil(value / GRID_CELL_SIZE) * GRID_CELL_SIZE;
+  return (
+    Math.ceil((value + GridSingleton.halfCellSize) / GridSingleton.cellSize) * GridSingleton.cellSize
+    - GridSingleton.halfCellSize
+  );
 }
 
 function getGridBounds(world: UserWorld):

@@ -1,10 +1,11 @@
-import { Vec2, type UserWorld } from "@engine";
-import { Color, Debug, Shape, Transform2D } from "@engine/components";
-import { RectangleCollider } from "@libs/physics";
 import { RenderVisibility, type RenderVisibilityRole } from "@client/scenes/world/components/render-visibility";
 import { GridFootprint } from "@client/scenes/world/systems/build-mode/components/grid-footprint";
 import { GridPosition } from "@client/scenes/world/systems/build-mode/components/grid-position";
 import { Placeable } from "@client/scenes/world/systems/build-mode/components/placeable";
+import { GridSingleton } from "@client/scenes/world/systems/build-mode/grid-singleton";
+import { Vec2, type UserWorld } from "@engine";
+import { Color, Debug, Shape, Transform2D } from "@engine/components";
+import { RectangleCollider } from "@libs/physics";
 
 const BOX_SIZE = 20;
 const HALF_BOX_SIZE = BOX_SIZE / 2;
@@ -35,7 +36,8 @@ export function spawnBox(world: UserWorld, opts: SpawnBoxOptions): number {
     placed,
     new RectangleCollider(new Vec2(-HALF_BOX_SIZE, -HALF_BOX_SIZE), new Vec2(BOX_SIZE, BOX_SIZE)),
   );
-  world.add(placed, new GridPosition(opts.snappedX, opts.snappedY));
+  const [gridX, gridY] = GridSingleton.worldToGridCoordinates(opts.snappedX, opts.snappedY);
+  world.add(placed, new GridPosition(gridX, gridY));
   world.add(placed, new GridFootprint(BOX_SIZE, BOX_SIZE));
   world.add(placed, new Placeable("box"));
   world.add(placed, new RenderVisibility(opts.renderVisibilityRole, 1));
