@@ -6,22 +6,28 @@ import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
   root: resolve(__dirname, "src/app/client"),
-  plugins: [tsconfigPaths(), tailwindcss(), glsl()],
-  resolve: {
-    alias: {
-      "@client": resolve(__dirname, "src/app/client/src"),
-      "@server": resolve(__dirname, "src/app/server/src"),
-      "@engine": resolve(__dirname, "src/engine/src"),
-      "@libs/fps": resolve(__dirname, "src/libs/fps/src"),
-      "@libs/physics": resolve(__dirname, "src/libs/physics/src"),
-      "@libs/spatial-contexts": resolve(__dirname, "src/libs/spatial-contexts/src"),
-      "@utils": resolve(__dirname, "src/utils/src"),
-    },
-  },
+  plugins: [
+    tsconfigPaths({
+      projects: [
+        resolve(__dirname, "tsconfig.base.json"),
+        resolve(__dirname, "src/app/client/tsconfig.json"),
+        resolve(__dirname, "src/app/server/tsconfig.json"),
+        resolve(__dirname, "src/engine/tsconfig.json"),
+        resolve(__dirname, "src/libs/fps/tsconfig.json"),
+        resolve(__dirname, "src/libs/physics/tsconfig.json"),
+        resolve(__dirname, "src/libs/spatial-contexts/tsconfig.json"),
+        resolve(__dirname, "src/utils/tsconfig.json"),
+        resolve(__dirname, "vite/engine-hmr/tsconfig.json"),
+        resolve(__dirname, "src/engine/src/tests/type-registration/tsconfig.json"),
+      ],
+    }),
+    tailwindcss(),
+    glsl(),
+  ],
   server: {
-        fs: {
-          allow: [resolve(__dirname)],
-        },
+    fs: {
+      allow: [resolve(__dirname)],
+    },
     port: 3000,
     host: "127.0.0.1",
     headers: {
