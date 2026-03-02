@@ -1,0 +1,13 @@
+{
+  "base": "./tsconfig.base.json",
+  "paths": {
+    "src/engine/tsconfig.json": [
+      {
+        "@ui": ["./src/ui/index.tsx"]
+      },
+      {
+        "@ui/*": ["./src/ui/*"]
+      }
+    ]
+  }
+}

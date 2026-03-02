@@ -31,8 +31,6 @@
       // Engine aliases
       "@engine": ["./src/engine/src/index.ts"],
       "@engine/*": ["./src/engine/src/*"],
-      "@ui": ["./src/engine/src/ui/index.tsx"],
-      "@ui/*": ["./src/engine/src/ui/*"],
     }
   },
   "exclude": ["node_modules", "dist"]
