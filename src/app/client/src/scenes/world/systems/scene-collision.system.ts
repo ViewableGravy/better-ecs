@@ -1,25 +1,20 @@
 import { PlayerComponent } from "@client/components/player";
+import { PhysicsWorldManager } from "@client/scenes/world/physics/physics-world-manager";
 import { createSystem } from "@engine";
 import { fromContext, World } from "@engine/context";
-import { PhysicsWorld, collides, resolve } from "@libs/physics";
-
-const physicsWorld = new PhysicsWorld();
+import { collides, COLLISION_LAYERS, resolve } from "@libs/physics";
 
 export const System = createSystem("main:spatial-contexts-collision")({
   system() {
     const world = fromContext(World);
+    const physicsWorld = PhysicsWorldManager.requireWorld(world);
+    const playerBody = physicsWorld.queryFirstLayer(COLLISION_LAYERS.ACTOR, PlayerComponent);
 
-    physicsWorld.build(world);
-
-    const [playerId] = world.query(PlayerComponent);
-    if (playerId === undefined) {
+    if (!playerBody) {
       return;
     }
 
-    const playerBody = physicsWorld.getBody(playerId);
-    if (!playerBody) return;
-
-    const candidateBodies = physicsWorld.broadPhase(playerBody);
+    const candidateBodies = physicsWorld.collisionCandidates(playerBody);
 
     for (const otherBody of candidateBodies) {
       if (

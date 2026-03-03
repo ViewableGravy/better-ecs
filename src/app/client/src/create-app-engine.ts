@@ -10,6 +10,7 @@ import { System as CameraFollow } from "@client/systems/camera-follow";
 import { System as CameraZoom } from "@client/systems/camera-zoom";
 import { System as Initialize } from "@client/systems/initialisation";
 import { System as Movement } from "@client/systems/movement";
+import { System as PhysicsWorldSync } from "@client/systems/physics-world-sync";
 import { System as TempAutoSavePlayerPosition } from "@client/systems/temp-auto-save";
 import { invariantById } from "@client/utilities/selectors";
 
@@ -27,6 +28,7 @@ export const createAppEngine = () => {
       // Update systems
       TempAutoSavePlayerPosition,
       Movement,
+      PhysicsWorldSync,
       Collision,
       CameraFollow,
       CameraZoom,

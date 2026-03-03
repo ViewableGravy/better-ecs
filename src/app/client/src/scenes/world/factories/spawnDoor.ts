@@ -1,8 +1,9 @@
+import { OUTSIDE, RenderVisibility, type RenderVisibilityRole } from "@client/scenes/world/components/render-visibility";
+import { CollisionProfiles } from "@client/scenes/world/physics/collision-profiles";
 import { Vec2, type UserWorld } from "@engine";
 import { Color, Debug, Shape, Transform2D } from "@engine/components";
 import { RectangleCollider } from "@libs/physics";
 import { Portal, type PortalOpts } from "@libs/spatial-contexts";
-import { OUTSIDE, RenderVisibility, type RenderVisibilityRole } from "@client/scenes/world/components/render-visibility";
 
 type SpawnDoorOptions = {
   x: number;
@@ -45,6 +46,7 @@ export function spawnDoor(world: UserWorld, opts: SpawnDoorOptions): number {
       entity,
       new RectangleCollider(new Vec2(-halfWidth, -halfHeight), new Vec2(width, height)),
     );
+    world.add(entity, CollisionProfiles.solid());
   }
 
   if (opts.portal) {

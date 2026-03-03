@@ -145,8 +145,8 @@ function shouldSpawnPlacement(
     return false;
   }
 
-  // The box must not collide with anything in the world (4)
-  if (!Placement.canSpawnBox(placementTarget.world, gridCoordinates)) {
+  // Selected item collision policy must allow placement (4)
+  if (!Placement.canPlaceItem(placementTarget.world, gridCoordinates, data.selectedItem)) {
     return false;
   }
 

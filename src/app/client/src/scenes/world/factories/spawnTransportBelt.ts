@@ -1,7 +1,10 @@
 import { RENDER_LAYERS } from "@client/consts";
-import type { EntityId, UserWorld } from "@engine";
-import { AnimatedSprite, Debug, Transform2D } from "@engine/components";
 import { OUTSIDE, RenderVisibility } from "@client/scenes/world/components/render-visibility";
+import { CollisionProfiles } from "@client/scenes/world/physics/collision-profiles";
+import { TRANSPORT_BELT_COLLIDER_SIZE } from "@client/scenes/world/systems/build-mode/const";
+import { Vec2, type EntityId, type UserWorld } from "@engine";
+import { AnimatedSprite, Debug, Transform2D } from "@engine/components";
+import { RectangleCollider } from "@libs/physics";
 
 export const TRANSPORT_BELT_VARIANTS = [
   "horizontal-right",
@@ -39,6 +42,7 @@ const TRANSPORT_BELT_QUAD_SIZE = 40;
 const TRANSPORT_BELT_FRAME_SIZE = 128;
 const TRANSPORT_BELT_Z_BASE = 0.2;
 const TRANSPORT_BELT_Z_PER_WORLD_Y = 0.000001;
+const HALF_TRANSPORT_BELT_COLLIDER_SIZE = TRANSPORT_BELT_COLLIDER_SIZE * 0.5;
 
 function createTransportBeltAssetId(variant: TransportBeltVariant, frame: TransportBeltFrame): TransportBeltAssetId {
   return `transport-belt:${variant}_${frame}`;
@@ -90,6 +94,14 @@ export function spawnTransportBelt(world: UserWorld, options: SpawnTransportBelt
   sprite.zOrder = TRANSPORT_BELT_Z_BASE + options.y * TRANSPORT_BELT_Z_PER_WORLD_Y;
 
   world.add(belt, new Transform2D(options.x, options.y, 0));
+  world.add(
+    belt,
+    new RectangleCollider(
+      new Vec2(-HALF_TRANSPORT_BELT_COLLIDER_SIZE, -HALF_TRANSPORT_BELT_COLLIDER_SIZE),
+      new Vec2(TRANSPORT_BELT_COLLIDER_SIZE, TRANSPORT_BELT_COLLIDER_SIZE),
+    ),
+  );
+  world.add(belt, CollisionProfiles.conveyor());
   world.add(belt, sprite);
   world.add(belt, new RenderVisibility(OUTSIDE, 1));
   world.add(belt, new Debug("transport-belt"));

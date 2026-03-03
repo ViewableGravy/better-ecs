@@ -1,6 +1,7 @@
 import { OrbitMotion } from "@client/components/orbit-motion";
 import { PlayerComponent } from "@client/components/player";
 import { RENDER_LAYERS } from "@client/consts";
+import { CollisionProfiles } from "@client/scenes/world/physics/collision-profiles";
 import type { EntityId, UserWorld } from "@engine";
 import {
   Color,
@@ -37,6 +38,7 @@ export function spawnPlayer(world: UserWorld): EntityId {
   world.add(player, playerComponent);
   world.add(player, sprite);
   world.add(player, collider);
+  world.add(player, CollisionProfiles.actor());
   world.add(player, new Debug("player"));
 
   const orbitAnchor = world.create();
