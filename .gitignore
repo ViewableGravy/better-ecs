@@ -16,10 +16,9 @@ vitest.config.*.timestamp*
 
 # Prevent compiled output in source directories
 # (build output belongs in dist/, not src/)
-packages/*/src/**/*.js
-packages/*/src/**/*.js.map
-packages/*/src/**/*.d.ts
-packages/*/src/**/*.d.ts.map
+src/**/*.types/**/*.d.ts
+src/**/*.types/**/*.d.ts.map
+
 # But allow spec/test JS files if any exist
 !packages/*/src/**/*.spec.*
 !packages/*/src/**/*.test.*

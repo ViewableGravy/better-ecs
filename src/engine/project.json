@@ -1,0 +1,53 @@
+{
+  "name": "engine",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "src/engine/src",
+  "projectType": "library",
+  "tags": ["type:engine"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx tsc -p tsconfig.lib.json --emitDeclarationOnly",
+        "cwd": "src/engine"
+      },
+      "inputs": ["default", "^default"]
+    },
+    "build:watch": {
+      "continuous": true,
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx tsc -p tsconfig.lib.json --watch",
+        "cwd": "src/engine"
+      }
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rm -rf .types dist tsconfig.lib.tsbuildinfo",
+        "cwd": "src/engine"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx tsc --noEmit",
+        "cwd": "src/engine"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun x eslint .",
+        "cwd": "src/engine"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest --run --typecheck",
+        "cwd": "src/engine"
+      }
+    }
+  }
+}

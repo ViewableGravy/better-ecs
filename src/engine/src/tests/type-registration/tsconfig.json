@@ -1,0 +1,18 @@
+{
+  "extends": "../../../../../tsconfig.base.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "ignoreDeprecations": "5.0",
+    "rootDir": "../../../../../",
+    "lib": ["ESNext", "DOM"],
+    "jsx": "react-jsx"
+  },
+  "include": [
+    "./**/*.ts",
+    "./**/*.test-d.ts",
+    "../../../**/*.ts",
+    "../../../**/*.tsx",
+    "../../../../../src/utils/src/**/*.ts"
+  ]
+}

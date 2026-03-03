@@ -1,0 +1,67 @@
+{
+  "name": "client",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "src/app/client/src",
+  "projectType": "application",
+  "tags": ["type:client"],
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun x vite --config vite.config.ts",
+        "cwd": "."
+      }
+    },
+    "build-deps": {
+      "executor": "nx:noop",
+      "dependsOn": ["^build"],
+      "options": {}
+    },
+    "watch-deps": {
+      "continuous": true,
+      "executor": "nx:run-commands",
+      "dependsOn": ["build-deps"],
+      "options": {
+        "command": "bun x nx run-many --target=build:watch --projects=$(bun x nx graph --print | jq -r --arg project \"{projectName}\" '[.graph.dependencies[$project][]?.target] | unique | join(\",\")') --outputStyle=static",
+        "cwd": "."
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun x vite build --config vite.config.ts",
+        "cwd": "."
+      },
+      "inputs": ["default", "^default"],
+      "outputs": ["{workspaceRoot}/dist"]
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rm -rf dist",
+        "cwd": "."
+      }
+    },
+    "preview": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun x vite preview --config vite.config.ts",
+        "cwd": "."
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun x eslint .",
+        "cwd": "src/app/client"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx tsc -p tsconfig.json --noEmit",
+        "cwd": "src/app/client"
+      }
+    }
+  }
+}

@@ -5,29 +5,29 @@
   "references": [
     // UPDATED BY NX SYNC
     {
-      "path": "./packages/utils"
+      "path": "./src/utils"
     },
     {
-      "path": "./packages/engine"
+      "path": "./src/engine"
     },
     {
-      "path": "./packages/foundation/physics"
+      "path": "./src/libs/physics"
     },
     {
-      "path": "./packages/foundation/spatial-contexts"
+      "path": "./src/libs/spatial-contexts"
     },
     {
-      "path": "./packages/features/fps"
+      "path": "./src/libs/fps"
     },
     {
-      "path": "./packages/tooling/hmr"
+      "path": "./vite/engine-hmr"
     },
     {
-      "path": "./apps/client"
+      "path": "./src/app/client"
     },
     {
-      "path": "./apps/server"
+      "path": "./src/app/server"
     }
   ],
-  "exclude": ["**/dist", "**/apps/**/dist", "**/packages/**/dist", "**/node_modules/*"]
+  "exclude": ["**/dist", "**/src/**/dist", "**/node_modules/*"]
 }

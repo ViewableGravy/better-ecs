@@ -1,0 +1,71 @@
+{
+  "name": "server",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "src/app/server/src",
+  "projectType": "application",
+  "tags": ["type:server"],
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "parallel": true,
+        "commands": [
+          "NX_DAEMON=false bun x nx run-many --target=build:watch --projects=$(bun x nx graph --print | jq -r '[.graph.dependencies[\"server\"][]?.target] | unique | join(\",\")') --outputStyle=static",
+          "node --watch src/main.ts"
+        ],
+        "cwd": "src/app/server"
+      }
+    },
+    "build-deps": {
+      "executor": "nx:noop",
+      "dependsOn": ["^build"],
+      "options": {}
+    },
+    "watch-deps": {
+      "continuous": true,
+      "executor": "nx:run-commands",
+      "dependsOn": ["build-deps"],
+      "options": {
+        "command": "bun x nx run-many --target=build:watch --projects=$(bun x nx graph --print | jq -r --arg project \"{projectName}\" '[.graph.dependencies[$project][]?.target] | unique | join(\",\")') --outputStyle=static",
+        "cwd": "."
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx tsc -p tsconfig.json --noEmit",
+        "cwd": "src/app/server"
+      },
+      "inputs": ["default", "^default"],
+      "outputs": []
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rm -rf dist",
+        "cwd": "src/app/server"
+      }
+    },
+    "start": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node dist/main.js",
+        "cwd": "src/app/server"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun x eslint .",
+        "cwd": "src/app/server"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx tsc -p tsconfig.json --noEmit",
+        "cwd": "src/app/server"
+      }
+    }
+  }
+}

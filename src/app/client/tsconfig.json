@@ -1,0 +1,35 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "target": "ES2022",
+    "types": ["node"],
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "composite": false,
+    "strict": true
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.d.ts"],
+  "exclude": ["e2e/**/*"],
+  "references": [
+    {
+      "path": "../../utils"
+    },
+    {
+      "path": "../../libs/spatial-contexts"
+    },
+    {
+      "path": "../../libs/physics"
+    },
+    {
+      "path": "../../../vite/engine-hmr"
+    },
+    {
+      "path": "../../libs/fps"
+    },
+    {
+      "path": "../../engine"
+    }
+  ]
+}
