@@ -1,8 +1,9 @@
 import { OrbitMotion } from "@client/components/orbit-motion";
 import { PlayerComponent } from "@client/components/player";
+import { PlayerFeetComponent } from "@client/components/player-feet";
 import { RENDER_LAYERS } from "@client/consts";
 import { CollisionProfiles } from "@client/scenes/world/physics/collision-profiles";
-import type { EntityId, UserWorld } from "@engine";
+import { Vec2, type EntityId, type UserWorld } from "@engine";
 import {
   Color,
   Debug,
@@ -11,7 +12,7 @@ import {
   Sprite,
   Transform2D,
 } from "@engine/components";
-import { CircleCollider } from "@libs/physics";
+import { CircleCollider, RectangleCollider } from "@libs/physics";
 
 export function ensurePlayer(world: UserWorld) {
   let [player] = world.query(PlayerComponent);
@@ -25,21 +26,26 @@ export function ensurePlayer(world: UserWorld) {
 
 export function spawnPlayer(world: UserWorld): EntityId {
   const player = world.create();
-  const transform = new Transform2D(0, 0);
-  const playerComponent = new PlayerComponent("NewPlayer"); // identifier since player is unique
-  const collider = new CircleCollider(16);
 
   // Create a sprite component referencing the asset by key
   const sprite = new Sprite("player-sprite", 40, 40);
   sprite.layer = RENDER_LAYERS.world;
   sprite.zOrder = 1;
 
-  world.add(player, transform);
-  world.add(player, playerComponent);
   world.add(player, sprite);
-  world.add(player, collider);
+  world.add(player, new Transform2D(0, 0));
+  world.add(player, new PlayerComponent("NewPlayer"));
+  world.add(player, new CircleCollider(16));
   world.add(player, CollisionProfiles.actor());
   world.add(player, new Debug("player"));
+
+  const feet = world.create();
+  world.add(feet, new Parent(player));
+  world.add(feet, new Transform2D(0, 15));
+  world.add(feet, new RectangleCollider(new Vec2(-7.5, 0), new Vec2(15, 2)));
+  world.add(feet, CollisionProfiles.ghost());
+  world.add(feet, new PlayerFeetComponent(player));
+  world.add(feet, new Debug("player-feet"));
 
   const orbitAnchor = world.create();
   world.add(orbitAnchor, new Parent(player));

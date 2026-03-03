@@ -1,4 +1,5 @@
 import { RENDER_LAYERS } from "@client/consts";
+import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import { OUTSIDE, RenderVisibility } from "@client/scenes/world/components/render-visibility";
 import { CollisionProfiles } from "@client/scenes/world/physics/collision-profiles";
 import { TRANSPORT_BELT_COLLIDER_SIZE } from "@client/scenes/world/systems/build-mode/const";
@@ -74,6 +75,7 @@ type SpawnTransportBeltOptions = {
   x: number;
   y: number;
   variant?: TransportBeltVariant;
+  speed?: number;
 };
 
 export function spawnTransportBelt(world: UserWorld, options: SpawnTransportBeltOptions): EntityId {
@@ -102,6 +104,7 @@ export function spawnTransportBelt(world: UserWorld, options: SpawnTransportBelt
     ),
   );
   world.add(belt, CollisionProfiles.conveyor());
+  world.add(belt, new ConveyorBeltComponent(variant, options.speed));
   world.add(belt, sprite);
   world.add(belt, new RenderVisibility(OUTSIDE, 1));
   world.add(belt, new Debug("transport-belt"));
