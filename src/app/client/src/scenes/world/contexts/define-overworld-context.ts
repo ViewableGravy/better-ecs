@@ -1,17 +1,19 @@
-import type { UserWorld } from "@engine";
-import { Color } from "@engine/components";
-import { defineContext, type ContextId } from "@libs/spatial-contexts";
 import { OUTSIDE } from "@client/scenes/world/components/render-visibility";
+import { setupContextPlayer } from "@client/scenes/world/contexts/shared";
 import { spawnContextEntryRegion } from "@client/scenes/world/factories/spawnContextEntryRegion";
 import { spawnDemoShaderQuad } from "@client/scenes/world/factories/spawnDemoShaderQuad";
 import { spawnDoor } from "@client/scenes/world/factories/spawnDoor";
+import { spawnGear } from "@client/scenes/world/factories/spawnGear";
 import { spawnHouse } from "@client/scenes/world/factories/spawnHouse";
 import { spawnOreField } from "@client/scenes/world/factories/spawnOreField";
 import { spawnTransportBelt, type TransportBeltVariant } from "@client/scenes/world/factories/spawnTransportBelt";
 import { spawnTree } from "@client/scenes/world/factories/spawnTree";
 import { spawnWall } from "@client/scenes/world/factories/spawnWall";
+import { ConveyorUtils } from "@client/scenes/world/utilities/conveyor-utils";
 import { createHouseLayout } from "@client/scenes/world/utilities/house-layout";
-import { setupContextPlayer } from "@client/scenes/world/contexts/shared";
+import type { UserWorld } from "@engine";
+import { Color } from "@engine/components";
+import { defineContext, type ContextId } from "@libs/spatial-contexts";
 
 type OverworldContextOptions = {
   overworldId: ContextId;
@@ -198,6 +200,47 @@ export function defineOverworldContext(options: OverworldContextOptions) {
         centerX: 700,
         centerY: 360,
       });
+
+      function testSpawnTransportWithGears(x: number, y: number) {
+        const demoItemBelt = spawnTransportBelt(world, {
+          x: x,
+          y: y,
+          variant: "horizontal-right",
+        });
+
+        const leftA = spawnGear(world, { size: "large" });
+        const leftB = spawnGear(world, { size: "large" });
+        const leftC = spawnGear(world, { size: "large" });
+        const leftD = spawnGear(world, { size: "large" });
+        const rightA = spawnGear(world, { size: "large" });
+        const rightB = spawnGear(world, { size: "large" });
+
+        ConveyorUtils.addEntity(world, demoItemBelt, leftA, "left", 0);
+        ConveyorUtils.addEntity(world, demoItemBelt, leftB, "left", 1);
+        ConveyorUtils.addEntity(world, demoItemBelt, leftC, "left", 2);
+        ConveyorUtils.addEntity(world, demoItemBelt, leftD, "left", 3);
+        ConveyorUtils.addEntity(world, demoItemBelt, rightA, "right", 0);
+        ConveyorUtils.addEntity(world, demoItemBelt, rightB, "right", 2);
+      }
+
+      testSpawnTransportWithGears(0, 300);
+
+      // performance testing (currently ~70-80 fps)
+      // for (const x of [500,600,700,800,900,1000,1100]) {
+      //   for (const y of [100, 120, 140, 160]) {
+      //     testSpawnTransportWithGears(x, y);
+      //     testSpawnTransportWithGears(x + 20, y);
+      //     testSpawnTransportWithGears(x + 40, y);
+      //     testSpawnTransportWithGears(x + 60, y);
+      //     testSpawnTransportWithGears(x + 80, y);
+
+      //     testSpawnTransportWithGears(x, y);
+      //     testSpawnTransportWithGears(x + 20, y);
+      //     testSpawnTransportWithGears(x + 40, y);
+      //     testSpawnTransportWithGears(x + 60, y);
+      //     testSpawnTransportWithGears(x + 80, y);
+      //   }
+      // }
 
       const demoStartX = -450;
       const leftRowY = 287;

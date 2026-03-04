@@ -1,3 +1,4 @@
+import { getAllGearAssetIds } from "@client/assets/iron-gear";
 import { sceneConfig } from "@client/scenes/world/const";
 import { defineDungeonContext } from "@client/scenes/world/contexts/define-dungeon-context";
 import { defineHouseContext } from "@client/scenes/world/contexts/define-house-context";
@@ -49,6 +50,7 @@ export const Scene = createContextScene("MainScene")({
     const assets = fromContext(FromEngine.Assets);
 
     await assets.load("player-sprite");
+    await assets.loadMany(getAllGearAssetIds());
     await assets.loadMany(getAllTransportBeltAssetIds());
   },
 });
