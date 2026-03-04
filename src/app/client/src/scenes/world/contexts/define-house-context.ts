@@ -1,11 +1,11 @@
 import { Color } from "@engine/components";
 import { defineContext, type ContextId } from "@libs/spatial-contexts";
-import { HOUSE_INTERIOR } from "@client/scenes/world/components/render-visibility";
-import { spawnBackground } from "@client/scenes/world/factories/spawnBackground";
-import { spawnChair } from "@client/scenes/world/factories/spawnChair";
-import { spawnDoor } from "@client/scenes/world/factories/spawnDoor";
-import { spawnTable } from "@client/scenes/world/factories/spawnTable";
-import { spawnWall } from "@client/scenes/world/factories/spawnWall";
+import { HOUSE_INTERIOR } from "@client/components/render-visibility";
+import { spawnBackground } from "@client/entities/background";
+import { spawnChair } from "@client/entities/chair";
+import { spawnDoor } from "@client/entities/door";
+import { spawnTable } from "@client/entities/table";
+import { spawnWall } from "@client/entities/wall";
 import { createHouseLayout } from "@client/scenes/world/utilities/house-layout";
 import { setupContextCamera } from "@client/scenes/world/contexts/shared";
 

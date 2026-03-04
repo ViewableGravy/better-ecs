@@ -1,19 +1,19 @@
-import { OUTSIDE } from "@client/scenes/world/components/render-visibility";
+import { OUTSIDE } from "@client/components/render-visibility";
 import { setupContextPlayer } from "@client/scenes/world/contexts/shared";
-import { spawnContextEntryRegion } from "@client/scenes/world/factories/spawnContextEntryRegion";
-import { spawnDemoShaderQuad } from "@client/scenes/world/factories/spawnDemoShaderQuad";
-import { spawnDoor } from "@client/scenes/world/factories/spawnDoor";
-import { spawnGear } from "@client/scenes/world/factories/spawnGear";
-import { spawnHouse } from "@client/scenes/world/factories/spawnHouse";
-import { spawnOreField } from "@client/scenes/world/factories/spawnOreField";
+import { spawnContextEntryRegion } from "@client/entities/context-entry-region";
+import { spawnDemoShaderQuad } from "@client/entities/demo-shader-quad";
+import { spawnDoor } from "@client/entities/door";
+import { spawnGear } from "@client/entities/gear";
+import { spawnHouse } from "@client/entities/house";
+import { spawnOreField } from "@client/entities/ore-field";
 import {
   spawnTransportBelt,
   TRANSPORT_BELT_VARIANTS,
   type TransportBeltVariant,
-} from "@client/scenes/world/factories/spawnTransportBelt";
-import { spawnTree } from "@client/scenes/world/factories/spawnTree";
-import { spawnWall } from "@client/scenes/world/factories/spawnWall";
-import { ConveyorUtils } from "@client/scenes/world/utilities/conveyor-utils";
+} from "@client/entities/transport-belt";
+import { spawnTree } from "@client/entities/tree";
+import { spawnWall } from "@client/entities/wall";
+import { ConveyorUtils } from "@client/entities/transport-belt/conveyor-utils";
 import { createHouseLayout } from "@client/scenes/world/utilities/house-layout";
 import type { UserWorld } from "@engine";
 import { Color } from "@engine/components";

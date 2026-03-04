@@ -1,5 +1,5 @@
 import { GridBounds } from "@client/components/grid-bounds";
-import { GridSingleton } from "@client/scenes/world/systems/build-mode/grid-singleton";
+import { GridSingleton } from "@client/systems/world/build-mode/grid-singleton";
 import { type UserWorld } from "@engine";
 import { Color, Shape, Transform2D } from "@engine/components";
 import { System as ContextSystem, fromContext } from "@engine/context";

@@ -3,11 +3,11 @@ import { sceneConfig } from "@client/scenes/world/const";
 import { defineDungeonContext } from "@client/scenes/world/contexts/define-dungeon-context";
 import { defineHouseContext } from "@client/scenes/world/contexts/define-house-context";
 import { defineOverworldContext } from "@client/scenes/world/contexts/define-overworld-context";
-import { System as BuildModeSystem } from "@client/scenes/world/systems/build-mode";
-import { DebugOverlaySystem } from "@client/scenes/world/systems/debug-overlay.system";
-import { HouseContextSystem } from "@client/scenes/world/systems/houseTransition/house-context.system";
-import { PlayerOrbitSystem } from "@client/scenes/world/systems/player-orbit.system";
-import { System as PortalSystem } from "@client/scenes/world/systems/portal";
+import { System as BuildModeSystem } from "@client/systems/world/build-mode";
+import { DebugOverlaySystem } from "@client/systems/world/debug-overlay";
+import { HouseContextSystem } from "@client/systems/world/house-transition";
+import { PlayerOrbitSystem } from "@client/systems/world/player-orbit";
+import { System as PortalSystem } from "@client/systems/world/portal";
 import { fromContext, FromEngine } from "@engine/context";
 import {
   createContextScene

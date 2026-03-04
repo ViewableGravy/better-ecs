@@ -1,8 +1,8 @@
 import { Color } from "@engine/components";
 import { defineContext, type ContextId } from "@libs/spatial-contexts";
-import { OUTSIDE } from "@client/scenes/world/components/render-visibility";
-import { spawnDoor } from "@client/scenes/world/factories/spawnDoor";
-import { spawnDungeon } from "@client/scenes/world/factories/spawnDungeon";
+import { OUTSIDE } from "@client/components/render-visibility";
+import { spawnDoor } from "@client/entities/door";
+import { spawnDungeon } from "@client/entities/dungeon";
 import { setupContextCamera } from "@client/scenes/world/contexts/shared";
 
 type DungeonContextOptions = {
