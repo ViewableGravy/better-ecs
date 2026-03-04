@@ -8,8 +8,8 @@ import { InitState } from "@engine/core/engine/init";
 import { Meta } from "@engine/core/engine/meta";
 import { PhaseState } from "@engine/core/engine/phase";
 import {
-	resolveEngineRenderCullingSettings,
-	type EngineRenderCullingSettings,
+    resolveEngineRenderCullingSettings,
+    type EngineRenderCullingSettings,
 } from "@engine/core/engine/render-culling";
 import { SystemsManager } from "@engine/core/engine/systems";
 import type { AllSystems, ScenesTupleToRecord, StartEngineGenerator, StartEngineOpts } from "@engine/core/engine/types";
@@ -136,21 +136,21 @@ export class EngineClass<
 
 				this.#systemsManager.initializeEngineSystems();
 
-				if (this.#initialSceneName && this.scene.activeSceneName === null) {
-					await this.scene.set(this.#initialSceneName);
-				}
-
 				await this.#renderManager.initialize();
 				await this.#renderManager.warmupLoadedTextures();
 			});
-
-			this.#init.markInitialized();
 		} finally {
 			if (this.#engineLoadingOverlay) {
 				await this.#engineLoadingOverlay.end();
 				await this.#engineLoadingOverlay.dispose();
 			}
 		}
+
+		if (this.#initialSceneName && this.scene.activeSceneName === null) {
+			await this.scene.set(this.#initialSceneName);
+		}
+
+		this.#init.markInitialized();
 	}
 
 	public async *startEngine(opts?: StartEngineOpts): StartEngineGenerator {

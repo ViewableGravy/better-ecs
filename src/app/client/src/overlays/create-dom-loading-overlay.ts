@@ -4,6 +4,7 @@ export type DomLoadingOverlayOptions = {
   id: string;
   message: string;
   zIndex: number;
+  scope?: "viewport" | "canvas-parent";
 };
 
 type OverlayElements = {
@@ -14,7 +15,7 @@ type OverlayElements = {
 function createOverlayElements(options: DomLoadingOverlayOptions): OverlayElements {
   const root = document.createElement("div");
   root.id = options.id;
-  root.style.position = "fixed";
+  root.style.position = options.scope === "canvas-parent" ? "absolute" : "fixed";
   root.style.inset = "0";
   root.style.display = "none";
   root.style.alignItems = "center";
@@ -35,11 +36,31 @@ function createOverlayElements(options: DomLoadingOverlayOptions): OverlayElemen
 }
 
 export function createDomLoadingOverlay(options: DomLoadingOverlayOptions): EngineOverlay {
+  const scope = options.scope ?? "viewport";
   const elements = createOverlayElements(options);
+
+  const resolveOverlayContainer = (): HTMLElement => {
+    if (scope !== "canvas-parent") {
+      return document.body;
+    }
+
+    const canvas = document.querySelector("canvas");
+    const container = canvas?.parentElement;
+
+    if (!container) {
+      return document.body;
+    }
+
+    if (window.getComputedStyle(container).position === "static") {
+      container.style.position = "relative";
+    }
+
+    return container;
+  };
 
   const attachIfNeeded = () => {
     if (!elements.root.isConnected) {
-      document.body.append(elements.root);
+      resolveOverlayContainer().append(elements.root);
     }
   };
 

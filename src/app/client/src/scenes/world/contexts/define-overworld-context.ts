@@ -244,21 +244,21 @@ export function defineOverworldContext(options: OverworldContextOptions) {
       }
 
       // performance testing (currently ~70-80 fps)
-      // for (const x of [500,600,700,800,900,1000,1100]) {
-      //   for (const y of [100, 120, 140, 160]) {
-      //     testSpawnTransportWithGears(x, y);
-      //     testSpawnTransportWithGears(x + 20, y);
-      //     testSpawnTransportWithGears(x + 40, y);
-      //     testSpawnTransportWithGears(x + 60, y);
-      //     testSpawnTransportWithGears(x + 80, y);
+      for (const x of [500,600,700,800,900,1000,1100]) {
+        for (const y of [100, 120, 140, 160]) {
+          testSpawnTransportWithGears(x, y, "horizontal-right");
+          testSpawnTransportWithGears(x + 20, y, "horizontal-right");
+          testSpawnTransportWithGears(x + 40, y, "horizontal-right");
+          testSpawnTransportWithGears(x + 60, y, "horizontal-right");
+          testSpawnTransportWithGears(x + 80, y, "horizontal-right");
 
-      //     testSpawnTransportWithGears(x, y);
-      //     testSpawnTransportWithGears(x + 20, y);
-      //     testSpawnTransportWithGears(x + 40, y);
-      //     testSpawnTransportWithGears(x + 60, y);
-      //     testSpawnTransportWithGears(x + 80, y);
-      //   }
-      // }
+          testSpawnTransportWithGears(x, y, "horizontal-left");
+          testSpawnTransportWithGears(x + 20, y, "horizontal-left");
+          testSpawnTransportWithGears(x + 40, y, "horizontal-left");
+          testSpawnTransportWithGears(x + 60, y, "horizontal-left");
+          testSpawnTransportWithGears(x + 80, y, "horizontal-left");
+        }
+      }
 
       const demoStartX = -450;
       const leftRowY = 287;

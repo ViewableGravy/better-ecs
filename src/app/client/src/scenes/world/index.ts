@@ -18,6 +18,7 @@ export const Scene = createContextScene("MainScene")({
     id: "scene-loading-overlay-main",
     message: "Loading Main Scene...",
     zIndex: 10001,
+    scope: "canvas-parent",
   }),
   systems: [
     PlayerOrbitSystem,
@@ -52,6 +53,8 @@ export const Scene = createContextScene("MainScene")({
     manager.setFocusedContextId(sceneConfig.contextIds.overworld);
 
     const assets = fromContext(FromEngine.Assets);
+
+    await new Promise((resolve) => setTimeout(resolve, 500)); // artificial delay to show loading overlay
 
     await assets.load("player-sprite");
     await assets.loadSheet("iron-gear");
