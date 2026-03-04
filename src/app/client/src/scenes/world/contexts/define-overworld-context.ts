@@ -6,7 +6,11 @@ import { spawnDoor } from "@client/scenes/world/factories/spawnDoor";
 import { spawnGear } from "@client/scenes/world/factories/spawnGear";
 import { spawnHouse } from "@client/scenes/world/factories/spawnHouse";
 import { spawnOreField } from "@client/scenes/world/factories/spawnOreField";
-import { spawnTransportBelt, type TransportBeltVariant } from "@client/scenes/world/factories/spawnTransportBelt";
+import {
+  spawnTransportBelt,
+  TRANSPORT_BELT_VARIANTS,
+  type TransportBeltVariant,
+} from "@client/scenes/world/factories/spawnTransportBelt";
 import { spawnTree } from "@client/scenes/world/factories/spawnTree";
 import { spawnWall } from "@client/scenes/world/factories/spawnWall";
 import { ConveyorUtils } from "@client/scenes/world/utilities/conveyor-utils";
@@ -201,11 +205,11 @@ export function defineOverworldContext(options: OverworldContextOptions) {
         centerY: 360,
       });
 
-      function testSpawnTransportWithGears(x: number, y: number) {
+      function testSpawnTransportWithGears(x: number, y: number, variant: TransportBeltVariant) {
         const demoItemBelt = spawnTransportBelt(world, {
           x: x,
           y: y,
-          variant: "horizontal-right",
+          variant,
         });
 
         const leftA = spawnGear(world, { size: "large" });
@@ -223,7 +227,21 @@ export function defineOverworldContext(options: OverworldContextOptions) {
         ConveyorUtils.addEntity(world, demoItemBelt, rightB, "right", 2);
       }
 
-      testSpawnTransportWithGears(0, 300);
+      const demoGridStartX = -220;
+      const demoGridStartY = 540;
+      const demoGridColumns = 5;
+      const demoGridStep = BELT_SPACING * 2;
+
+      for (const [index, variant] of TRANSPORT_BELT_VARIANTS.entries()) {
+        const column = index % demoGridColumns;
+        const row = Math.floor(index / demoGridColumns);
+
+        testSpawnTransportWithGears(
+          demoGridStartX + column * demoGridStep,
+          demoGridStartY + row * demoGridStep,
+          variant,
+        );
+      }
 
       // performance testing (currently ~70-80 fps)
       // for (const x of [500,600,700,800,900,1000,1100]) {

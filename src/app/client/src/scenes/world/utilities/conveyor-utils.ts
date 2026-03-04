@@ -1,9 +1,8 @@
 import { ConveyorBeltComponent, type ConveyorSide, type ConveyorSlotIndex } from "@client/components/conveyor-belt";
+import { CONVEYOR_SLOT_POSITIONS } from "@client/scenes/world/utilities/slot-lookup";
 import type { EntityId, UserWorld } from "@engine";
 import { Parent, Transform2D } from "@engine/components";
-
-const SLOT_AXIS_OFFSETS: readonly [number, number, number, number] = [-7.5, -2.5, 2.5, 7.5];
-const SLOT_SIDE_OFFSET = 4;
+import invariant from "tiny-invariant";
 
 export class ConveyorUtils {
   public static addEntity(
@@ -26,33 +25,11 @@ export class ConveyorUtils {
     variant: string,
     side: ConveyorSide,
     index: ConveyorSlotIndex,
-  ): [number, number] {
-    const axisOffset = SLOT_AXIS_OFFSETS[index];
+  ): readonly [number, number] {
+    const mappedPosition = CONVEYOR_SLOT_POSITIONS[`${variant}:${side}:${index}`];
 
-    if (ConveyorUtils.isHorizontalVariant(variant)) {
-      return [axisOffset, side === "left" ? -SLOT_SIDE_OFFSET : SLOT_SIDE_OFFSET];
-    }
+    invariant(mappedPosition, `No slot position found for variant ${variant}, side ${side}, index ${index}`);
 
-    if (ConveyorUtils.isVerticalVariant(variant)) {
-      return [side === "left" ? -SLOT_SIDE_OFFSET : SLOT_SIDE_OFFSET, axisOffset];
-    }
-
-    throw new Error(`Conveyor variant ${variant} is not supported for belt item placement yet`);
-  }
-
-  private static isHorizontalVariant(variant: string): boolean {
-    if (variant === "start-left" || variant === "end-left" || variant === "start-right" || variant === "end-right") {
-      return true;
-    }
-
-    return variant.startsWith("horizontal");
-  }
-
-  private static isVerticalVariant(variant: string): boolean {
-    if (variant === "start-top" || variant === "end-top" || variant === "start-bottom" || variant === "end-bottom") {
-      return true;
-    }
-
-    return variant.startsWith("vertical");
+    return mappedPosition;
   }
 }
