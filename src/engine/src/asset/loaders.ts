@@ -1,7 +1,7 @@
-import { Texture, TextureSource } from "@engine/components/texture";
 import type { AssetType } from "@engine/asset/asset";
 import { AssetAdapter } from "@engine/asset/asset";
 import { AssetManager } from "@engine/asset/AssetManager";
+import { Texture, TextureSource } from "@engine/components/texture";
 
 export type ShaderSourceAsset = {
   type: "shader";
@@ -56,6 +56,22 @@ type Assets<TRegistry extends Registry = Registry> = Expand<
   >
 >;
 
+type SheetKeyRecordForEntry<
+  TKey extends string,
+  TValue extends RegistryValue,
+> = TValue extends SheetAsset<infer TSprites>
+  ? { [TOutputKey in TKey]: Extract<keyof TSprites, string> }
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+  : {};
+
+type SheetKeyMap<TRegistry extends Registry = Registry> = Expand<
+  UnionToIntersection<
+    {
+      [TKey in Extract<keyof TRegistry, string>]: SheetKeyRecordForEntry<TKey, TRegistry[TKey]>;
+    }[Extract<keyof TRegistry, string>]
+  >
+>;
+
 type AssetTypeRecordForEntry<
   TKey extends string,
   TValue extends RegistryValue,
@@ -86,7 +102,9 @@ function isSheetAsset(value: RegistryValue): value is SheetAsset<SheetSprites> {
 /**
  * Create an Asset Manager with the given registry.
  */
-export function createAssetLoader<const T extends Registry>(assets: T): AssetManager<Assets<T>, AssetTypes<T>> {
+export function createAssetLoader<const T extends Registry>(
+  assets: T,
+): AssetManager<Assets<T>, AssetTypes<T>, SheetKeyMap<T>> {
   const resolvedAssets: Record<string, AssetAdapter<unknown, AssetType>> = {};
 
   for (const baseKey in assets) {
@@ -130,7 +148,9 @@ export function createAssetLoader<const T extends Registry>(assets: T): AssetMan
   }
 
   // `resolvedAssets` is generated from `assets` at runtime; this cast bridges dynamic key expansion to static type-level key expansion.
-  return new AssetManager<Assets<T>, AssetTypes<T>>({ assets: resolvedAssets as ResolvedRegistry<Assets<T>> });
+  return new AssetManager<Assets<T>, AssetTypes<T>, SheetKeyMap<T>>({
+    assets: resolvedAssets as ResolvedRegistry<Assets<T>>,
+  });
 }
 
 /**

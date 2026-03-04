@@ -1,8 +1,10 @@
-import { createGearAssetId, type GearAssetId, type GearSizeVariant } from "@client/assets/iron-gear";
+import { ironGearSheet } from "@client/assets/iron-gear";
 import { RENDER_LAYERS } from "@client/consts";
 import { OUTSIDE, RenderVisibility } from "@client/scenes/world/components/render-visibility";
 import type { EntityId, UserWorld } from "@engine";
 import { Debug, Sprite, Transform2D } from "@engine/components";
+
+type GearSizeVariant = Extract<keyof typeof ironGearSheet.sprites, string>;
 
 type SpawnGearOptions = {
   x?: number;
@@ -19,7 +21,7 @@ const GEAR_RENDER_SIZE_BY_VARIANT: Record<GearSizeVariant, number> = {
 
 export function spawnGear(world: UserWorld, options: SpawnGearOptions = {}): EntityId {
   const sizeVariant = options.size ?? "large";
-  const assetId: GearAssetId = createGearAssetId(sizeVariant);
+  const assetId: `iron-gear:${GearSizeVariant}` = `iron-gear:${sizeVariant}`;
   const renderSize = GEAR_RENDER_SIZE_BY_VARIANT[sizeVariant];
 
   const gear = world.create();

@@ -1,9 +1,7 @@
-import { getAllGearAssetIds } from "@client/assets/iron-gear";
 import { sceneConfig } from "@client/scenes/world/const";
 import { defineDungeonContext } from "@client/scenes/world/contexts/define-dungeon-context";
 import { defineHouseContext } from "@client/scenes/world/contexts/define-house-context";
 import { defineOverworldContext } from "@client/scenes/world/contexts/define-overworld-context";
-import { getAllTransportBeltAssetIds } from "@client/scenes/world/factories/spawnTransportBelt";
 import { System as BuildModeSystem } from "@client/scenes/world/systems/build-mode";
 import { DebugOverlaySystem } from "@client/scenes/world/systems/debug-overlay.system";
 import { HouseContextSystem } from "@client/scenes/world/systems/houseTransition/house-context.system";
@@ -50,7 +48,7 @@ export const Scene = createContextScene("MainScene")({
     const assets = fromContext(FromEngine.Assets);
 
     await assets.load("player-sprite");
-    await assets.loadMany(getAllGearAssetIds());
-    await assets.loadMany(getAllTransportBeltAssetIds());
+    await assets.loadSheet("iron-gear");
+    await assets.loadSheet("transport-belt");
   },
 });
