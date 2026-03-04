@@ -1,4 +1,4 @@
-import { resolveWorldTransform2D, Vec2, type EntityId, type UserWorld } from "@engine";
+import { dotNormalized, setNormalized, Vec2 } from "@engine";
 import { Transform2D } from "@engine/components";
 import { RectangleCollider } from "@libs/physics";
 import {
@@ -6,13 +6,11 @@ import {
   DIRECTION_LEFT,
   DIRECTION_RIGHT,
   DIRECTION_UP,
-  SHARED_FEET_WORLD_TRANSFORM,
   SIDE_TO_INWARD,
   SIDE_TO_OUTWARD
 } from "../constants";
 import { type BeltFlow, type Side } from "../types";
 import { ConveyorGeometryUtils } from "./geometry-utils";
-import { ConveyorMathUtils } from "./math-utils";
 
 export class ConveyorMovementUtils {
   private static readonly SIDE_ALIASES: Record<string, Side> = {
@@ -24,19 +22,6 @@ export class ConveyorMovementUtils {
     down: "bottom",
   };
 
-  public static requireFeetWorldPosition(
-    world: UserWorld,
-    feetEntityId: EntityId,
-    out: Vec2 = new Vec2(),
-  ): Vec2 {
-    if (!resolveWorldTransform2D(world, feetEntityId, SHARED_FEET_WORLD_TRANSFORM)) {
-      throw new Error("Feet world transform could not be resolved");
-    }
-
-    out.set(SHARED_FEET_WORLD_TRANSFORM.curr.pos.x, SHARED_FEET_WORLD_TRANSFORM.curr.pos.y);
-    return out;
-  }
-
   public static resolveBeltMotionVector(
     variant: string,
     playerX: number,
@@ -46,20 +31,17 @@ export class ConveyorMovementUtils {
     out: Vec2,
   ): void {
     const flow = this.resolveBeltFlow(variant);
-    if (!flow) {
-      out.set(0, 0);
-      return;
-    }
 
-    if (flow.type === "straight") {
-      out.set(flow.direction);
-      return;
-    }
+    if (!flow)
+      return void out.set(0, 0);
+
+    if (flow.type === "straight")
+      return void out.set(flow.direction);
 
     this.resolveCurveMotion(flow.from, flow.to, playerX, playerY, beltTransform, beltCollider, out);
   }
 
-  public static resolveBeltFlow(variant: string): BeltFlow | undefined {
+  private static resolveBeltFlow(variant: string): BeltFlow | undefined {
     if (variant.startsWith("horizontal_") || variant.startsWith("vertical_")) {
       const flowSides = variant.slice(variant.indexOf("_") + 1).split("-");
       if (flowSides.length === 2) {
@@ -123,15 +105,15 @@ export class ConveyorMovementUtils {
     };
   }
 
-  public static isSide(value: string): value is Side {
+  private static isSide(value: string): value is Side {
     return value === "left" || value === "right" || value === "top" || value === "bottom";
   }
 
-  public static normalizeSideToken(value: string): Side | undefined {
+  private static normalizeSideToken(value: string): Side | undefined {
     return this.SIDE_ALIASES[value];
   }
 
-  public static resolveCurveMotion(
+  private static resolveCurveMotion(
     from: Side,
     to: Side,
     playerX: number,
@@ -162,17 +144,17 @@ export class ConveyorMovementUtils {
     const counterClockwiseY = radiusX;
 
     const clockwiseScore =
-      ConveyorMathUtils.dotNormalized(clockwiseX, clockwiseY, inward.x, inward.y)
-      + ConveyorMathUtils.dotNormalized(clockwiseX, clockwiseY, outward.x, outward.y);
+      dotNormalized(clockwiseX, clockwiseY, inward.x, inward.y)
+      + dotNormalized(clockwiseX, clockwiseY, outward.x, outward.y);
     const counterClockwiseScore =
-      ConveyorMathUtils.dotNormalized(counterClockwiseX, counterClockwiseY, inward.x, inward.y)
-      + ConveyorMathUtils.dotNormalized(counterClockwiseX, counterClockwiseY, outward.x, outward.y);
+      dotNormalized(counterClockwiseX, counterClockwiseY, inward.x, inward.y)
+      + dotNormalized(counterClockwiseX, counterClockwiseY, outward.x, outward.y);
 
     if (clockwiseScore >= counterClockwiseScore) {
-      ConveyorMathUtils.setNormalized(out, clockwiseX, clockwiseY, outward);
+      setNormalized(out, clockwiseX, clockwiseY, outward);
       return;
     }
 
-    ConveyorMathUtils.setNormalized(out, counterClockwiseX, counterClockwiseY, outward);
+    setNormalized(out, counterClockwiseX, counterClockwiseY, outward);
   }
 }

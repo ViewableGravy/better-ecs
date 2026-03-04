@@ -103,4 +103,17 @@ export class Vec2 {
   public clone(): Vec2 {
     return new Vec2(this.x, this.y);
   }
+
+  /**
+   * Calculates the squared distance between two vectors.
+   * @param a The first vector
+   * @param b The second vector
+   * @returns The squared distance
+   */
+  public static distanceSquared(a: Vec2, b: Vec2): number {
+    const dx = a.x - b.x;
+    const dy = a.y - b.y;
+
+    return dx * dx + dy * dy;
+  }
 }
