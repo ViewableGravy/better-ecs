@@ -243,9 +243,12 @@ export function defineOverworldContext(options: OverworldContextOptions) {
         );
       }
 
+      const xs = Array.from({ length: 10 }, (_, i) => 500 + i * 100);
+      const ys = Array.from({ length: 4 }, (_, i) => 60 + i * 20);
+
       // performance testing (currently ~70-80 fps)
-      for (const x of [500,600,700,800,900,1000,1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000]) {
-        for (const y of [60, 80, 100, 120, 140, 160]) {
+      for (const x of xs) {
+        for (const y of ys) {
           testSpawnTransportWithGears(x, y, "horizontal-right");
           testSpawnTransportWithGears(x + 20, y, "horizontal-right");
           testSpawnTransportWithGears(x + 40, y, "horizontal-right");

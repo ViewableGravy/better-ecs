@@ -12,6 +12,7 @@ export function queueSprites(
   ),
 ): void {
   const entities = world.query(Sprite);
+
   for (const id of entities) {
     const sprite = world.require(id, Sprite);
     queueSpriteCommand(id, sprite, world, queue, frameAllocator);
