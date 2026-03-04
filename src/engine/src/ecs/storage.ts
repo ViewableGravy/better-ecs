@@ -7,9 +7,9 @@ import { getEntityIndex } from "@engine/ecs/entity";
  * Provides O(1) insertion, deletion, and lookup with cache-friendly dense iteration.
  */
 export class ComponentStore<T> {
-  private dense: T[] = [];
+  private denseComponents: T[] = [];
+  private denseEntities: EntityId[] = [];
   private sparse: Map<number, number> = new Map(); // entityIndex -> denseIndex
-  private entityMap: Map<number, EntityId> = new Map(); // denseIndex -> entityId
 
   /**
    * Adds or replaces a component for an entity
@@ -25,13 +25,13 @@ export class ComponentStore<T> {
           "ComponentStore invariant violated: missing dense index for existing sparse entry",
         );
       }
-      this.dense[denseIndex] = component;
+      this.denseComponents[denseIndex] = component;
     } else {
       // Add new component
-      const denseIndex = this.dense.length;
-      this.dense.push(component);
+      const denseIndex = this.denseComponents.length;
+      this.denseComponents.push(component);
+      this.denseEntities.push(entityId);
       this.sparse.set(index, denseIndex);
-      this.entityMap.set(denseIndex, entityId);
     }
   }
 
@@ -43,7 +43,7 @@ export class ComponentStore<T> {
     const denseIndex = this.sparse.get(index);
 
     if (denseIndex === undefined) return undefined;
-    return this.dense[denseIndex];
+    return this.denseComponents[denseIndex];
   }
 
   /**
@@ -52,6 +52,20 @@ export class ComponentStore<T> {
   has(entityId: EntityId): boolean {
     const index = getEntityIndex(entityId);
     return this.sparse.has(index);
+  }
+
+  /**
+   * Checks if an entity index has this component.
+   */
+  hasEntityIndex(entityIndex: number): boolean {
+    return this.sparse.has(entityIndex);
+  }
+
+  /**
+   * Dense entity list (cache-friendly) matching component order.
+   */
+  entityIds(): readonly EntityId[] {
+    return this.denseEntities;
   }
 
   /**
@@ -64,10 +78,10 @@ export class ComponentStore<T> {
     if (denseIndex === undefined) return;
 
     // Swap-remove: move last element to this position
-    const lastDenseIndex = this.dense.length - 1;
+    const lastDenseIndex = this.denseComponents.length - 1;
     if (denseIndex !== lastDenseIndex) {
-      const lastComponent = this.dense[lastDenseIndex];
-      const lastEntity = this.entityMap.get(lastDenseIndex);
+      const lastComponent = this.denseComponents[lastDenseIndex];
+      const lastEntity = this.denseEntities[lastDenseIndex];
       if (lastComponent === undefined) {
         throw new Error(
           "ComponentStore invariant violated: missing last dense component during swap-remove",
@@ -80,19 +94,20 @@ export class ComponentStore<T> {
       }
       const lastEntityIndex = getEntityIndex(lastEntity);
 
-      this.dense[denseIndex] = lastComponent;
+      this.denseComponents[denseIndex] = lastComponent;
+      this.denseEntities[denseIndex] = lastEntity;
       this.sparse.set(lastEntityIndex, denseIndex);
-      this.entityMap.set(denseIndex, lastEntity);
     }
 
-    this.dense.pop();
+    this.denseComponents.pop();
+    this.denseEntities.pop();
     this.sparse.delete(index);
-    this.entityMap.delete(lastDenseIndex);
   }
 
   *[Symbol.iterator](): IterableIterator<[EntityId, T]> {
-    for (const [i, component] of this.dense.entries()) {
-      const entityId = this.entityMap.get(i);
+    for (let i = 0; i < this.denseComponents.length; i += 1) {
+      const component = this.denseComponents[i];
+      const entityId = this.denseEntities[i];
       if (entityId === undefined) {
         throw new Error(
           "ComponentStore invariant violated: missing entity mapping during iteration",
@@ -106,22 +121,22 @@ export class ComponentStore<T> {
    * Gets all component values (dense array, cache-friendly)
    */
   components(): T[] {
-    return this.dense;
+    return this.denseComponents;
   }
 
   /**
    * Gets the number of entities with this component
    */
   count(): number {
-    return this.dense.length;
+    return this.denseComponents.length;
   }
 
   /**
    * Clears all components
    */
   clear(): void {
-    this.dense = [];
+    this.denseComponents = [];
+    this.denseEntities = [];
     this.sparse.clear();
-    this.entityMap.clear();
   }
 }

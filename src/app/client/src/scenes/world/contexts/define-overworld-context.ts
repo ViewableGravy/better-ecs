@@ -1,5 +1,4 @@
 import { OUTSIDE } from "@client/components/render-visibility";
-import { setupContextPlayer } from "@client/scenes/world/contexts/shared";
 import { spawnContextEntryRegion } from "@client/entities/context-entry-region";
 import { spawnDemoShaderQuad } from "@client/entities/demo-shader-quad";
 import { spawnDoor } from "@client/entities/door";
@@ -11,9 +10,10 @@ import {
   TRANSPORT_BELT_VARIANTS,
   type TransportBeltVariant,
 } from "@client/entities/transport-belt";
+import { ConveyorUtils } from "@client/entities/transport-belt/conveyor-utils";
 import { spawnTree } from "@client/entities/tree";
 import { spawnWall } from "@client/entities/wall";
-import { ConveyorUtils } from "@client/entities/transport-belt/conveyor-utils";
+import { setupContextPlayer } from "@client/scenes/world/contexts/shared";
 import { createHouseLayout } from "@client/scenes/world/utilities/house-layout";
 import type { UserWorld } from "@engine";
 import { Color } from "@engine/components";
@@ -244,8 +244,8 @@ export function defineOverworldContext(options: OverworldContextOptions) {
       }
 
       // performance testing (currently ~70-80 fps)
-      for (const x of [500,600,700,800,900,1000,1100]) {
-        for (const y of [100, 120, 140, 160]) {
+      for (const x of [500,600,700,800,900,1000,1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000]) {
+        for (const y of [60, 80, 100, 120, 140, 160]) {
           testSpawnTransportWithGears(x, y, "horizontal-right");
           testSpawnTransportWithGears(x + 20, y, "horizontal-right");
           testSpawnTransportWithGears(x + 40, y, "horizontal-right");

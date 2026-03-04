@@ -11,11 +11,12 @@ export function queueSprites(
     FromRender.FrameAllocator,
   ),
 ): void {
-  for (const id of world.query(Sprite)) {
+  const entities = world.query(Sprite);
+  for (const id of entities) {
     const sprite = world.require(id, Sprite);
     queueSpriteCommand(id, sprite, world, queue, frameAllocator);
   }
-
+  
   for (const id of world.query(AnimatedSprite)) {
     if (world.has(id, Sprite)) {
       continue;

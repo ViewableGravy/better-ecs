@@ -1,7 +1,7 @@
 // packages/engine/src/ecs/world.ts
 import { Parent } from "@engine/components";
 import type { EntityId } from "@engine/ecs/entity";
-import { createEntityId, invalidateEntity } from "@engine/ecs/entity";
+import { createEntityId, getEntityIndex, invalidateEntity } from "@engine/ecs/entity";
 import { ComponentStore } from "@engine/ecs/storage";
 import type { Class } from "type-fest";
 
@@ -319,15 +319,26 @@ export class World {
   }
 
   /**
-   * Queries entities by component types (intersection)
+   * Queries entities by component types (intersection).
+   *
+   * Algorithm:
+   * 1) Resolve stores for each requested component.
+   * 2) Choose the smallest store as the base iteration set.
+   * 3) For each entity in that base set, verify membership in every other store.
+   *
+   * Why this shape:
+   * - Intersecting from the smallest store minimizes entities we need to test.
+   * - Membership checks run by entity index (sparse-set key) to avoid extra map lookups.
    */
   query(...componentTypes: Function[]): EntityId[] {
+    // No filter means "all entities".
     if (componentTypes.length === 0) {
       return this.getEntities();
     }
 
-    // Use the smallest store as the base to iterate
-    let smallestStore: ComponentStore<any> | undefined;
+    // Resolve stores once and track the smallest store for base iteration.
+    const stores: ComponentStore<unknown>[] = [];
+    let smallestStore: ComponentStore<unknown> | undefined;
     let smallestCount = Infinity;
 
     for (const componentType of componentTypes) {
@@ -335,24 +346,42 @@ export class World {
 
       if (!store) return []; // No entities have all required components
 
-      // Since we will short circuit if any store is missing,
-      // we know all entities for this store are in other stores,
-      // but we only keep the smallest one to iterate over
-      if (store.count() < smallestCount) {
+      stores.push(store);
+      const storeCount = store.count();
+
+      // Base iteration cost is proportional to this count, so pick the smallest.
+      if (storeCount < smallestCount) {
         smallestStore = store;
-        smallestCount = store.count();
+        smallestCount = storeCount;
       }
     }
 
     if (!smallestStore) return [];
 
+    // Fast path: single-component query is just the dense entity list for that store.
+    if (stores.length === 1) {
+      return [...smallestStore.entityIds()];
+    }
+
+    // Build the remaining stores once so the inner loop only performs sparse membership checks.
+    const otherStores: ComponentStore<unknown>[] = [];
+    for (const store of stores) {
+      if (store === smallestStore) {
+        continue;
+      }
+      otherStores.push(store);
+    }
+
     const result: EntityId[] = [];
 
-    for (const [entityId] of smallestStore) {
+    // Iterate dense entities from the smallest store, then verify presence in every other store.
+    for (const entityId of smallestStore.entityIds()) {
+      // Sparse sets are keyed by entity index, not full entity id.
+      const entityIndex = getEntityIndex(entityId);
       let matchesAll = true;
 
-      for (const componentType of componentTypes) {
-        if (!this.hasComponent(entityId, componentType)) {
+      for (const store of otherStores) {
+        if (!store.hasEntityIndex(entityIndex)) {
           matchesAll = false;
           break;
         }
