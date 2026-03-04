@@ -21,6 +21,9 @@ interface TexturedShaderProgram {
   timeLocation?: WebGLUniformLocation | null;
 }
 
+const SPRITE_INSTANCE_FLOATS = 17;
+const INITIAL_SPRITE_BATCH_CAPACITY = 1024;
+
 export class WebGLRenderAPI implements RendererAPI {
   #canvas: HTMLCanvasElement | null = null;
   #gl: WebGL2RenderingContext | null = null;
@@ -34,6 +37,9 @@ export class WebGLRenderAPI implements RendererAPI {
   #customTexturedShaders = new WeakMap<ShaderSourceAsset, TexturedShaderProgram>();
   #assets: LooseAssetManager | null;
   #meshOverlayEnabled = false;
+  #spriteBatchData = new Float32Array(INITIAL_SPRITE_BATCH_CAPACITY * SPRITE_INSTANCE_FLOATS);
+  #spriteBatchCount = 0;
+  #spriteBatchTexture: WebGLTexture | null = null;
 
   static readonly #MESH_OVERLAY_COLOR = new Color(1, 1, 1, 0.5);
 
@@ -93,6 +99,7 @@ export class WebGLRenderAPI implements RendererAPI {
   }
 
   endFrame(): void {
+    this.#flushSpriteBatch();
     return;
   }
 
@@ -102,17 +109,21 @@ export class WebGLRenderAPI implements RendererAPI {
       return;
     }
 
+    this.#flushSpriteBatch();
+
     gl.clearColor(color.r, color.g, color.b, color.a);
     gl.clear(gl.COLOR_BUFFER_BIT);
   }
 
   setCamera(x: number, y: number, zoom: number): void {
+    this.#flushSpriteBatch();
     this.#cameraX = x;
     this.#cameraY = y;
     this.#cameraZoom = zoom;
   }
 
   setMeshOverlayEnabled(enabled: boolean): void {
+    this.#flushSpriteBatch();
     this.#meshOverlayEnabled = enabled;
   }
 
@@ -129,17 +140,12 @@ export class WebGLRenderAPI implements RendererAPI {
   }
 
   drawSprite(data: SpriteRenderData): void {
-    const gl = this.#gl;
-    const canvas = this.#canvas;
-
-    invariant(gl, "WebGL context is not initialized");
-    invariant(canvas, "Canvas element is not initialized");
-
-    const spriteProgram = registry.get("sprite");
-    this.#drawTexturedQuadWithProgram(gl, data, spriteProgram);
+    this.#queueSprite(data);
   }
 
   drawTexturedQuad(data: TexturedQuadRenderData): void {
+    this.#flushSpriteBatch();
+
     const gl = this.#gl;
     const canvas = this.#canvas;
     const customProgram = this.#customTexturedShaders.get(data.shader);
@@ -149,6 +155,147 @@ export class WebGLRenderAPI implements RendererAPI {
     invariant(customProgram, "Custom shader program not found for provided shader asset");
 
     this.#drawTexturedQuadWithProgram(gl, data, customProgram);
+  }
+
+  #queueSprite(data: SpriteRenderData): void {
+    const gl = this.#gl;
+    const canvas = this.#canvas;
+    const gpuTextureManager = this.#gpuTextureManager;
+
+    invariant(gl, "WebGL context is not initialized");
+    invariant(canvas, "Canvas element is not initialized");
+    invariant(gpuTextureManager, "GPU texture manager is not initialized");
+
+    const texture = gpuTextureManager.getOrCreateTexture(data.image);
+    invariant(texture, "Failed to create or retrieve texture");
+
+    if (this.#spriteBatchTexture && this.#spriteBatchTexture !== texture) {
+      this.#flushSpriteBatch();
+    }
+
+    this.#spriteBatchTexture = texture;
+
+    const requiredCapacity = this.#spriteBatchCount + 1;
+    this.#ensureSpriteBatchCapacity(requiredCapacity);
+
+    const width = data.width * Math.abs(data.scaleX) * this.#cameraZoom;
+    const height = data.height * Math.abs(data.scaleY) * this.#cameraZoom;
+    const center = this.#worldToScreen(data.x, data.y);
+
+    const srcW = data.image.width > 0 ? data.image.width : 1;
+    const srcH = data.image.height > 0 ? data.image.height : 1;
+    const frameWidth = data.sourceWidth > 0 ? data.sourceWidth : srcW;
+    const frameHeight = data.sourceHeight > 0 ? data.sourceHeight : srcH;
+
+    const insetX = frameWidth > 1 ? 0.5 : 0;
+    const insetY = frameHeight > 1 ? 0.5 : 0;
+
+    const u0 = (data.sourceX + insetX) / srcW;
+    const v0 = (data.sourceY + insetY) / srcH;
+    const u1 = (data.sourceX + frameWidth - insetX) / srcW;
+    const v1 = (data.sourceY + frameHeight - insetY) / srcH;
+
+    const flipScaleX = (data.flipX ? -1 : 1) * (data.scaleX < 0 ? -1 : 1);
+    const flipScaleY = (data.flipY ? -1 : 1) * (data.scaleY < 0 ? -1 : 1);
+
+    const base = this.#spriteBatchCount * SPRITE_INSTANCE_FLOATS;
+    this.#spriteBatchData[base] = center.x;
+    this.#spriteBatchData[base + 1] = center.y;
+    this.#spriteBatchData[base + 2] = width;
+    this.#spriteBatchData[base + 3] = height;
+    this.#spriteBatchData[base + 4] = data.rotation;
+    this.#spriteBatchData[base + 5] = data.anchorX;
+    this.#spriteBatchData[base + 6] = data.anchorY;
+    this.#spriteBatchData[base + 7] = flipScaleX;
+    this.#spriteBatchData[base + 8] = flipScaleY;
+    this.#spriteBatchData[base + 9] = u0;
+    this.#spriteBatchData[base + 10] = v0;
+    this.#spriteBatchData[base + 11] = u1;
+    this.#spriteBatchData[base + 12] = v1;
+    this.#spriteBatchData[base + 13] = data.tint.r;
+    this.#spriteBatchData[base + 14] = data.tint.g;
+    this.#spriteBatchData[base + 15] = data.tint.b;
+    this.#spriteBatchData[base + 16] = data.tint.a;
+
+    this.#spriteBatchCount += 1;
+  }
+
+  #flushSpriteBatch(): void {
+    const gl = this.#gl;
+    const canvas = this.#canvas;
+
+    if (!gl || !canvas || this.#spriteBatchCount === 0 || !this.#spriteBatchTexture) {
+      return;
+    }
+
+    const spriteProgram = registry.get("sprite");
+
+    gl.useProgram(spriteProgram.program);
+    gl.bindVertexArray(spriteProgram.vertexArray);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, spriteProgram.instanceBuffer);
+    gl.bufferData(
+      gl.ARRAY_BUFFER,
+      this.#spriteBatchData.subarray(0, this.#spriteBatchCount * SPRITE_INSTANCE_FLOATS),
+      gl.DYNAMIC_DRAW,
+    );
+
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, this.#spriteBatchTexture);
+
+    if (spriteProgram.samplerLocation) {
+      gl.uniform1i(spriteProgram.samplerLocation, 0);
+    }
+
+    if (spriteProgram.viewportLocation) {
+      gl.uniform2f(spriteProgram.viewportLocation, canvas.width, canvas.height);
+    }
+
+    gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, this.#spriteBatchCount);
+
+    if (this.#meshOverlayEnabled) {
+      this.#drawSpriteBatchOverlay();
+    }
+
+    gl.bindVertexArray(null);
+
+    this.#spriteBatchCount = 0;
+    this.#spriteBatchTexture = null;
+  }
+
+  #ensureSpriteBatchCapacity(requiredCapacity: number): void {
+    const currentCapacity = this.#spriteBatchData.length / SPRITE_INSTANCE_FLOATS;
+    if (requiredCapacity <= currentCapacity) {
+      return;
+    }
+
+    const nextCapacity = Math.max(requiredCapacity, currentCapacity * 2);
+    const nextData = new Float32Array(nextCapacity * SPRITE_INSTANCE_FLOATS);
+    nextData.set(this.#spriteBatchData);
+    this.#spriteBatchData = nextData;
+  }
+
+  #drawSpriteBatchOverlay(): void {
+    for (let i = 0; i < this.#spriteBatchCount; i += 1) {
+      const base = i * SPRITE_INSTANCE_FLOATS;
+      const quad = this.#buildSpriteQuad(
+        {
+          x: this.#spriteBatchData[base],
+          y: this.#spriteBatchData[base + 1],
+        },
+        this.#spriteBatchData[base + 2],
+        this.#spriteBatchData[base + 3],
+        this.#spriteBatchData[base + 4],
+        this.#spriteBatchData[base + 5],
+        this.#spriteBatchData[base + 6],
+        this.#spriteBatchData[base + 7] < 0,
+        this.#spriteBatchData[base + 8] < 0,
+        1,
+        1,
+      );
+
+      this.#drawMeshLinesFromTriangleStrip(quad);
+    }
   }
 
   #drawTexturedQuadWithProgram(
@@ -280,6 +427,8 @@ export class WebGLRenderAPI implements RendererAPI {
   }
 
   drawShape(data: ShapeRenderInput): void {
+    this.#flushSpriteBatch();
+
     const gl = this.#gl;
     const canvas = this.#canvas;
     if (!gl || !canvas) {
