@@ -1,6 +1,7 @@
 import type { EntityId, UserWorld } from "@engine";
 import { CircleCollider } from "@libs/physics/colliders/circle";
 import { CompoundCollider } from "@libs/physics/colliders/compound";
+import { PointCollider } from "@libs/physics/colliders/point";
 import { RectangleCollider } from "@libs/physics/colliders/rectangle";
 import type { Collider } from "@libs/physics/types";
 
@@ -25,6 +26,11 @@ export function getEntityCollider(world: UserWorld, entityId: EntityId): Collide
   const rectangle = world.get(entityId, RectangleCollider);
   if (rectangle) {
     return rectangle;
+  }
+
+  const point = world.get(entityId, PointCollider);
+  if (point) {
+    return point;
   }
 
   return undefined;

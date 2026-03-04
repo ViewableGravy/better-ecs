@@ -1,11 +1,16 @@
 import type { Transform2D } from "@engine/components";
 import { CircleCollider } from "@libs/physics/colliders/circle";
+import { PointCollider } from "@libs/physics/colliders/point";
 import { RectangleCollider } from "@libs/physics/colliders/rectangle";
 import type { PrimitiveCollider, PrimitiveColliderKey } from "@libs/physics/types";
 
 export function getPrimitiveColliderKey(collider: PrimitiveCollider): PrimitiveColliderKey {
   if (collider instanceof CircleCollider) {
     return "circle";
+  }
+
+  if (collider instanceof PointCollider) {
+    return "point";
   }
 
   return "rect";

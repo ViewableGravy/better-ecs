@@ -3,6 +3,7 @@ import { Transform2D } from "@engine/components";
 import { collides } from "@libs/physics/check";
 import { CircleCollider } from "@libs/physics/colliders/circle";
 import { CompoundCollider } from "@libs/physics/colliders/compound";
+import { PointCollider } from "@libs/physics/colliders/point";
 import { RectangleCollider } from "@libs/physics/colliders/rectangle";
 import {
   CollisionParticipation,
@@ -202,6 +203,18 @@ function getAabb(collider: Collider, transform: Transform2D): Aabb {
       top: centerY - broadPhaseCollider.radius,
       right: centerX + broadPhaseCollider.radius,
       bottom: centerY + broadPhaseCollider.radius,
+    };
+  }
+
+  if (broadPhaseCollider instanceof PointCollider) {
+    const x = transform.curr.pos.x;
+    const y = transform.curr.pos.y;
+
+    return {
+      left: x,
+      top: y,
+      right: x,
+      bottom: y,
     };
   }
 

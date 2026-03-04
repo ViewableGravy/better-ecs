@@ -10,11 +10,3 @@ export type BeltFlow = {
 	from: Side;
 	to: Side;
 };
-
-export type FeetGeometry = {
-	left: number;
-	right: number;
-	top: number;
-	bottom: number;
-	area: number;
-};

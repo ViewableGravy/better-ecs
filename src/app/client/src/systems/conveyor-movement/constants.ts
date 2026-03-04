@@ -2,12 +2,6 @@ import { Vec2 } from "@engine";
 import { Transform2D } from "@engine/components";
 import { COLLISION_LAYERS } from "@libs/physics";
 
-export const FEET_WIDTH_MULTIPLIER = 0.4;
-export const FEET_HEIGHT_MULTIPLIER = 0.2;
-export const FEET_Y_OFFSET_MULTIPLIER = 0.75;
-export const FEET_MIN_OVERLAP_RATIO = 0.5;
-export const BELT_OVERLAP_PADDING = 1;
-
 export const BELT_QUERY_FILTER = {
 	category: COLLISION_LAYERS.QUERY,
 	mask: COLLISION_LAYERS.CONVEYOR,

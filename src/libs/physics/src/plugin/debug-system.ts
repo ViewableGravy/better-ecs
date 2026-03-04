@@ -4,6 +4,7 @@ import { Color, Shape, Sprite, Transform2D } from "@engine/components";
 import { Engine, fromContext, System } from "@engine/context";
 import { CircleCollider } from "@libs/physics/colliders/circle";
 import { CompoundCollider } from "@libs/physics/colliders/compound";
+import { PointCollider } from "@libs/physics/colliders/point";
 import { RectangleCollider } from "@libs/physics/colliders/rectangle";
 import { COLLISION_LAYERS, CollisionParticipation } from "@libs/physics/entity/collision-participation";
 import { getEntityCollider } from "@libs/physics/entity/get";
@@ -18,6 +19,7 @@ const COLLIDER_DEBUG_STYLE = {
 
 const DEBUG_OVERLAY_LAYER = 10_000;
 const DEBUG_OVERLAY_Z = 10_000;
+const POINT_DEBUG_SIZE = 4;
 const SHARED_WORLD_TRANSFORM = new Transform2D();
 
 export function createDebugSystem(opts: PhysicsDebugOpts) {
@@ -155,6 +157,15 @@ function syncDebugShapeFromTarget(
     debugShape.type = "circle";
     debugShape.width = primitive.radius * 2;
     debugShape.height = primitive.radius * 2;
+    debugTransform.curr.pos.set(SHARED_WORLD_TRANSFORM.curr.pos);
+    debugTransform.prev.pos.set(SHARED_WORLD_TRANSFORM.prev.pos);
+    return;
+  }
+
+  if (primitive instanceof PointCollider) {
+    debugShape.type = "circle";
+    debugShape.width = POINT_DEBUG_SIZE;
+    debugShape.height = POINT_DEBUG_SIZE;
     debugTransform.curr.pos.set(SHARED_WORLD_TRANSFORM.curr.pos);
     debugTransform.prev.pos.set(SHARED_WORLD_TRANSFORM.prev.pos);
     return;

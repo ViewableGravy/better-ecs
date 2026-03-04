@@ -1,4 +1,7 @@
 import { FPSPass } from "@client/plugins/fps";
+import { ApplyContextVisualsPass } from "@client/render/passes/ApplyContextVisualsPass";
+import { DrawGridPass } from "@client/render/passes/DrawGridPass";
+import { ActiveWorldProvider } from "@client/render/world-provider";
 import { createRenderPipeline, type CreateRenderPipelineContext } from "@engine";
 import { fromContext, FromEngine } from "@engine/context";
 import {
@@ -7,9 +10,6 @@ import {
   Renderer2D,
   WebGLRenderAPI,
 } from "@engine/render";
-import { ApplyContextVisualsPass } from "@client/render/passes/ApplyContextVisualsPass";
-import { DrawGridPass } from "@client/render/passes/DrawGridPass";
-import { ActiveWorldProvider } from "@client/render/world-provider";
 
 export const Render = createRenderPipeline({
   async initializeContext(): Promise<CreateRenderPipelineContext> {

@@ -1,6 +1,7 @@
 export { collides } from "@libs/physics/check";
 export { CircleCollider } from "@libs/physics/colliders/circle";
 export { CompoundCollider } from "@libs/physics/colliders/compound";
+export { PointCollider } from "@libs/physics/colliders/point";
 export {
 	CollisionParticipation,
 	COLLISION_LAYERS,

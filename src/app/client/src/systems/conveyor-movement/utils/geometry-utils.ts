@@ -1,36 +1,20 @@
 import { Transform2D } from "@engine/components";
 import { RectangleCollider } from "@libs/physics";
-import { BELT_OVERLAP_PADDING } from "../constants";
-import { type FeetGeometry, type Side } from "../types";
+import { type Side } from "../types";
 
 export class ConveyorGeometryUtils {
-  public static computeFeetOverlapRatio(
-    feet: FeetGeometry,
-    beltCollider: unknown,
+  public static containsPoint(
+    pointX: number,
+    pointY: number,
+    beltCollider: RectangleCollider,
     beltTransform: Transform2D,
-  ): number {
-    if (!(beltCollider instanceof RectangleCollider)) {
-      return 0;
-    }
+  ): boolean {
+    const beltLeft = beltTransform.curr.pos.x + beltCollider.bounds.left;
+    const beltTop = beltTransform.curr.pos.y + beltCollider.bounds.top;
+    const beltRight = beltLeft + beltCollider.bounds.size.x;
+    const beltBottom = beltTop + beltCollider.bounds.size.y;
 
-    const beltLeft = beltTransform.curr.pos.x + beltCollider.bounds.left - BELT_OVERLAP_PADDING;
-    const beltTop = beltTransform.curr.pos.y + beltCollider.bounds.top - BELT_OVERLAP_PADDING;
-    const beltRight = beltLeft + beltCollider.bounds.size.x + BELT_OVERLAP_PADDING * 2;
-    const beltBottom = beltTop + beltCollider.bounds.size.y + BELT_OVERLAP_PADDING * 2;
-
-    const overlapLeft = Math.max(feet.left, beltLeft);
-    const overlapTop = Math.max(feet.top, beltTop);
-    const overlapRight = Math.min(feet.right, beltRight);
-    const overlapBottom = Math.min(feet.bottom, beltBottom);
-
-    const overlapWidth = overlapRight - overlapLeft;
-    const overlapHeight = overlapBottom - overlapTop;
-
-    if (overlapWidth <= 0 || overlapHeight <= 0) {
-      return 0;
-    }
-
-    return (overlapWidth * overlapHeight) / feet.area;
+    return pointX >= beltLeft && pointX <= beltRight && pointY >= beltTop && pointY <= beltBottom;
   }
 
   public static sideMidpointX(side: Side, halfSize: number): number {

@@ -3,6 +3,9 @@ import { type PrimitiveCollider, type PrimitiveColliderKey } from "@libs/physics
 import { getPrimitiveColliderKey } from "@libs/physics/utils";
 import { circleVsCircle } from "@libs/physics/check/circle-circle";
 import { circleVsRect } from "@libs/physics/check/circle-rect";
+import { pointVsCircle } from "@libs/physics/check/point-circle";
+import { pointVsPoint } from "@libs/physics/check/point-point";
+import { pointVsRect } from "@libs/physics/check/point-rect";
 import { rectVsRect } from "@libs/physics/check/rect-rect";
 
 export type CollisionFn = (
@@ -20,7 +23,12 @@ export type CollisionPair = {
 const collisionMatrix = new Map<string, CollisionPair>([
   [createCollisionKey("circle", "circle"), { fn: circleVsCircle, shouldSwap: false }],
   [createCollisionKey("circle", "rect"), { fn: circleVsRect, shouldSwap: false }],
+  [createCollisionKey("point", "circle"), { fn: pointVsCircle, shouldSwap: false }],
+  [createCollisionKey("point", "rect"), { fn: pointVsRect, shouldSwap: false }],
+  [createCollisionKey("point", "point"), { fn: pointVsPoint, shouldSwap: false }],
   [createCollisionKey("rect", "circle"), { fn: circleVsRect, shouldSwap: true }],
+  [createCollisionKey("circle", "point"), { fn: pointVsCircle, shouldSwap: true }],
+  [createCollisionKey("rect", "point"), { fn: pointVsRect, shouldSwap: true }],
   [createCollisionKey("rect", "rect"), { fn: rectVsRect, shouldSwap: false }],
 ]);
 

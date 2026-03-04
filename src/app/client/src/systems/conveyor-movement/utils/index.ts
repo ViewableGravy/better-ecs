@@ -1,218 +1,31 @@
-import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
-import { PlayerComponent } from "@client/components/player";
-import { PlayerFeetComponent } from "@client/components/player-feet";
-import { CollisionProfiles } from "@client/scenes/world/physics/collision-profiles";
-import { PhysicsWorldManager } from "@client/scenes/world/physics/physics-world-manager";
 import { resolveWorldTransform2D, Vec2, type EntityId, type UserWorld } from "@engine";
-import { Debug, Parent, Transform2D } from "@engine/components";
+import { Transform2D } from "@engine/components";
 import { RectangleCollider } from "@libs/physics";
 import {
-  BELT_QUERY_FILTER,
   DIRECTION_DOWN,
   DIRECTION_LEFT,
   DIRECTION_RIGHT,
   DIRECTION_UP,
-  FEET_HEIGHT_MULTIPLIER,
-  FEET_MIN_OVERLAP_RATIO,
-  FEET_WIDTH_MULTIPLIER,
-  FEET_Y_OFFSET_MULTIPLIER,
-  SHARED_BELT_WORLD_TRANSFORM,
   SHARED_FEET_WORLD_TRANSFORM,
-  SHARED_MOTION,
   SIDE_TO_INWARD,
-  SIDE_TO_OUTWARD,
+  SIDE_TO_OUTWARD
 } from "../constants";
-import { type BeltFlow, type FeetGeometry, type Side } from "../types";
+import { type BeltFlow, type Side } from "../types";
 import { ConveyorGeometryUtils } from "./geometry-utils";
 import { ConveyorMathUtils } from "./math-utils";
 
-const DEFAULT_PLAYER_RADIUS = 16;
-
-export class ConveyorMovementGroupedUtilities {
-  public static apply(world: UserWorld, seconds: number): void {
-    this.cleanupOrphanFeet(world);
-
-    const [playerId] = world.invariantQuery(PlayerComponent);
-    const playerTransform = world.require(playerId, Transform2D);
-
-    const physicsWorld = PhysicsWorldManager.requireWorld(world);
-    const feetEntityId = this.ensureFeetEntity(world, playerId);
-    if (!feetEntityId) {
-      return;
-    }
-
-    const feetGeometry = this.resolveFeetGeometry(world, physicsWorld, feetEntityId);
-    if (!feetGeometry) {
-      return;
-    }
-
-    const feetBody = physicsWorld.getBody(feetEntityId);
-    if (!feetBody) {
-      return;
-    }
-
-    const overlaps = physicsWorld.queryOverlap({
-      collider: feetBody.collider,
-      transform: SHARED_FEET_WORLD_TRANSFORM,
-      filter: BELT_QUERY_FILTER,
-    });
-
-    let bestOverlapRatio = 0;
-    let bestBeltEntityId: EntityId | undefined;
-    let bestBeltCollider: RectangleCollider | undefined;
-
-    for (const overlap of overlaps) {
-      const beltComponent = world.get(overlap.entityId, ConveyorBeltComponent);
-      if (!beltComponent) {
-        continue;
-      }
-
-      const beltTransform = resolveWorldTransform2D(world, overlap.entityId, SHARED_BELT_WORLD_TRANSFORM)
-        ? SHARED_BELT_WORLD_TRANSFORM
-        : overlap.transform;
-
-      const overlapRatio = ConveyorGeometryUtils.computeFeetOverlapRatio(
-        feetGeometry,
-        overlap.collider,
-        beltTransform,
-      );
-      if (overlapRatio < FEET_MIN_OVERLAP_RATIO) {
-        continue;
-      }
-
-      if (overlapRatio <= bestOverlapRatio) {
-        continue;
-      }
-
-      bestOverlapRatio = overlapRatio;
-      bestBeltEntityId = overlap.entityId;
-      bestBeltCollider = overlap.collider instanceof RectangleCollider ? overlap.collider : undefined;
-    }
-
-    if (bestBeltEntityId === undefined || !bestBeltCollider) {
-      return;
-    }
-
-    const belt = world.get(bestBeltEntityId, ConveyorBeltComponent);
-    const beltTransform = world.get(bestBeltEntityId, Transform2D);
-
-    if (!belt || !beltTransform) {
-      return;
-    }
-
-    const beltWorldTransform = resolveWorldTransform2D(world, bestBeltEntityId, SHARED_BELT_WORLD_TRANSFORM)
-      ? SHARED_BELT_WORLD_TRANSFORM
-      : beltTransform;
-
-    this.resolveBeltMotionVector(
-      belt.variant,
-      playerTransform.curr.pos.x,
-      playerTransform.curr.pos.y,
-      beltWorldTransform,
-      bestBeltCollider,
-      SHARED_MOTION,
-    );
-
-    if (SHARED_MOTION.x === 0 && SHARED_MOTION.y === 0) {
-      return;
-    }
-
-    const step = belt.speed * seconds;
-    playerTransform.curr.pos.x += SHARED_MOTION.x * step;
-    playerTransform.curr.pos.y += SHARED_MOTION.y * step;
-  }
-
-  public static cleanupOrphanFeet(world: UserWorld): void {
-    for (const feetEntityId of world.query(PlayerFeetComponent)) {
-      const feet = world.get(feetEntityId, PlayerFeetComponent);
-      if (!feet) {
-        continue;
-      }
-
-      if (world.has(feet.playerId, Transform2D)) {
-        continue;
-      }
-
-      world.destroy(feetEntityId);
-    }
-  }
-
-  public static ensureFeetEntity(world: UserWorld, playerId: EntityId): EntityId {
-    let currentFeetEntityId: EntityId | undefined;
-
-    for (const feetEntityId of world.query(PlayerFeetComponent)) {
-      const feet = world.get(feetEntityId, PlayerFeetComponent);
-      if (!feet) {
-        continue;
-      }
-
-      if (!world.has(feet.playerId, Transform2D)) {
-        world.destroy(feetEntityId);
-        continue;
-      }
-
-      if (feet.playerId !== playerId) {
-        continue;
-      }
-
-      if (!world.get(feetEntityId, Parent)) {
-        world.add(feetEntityId, new Parent(playerId));
-      }
-
-      currentFeetEntityId = feetEntityId;
-      break;
-    }
-
-    if (currentFeetEntityId) {
-      return currentFeetEntityId;
-    }
-
-    const feetEntityId = world.create();
-
-    const diameter = DEFAULT_PLAYER_RADIUS * 2;
-    const feetWidth = diameter * FEET_WIDTH_MULTIPLIER;
-    const feetHeight = diameter * FEET_HEIGHT_MULTIPLIER;
-    const feetOffsetY = DEFAULT_PLAYER_RADIUS * FEET_Y_OFFSET_MULTIPLIER;
-
-    world.add(feetEntityId, new Parent(playerId));
-    world.add(feetEntityId, new Transform2D(0, feetOffsetY));
-    world.add(
-      feetEntityId,
-      new RectangleCollider(new Vec2(-feetWidth * 0.5, -feetHeight * 0.5), new Vec2(feetWidth, feetHeight)),
-    );
-    world.add(feetEntityId, CollisionProfiles.ghost());
-    world.add(feetEntityId, new PlayerFeetComponent(playerId));
-    world.add(feetEntityId, new Debug("player-feet"));
-
-    return feetEntityId;
-  }
-
-  public static resolveFeetGeometry(
+export class ConveyorMovementUtils {
+  public static requireFeetWorldPosition(
     world: UserWorld,
-    physicsWorld: ReturnType<typeof PhysicsWorldManager.requireWorld>,
     feetEntityId: EntityId,
-  ): FeetGeometry | undefined {
-    const feetBody = physicsWorld.getBody(feetEntityId);
-    if (!feetBody || !(feetBody.collider instanceof RectangleCollider)) {
-      return undefined;
-    }
-
+    out: Vec2 = new Vec2(),
+  ): Vec2 {
     if (!resolveWorldTransform2D(world, feetEntityId, SHARED_FEET_WORLD_TRANSFORM)) {
-      return undefined;
+      throw new Error("Feet world transform could not be resolved");
     }
 
-    const feetCenterX = SHARED_FEET_WORLD_TRANSFORM.curr.pos.x;
-    const feetCenterY = SHARED_FEET_WORLD_TRANSFORM.curr.pos.y;
-    const feetWidth = feetBody.collider.bounds.size.x;
-    const feetHeight = feetBody.collider.bounds.size.y;
-
-    return {
-      left: feetCenterX - feetWidth * 0.5,
-      right: feetCenterX + feetWidth * 0.5,
-      top: feetCenterY - feetHeight * 0.5,
-      bottom: feetCenterY + feetHeight * 0.5,
-      area: feetWidth * feetHeight,
-    };
+    out.set(SHARED_FEET_WORLD_TRANSFORM.curr.pos.x, SHARED_FEET_WORLD_TRANSFORM.curr.pos.y);
+    return out;
   }
 
   public static resolveBeltMotionVector(
