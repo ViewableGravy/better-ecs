@@ -3,10 +3,7 @@ import type { BuildItemType } from "@client/scenes/world/systems/build-mode/cons
 import {
   BOX_SIZE,
   DELETE_POINT_RADIUS,
-  HALF_BOX_SIZE,
-  TRANSPORT_BELT_COLLIDER_SIZE,
-  TRANSPORT_BELT_OFFSET_X,
-  TRANSPORT_BELT_OFFSET_Y,
+  HALF_BOX_SIZE
 } from "@client/scenes/world/systems/build-mode/const";
 import {
   GridSingleton,
@@ -40,11 +37,6 @@ export class Placement {
   );
 
   private static readonly placementTransform = new Transform2D(0, 0);
-  private static readonly transportBeltPlacementCollider = new RectangleCollider(
-    new Vec2(-TRANSPORT_BELT_COLLIDER_SIZE * 0.5, -TRANSPORT_BELT_COLLIDER_SIZE * 0.5),
-    new Vec2(TRANSPORT_BELT_COLLIDER_SIZE, TRANSPORT_BELT_COLLIDER_SIZE),
-  );
-  private static readonly transportBeltPlacementTransform = new Transform2D(0, 0);
   private static readonly deletePointCollider = new CircleCollider(DELETE_POINT_RADIUS);
   private static readonly deletePointTransform = new Transform2D(0, 0);
 
@@ -94,7 +86,7 @@ export class Placement {
   }
 
   public static canSpawnTransportBelt(world: UserWorld, gridCoordinates: GridCoordinates): boolean {
-    const overlaps = Placement.queryTransportBeltOverlapsByGrid(world, gridCoordinates);
+    const overlaps = Placement.queryPlacementOccupantsByGrid(world, gridCoordinates);
 
     for (const overlap of overlaps) {
       if (inLayer(overlap.participation.layers, Placement.conveyorMask)) {
@@ -109,19 +101,10 @@ export class Placement {
 
   public static replaceTransportBeltAt(world: UserWorld, x: number, y: number): void {
     const targetCoordinates = GridSingleton.worldToGridCoordinates(x, y);
-    const overlaps = Placement.queryTransportBeltOverlapsByWorld(world, x, y);
+    const overlaps = Placement.queryPlacementOccupantsByGrid(world, targetCoordinates);
 
     for (const overlap of overlaps) {
       if (!inLayer(overlap.participation.layers, Placement.conveyorMask)) {
-        continue;
-      }
-
-      const overlapCoordinates = GridSingleton.worldToGridCoordinates(
-        overlap.transform.curr.pos.x,
-        overlap.transform.curr.pos.y,
-      );
-
-      if (!GridSingleton.areCoordinatesEqual(targetCoordinates, overlapCoordinates)) {
         continue;
       }
 
@@ -129,29 +112,27 @@ export class Placement {
     }
   }
 
-  private static queryTransportBeltOverlapsByGrid(
+  private static queryPlacementOccupantsByGrid(
     world: UserWorld,
     gridCoordinates: GridCoordinates,
   ) {
-    const [tileOriginX, tileOriginY] = GridSingleton.gridCoordinatesToWorldOrigin(gridCoordinates);
-
-    const beltCenterX = tileOriginX + TRANSPORT_BELT_OFFSET_X;
-    const beltCenterY = tileOriginY + TRANSPORT_BELT_OFFSET_Y;
-
-    return Placement.queryTransportBeltOverlapsByWorld(world, beltCenterX, beltCenterY);
-  }
-
-  private static queryTransportBeltOverlapsByWorld(world: UserWorld, x: number, y: number) {
-    Placement.transportBeltPlacementTransform.curr.pos.set(x, y);
-    Placement.transportBeltPlacementTransform.prev.pos.set(x, y);
-
     const physicsWorld = PhysicsWorldManager.requireWorld(world);
+    const overlaps = [];
 
-    return physicsWorld.queryOverlap({
-      collider: Placement.transportBeltPlacementCollider,
-      transform: Placement.transportBeltPlacementTransform,
-      filter: Placement.placementFilter,
-    });
+    for (const body of physicsWorld.layers(Placement.placementFilter.mask)) {
+      const overlapCoordinates = GridSingleton.worldToGridCoordinates(
+        body.transform.curr.pos.x,
+        body.transform.curr.pos.y,
+      );
+
+      if (!GridSingleton.areCoordinatesEqual(gridCoordinates, overlapCoordinates)) {
+        continue;
+      }
+
+      overlaps.push(body);
+    }
+
+    return overlaps;
   }
 
   private static queryFirstPlacementOverlap(world: UserWorld, gridCoordinates: GridCoordinates) {

@@ -1,4 +1,4 @@
-export const DEFAULT_CONVEYOR_BELT_SPEED = 35;
+export const DEFAULT_CONVEYOR_BELT_SPEED = 19;
 
 export class ConveyorBeltComponent {
   constructor(

@@ -15,6 +15,15 @@ import { ConveyorGeometryUtils } from "./geometry-utils";
 import { ConveyorMathUtils } from "./math-utils";
 
 export class ConveyorMovementUtils {
+  private static readonly SIDE_ALIASES: Record<string, Side> = {
+    left: "left",
+    right: "right",
+    top: "top",
+    bottom: "bottom",
+    up: "top",
+    down: "bottom",
+  };
+
   public static requireFeetWorldPosition(
     world: UserWorld,
     feetEntityId: EntityId,
@@ -100,8 +109,10 @@ export class ConveyorMovementUtils {
       return undefined;
     }
 
-    const [from, to] = sideParts;
-    if (!this.isSide(from) || !this.isSide(to)) {
+    const from = this.normalizeSideToken(sideParts[0]);
+    const to = this.normalizeSideToken(sideParts[1]);
+
+    if (!from || !to) {
       return undefined;
     }
 
@@ -114,6 +125,10 @@ export class ConveyorMovementUtils {
 
   public static isSide(value: string): value is Side {
     return value === "left" || value === "right" || value === "top" || value === "bottom";
+  }
+
+  public static normalizeSideToken(value: string): Side | undefined {
+    return this.SIDE_ALIASES[value];
   }
 
   public static resolveCurveMotion(

@@ -1,7 +1,7 @@
+import { PlayerComponent } from "@client/components/player";
 import { createSystem } from "@engine";
 import { Transform2D } from "@engine/components";
-import { fromContext, Delta, System as ContextSystem, World } from "@engine/context";
-import { PlayerComponent } from "@client/components/player";
+import { System as ContextSystem, Delta, fromContext, World } from "@engine/context";
 
 export const System = createSystem("movement")({
   system() {
@@ -11,13 +11,8 @@ export const System = createSystem("movement")({
     const [updateDelta] = fromContext(Delta);
 
     /***** QUERIES *****/
-    const [playerId] = world.query(PlayerComponent);
-
-    if (!playerId) return;
-
-    const transform = world.get(playerId, Transform2D);
-
-    if (!transform) return;
+    const [playerId] = world.invariantQuery(PlayerComponent);
+    const transform = world.require(playerId, Transform2D);
 
     // Handle movement using physical key codes (layout-independent)
     // Maps physical keys to movement directions
