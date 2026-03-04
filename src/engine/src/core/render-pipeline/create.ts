@@ -157,6 +157,10 @@ export function createRenderPipeline<
 		async initialize(): Promise<void> {
 			await getOrInitializeContext();
 		},
+		async warmupLoadedTextures(): Promise<void> {
+			const initializedContext = await getOrInitializeContext();
+			await initializedContext.renderer.warmupLoadedTextures();
+		},
 		render(): void {
 			const passContext = requireContext();
 			const engine = fromContext(Engine);

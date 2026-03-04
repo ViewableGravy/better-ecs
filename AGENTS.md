@@ -68,6 +68,14 @@ This is the single source of truth for agent behavior and coding conventions in 
   - Example: prefer `Engine` over `ReturnType<typeof makeEngine>[0]`.
   - Use `typeof`/`ReturnType` only when a concrete type is not reasonably importable (for example complex inferred unions/intersections).
 
+## Architecture principles
+
+- Prefer **colocation over hoisting** by default.
+  - Keep behavior next to the feature/factory that owns it (scene behavior in scenes, asset behavior in asset loaders, runtime behavior in systems/plugins).
+  - Hoist to engine-level/global scope only when truly cross-cutting and shared across most scenes/features.
+- For React/userland adapters, prefer moving state and orchestration downward toward the smallest owning component/module that can safely manage it.
+- When introducing new lifecycle hooks/options, start at the lowest meaningful layer and only promote upward if repeated usage demonstrates global ownership.
+
 ## Performance guidance
 
 - Avoid unnecessary allocations in hot paths (main loop / per-frame / inner loops).

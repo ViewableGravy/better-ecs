@@ -3,6 +3,12 @@ import type { RenderPipeline } from "@engine/core/render-pipeline";
 import type { SceneDefinitionTuple, SceneName } from "@engine/core/scene/scene.types";
 import type { EngineInitializationSystem, SystemFactoryTuple } from "@engine/core/system/types";
 
+export interface EngineOverlay {
+	begin(): void | Promise<void>;
+	end(): void | Promise<void>;
+	dispose(): void | Promise<void>;
+}
+
 export type EngineRenderCullingOptions = {
 	enabled?: boolean;
 	viewportScaleX?: number;
@@ -29,6 +35,7 @@ export type CreateEngineOptions<
 	initialization?: EngineInitializationSystem;
 	assetLoader?: AssetManager<TAssets, TAssetTypes>;
 	render?: RenderPipeline;
+	loading?: EngineOverlay;
 	config?: EngineConfigOptions;
 };
 

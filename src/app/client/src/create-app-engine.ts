@@ -1,4 +1,5 @@
 import { Loader } from "@client/assets";
+import { createAppEngineLoadingOverlay } from "@client/overlays/create-app-engine-overlays";
 import { FPSSystem } from "@client/plugins/fps";
 import { PhysicsDebugSystem } from "@client/plugins/physics";
 import { Render } from "@client/render";
@@ -22,6 +23,7 @@ export const createAppEngine = () => {
   return Engine.createEngine({
     rootElement,
     assetLoader: Loader,
+    loading: createAppEngineLoadingOverlay(),
     initialization: Initialize,
     systems: [
       // Plugins

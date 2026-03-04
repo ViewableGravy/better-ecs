@@ -2,6 +2,7 @@ import type { ShaderSourceAsset } from "@engine/asset";
 import type { LooseAssetManager } from "@engine/asset/AssetManager";
 import { isShaderSourceAsset } from "@engine/asset/utils";
 import { Color } from "@engine/components/sprite/sprite";
+import type { TextureSourceData } from "@engine/components/texture";
 import { ShaderCompiler } from "@engine/render/renderers/webGL/compiler";
 import { shapeDrawers, type ShapeDrawerContext, type Vec2 } from "@engine/render/renderers/webGL/drawers";
 import { GPUTextureManager } from "@engine/render/renderers/webGL/gpu-texture-manager";
@@ -68,6 +69,18 @@ export class WebGLRenderAPI implements RendererAPI {
     const assetManager = this.#assets;
     invariant(assetManager, "Asset manager is not initialized");
     this.#initializeCustomTexturedShaders(gl, assetManager);
+  }
+
+  preloadTextures(sources: readonly TextureSourceData[]): void {
+    const gpuTextureManager = this.#gpuTextureManager;
+
+    if (!gpuTextureManager) {
+      return;
+    }
+
+    for (const source of sources) {
+      gpuTextureManager.getOrCreateTexture(source);
+    }
   }
 
   beginFrame(): void {

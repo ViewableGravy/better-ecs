@@ -1,5 +1,6 @@
 import type { LooseAssetManager } from "@engine/asset/AssetManager";
 import type { Color } from "@engine/components/sprite/sprite";
+import type { TextureSourceData } from "@engine/components/texture";
 import type { ShapeRenderInput, SpriteRenderData, TexturedQuadRenderData } from "@engine/render/types/low-level";
 import type { RendererAPI } from "@engine/render/types/renderer-api";
 
@@ -12,6 +13,10 @@ export class RenderCommand {
 
   initialize(canvas: HTMLCanvasElement, assets: LooseAssetManager): Promise<void> | void {
     return this.#rendererApi.initialize(canvas, assets);
+  }
+
+  preloadTextures(sources: readonly TextureSourceData[]): void {
+    this.#rendererApi.preloadTextures(sources);
   }
 
   beginFrame(): void {

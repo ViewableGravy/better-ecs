@@ -1,4 +1,5 @@
 import { Color } from "@engine/components/sprite/sprite";
+import type { TextureSourceData } from "@engine/components/texture";
 import type {
   CircleShapeRenderData,
   DenseShapeRenderData,
@@ -30,6 +31,10 @@ export class Canvas2DRenderAPI implements RendererAPI {
     if (!this.ctx) {
       throw new Error("Failed to get 2D rendering context");
     }
+  }
+
+  preloadTextures(_sources: readonly TextureSourceData[]): void {
+    return;
   }
 
   // ── Frame lifecycle ──────────────────────────────────────────────

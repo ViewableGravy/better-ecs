@@ -1,3 +1,4 @@
+import { createDomLoadingOverlay } from "@client/overlays/create-dom-loading-overlay";
 import { sceneConfig } from "@client/scenes/world/const";
 import { defineDungeonContext } from "@client/scenes/world/contexts/define-dungeon-context";
 import { defineHouseContext } from "@client/scenes/world/contexts/define-house-context";
@@ -13,6 +14,11 @@ import {
 } from "@libs/spatial-contexts";
 
 export const Scene = createContextScene("MainScene")({
+  loading: createDomLoadingOverlay({
+    id: "scene-loading-overlay-main",
+    message: "Loading Main Scene...",
+    zIndex: 10001,
+  }),
   systems: [
     PlayerOrbitSystem,
     HouseContextSystem, 

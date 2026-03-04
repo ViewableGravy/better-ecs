@@ -1,10 +1,10 @@
 // packages/engine/src/core/scene/scene-manager.ts
-import { UserWorld, World } from "@engine/ecs/world";
 import { executeWithContext } from "@engine/core/context";
 import type { EngineClass } from "@engine/core/engine";
 import { SystemsManager } from "@engine/core/engine/systems";
 import { SceneContext } from "@engine/core/scene/scene-context";
 import type { SceneDefinition, SceneDefinitionTuple, SceneName } from "@engine/core/scene/scene.types";
+import { UserWorld, World } from "@engine/ecs/world";
 
 /**
  * Manages scene lifecycle, transitions, and world isolation.
@@ -30,6 +30,7 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
   #userWorld: UserWorld;
 
   #isTransitioning = false;
+  #transitionListeners = new Set<(isTransitioning: boolean) => void>();
 
   // Reference to engine for context execution
   #engineRef: EngineClass<any, any, any, any> | null = null;
@@ -122,6 +123,20 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
     return this.#isTransitioning;
   }
 
+  onTransitionStateChange(listener: (isTransitioning: boolean) => void): () => void {
+    this.#transitionListeners.add(listener);
+
+    return () => {
+      this.#transitionListeners.delete(listener);
+    };
+  }
+
+  #emitTransitionState(isTransitioning: boolean): void {
+    for (const listener of this.#transitionListeners) {
+      listener(isTransitioning);
+    }
+  }
+
   /** Get all registered scene definitions as a record. */
   get all(): { [Scene in TScenes[number] as SceneName<Scene>]: Scene } {
     return Object.fromEntries(this.#scenes) as any;
@@ -152,6 +167,12 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
     }
 
     this.#isTransitioning = true;
+    this.#emitTransitionState(true);
+
+    const transitionLoadingOverlay = newScene.loading;
+    if (transitionLoadingOverlay) {
+      await transitionLoadingOverlay.begin();
+    }
 
     try {
       if (this.#activeScene) {
@@ -161,6 +182,12 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
       await this.#setupScene(newScene);
     } finally {
       this.#isTransitioning = false;
+      this.#emitTransitionState(false);
+
+      if (transitionLoadingOverlay) {
+        await transitionLoadingOverlay.end();
+        await transitionLoadingOverlay.dispose();
+      }
     }
   }
 
@@ -174,6 +201,12 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
     if (this.#isTransitioning) return;
 
     this.#isTransitioning = true;
+    this.#emitTransitionState(true);
+
+    const transitionLoadingOverlay = this.#activeScene.loading;
+    if (transitionLoadingOverlay) {
+      await transitionLoadingOverlay.begin();
+    }
 
     try {
       const sceneToReload = this.#activeScene;
@@ -181,6 +214,12 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
       await this.#setupScene(sceneToReload);
     } finally {
       this.#isTransitioning = false;
+      this.#emitTransitionState(false);
+
+      if (transitionLoadingOverlay) {
+        await transitionLoadingOverlay.end();
+        await transitionLoadingOverlay.dispose();
+      }
     }
   }
 
@@ -197,6 +236,7 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
     existing.teardown = fresh.teardown;
     existing.sceneSetup = fresh.sceneSetup;
     existing.sceneTeardown = fresh.sceneTeardown;
+    existing.loading = fresh.loading;
 
     const isActiveDefinition = this.#activeScene?.name === fresh.name;
 
@@ -243,6 +283,10 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
 
       await scene.sceneSetup(newContext);
       await scene.setup(this.#userWorld);
+
+      if (this.#engineRef) {
+        await this.#engineRef.warmupLoadedTextures();
+      }
     });
   }
 }
