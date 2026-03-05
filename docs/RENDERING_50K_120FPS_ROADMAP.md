@@ -317,6 +317,69 @@ Outcome:
 - Corrected measurement confirms heavy frame-time scaling at larger counts using the same interaction path reported by user (switch scene first, then click benchmark target).
 - At `500,000`, this run shows a large switch hitch (`~1415ms` click→first frame) and steady-state frame time around `~431ms` (`~2.3 FPS`).
 
+### 2026-03-05 — Stage C (Phase 3) implementation checkpoint
+
+Status:
+
+- `Phase 3` implementation completed in engine render queue + sprite render path.
+- Added record-level differential updates with per-record version counters for sprite fields and world transform fields.
+- Added queue-time visibility gating so off-screen sprites are skipped before render command creation.
+- Updated sprite render command handling to reuse staged world transform snapshots instead of re-resolving hierarchy transforms in `renderCommands` for staged sprite commands.
+
+Stage C implementation scope:
+
+- Expanded `SpriteRenderRecord` shape with `worldTransform`, `spriteVersion`, `transformVersion`, `dirtyMask`, and `isVisible`.
+- Added persistent per-world sprite record cache in `queue-sprites.ts` with periodic stale-entry pruning.
+- Switched sprite record writes from full-copy-per-frame to field-diff updates.
+- Added culling helper `isSpriteWithinCullingBounds(...)` for queue-time sprite visibility checks.
+- Updated frame allocator `engine:sprite-render-record` factory/reset shape to match the expanded record contract.
+
+Verification:
+
+- `engine:typecheck` passed.
+- `engine:lint` still fails on pre-existing generated declaration lint issues under `src/engine/.types/**` (same failure class as Stage B).
+- `engine:test` currently fails on pre-existing unrelated test-environment/import issues (GLSL parse + missing `@ui/utilities/engine-context` type import), with no new Stage C type errors reported.
+
+Benchmarking:
+
+- Browser verification via Chrome MCP with a clean single-page session.
+- Single clean dev server instance (`client:dev`).
+- Entered benchmark scene first via `#to-benchmark`, then clicked benchmark target buttons in sequence (`10k/50k/100k/200k/500k`).
+- Immediate sample window: `2000ms`.
+- Steady-state sample window: `2500ms` with first `500ms` excluded.
+
+Viewport/layout used during run:
+
+- Viewport: `1420 x 881`.
+- Safe area: `1278 x 792.9`.
+- Spawn bounds: `x: [-639, 639]`, `y: [-396.45, 396.45]`.
+
+Measured results:
+
+| Entities | Click→1st Frame (ms) | FPS Avg | Frame Avg (ms) | P95 (ms) | P99 (ms) | Min (ms) | Max (ms) |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| 10,000 | 39.00 | 119.38 | 8.38 | 9.94 | 10.94 | 5.45 | 13.63 |
+| 50,000 | 84.78 | 28.84 | 34.68 | 43.92 | 44.80 | 30.47 | 45.17 |
+| 100,000 | 204.80 | 13.30 | 75.19 | 90.80 | 91.63 | 61.30 | 99.61 |
+| 200,000 | 534.47 | 6.49 | 154.03 | 169.07 | 169.07 | 144.72 | 173.66 |
+| 500,000 | 1461.99 | 2.26 | 442.36 | 446.11 | 446.11 | 434.88 | 449.67 |
+
+Steady-state results (after first 500ms of each 2500ms window):
+
+| Entities | FPS Avg | Frame Avg (ms) | P95 (ms) | P99 (ms) | Min (ms) | Max (ms) |
+|---:|---:|---:|---:|---:|---:|---:|
+| 10,000 | 119.88 | 8.34 | 9.84 | 10.29 | 4.87 | 11.73 |
+| 50,000 | 28.98 | 34.51 | 41.46 | 47.24 | 29.80 | 47.25 |
+| 100,000 | 13.59 | 73.59 | 83.71 | 85.31 | 59.10 | 86.31 |
+| 200,000 | 6.49 | 154.03 | 167.35 | 167.35 | 142.75 | 180.96 |
+| 500,000 | 2.27 | 439.98 | 452.56 | 452.56 | 419.27 | 460.99 |
+
+Outcome:
+
+- Stage C implementation is functionally complete and benchmarked across all requested scales.
+- Queue-path behavior remains linear in total entity count at very large scales, but Stage C successfully pushes more work into queue-time staging and keeps render command execution focused on already-staged data.
+- At high counts (`200k+`), frame budget is still dominated by CPU-side queue/staging work rather than GPU submission, matching the expected post-refactor bottleneck shift.
+
 ### Gate A: after Phase 1
 
 - Queue correctness unchanged (same visible output).

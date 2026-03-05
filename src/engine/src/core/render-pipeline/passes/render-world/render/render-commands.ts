@@ -52,11 +52,11 @@ export function renderCommands(
       continue;
 
     const { world, entityId } = command;
-
-    if (!resolveWorldTransform2D(world, entityId, SHARED_RENDER_TRANSFORM))
-      continue;
-
     const spriteRecord = resolveSpriteRecord(command, spriteRenderRecords);
+    const didResolveTransform = resolveCommandWorldTransform(command, world, entityId, SHARED_RENDER_TRANSFORM, spriteRecord);
+    if (!didResolveTransform) {
+      continue;
+    }
 
     if (!isCommandWithinCullingBounds(command, cullingBounds, SHARED_RENDER_TRANSFORM, interpolationAlpha, spriteRecord))
       continue;
@@ -100,5 +100,21 @@ function resolveSpriteRecord(
   }
 
   return records[index] ?? null;
+}
+
+function resolveCommandWorldTransform(
+  command: EntityRenderCommand,
+  world: EntityRenderCommand["world"],
+  entityId: EntityRenderCommand["entityId"],
+  out: Transform2D,
+  spriteRecord: SpriteRenderRecord | null,
+): boolean {
+  if (command.type === "sprite-entity" && spriteRecord) {
+    out.curr.copyFrom(spriteRecord.worldTransform.curr);
+    out.prev.copyFrom(spriteRecord.worldTransform.prev);
+    return true;
+  }
+
+  return resolveWorldTransform2D(world, entityId, out);
 }
 

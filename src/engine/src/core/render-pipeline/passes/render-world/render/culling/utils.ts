@@ -158,6 +158,27 @@ export function isEntityRenderCommand(command: RenderCommand): command is Entity
   return command.world !== null && command.entityId !== null;
 }
 
+export function isSpriteWithinCullingBounds(
+  bounds: CullingBounds | null,
+  transform: Transform2D,
+  alpha: number,
+  spriteRecord: SpriteRenderRecord,
+): boolean {
+  if (!bounds) {
+    return true;
+  }
+
+  return intersectsSpriteWithDimensions(
+    bounds,
+    transform,
+    alpha,
+    spriteRecord.sprite.width,
+    spriteRecord.sprite.height,
+    spriteRecord.sprite.anchorX,
+    spriteRecord.sprite.anchorY,
+  );
+}
+
 function intersectsSpriteEntity(
   command: SpriteEntityRenderCommand,
   bounds: CullingBounds,
@@ -170,16 +191,36 @@ function intersectsSpriteEntity(
     return true;
   }
 
+  return intersectsSpriteWithDimensions(
+    bounds,
+    transform,
+    alpha,
+    sprite.width,
+    sprite.height,
+    sprite.anchorX,
+    sprite.anchorY,
+  );
+}
+
+function intersectsSpriteWithDimensions(
+  bounds: CullingBounds,
+  transform: Transform2D,
+  alpha: number,
+  width: number,
+  height: number,
+  anchorX: number,
+  anchorY: number,
+): boolean {
   const worldX = lerp(transform.prev.pos.x, transform.curr.pos.x, alpha);
   const worldY = lerp(transform.prev.pos.y, transform.curr.pos.y, alpha);
   const viewport = resolveAnchorViewport(
     worldX,
     worldY,
     transform,
-    sprite.width,
-    sprite.height,
-    sprite.anchorX,
-    sprite.anchorY,
+    width,
+    height,
+    anchorX,
+    anchorY,
   );
 
   if (!viewport) {
