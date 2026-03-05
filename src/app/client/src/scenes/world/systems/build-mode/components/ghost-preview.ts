@@ -1,11 +1,18 @@
-import type { EntityId, UserWorld } from "@engine";
-import { Shape, Transform2D } from "@engine/components";
+import { CollisionProfiles } from "@client/scenes/world/physics/collision-profiles";
 import { BOX_SIZE, GHOST_FILL, GHOST_STROKE, HALF_BOX_SIZE } from "@client/scenes/world/systems/build-mode/const";
+import type { EntityId, UserWorld } from "@engine";
+import { Vec2 } from "@engine";
+import { Shape, Transform2D } from "@engine/components";
+import { RectangleCollider } from "@libs/physics";
 
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
 export class GhostPreview {
+  private static readonly gridColliderInsetPx = 1;
+  private static readonly insetBoxSize = BOX_SIZE - GhostPreview.gridColliderInsetPx * 2;
+  private static readonly insetHalfBoxSize = HALF_BOX_SIZE - GhostPreview.gridColliderInsetPx;
+
   /**
    * Spawns a new ghost preview entity at the specified position
    */
@@ -16,6 +23,14 @@ export class GhostPreview {
       ghost,
       new Shape("rectangle", BOX_SIZE, BOX_SIZE, GHOST_FILL, GHOST_STROKE, 1, Number.MAX_SAFE_INTEGER, 0),
     );
+    world.add(
+      ghost,
+      new RectangleCollider(
+        new Vec2(-GhostPreview.insetHalfBoxSize, -GhostPreview.insetHalfBoxSize),
+        new Vec2(GhostPreview.insetBoxSize, GhostPreview.insetBoxSize),
+      ),
+    );
+    world.add(ghost, CollisionProfiles.ghost());
     world.add(ghost, new GhostPreview());
     return ghost;
   }

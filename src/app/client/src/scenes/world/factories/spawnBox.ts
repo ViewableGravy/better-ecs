@@ -1,4 +1,5 @@
 import { RenderVisibility, type RenderVisibilityRole } from "@client/scenes/world/components/render-visibility";
+import { CollisionProfiles } from "@client/scenes/world/physics/collision-profiles";
 import { GridFootprint } from "@client/scenes/world/systems/build-mode/components/grid-footprint";
 import { GridPosition } from "@client/scenes/world/systems/build-mode/components/grid-position";
 import { Placeable } from "@client/scenes/world/systems/build-mode/components/placeable";
@@ -9,6 +10,9 @@ import { RectangleCollider } from "@libs/physics";
 
 const BOX_SIZE = 20;
 const HALF_BOX_SIZE = BOX_SIZE / 2;
+const GRID_COLLIDER_INSET_PX = 1;
+const INSET_BOX_SIZE = BOX_SIZE - GRID_COLLIDER_INSET_PX * 2;
+const INSET_HALF_BOX_SIZE = HALF_BOX_SIZE - GRID_COLLIDER_INSET_PX;
 const PLACED_FILL = new Color(1, 0.2, 0.8, 1);
 const PLACED_STROKE = new Color(1, 1, 1, 1);
 
@@ -34,8 +38,12 @@ export function spawnBox(world: UserWorld, opts: SpawnBoxOptions): number {
   );
   world.add(
     placed,
-    new RectangleCollider(new Vec2(-HALF_BOX_SIZE, -HALF_BOX_SIZE), new Vec2(BOX_SIZE, BOX_SIZE)),
+    new RectangleCollider(
+      new Vec2(-INSET_HALF_BOX_SIZE, -INSET_HALF_BOX_SIZE),
+      new Vec2(INSET_BOX_SIZE, INSET_BOX_SIZE),
+    ),
   );
+  world.add(placed, CollisionProfiles.solid());
   const [gridX, gridY] = GridSingleton.worldToGridCoordinates(opts.snappedX, opts.snappedY);
   world.add(placed, new GridPosition(gridX, gridY));
   world.add(placed, new GridFootprint(BOX_SIZE, BOX_SIZE));

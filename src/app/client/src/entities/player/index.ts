@@ -1,7 +1,9 @@
 import { OrbitMotion } from "@client/components/orbit-motion";
 import { PlayerComponent } from "@client/components/player";
+import { PlayerFeetComponent } from "@client/components/player-feet";
 import { RENDER_LAYERS } from "@client/consts";
-import type { EntityId, UserWorld } from "@engine";
+import { CollisionProfiles } from "@client/scenes/world/physics/collision-profiles";
+import { type EntityId, type UserWorld } from "@engine";
 import {
   Color,
   Debug,
@@ -10,7 +12,7 @@ import {
   Sprite,
   Transform2D,
 } from "@engine/components";
-import { CircleCollider } from "@libs/physics";
+import { CircleCollider, PointCollider } from "@libs/physics";
 
 export function ensurePlayer(world: UserWorld) {
   let [player] = world.query(PlayerComponent);
@@ -24,26 +26,36 @@ export function ensurePlayer(world: UserWorld) {
 
 export function spawnPlayer(world: UserWorld): EntityId {
   const player = world.create();
-  const transform = new Transform2D(0, 0);
-  const playerComponent = new PlayerComponent("NewPlayer"); // identifier since player is unique
-  const collider = new CircleCollider(16);
 
   // Create a sprite component referencing the asset by key
   const sprite = new Sprite("player-sprite", 40, 40);
   sprite.layer = RENDER_LAYERS.world;
   sprite.zOrder = 1;
 
-  world.add(player, transform);
-  world.add(player, playerComponent);
+  // Create player
   world.add(player, sprite);
-  world.add(player, collider);
+  world.add(player, new Transform2D(0, 0));
+  world.add(player, new PlayerComponent("NewPlayer"));
+  world.add(player, new CircleCollider(16));
+  world.add(player, CollisionProfiles.actor());
   world.add(player, new Debug("player"));
 
+  // create players feet
+  const feet = world.create();
+  world.add(feet, new Parent(player));
+  world.add(feet, new Transform2D(0, 15));
+  world.add(feet, new PointCollider());
+  world.add(feet, CollisionProfiles.ghost());
+  world.add(feet, new PlayerFeetComponent(player));
+  world.add(feet, new Debug("player-feet"));
+
+  // create an anchor for orbiting objects
   const orbitAnchor = world.create();
   world.add(orbitAnchor, new Parent(player));
   world.add(orbitAnchor, new Transform2D(0, 0));
   world.add(orbitAnchor, new Debug("player-orbit-anchor"));
 
+  // create an orbiting circle for visual flair
   const orbitingCircle = world.create();
   world.add(orbitingCircle, new Parent(orbitAnchor));
   world.add(orbitingCircle, new Transform2D(36, 0));

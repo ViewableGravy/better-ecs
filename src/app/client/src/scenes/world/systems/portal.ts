@@ -1,13 +1,18 @@
 import { PlayerComponent } from "@client/components/player";
 import { ensurePlayer } from "@client/entities/player";
+import { PhysicsWorldManager } from "@client/scenes/world/physics/physics-world-manager";
 import { Transform2D } from "@engine/components";
-import { collides, getEntityCollider } from "@libs/physics";
+import { COLLISION_LAYERS } from "@libs/physics";
 import { createPortalSystem, type PortalActivationArgs } from "@libs/spatial-contexts";
 
 /**********************************************************************************************************
 *   CONSTS
 **********************************************************************************************************/
 const portalOccupancy = new Set<string>();
+const portalActivationFilter = {
+  category: COLLISION_LAYERS.ACTOR,
+  mask: COLLISION_LAYERS.SOLID,
+};
 
 /**********************************************************************************************************
  *   COMPONENT SYSTEM START
@@ -34,22 +39,23 @@ export const System = createPortalSystem({
  *   UTILITIES
  **********************************************************************************************************/
 function shouldActivatePortal(args: PortalActivationArgs): boolean {
-  const [playerId] = args.world.query(PlayerComponent);
-  if (!playerId) return false;
+  const physicsWorld = PhysicsWorldManager.requireWorld(args.world);
+  const playerBody = physicsWorld.queryFirstLayer(COLLISION_LAYERS.ACTOR, PlayerComponent);
+  if (!playerBody) return false;
 
-  const playerTransform = args.world.get(playerId, Transform2D);
-  if (!playerTransform) return false;
+  const overlaps = physicsWorld.queryOverlap({
+    collider: playerBody.collider,
+    transform: playerBody.transform,
+    filter: portalActivationFilter,
+  });
 
-  const portalTransform = args.world.get(args.portalEntity, Transform2D);
-  if (!portalTransform) return false;
-
-  const playerCollider = getEntityCollider(args.world, playerId);
-  if (!playerCollider) return false;
-
-  const portalCollider = getEntityCollider(args.world, args.portalEntity);
-  if (!portalCollider) return false;
-
-  const inside = collides(playerCollider, playerTransform, portalCollider, portalTransform);
+  let inside = false;
+  for (const overlap of overlaps) {
+    if (overlap.entityId === args.portalEntity) {
+      inside = true;
+      break;
+    }
+  }
 
   const portalKey = `${args.focusedContextId}:${args.portalEntity}`;
   const wasInside = portalOccupancy.has(portalKey);
