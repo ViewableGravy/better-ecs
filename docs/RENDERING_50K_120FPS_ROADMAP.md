@@ -1,168 +1,280 @@
-# Rendering roadmap: 6k -> 50k sprites @ 120 FPS
+# Rendering roadmap: queue path + ECS access optimization
 
-## Goal and budget
+## Purpose
 
-- Target frame time at 120 FPS: **8.33 ms** total.
-- Practical CPU budget for world render prep + submission: **~2.5-3.5 ms** (leave room for gameplay, UI, input, physics, GC).
-- At 50k sprites, every per-sprite CPU operation matters. The plan must shift from **"scan everything every frame"** to **"maintain visible/renderable sets incrementally"**.
+This document focuses on the two areas called out for immediate work:
 
-## What the latest trace says
+1. `world.require` / component access overhead in `query -> require` loops.
+2. `queueSprites` + `queueSpriteCommand` scaling behavior.
 
-Source trace: `Trace-20260305T001728.json.gz`
+The goal is to reduce per-entity CPU constant factors while keeping architecture safe for 100k-scale scenes.
 
-Primary findings from CPU samples:
+## Constraints agreed for this plan
 
-1. `world.query` is now much smaller than before (good improvement).
-2. Remaining hot spots are mostly per-entity render prep and component access:
-   - `get` in ECS storage (`storage.ts`) is very high.
-   - `getComponent` (`world.ts`) is high.
-   - `handleSpriteEntityCommand` and `#queueSprite` are high.
-   - `resolveWorldTransform2D` and `#worldToScreen` are non-trivial.
-3. Culling and texture management are present but not currently dominant.
+- Render may use frame snapshot semantics (data changed during update appears next frame).
+- Broad API migration is acceptable when ROI is clear.
+- We keep a late-bound render-command model for now unless verified data shows snapshot commands are better.
+- If investigation uncovers a better contradictory pattern, we pause and ask for immediate MCP confirmation before continuing.
 
-Interpretation:
+## Trace-backed findings (source: `Trace-20260305T001728.json.gz`)
 
-- Query optimization helped, but the bottleneck moved to **the rest of the per-sprite CPU pipeline**.
-- This is expected: once query is cheaper, component fetches/transforms/command setup become the next ceiling.
+The latest sampled profile indicates:
 
-## Can this be O(log n)?
+- `world.query` is no longer the dominant cost.
+- Major costs are repeated component access and downstream sprite handling.
 
-Short answer: not for full per-frame enumeration of all sprites.
+Notable sample self-time (directional, not wall-clock exact):
 
-- If you need to output/process `k` sprites this frame, lower bound is **Ω(k)**.
-- So the right approach is not chasing `O(log n)` query for this use case; it is reducing `k` and reducing per-item constant cost.
+- `get` in ECS storage: ~875.6 ms.
+- `getComponent` in world: ~387.0 ms.
+- `#queueSprite` (WebGL API): ~507.7 ms.
+- `handleSpriteEntityCommand`: ~380.6 ms.
+- `acquire` (internal frame allocator): ~17.1 ms.
+- `queueSprites`: ~7.0 ms.
+- `queueSpriteCommand`: ~6.2 ms.
+- `require` wrapper itself: ~6.0 ms.
 
-What can be `O(log n)` or better in practice:
+Interpretation: the bottleneck is not the throw-check in `require`; it is frequency of entity->component lookup across queue + render + culling stages.
 
-- Looking up whether one entity belongs to one set.
-- Updating indexes when one entity changes.
-- Spatial insert/remove/query structures for culling (often amortized near O(log n) per update/query).
+## Core strategy
 
-But drawing/queuing `k` visible sprites still costs at least proportional work.
+### Principle 1: minimize repeated lookups per sprite per frame
 
-## Priority roadmap (highest ROI first)
+If a sprite is looked up in queue, culling, and handler paths, we pay repeated sparse-map lookups each time.
 
-## P0 — Keep query optimization, stop re-scanning where possible
+Plan direction:
 
-Outcome target: make sprite list retrieval mostly incremental instead of rebuilt every frame.
+- Introduce ECS fast iteration APIs that return hot data directly in callback form.
+- Stage render records once per frame (or only when dirty), then consume those records downstream.
 
-- Maintain a persistent **renderable sprite entity list** (or set) updated on component add/remove.
-- Avoid `world.query(Sprite)` every frame when membership is unchanged.
-- Only rebuild full list on world reset/scene swap; otherwise patch incrementally.
+### Principle 2: keep O(n) but reduce constant factors aggressively
 
-Why first:
+For `k` visible/processed sprites, Ω(k) work remains unavoidable. The focus is:
 
-- Cheapest architectural win with immediate frame-time stability improvements.
-- Prevents linear full-world scans from reappearing as content grows.
+- reduce lookups,
+- reduce branching,
+- reduce allocations,
+- reduce repeated transforms.
 
-## P1 — Eliminate repeated component lookups in render hot path
+### Principle 3: bias toward visible + changed, not total entities
 
-Outcome target: reduce repeated `world.get` / `getComponent` calls per sprite.
+Queue and render prep must trend toward work proportional to what changed and what is visible.
 
-- In queue/render path, fetch required component references once and reuse in that frame step.
-- Prefer iterating a structure already containing direct sprite render records (entityId + direct refs/indices).
-- Avoid repeated entity->component map lookups across multiple render sub-steps.
+## Proposed ECS API additions (concrete)
 
-Why second:
+Add callback-based query fast paths that avoid building temporary arrays and avoid immediate `require` calls:
 
-- Trace shows storage `get` + world `getComponent` are top contributors.
+```ts
+// 1 component
+world.forEach1(Sprite, (entityId, sprite) => {
+  // sprite guaranteed present
+});
 
-## P2 — Introduce frame-stable render records (dirty-update model)
+// 2 components
+world.forEach2(Camera, Transform2D, (entityId, camera, transform) => {
+  // both guaranteed present
+});
 
-Outcome target: do expensive transform/state computation only when changed.
+// 3 components (only where needed)
+world.forEach3(OrbitMotion, Parent, Transform2D, (entityId, orbit, parent, transform) => {
+  // all guaranteed present
+});
+```
 
-- Keep a per-sprite render record cache (world transform, bounds, texture frame, layer, z).
-- Mark dirty on transform/sprite/animation changes.
-- Recompute only dirty records; unchanged sprites reuse prior-frame computed data.
+Notes:
 
-Why third:
+- Callback is caller-provided so it can be module-scoped and reused (no per-frame closure allocation required).
+- API should iterate from the smallest store (same strategy as current `query`) but pass component refs directly.
+- Keep existing `query`/`require` APIs for compatibility; migrate hotspots first.
 
-- Moves work from per-frame/per-entity to per-change/per-entity.
-- Essential for large static or mostly-static scenes.
+### Callback overhead and cache locality (decision)
 
-## P3 — Strong visibility culling before queueing
+The callback cost is real but typically much smaller than repeated map/sparse lookups.
 
-Outcome target: reduce `k` (visible/queued sprites), especially in large worlds.
+- A function call per entity has overhead, but in practice this is usually dominated by component access and render math.
+- Using module-scoped stable callbacks keeps call sites monomorphic and avoids closure churn.
+- If needed, we can provide a second zero-callback variant later (for example, "visit" API with an internal sink object) but we should verify with benchmarks first.
 
-- Use broad-phase spatial partition (uniform grid / loose quadtree / chunk bins).
-- Query only camera-overlapping buckets.
-- Early reject off-screen sprites before command creation.
+Cache locality expectation with multi-component iteration:
 
-Why fourth:
+- Iterating dense entity/component arrays is more locality-friendly than sparse lookup per component per entity.
+- Accessing multiple component types still means touching multiple arrays/objects, so locality is improved, not perfect.
+- This is still a net win because we remove repeated hash/sparse indirections and keep sequential scans.
 
-- If world is much larger than viewport, this gives multiplicative gains.
-- At 50k total sprites, visible count should ideally be far lower.
+Benchmark rule for this decision:
 
-## P4 — Batch/instance submission path by material/texture atlas
+- If callback-based fast iteration is not measurably faster in 10k and 100k gates, stop and pivot with MCP check before wider migration.
 
-Outcome target: keep draw/submission overhead low as visible count rises.
+## Proposed queue architecture shift (concrete)
 
-- Ensure sprite texture usage is atlas-friendly to reduce texture binds.
-- Keep instance buffers persistent and update only active range.
-- Minimize per-command object churn; write compact struct-like arrays where possible.
+### Current shape (high-level)
 
-Why fifth:
+`queueSprites` currently does:
 
-- GPU instancing helps, but CPU-side packing/submission must also be lean.
+- `world.query(Sprite)` -> ids
+- `world.require(id, Sprite)`
+- `frameAllocator.acquire(render-command)`
+- queue command containing `world + entityId`
 
-## P5 — Reduce memory churn and per-frame allocations
+Then render/culling re-fetches components again via `world.get`.
 
-Outcome target: flatten GC spikes and improve frame pacing.
+### Proposed shape
 
-- Reuse query/result arrays and command buffers when safe.
-- Avoid creating throwaway objects in inner loops.
-- Keep transform/temp math objects pooled or stack-like reused scratch.
+Introduce a frame-local `SpriteRenderRecord` array (allocator-backed scratch) and split queue into two steps:
 
-Why sixth:
+1. **Build records** (once):
+   - iterate ECS fast path
+   - capture minimal render-critical fields for this frame snapshot
+   - include `entityId`, `world`, `layer`, `zOrder`, sprite dimensions/anchors/frame asset id, and pre-resolved transform snapshot when appropriate
 
-- Not always biggest mean-time gain, but often critical for stable 120 FPS frame pacing.
+2. **Queue from records**:
+   - push lightweight command entries that index record array
+   - avoid re-querying component data in culling/handler where possible
 
-## P6 — Optional: move non-critical prep off main thread
+Example target flow:
 
-Outcome target: reserve main thread for minimal render-critical work.
+```ts
+buildSpriteRenderRecords(world, frame);
+queueSpriteCommandsFromRecords(frame.spriteRecords, queue, allocator);
+```
 
-- Candidate: precompute culling bins, animation frame indices, or static bounds out of hot path.
-- Keep final render submission deterministic and lightweight on main thread.
+This preserves late-bound command scheduling while removing repeated component-store touches.
 
-Why last:
+## `queueSpriteCommand` recommendation
 
-- Higher complexity; do only after hot-path data layout issues are fixed.
+Do not embed mutable render command state directly on `Sprite` component right now.
 
-## Recommended milestones
+Why:
 
-1. **Milestone A (near-term):**
-   - Incremental renderable-sprite set + reduced component lookup churn.
-   - Success metric: significant drop in `storage.get` and `getComponent` samples.
+- `Sprite` is gameplay-facing component state and should not own render-pipeline lifecycle details.
+- Command lifecycle is frame-scoped and queue-order-dependent.
+- Coupling sprite component to command structs increases invalidation complexity.
 
-2. **Milestone B:**
-   - Dirty render-record cache + early visibility culling.
-   - Success metric: queue/render CPU cost scales with visible sprites, not total sprites.
+Preferred alternative:
 
-3. **Milestone C:**
-   - Submission/batching polish + allocation minimization.
-   - Success metric: stable frame pacing at large counts and fewer GC-related stalls.
+- keep command structs frame-scoped,
+- keep cached render records in renderer/pipeline-owned memory,
+- update records only when dirty or when frame-variant values change (e.g. animation time).
 
-## Scaling expectation for 50k
+## Phased implementation plan
 
-If nothing else changes, linear scaling from current numbers will not hit 120 FPS.
+### Phase 1 (10k stabilization)
 
-To make 50k plausible:
+1. Add `forEach1/2/3` fast-path APIs in ECS world.
+2. Migrate render queue passes first:
+   - `queue-sprites.ts`
+   - `queue-shapes.ts`
+   - `queue-shader-quads.ts`
+3. Remove `query -> require` in these passes.
+4. Re-profile and verify:
+   - fewer `storage.get` / `world.getComponent` samples,
+   - no correctness regressions.
 
-- Make work proportional to **visible + changed** sprites, not total sprites.
-- Keep per-visible-sprite CPU work very small and mostly contiguous memory access.
-- Ensure submission path stays batch-friendly and allocation-light.
+### Phase 2 (record staging)
 
-## What to measure after each step
+1. Add frame-local `SpriteRenderRecord` scratch storage.
+2. Build records in queue pass using fast ECS iteration.
+3. Update culling + handler path to consume records first, fallback to ECS only when required.
+4. Re-profile and compare against Phase 1.
 
-Track the same trace counters after each milestone:
+### Phase 3 (100k scaling)
 
-- `world.query`
-- `storage.get`
-- `world.getComponent`
-- `handleSpriteEntityCommand`
-- `#queueSprite`
-- `resolveWorldTransform2D`
-- `#worldToScreen`
-- GC sample share / GC pause events
+1. Introduce dirty flags / versioning for transform + sprite + animated sprite.
+2. Recompute record fields only when dirty.
+3. Add stronger early visibility gating before command creation.
+4. Validate against 100k target scenario and adjust data layout if needed.
 
-Stop moving to the next milestone until the previous one shows measurable improvement in trace data.
+### Dirty tracking strategy (decision)
+
+Recommended first implementation:
+
+1. Keep dirty tracking in render-record staging, not in component proxies.
+2. Use record-level field diff + bitmask during staging:
+   - compare incoming value vs cached record value,
+   - update record only when changed,
+   - set changed bits for downstream decisions.
+3. Optionally add coarse component version counters later if mutation ownership is explicit enough.
+
+Why this is preferred now:
+
+- Avoids JavaScript `Proxy` overhead and potential de-optimizations in hot update paths.
+- Avoids requiring every component mutation site to remember explicit `markDirty` calls on day one.
+- Preserves current ergonomics while still enabling selective update logic.
+
+When to consider proxy- or mutation-hook-based dirty tracking:
+
+- Only if profiling shows staging-time diff checks are the dominant cost,
+- and only after a measured prototype proves net gain in both 10k and 100k scenarios.
+
+## Validation gates (must pass before moving on)
+
+### Gate A: after Phase 1
+
+- Queue correctness unchanged (same visible output).
+- `queueSprites` + sibling queue passes show measurable CPU drop.
+- `world.require` sample share in render queue path materially reduced.
+
+### Gate B: after Phase 2
+
+- Culling + handler paths reduce repeated ECS access.
+- Render output stable across animated + static sprites.
+- No new GC spikes from record staging.
+
+### Gate C: after Phase 3
+
+- 10k scenario stable with low queue cost.
+- 100k scenario scales near visible+changed rather than total entities.
+- Queue step approaches sub-millisecond budget in representative scenes.
+
+## Do not do (unless new evidence appears)
+
+1. **Do not** return fresh tuple arrays from `query` per entity for hot loops.
+   - This introduces allocation pressure and GC risk.
+
+2. **Do not** add frame-pooled tuple object APIs with implicit lifetime semantics.
+   - Easy to misuse and hard to reason about ownership/frame safety.
+
+3. **Do not** move render-command ownership into `Sprite` component state.
+   - Mixes gameplay state with frame-transient pipeline internals.
+
+4. **Do not** optimize only `require` throw-path micro-cost and assume the issue is solved.
+   - Main cost is repeated lookup frequency, not missing-component error checks.
+
+5. **Do not** skip profiling checkpoints between phases.
+   - We need evidence after each stage before broadening changes.
+
+6. **Do not** introduce `Proxy`-based dirty tracking in hot paths as a default.
+   - Treat as experiment-only due to likely runtime overhead/deopt risk.
+
+7. **Do not** require manual `markDirty` calls everywhere without enforcement tooling.
+   - This is error-prone and likely to regress correctness as codebase/users grow.
+
+## Pivot rule (agility + MCP check)
+
+If investigation shows a better pattern that contradicts any guidance above:
+
+1. Stop implementation immediately.
+2. Capture the contradictory evidence (trace diff, benchmark, correctness notes).
+3. Request immediate MCP confirmation from you before proceeding.
+4. Pivot only after explicit approval.
+
+This keeps the roadmap strict by default and agile when new data warrants change.
+
+## Migration candidates in current codebase
+
+High-priority direct migrations:
+
+- `src/engine/src/core/render-pipeline/passes/render-world/queue/queue-sprites.ts`
+- `src/engine/src/core/render-pipeline/passes/render-world/queue/queue-shapes.ts`
+- `src/engine/src/core/render-pipeline/passes/render-world/queue/queue-shader-quads.ts`
+
+Then evaluate other frequent patterns of `for (const id of world.query(...)) + world.require(...)` across engine/libs.
+
+## Success definition
+
+This effort is successful when:
+
+- queue-stage performance is no longer a dominant contributor,
+- repeated ECS lookup overhead in render path is materially reduced,
+- scaling behavior remains predictable at higher entity counts,
+- and each pivot decision is evidence-led and approved through MCP check-ins.
