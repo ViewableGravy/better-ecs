@@ -208,6 +208,51 @@ When to consider proxy- or mutation-hook-based dirty tracking:
 
 ## Validation gates (must pass before moving on)
 
+Benchmark cadence policy:
+
+- Benchmarks are required at each phase gate (A, B, C), not just at the end.
+- Every phase must record before/after results using the benchmark harness with identical entity count and sample duration.
+- If a phase regresses frame-time metrics, pause and investigate before continuing.
+
+## Stage progress log (agent handoff)
+
+### 2026-03-05 — Stage A (Phase 1) checkpoint
+
+Status:
+
+- `Phase 1` implementation completed.
+- Queue passes migrated to fast iteration (`forEach`) to remove the `query -> require` hot-loop pattern in sprite/shape/shader queue stages.
+- Scene-scoped benchmark harness used for verification.
+
+Benchmark run configuration:
+
+- Browser verification via Chrome MCP with a clean single-page session.
+- Single clean dev server instance.
+- Sample window: `2000ms` per variation.
+- Benchmark layout forced to viewport-safe bounds (90% viewport area) so generated entities remain on-screen.
+
+Viewport/layout used during run:
+
+- Viewport: `1420 x 881`.
+- Safe area: `1278 x 792.9`.
+- Spawn bounds: `x: [-639, 639]`, `y: [-396.45, 396.45]`.
+
+Measured results:
+
+| Entities | FPS Avg | Frame Avg (ms) | P95 (ms) | P99 (ms) | Min (ms) | Max (ms) |
+|---:|---:|---:|---:|---:|---:|---:|
+| 10,000 | 119.88 | 8.34 | 8.39 | 8.40 | 8.24 | 8.46 |
+| 50,000 | 28.24 | 35.42 | 41.73 | 41.77 | 33.31 | 50.06 |
+| 100,000 | 13.00 | 76.93 | 83.46 | 83.46 | 66.69 | 91.75 |
+| 200,000 | 6.18 | 161.70 | 166.88 | 166.88 | 150.17 | 183.51 |
+| 500,000 | 1.94 | 515.10 | 517.14 | 517.14 | 500.46 | 533.90 |
+
+Outcome:
+
+- Stage A is considered complete and benchmarked across all requested scales.
+- Performance still scales linearly with entity count (expected at this stage).
+- Next active work item: `Phase 2` (render-record staging + reducing repeated ECS reads in culling/handler paths).
+
 ### Gate A: after Phase 1
 
 - Queue correctness unchanged (same visible output).
