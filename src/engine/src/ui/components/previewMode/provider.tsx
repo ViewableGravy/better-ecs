@@ -17,17 +17,17 @@ type PreviewModeProviderProps = {
 
 export const PreviewModeProvider: React.FC<PreviewModeProviderProps> = ({ children }) => {
   const engine = useInvariantContext(EngineUiContext);
-  const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [isPreviewMode, setIsPreviewMode] = useState(true);
 
   const setPreviewMode: Dispatch<SetStateAction<boolean>> = (nextState) => {
-    setIsPreviewMode((currentState) => {
-      const resolvedState =
-        typeof nextState === "function" ? nextState(currentState) : nextState;
-
-      engine.editor.setPreviewMode(resolvedState);
-      return resolvedState;
-    });
+    setIsPreviewMode((currentState) =>
+      typeof nextState === "function" ? nextState(currentState) : nextState,
+    );
   };
+
+  useEffect(() => {
+    engine.editor.setPreviewMode(isPreviewMode);
+  }, [engine, isPreviewMode]);
 
   useEffect(() => {
     let dragging = false;

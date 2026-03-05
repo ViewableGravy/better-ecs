@@ -22,7 +22,11 @@ export const DebugHover: React.FC<DebugHoverProps> = ({ children }) => {
 
   useEffect(() => {
     return () => {
-      const world = engine.scene.context.requireWorld(worldId);
+      const world = engine.scene.context.getWorld(worldId);
+      if (!world) {
+        return;
+      }
+
       if (world.has(entityId, EditorHoverHighlight)) {
         world.remove(entityId, EditorHoverHighlight);
       }
@@ -31,14 +35,22 @@ export const DebugHover: React.FC<DebugHoverProps> = ({ children }) => {
 
   /***** FUNCTIONS *****/
   const onMouseEnter = () => {
-    const world = engine.scene.context.requireWorld(worldId);
+    const world = engine.scene.context.getWorld(worldId);
+    if (!world) {
+      return;
+    }
+
     if (!world.has(entityId, EditorHoverHighlight)) {
       world.add(entityId, EditorHoverHighlight, new EditorHoverHighlight(0.35));
     }
   };
 
   const onMouseLeave = () => {
-    const world = engine.scene.context.requireWorld(worldId);
+    const world = engine.scene.context.getWorld(worldId);
+    if (!world) {
+      return;
+    }
+
     if (world.has(entityId, EditorHoverHighlight)) {
       world.remove(entityId, EditorHoverHighlight);
     }
