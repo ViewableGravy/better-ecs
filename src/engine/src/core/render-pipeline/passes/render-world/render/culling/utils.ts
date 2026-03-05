@@ -3,6 +3,7 @@ import type { Transform2D } from "@engine/components/transform";
 import { type EngineAndRenderContextOptions } from "@engine/context";
 import type { RegisteredEngine } from "@engine/core/engine-types";
 import type { AnyRenderPipelineContext } from "@engine/core/render-pipeline/context";
+import type { SpriteRenderRecord } from "@engine/core/render-pipeline/passes/render-world/sprite-render-record";
 import type { RenderCommand } from "@engine/render/queue/render-queue";
 import type { ShapeRenderInput } from "@engine/render/types/low-level";
 import invariant from "tiny-invariant";
@@ -113,11 +114,13 @@ export const CullingBounds: EngineAndRenderContextOptions<CullingBounds | null> 
 
 export function isCommandWithinCullingBounds(command: ShapeDrawRenderCommand, bounds: CullingBounds | null): boolean;
 export function isCommandWithinCullingBounds(command: EntityRenderCommand, bounds: CullingBounds | null, transform: Transform2D, alpha: number): boolean;
+export function isCommandWithinCullingBounds(command: EntityRenderCommand, bounds: CullingBounds | null, transform: Transform2D, alpha: number, spriteRecord: SpriteRenderRecord | null): boolean;
 export function isCommandWithinCullingBounds(
   command: ShapeDrawRenderCommand | EntityRenderCommand,
   bounds: CullingBounds | null,
   transform?: Transform2D,
   alpha?: number,
+  spriteRecord?: SpriteRenderRecord | null,
 ): boolean {
   if (!bounds) {
     return true;
@@ -127,7 +130,7 @@ export function isCommandWithinCullingBounds(
     case "sprite-entity":
       invariant(transform, "Culling sprite-entity command requires a world transform");
       invariant(alpha !== undefined, "Culling sprite-entity command requires alpha");
-      return intersectsSpriteEntity(command, bounds, transform, alpha);
+      return intersectsSpriteEntity(command, bounds, transform, alpha, spriteRecord ?? null);
     case "shader-entity":
       invariant(transform, "Culling shader-entity command requires a world transform");
       invariant(alpha !== undefined, "Culling shader-entity command requires alpha");
@@ -160,15 +163,9 @@ function intersectsSpriteEntity(
   bounds: CullingBounds,
   transform: Transform2D,
   alpha: number,
+  spriteRecord: SpriteRenderRecord | null,
 ): boolean {
-  const world = command.world;
-  const entityId = command.entityId;
-
-  invariant(world, "Culling sprite-entity command requires world");
-  invariant(entityId !== null, "Culling sprite-entity command requires entityId");
-
-  const staticSprite = world.get(entityId, Sprite);
-  const sprite = staticSprite ?? world.get(entityId, AnimatedSprite);
+  const sprite = spriteRecord?.sprite ?? resolveSpriteForCulling(command);
   if (!sprite) {
     return true;
   }
@@ -190,6 +187,16 @@ function intersectsSpriteEntity(
   }
 
   return intersects(bounds, viewport);
+}
+
+function resolveSpriteForCulling(command: SpriteEntityRenderCommand): Sprite | AnimatedSprite | null {
+  const world = command.world;
+  const entityId = command.entityId;
+
+  invariant(world, "Culling sprite-entity command requires world");
+  invariant(entityId !== null, "Culling sprite-entity command requires entityId");
+
+  return world.get(entityId, Sprite) ?? world.get(entityId, AnimatedSprite) ?? null;
 }
 
 function intersectsShaderEntity(

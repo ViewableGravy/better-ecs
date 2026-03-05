@@ -5,6 +5,7 @@ import type { Transform2D } from "@engine/components/transform";
 import { fromContext, FromRender } from "@engine/context";
 import type { SpriteEntityRenderCommand } from "@engine/core/render-pipeline/passes/render-world/render/culling/utils";
 import { blendChannel } from "@engine/core/render-pipeline/passes/render-world/render/utils/blend";
+import type { SpriteRenderRecord } from "@engine/core/render-pipeline/passes/render-world/sprite-render-record";
 import type { Renderer } from "@engine/render";
 
 /**********************************************************************************************************
@@ -26,13 +27,11 @@ export function handleSpriteEntityCommand(
   transform: Transform2D,
   renderer: SpriteRenderer = fromContext(FromRender.Renderer),
   interpolationAlpha: number = fromContext(FromRender.InterpolationAlpha),
+  spriteRecord: SpriteRenderRecord | null = null,
 ): void {
   const world = command.world;
   const entityId = command.entityId;
-  const now = performance.now();
-
-  const staticSprite = world.get(entityId, Sprite);
-  const sprite = staticSprite ?? projectAnimatedSprite(world.get(entityId, AnimatedSprite), now);
+  const sprite = spriteRecord?.sprite ?? resolveSpriteForRender(world, entityId);
   if (!sprite) {
     return;
   }
@@ -56,6 +55,15 @@ export function handleSpriteEntityCommand(
   sprite.tint.r = originalR;
   sprite.tint.g = originalG;
   sprite.tint.b = originalB;
+}
+
+function resolveSpriteForRender(world: SpriteEntityRenderCommand["world"], entityId: SpriteEntityRenderCommand["entityId"]): Sprite | null {
+  const staticSprite = world.get(entityId, Sprite);
+  if (staticSprite) {
+    return staticSprite;
+  }
+
+  return projectAnimatedSprite(world.get(entityId, AnimatedSprite), performance.now());
 }
 
 function projectAnimatedSprite(animatedSprite: AnimatedSprite | undefined, timeMs: number): Sprite | null {

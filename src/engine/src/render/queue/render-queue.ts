@@ -15,6 +15,7 @@ export type RenderCommand = {
   world: UserWorld | null;
   entityId: EntityId | null;
   shape: ShapeRenderInput | null;
+  spriteRecordIndex?: number;
   layer: number;
   zOrder: number;
   sequence: number;

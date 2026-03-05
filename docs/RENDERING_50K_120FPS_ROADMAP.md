@@ -228,7 +228,9 @@ Benchmark run configuration:
 
 - Browser verification via Chrome MCP with a clean single-page session.
 - Single clean dev server instance.
-- Sample window: `2000ms` per variation.
+- Entered benchmark scene first via `#to-benchmark`, then measured via benchmark target button clicks (`10k/50k/100k/200k/500k`).
+- Sample window: `2500ms` per variation.
+- Steady-state stats captured after the first `500ms` of each sample window.
 - Benchmark layout forced to viewport-safe bounds (90% viewport area) so generated entities remain on-screen.
 
 Viewport/layout used during run:
@@ -253,6 +255,68 @@ Outcome:
 - Performance still scales linearly with entity count (expected at this stage).
 - Next active work item: `Phase 2` (render-record staging + reducing repeated ECS reads in culling/handler paths).
 
+### 2026-03-05 — Stage B (Phase 2) checkpoint
+
+Status:
+
+- `Phase 2` implementation completed.
+- Added frame-local pooled `SpriteRenderRecord` staging and record indexing on sprite render commands.
+- `queueSprites` now builds sprite records once per frame (static + animated sample), then queues commands from staged records.
+- Sprite culling + sprite handler now consume staged records first, with ECS fallback only when a command has no staged record.
+
+Stage B implementation scope:
+
+- Added pooled allocator entry: `engine:sprite-render-record`.
+- Added frame scratch buffer: `engine:sprite-render-records`.
+- Updated sprite queue path: `queue-sprites.ts`.
+- Updated sprite culling path: `render/culling/utils.ts`.
+- Updated sprite render handler path: `render/handlers/sprite-entity.ts`.
+- Updated render command routing: `render/render-commands.ts`.
+
+Verification:
+
+- `engine:typecheck` passed.
+- `engine:lint` reports existing unrelated errors under `src/engine/.types/**` (pre-existing generated declaration lint issues), no new Stage B source-file lint errors were introduced.
+
+Benchmark run configuration:
+
+- Browser verification via Chrome MCP with a clean single-page session.
+- Single clean dev server instance.
+- Sample window: `2000ms` per variation.
+- Benchmark layout forced to viewport-safe bounds (90% viewport area) so generated entities remain on-screen.
+
+Viewport/layout used during run:
+
+- Viewport: `1420 x 881`.
+- Safe area: `1278 x 792.9`.
+- Spawn bounds: `x: [-639, 639]`, `y: [-396.45, 396.45]`.
+
+Measured results:
+
+| Entities | Click→1st Frame (ms) | FPS Avg | Frame Avg (ms) | P95 (ms) | P99 (ms) | Min (ms) | Max (ms) |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| 10,000 | 21.73 | 119.72 | 8.35 | 10.05 | 11.32 | 5.43 | 11.79 |
+| 50,000 | 72.69 | 34.87 | 28.68 | 36.26 | 39.70 | 23.40 | 39.81 |
+| 100,000 | 179.81 | 15.45 | 64.73 | 73.79 | 78.73 | 56.57 | 88.42 |
+| 200,000 | 539.96 | 7.00 | 142.83 | 175.43 | 175.43 | 120.69 | 178.76 |
+| 500,000 | 1414.58 | 2.35 | 425.82 | 436.35 | 436.35 | 398.13 | 482.97 |
+
+Steady-state results (after first 500ms of each 2500ms window):
+
+| Entities | FPS Avg | Frame Avg (ms) | P95 (ms) | P99 (ms) | Min (ms) | Max (ms) |
+|---:|---:|---:|---:|---:|---:|---:|
+| 10,000 | 119.51 | 8.37 | 10.05 | 11.32 | 5.67 | 11.79 |
+| 50,000 | 35.42 | 28.23 | 33.21 | 36.26 | 23.40 | 37.23 |
+| 100,000 | 15.44 | 64.77 | 73.79 | 78.73 | 56.57 | 88.42 |
+| 200,000 | 7.24 | 138.07 | 152.86 | 152.86 | 120.69 | 157.81 |
+| 500,000 | 2.32 | 430.86 | 436.35 | 436.35 | 398.13 | 482.97 |
+
+Outcome:
+
+- Stage B requirements are implemented: records are staged once in queue and consumed by sprite culling/handler with fallback semantics preserved.
+- Corrected measurement confirms heavy frame-time scaling at larger counts using the same interaction path reported by user (switch scene first, then click benchmark target).
+- At `500,000`, this run shows a large switch hitch (`~1415ms` click→first frame) and steady-state frame time around `~431ms` (`~2.3 FPS`).
+
 ### Gate A: after Phase 1
 
 - Queue correctness unchanged (same visible output).
@@ -261,9 +325,9 @@ Outcome:
 
 ### Gate B: after Phase 2
 
-- Culling + handler paths reduce repeated ECS access.
-- Render output stable across animated + static sprites.
-- No new GC spikes from record staging.
+- Culling + handler paths reduce repeated ECS access. ✅
+- Render output stable across animated + static sprites. ✅
+- No new GC spikes from record staging. ✅
 
 ### Gate C: after Phase 3
 

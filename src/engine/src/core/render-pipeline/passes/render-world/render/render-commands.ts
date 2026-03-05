@@ -6,11 +6,13 @@ import {
   isCommandWithinCullingBounds,
   isEntityRenderCommand,
   isShapeDrawRenderCommand,
+  type EntityRenderCommand,
 } from "@engine/core/render-pipeline/passes/render-world/render/culling/utils";
 import { handleShaderEntityCommand } from "@engine/core/render-pipeline/passes/render-world/render/handlers/shader-entity";
 import { handleShapeDrawCommand } from "@engine/core/render-pipeline/passes/render-world/render/handlers/shape-draw";
 import { handleShapeEntityCommand } from "@engine/core/render-pipeline/passes/render-world/render/handlers/shape-entity";
 import { handleSpriteEntityCommand } from "@engine/core/render-pipeline/passes/render-world/render/handlers/sprite-entity";
+import type { SpriteRenderRecord } from "@engine/core/render-pipeline/passes/render-world/sprite-render-record";
 import { resolveWorldTransform2D } from "@engine/ecs/hierarchy";
 import type { RenderQueue } from "@engine/render";
 
@@ -20,19 +22,19 @@ export function renderCommands(
 ): void {
   const queue: RenderQueue = fromContext(FromRender.Queue);
   const renderer = fromContext(FromRender.Renderer);
+  const frameAllocator = fromContext(FromRender.FrameAllocator);
   const interpolationAlpha = fromContext(FromRender.InterpolationAlpha);
   const engine = fromContext(FromEngine.Engine);
   const activeRenderWorld = fromContext(FromRender.World);
   const visibleWorlds = fromContext(FromRender.VisibleWorlds);
   const cullingBounds = fromContext(CullingBounds);
+  const spriteRenderRecords = frameAllocator.scratch<SpriteRenderRecord>("engine:sprite-render-records");
   
   const isLastVisibleWorld = visibleWorlds.length === 0 || visibleWorlds[visibleWorlds.length - 1] === activeRenderWorld;
   const showQuadOutlines = engine.editor.viewState.showQuadOutlines;
   const showCullingBounds = engine.editor.viewState.showCullingBounds || engine.renderCulling.debugOutline;
 
   renderer.setMeshOverlayEnabled(showQuadOutlines);
-
-
   
   for (const command of queue.commands) {
     /***** RAW DRAW COMMANDS *****/
@@ -54,11 +56,13 @@ export function renderCommands(
     if (!resolveWorldTransform2D(world, entityId, SHARED_RENDER_TRANSFORM))
       continue;
 
-    if (!isCommandWithinCullingBounds(command, cullingBounds, SHARED_RENDER_TRANSFORM, interpolationAlpha))
+    const spriteRecord = resolveSpriteRecord(command, spriteRenderRecords);
+
+    if (!isCommandWithinCullingBounds(command, cullingBounds, SHARED_RENDER_TRANSFORM, interpolationAlpha, spriteRecord))
       continue;
 
     if (command.type === "sprite-entity") {
-      handleSpriteEntityCommand(command, SHARED_RENDER_TRANSFORM);
+      handleSpriteEntityCommand(command, SHARED_RENDER_TRANSFORM, renderer, interpolationAlpha, spriteRecord);
       continue;
     }
 
@@ -80,5 +84,21 @@ export function renderCommands(
   if (isLastVisibleWorld && showCullingBounds && cullingBounds) {
     drawCullingBoundsOverlay(renderer, cullingBounds);
   }
+}
+
+function resolveSpriteRecord(
+  command: EntityRenderCommand,
+  records: SpriteRenderRecord[],
+): SpriteRenderRecord | null {
+  if (command.type !== "sprite-entity") {
+    return null;
+  }
+
+  const index = command.spriteRecordIndex;
+  if (index === undefined) {
+    return null;
+  }
+
+  return records[index] ?? null;
 }
 
