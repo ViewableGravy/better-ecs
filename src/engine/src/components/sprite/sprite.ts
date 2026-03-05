@@ -98,6 +98,13 @@ export class Sprite {
   /** Render layer for multi-pass rendering. */
   public layer: number;
 
+  /**
+   * Queue update policy.
+   * - true: always evaluate this sprite in the queue hot path (default)
+   * - false: eligible for static cohort reuse
+   */
+  public isDynamic: boolean;
+
   constructor(
     assetId: Exclude<keyof RegisteredAssets, number | symbol>,
     width: number = 0,
@@ -109,6 +116,7 @@ export class Sprite {
     tint: Color = new Color(),
     zOrder: number = 0,
     layer: number = 0,
+    isDynamic: boolean = true,
   ) {
     this.assetId = assetId;
     this.width = width;
@@ -120,5 +128,6 @@ export class Sprite {
     this.tint = tint;
     this.zOrder = zOrder;
     this.layer = layer;
+    this.isDynamic = isDynamic;
   }
 }

@@ -87,6 +87,29 @@ Expected impact:
 
 - Lower total calls to `isSpriteWithinCullingBounds` and queue command creation.
 
+### D5 — hierarchy-native storage + tree-walk transform propagation
+
+Priority:
+
+- High priority after D3 validation, before broad D2 cache rollout.
+
+Problem:
+
+- Parent-linked entities are currently resolved from flat world storage per entity, which repeats parent-chain work for many children.
+- Conveyor-like structures are an extreme case where parent transform computation is redundantly repeated across sibling entities.
+
+Plan:
+
+- Introduce hierarchy-native runtime storage for parent/child relationships (tree/indexed adjacency) alongside ECS component storage.
+- During update, walk the hierarchy top-down once and propagate world transforms to descendants.
+- Store propagated world transforms in a render-ready structure so queue stage reads direct values instead of recomputing parent chains.
+- Keep ECS `Parent` semantics as source-of-truth API, while adding fast hierarchy indices for runtime traversal.
+
+Expected impact:
+
+- Significant reduction in repeated `resolveWorldTransform2D`/`getComponent` parent-chain work in deep or wide hierarchies.
+- Better scaling for conveyor-style and nested-attachment scenes.
+
 ## Data-structure direction (map/has pressure)
 
 To address map/has costs directly:
@@ -111,5 +134,29 @@ For each Stage D sub-step:
 
 ## Current active work
 
-- D1 implementation started.
-- After D1 is merged and benchmarked, proceed to D2 non-parent fast path prototype.
+- D1 implementation completed.
+- D3 implementation completed before D2, per current priority.
+
+## Quantified impact (D1 + D3)
+
+Measurement method:
+
+- Same benchmark harness path and sample windows as Stage C (`2000ms` immediate, `2500ms` steady with first `500ms` excluded).
+- Same viewport/layout: `1420 x 881`, safe area `1278 x 792.9`.
+- Runs captured in one session immediately before and after D3.
+
+Steady-state comparison:
+
+| Entities | Pre-D3 FPS | Post-D3 FPS | Delta | Pre-D3 Frame Avg (ms) | Post-D3 Frame Avg (ms) | Delta |
+|---:|---:|---:|---:|---:|---:|---:|
+| 10,000 | 119.88 | 119.88 | +0.0% | 8.34 | 8.34 | -0.0% |
+| 50,000 | 30.09 | 51.73 | +71.9% | 33.23 | 19.33 | -41.8% |
+| 100,000 | 15.23 | 26.10 | +71.4% | 65.66 | 38.31 | -41.7% |
+| 200,000 | 6.58 | 12.52 | +90.2% | 151.94 | 79.89 | -47.4% |
+| 500,000 | 2.10 | 4.15 | +97.6% | 475.49 | 240.98 | -49.3% |
+
+Interpretation:
+
+- D3 static/dynamic cohort reuse materially reduced queue-path CPU cost at high counts.
+- Largest gains occur in high-entity scenarios where static cohort reuse avoids repeated transform resolve + record write + culling work.
+- 10k remains frame-capped, so low-count behavior is unchanged as expected.

@@ -14,6 +14,7 @@ type AnimatedSpriteConfig = {
   tint?: Color;
   zOrder?: number;
   layer?: number;
+  isDynamic?: boolean;
   playbackRate?: number;
   startTime?: number;
   useGlobalOffset?: boolean;
@@ -60,6 +61,7 @@ export class AnimatedSprite extends Sprite {
       config?.tint,
       config?.zOrder,
       config?.layer,
+      config?.isDynamic,
     );
 
     this.frames = frames;

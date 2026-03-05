@@ -5,9 +5,13 @@ import type { UserWorld } from "@engine/ecs/world";
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
  **********************************************************************************************************/
+export type SpriteQueueCohort = "unknown" | "static" | "dynamic";
+
 type CachedSpriteRenderRecord = {
   record: SpriteRenderRecord;
   lastSeenSerial: number;
+  cohort: SpriteQueueCohort;
+  lastCullingSignature: number;
 };
 
 type WorldSpriteRenderRecordState = {
@@ -17,12 +21,14 @@ type WorldSpriteRenderRecordState = {
 };
 
 export type SpriteRenderRecordWorldState = WorldSpriteRenderRecordState;
+export type SpriteRenderRecordCacheEntry = CachedSpriteRenderRecord;
 
 /**********************************************************************************************************
  *   CONSTS
  **********************************************************************************************************/
 const MIN_PRUNE_BATCH_SIZE = 64;
 const MAX_PRUNE_BATCH_SIZE = 4096;
+const STATIC_REVALIDATE_PERIOD = 180;
 
 /**********************************************************************************************************
  *   COMPONENT START
@@ -41,10 +47,16 @@ export class SpriteRenderRecordCache {
     return SpriteRenderRecordCache.#instance;
   }
 
-  private constructor() {}
+  private constructor() {
+    return;
+  }
 
   public beginFrame(): number {
     this.#serial += 1;
+    return this.#serial;
+  }
+
+  public get currentSerial(): number {
     return this.#serial;
   }
 
@@ -61,19 +73,32 @@ export class SpriteRenderRecordCache {
     state: SpriteRenderRecordWorldState,
     entityId: EntityId,
   ): SpriteRenderRecord {
+    return this.resolveEntryFromState(state, entityId).record;
+  }
+
+  public resolveEntryFromState(
+    state: SpriteRenderRecordWorldState,
+    entityId: EntityId,
+  ): SpriteRenderRecordCacheEntry {
     const existing = state.records.get(entityId);
     if (existing) {
       existing.lastSeenSerial = this.#serial;
-      return existing.record;
+      return existing;
     }
 
-    const record: CachedSpriteRenderRecord = {
+    const entry: CachedSpriteRenderRecord = {
       record: createSpriteRenderRecord(),
       lastSeenSerial: this.#serial,
+      cohort: "unknown",
+      lastCullingSignature: Number.NaN,
     };
 
-    state.records.set(entityId, record);
-    return record.record;
+    state.records.set(entityId, entry);
+    return entry;
+  }
+
+  public shouldRevalidateStatic(entityId: EntityId): boolean {
+    return (this.#serial + Number(entityId)) % STATIC_REVALIDATE_PERIOD === 0;
   }
 
   public pruneBatch(world: UserWorld): void {

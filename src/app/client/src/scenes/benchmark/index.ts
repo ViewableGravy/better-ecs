@@ -252,16 +252,18 @@ function rebuildBenchmarkWorld(world: UserWorld, targetCount: number): void {
     const id = world.create();
     const transform = new Transform2D(x, y, 0);
     const sprite = new Sprite("iron-gear:small", 3, 3);
+    const isMovingEntity = i % Math.round(1 / MOVE_RATIO) === 0;
 
     sprite.layer = RENDER_LAYERS.world;
     sprite.zOrder = 0.3;
+    sprite.isDynamic = isMovingEntity;
 
     world.add(id, transform);
     world.add(id, sprite);
 
     runtimeState.spawnedEntityIds.push(id);
 
-    if (i % Math.round(1 / MOVE_RATIO) === 0) {
+    if (isMovingEntity) {
       runtimeState.movingTransforms.push(transform);
       runtimeState.movingBaseX.push(x);
       runtimeState.movingPhase.push((i % 1024) * 0.01);
