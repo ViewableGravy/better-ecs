@@ -380,6 +380,11 @@ Outcome:
 - Queue-path behavior remains linear in total entity count at very large scales, but Stage C successfully pushes more work into queue-time staging and keeps render command execution focused on already-staged data.
 - At high counts (`200k+`), frame budget is still dominated by CPU-side queue/staging work rather than GPU submission, matching the expected post-refactor bottleneck shift.
 
+Status update (post Stage C):
+
+- The previous "What to do next (highest ROI)" recommendation list has been executed as far as Stage C scope allowed and is now considered superseded by the Stage D queue-hotspot plan.
+- Active planning and implementation tracking now lives in `docs/QUEUE_PERFORMANCE_STAGE_D_PLAN.md`.
+
 ### Gate A: after Phase 1
 
 - Queue correctness unchanged (same visible output).
@@ -436,7 +441,7 @@ This keeps the roadmap strict by default and agile when new data warrants change
 
 High-priority direct migrations:
 
-- `src/engine/src/core/render-pipeline/passes/render-world/queue/queue-sprites.ts`
+- `src/engine/src/core/render-pipeline/passes/render-world/queue/queue-sprites/index.ts`
 - `src/engine/src/core/render-pipeline/passes/render-world/queue/queue-shapes.ts`
 - `src/engine/src/core/render-pipeline/passes/render-world/queue/queue-shader-quads.ts`
 

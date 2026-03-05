@@ -16,6 +16,8 @@ type WorldSpriteRenderRecordState = {
   pruneBatchSize: number;
 };
 
+export type SpriteRenderRecordWorldState = WorldSpriteRenderRecordState;
+
 /**********************************************************************************************************
  *   CONSTS
  **********************************************************************************************************/
@@ -48,6 +50,17 @@ export class SpriteRenderRecordCache {
 
   public resolveRecord(world: UserWorld, entityId: EntityId): SpriteRenderRecord {
     const state = this.#resolveWorldState(world);
+    return this.resolveRecordFromState(state, entityId);
+  }
+
+  public resolveWorldState(world: UserWorld): SpriteRenderRecordWorldState {
+    return this.#resolveWorldState(world);
+  }
+
+  public resolveRecordFromState(
+    state: SpriteRenderRecordWorldState,
+    entityId: EntityId,
+  ): SpriteRenderRecord {
     const existing = state.records.get(entityId);
     if (existing) {
       existing.lastSeenSerial = this.#serial;
@@ -65,6 +78,10 @@ export class SpriteRenderRecordCache {
 
   public pruneBatch(world: UserWorld): void {
     const state = this.#resolveWorldState(world);
+    this.pruneBatchFromState(state);
+  }
+
+  public pruneBatchFromState(state: SpriteRenderRecordWorldState): void {
 
     if (!state.pruneCursor) {
       state.pruneCursor = state.records.entries();

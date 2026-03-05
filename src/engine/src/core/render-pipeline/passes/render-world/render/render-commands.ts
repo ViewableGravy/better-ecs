@@ -2,11 +2,11 @@ import { Transform2D } from "@engine/components/transform";
 import { fromContext, FromEngine, FromRender } from "@engine/context";
 import { drawCullingBoundsOverlay } from "@engine/core/render-pipeline/passes/render-world/render/culling/overlay";
 import {
-  CullingBounds,
-  isCommandWithinCullingBounds,
-  isEntityRenderCommand,
-  isShapeDrawRenderCommand,
-  type EntityRenderCommand,
+    CullingBounds,
+    isCommandWithinCullingBounds,
+    isEntityRenderCommand,
+    isShapeDrawRenderCommand,
+    type EntityRenderCommand,
 } from "@engine/core/render-pipeline/passes/render-world/render/culling/utils";
 import { handleShaderEntityCommand } from "@engine/core/render-pipeline/passes/render-world/render/handlers/shader-entity";
 import { handleShapeDrawCommand } from "@engine/core/render-pipeline/passes/render-world/render/handlers/shape-draw";
@@ -58,21 +58,23 @@ export function renderCommands(
       continue;
     }
 
-    if (!isCommandWithinCullingBounds(command, cullingBounds, SHARED_RENDER_TRANSFORM, interpolationAlpha, spriteRecord))
+    const commandTransform = resolveCommandTransformRef(command, SHARED_RENDER_TRANSFORM, spriteRecord);
+
+    if (!isCommandWithinCullingBounds(command, cullingBounds, commandTransform, interpolationAlpha, spriteRecord))
       continue;
 
     if (command.type === "sprite-entity") {
-      handleSpriteEntityCommand(command, SHARED_RENDER_TRANSFORM, renderer, interpolationAlpha, spriteRecord);
+      handleSpriteEntityCommand(command, commandTransform, renderer, interpolationAlpha, spriteRecord);
       continue;
     }
 
     if (command.type === "shader-entity") {
-      handleShaderEntityCommand(command, SHARED_RENDER_TRANSFORM);
+      handleShaderEntityCommand(command, commandTransform);
       continue;
     }
 
     if (command.type === "shape-entity") {
-      handleShapeEntityCommand(command, SHARED_RENDER_TRANSFORM);
+      handleShapeEntityCommand(command, commandTransform);
       continue;
     }
 
@@ -110,11 +112,21 @@ function resolveCommandWorldTransform(
   spriteRecord: SpriteRenderRecord | null,
 ): boolean {
   if (command.type === "sprite-entity" && spriteRecord) {
-    out.curr.copyFrom(spriteRecord.worldTransform.curr);
-    out.prev.copyFrom(spriteRecord.worldTransform.prev);
     return true;
   }
 
   return resolveWorldTransform2D(world, entityId, out);
+}
+
+function resolveCommandTransformRef(
+  command: EntityRenderCommand,
+  fallback: Transform2D,
+  spriteRecord: SpriteRenderRecord | null,
+): Transform2D {
+  if (command.type === "sprite-entity" && spriteRecord) {
+    return spriteRecord.worldTransform;
+  }
+
+  return fallback;
 }
 

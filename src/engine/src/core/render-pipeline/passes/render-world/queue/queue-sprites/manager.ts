@@ -1,6 +1,6 @@
 import { Sprite } from "@engine/components";
 import { Transform2D } from "@engine/components/transform";
-import { SpriteRenderRecordCache } from "@engine/core/render-pipeline/passes/render-world/queue/queue-sprites/cache";
+import { SpriteRenderRecordCache, type SpriteRenderRecordWorldState } from "@engine/core/render-pipeline/passes/render-world/queue/queue-sprites/cache";
 import { pushSpriteRecord, queueSpriteCommand } from "@engine/core/render-pipeline/passes/render-world/queue/queue-sprites/utility";
 import { writeSpriteRecord, writeTransformRecord } from "@engine/core/render-pipeline/passes/render-world/queue/queue-sprites/writers";
 import {
@@ -19,6 +19,8 @@ export class QueueSpriteEntityManager {
   private static _instance: QueueSpriteEntityManager | null = null;
 
   private constructor(
+    private cache: SpriteRenderRecordCache,
+    private cacheState: SpriteRenderRecordWorldState,
     private world: UserWorld,
     private alpha: number,
     private cullingBounds: CullingBoundsValue | null,
@@ -28,6 +30,8 @@ export class QueueSpriteEntityManager {
   ) {}
 
   public static instance(
+    cache: SpriteRenderRecordCache,
+    cacheState: SpriteRenderRecordWorldState,
     world: UserWorld,
     alpha: number,
     cullingBounds: CullingBoundsValue | null,
@@ -37,6 +41,8 @@ export class QueueSpriteEntityManager {
   ): QueueSpriteEntityManager {
     if (!QueueSpriteEntityManager._instance) {
       QueueSpriteEntityManager._instance = new QueueSpriteEntityManager(
+        cache,
+        cacheState,
         world,
         alpha,
         cullingBounds,
@@ -45,6 +51,8 @@ export class QueueSpriteEntityManager {
         spriteRecords,
       );
     } else {
+      QueueSpriteEntityManager._instance.cache = cache;
+      QueueSpriteEntityManager._instance.cacheState = cacheState;
       QueueSpriteEntityManager._instance.world = world;
       QueueSpriteEntityManager._instance.alpha = alpha;
       QueueSpriteEntityManager._instance.cullingBounds = cullingBounds;
@@ -56,23 +64,21 @@ export class QueueSpriteEntityManager {
     return QueueSpriteEntityManager._instance;
   }
 
-  public queue(entityId: EntityId, sprite: Sprite): void {  
+  public queue(entityId: EntityId, sprite: Sprite, assetId: string = sprite.assetId): void {
     if (!resolveWorldTransform2D(this.world, entityId, QueueSpriteEntityManager._shared_queue_transform)) {
       return;
     }
-  
-    const cache = SpriteRenderRecordCache.instance();
-    const record = cache.resolveRecord(this.world, entityId);
-  
-    // TODO: just pass sprite instead of new allocation
-    record.dirtyMask = writeSpriteRecord(record, { assetId: sprite.assetId, sprite }) 
+
+    const record = this.cache.resolveRecordFromState(this.cacheState, entityId);
+
+    record.dirtyMask = writeSpriteRecord(record, assetId, sprite)
       | writeTransformRecord(record, QueueSpriteEntityManager._shared_queue_transform);
-  
+
     record.isVisible = isSpriteWithinCullingBounds(this.cullingBounds, record.worldTransform, this.alpha, record);
     if (!record.isVisible) {
       return;
     }
-  
+
     const spriteRecordIndex = pushSpriteRecord(this.spriteRecords, record);
     queueSpriteCommand(entityId, this.world, sprite.layer, sprite.zOrder, spriteRecordIndex, this.renderQueue, this.frameAllocator);
   }

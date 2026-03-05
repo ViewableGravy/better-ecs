@@ -1,27 +1,18 @@
 import { Sprite } from "@engine/components";
 import { Transform2D } from "@engine/components/transform";
 import {
-  SPRITE_RENDER_DIRTY_NONE,
-  SPRITE_RENDER_DIRTY_SPRITE,
-  SPRITE_RENDER_DIRTY_TRANSFORM,
-  type SpriteRenderRecord,
+    SPRITE_RENDER_DIRTY_NONE,
+    SPRITE_RENDER_DIRTY_SPRITE,
+    SPRITE_RENDER_DIRTY_TRANSFORM,
+    type SpriteRenderRecord,
 } from "@engine/core/render-pipeline/passes/render-world/sprite-render-record";
-
-/**********************************************************************************************************
- *   TYPE DEFINITIONS
- **********************************************************************************************************/
-type SpriteFieldSnapshot = {
-  assetId: string;
-  sprite: Sprite;
-};
 
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
-export function writeSpriteRecord(record: SpriteRenderRecord, snapshot: SpriteFieldSnapshot): number {
+export function writeSpriteRecord(record: SpriteRenderRecord, assetId: string, sprite: Sprite): number {
   let changed = false;
   const target = record.sprite;
-  const { assetId, sprite } = snapshot;
 
   if (target.assetId !== assetId) {
     target.assetId = assetId;

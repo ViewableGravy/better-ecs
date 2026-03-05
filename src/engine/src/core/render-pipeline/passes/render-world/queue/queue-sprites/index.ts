@@ -1,4 +1,5 @@
 import { AnimatedSprite, Sprite } from "@engine/components";
+import { getFrameAssetIdAtTime } from "@engine/components/sprite/animated";
 import { fromContext, FromRender } from "@engine/context";
 import { SpriteRenderRecordCache } from "@engine/core/render-pipeline/passes/render-world/queue/queue-sprites/cache";
 import { QueueSpriteEntityManager } from "@engine/core/render-pipeline/passes/render-world/queue/queue-sprites/manager";
@@ -21,7 +22,15 @@ export function queueSprites(): void {
   // Get sprite render record cache and queue manager instances
   const spriteRecords = frameAllocator.scratch<SpriteRenderRecord>("engine:sprite-render-records");
   const cache = SpriteRenderRecordCache.instance();
+
+  // Begin frame: mark all records as unused by incrementing the serial
+  cache.beginFrame();
+  const cacheState = cache.resolveWorldState(world);
+  const sampledTimeMs = performance.now();
+
   const manager = QueueSpriteEntityManager.instance(
+    cache,
+    cacheState,
     world, 
     interpolationAlpha, 
     cullingBounds, 
@@ -30,12 +39,9 @@ export function queueSprites(): void {
     spriteRecords
   );
 
-  // Begin frame: mark all records as unused by incrementing the serial
-  cache.beginFrame();
-
   // Queue sprite commands for all entities with Sprite or AnimatedSprite components
   world.forEach(Sprite, (entityId, sprite) => {
-    manager.queue(entityId, sprite);
+    manager.queue(entityId, sprite, sprite.assetId);
   });
 
   // AnimatedSprite is a separate loop to ensure it gets processed after Sprite, allowing it to override Sprite records if both components are present
@@ -44,9 +50,9 @@ export function queueSprites(): void {
       return;
     }
 
-    manager.queue(entityId, animatedSprite);
+    manager.queue(entityId, animatedSprite, getFrameAssetIdAtTime(animatedSprite, sampledTimeMs));
   });
 
   // Prune unused sprite records from the cache
-  cache.pruneBatch(world);
+  cache.pruneBatchFromState(cacheState);
 }
