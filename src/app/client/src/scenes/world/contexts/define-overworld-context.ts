@@ -243,8 +243,8 @@ export function defineOverworldContext(options: OverworldContextOptions) {
         );
       }
 
-      const xs = Array.from({ length: 50 }, (_, i) => 500 + i * 100);
-      const ys = Array.from({ length: 20 }, (_, i) => 60 + i * 20);
+      const xs = Array.from({ length: 5 }, (_, i) => 500 + i * 100);
+      const ys = Array.from({ length: 5 }, (_, i) => 60 + i * 20);
 
       // performance testing (currently ~70-80 fps)
       for (const x of xs) {
