@@ -5,7 +5,12 @@ import { schema, type Opts } from "@libs/fps/types";
 export function render(opts: Opts) {
   const now = performance.now();
   const engine = fromContext(Engine);
-  const { data } = fromContext(OverrideSystem<EngineSystem<typeof schema>>("plugin:fps-counter"));
+  const system = fromContext(OverrideSystem<EngineSystem<typeof schema>>("plugin:fps-counter"));
+  if (!system) {
+    return;
+  }
+
+  const { data } = system;
   const fpsBufferStart = data.fpsBuffer.start;
   if (fpsBufferStart === null) {
     data.fpsBuffer.start = now;

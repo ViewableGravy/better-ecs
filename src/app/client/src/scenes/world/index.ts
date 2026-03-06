@@ -1,13 +1,22 @@
 import { createDomLoadingOverlay } from "@client/overlays/create-dom-loading-overlay";
+import { FPSSystem } from "@client/plugins/fps";
+import { PhysicsDebugSystem } from "@client/plugins/physics";
 import { sceneConfig } from "@client/scenes/world/const";
 import { defineDungeonContext } from "@client/scenes/world/contexts/define-dungeon-context";
 import { defineHouseContext } from "@client/scenes/world/contexts/define-house-context";
 import { defineOverworldContext } from "@client/scenes/world/contexts/define-overworld-context";
+import { System as CameraFollow } from "@client/systems/core/camera-follow";
+import { System as CameraZoom } from "@client/systems/core/camera-zoom";
+import { System as Movement } from "@client/systems/core/movement";
+import { System as PhysicsWorldSync } from "@client/systems/core/physics-world-sync";
+import { System as TempAutoSavePlayerPosition } from "@client/systems/core/temp-auto-save";
 import { System as BuildModeSystem } from "@client/systems/world/build-mode";
+import { System as ConveyorMovement } from "@client/systems/world/conveyor-movement";
 import { DebugOverlaySystem } from "@client/systems/world/debug-overlay";
 import { HouseContextSystem } from "@client/systems/world/house-transition";
 import { PlayerOrbitSystem } from "@client/systems/world/player-orbit";
 import { System as PortalSystem } from "@client/systems/world/portal";
+import { System as Collision } from "@client/systems/world/scene-collision";
 import { fromContext, FromEngine } from "@engine/context";
 import {
   createContextScene
@@ -21,11 +30,20 @@ export const Scene = createContextScene("MainScene")({
     scope: "canvas-parent",
   }),
   systems: [
+    FPSSystem,
+    TempAutoSavePlayerPosition,
+    Movement,
+    PhysicsWorldSync,
+    ConveyorMovement,
+    Collision,
+    CameraFollow,
+    CameraZoom,
+    PhysicsDebugSystem,
     PlayerOrbitSystem,
-    HouseContextSystem, 
-    PortalSystem, 
-    BuildModeSystem, 
-    DebugOverlaySystem
+    HouseContextSystem,
+    PortalSystem,
+    BuildModeSystem,
+    DebugOverlaySystem,
   ],
   contexts: [
     defineOverworldContext({

@@ -5,6 +5,15 @@ import { createEntityId, getEntityIndex, invalidateEntity } from "@engine/ecs/en
 import { ComponentStore } from "@engine/ecs/storage";
 import type { Class } from "type-fest";
 
+type ForEach1Callback<TA> = (entityId: EntityId, componentA: TA) => void;
+type ForEach2Callback<TA, TB> = (entityId: EntityId, componentA: TA, componentB: TB) => void;
+type ForEach3Callback<TA, TB, TC> = (
+  entityId: EntityId,
+  componentA: TA,
+  componentB: TB,
+  componentC: TC,
+) => void;
+
 export interface IUserWorld {
   create(): EntityId;
 
@@ -24,6 +33,35 @@ export interface IUserWorld {
   move(entityId: EntityId, world: UserWorld): void;
 
   query(...componentTypes: Function[]): EntityId[];
+
+  forEach<TA>(
+    componentTypeA: Class<TA>,
+    callback: ForEach1Callback<TA>,
+  ): void;
+  forEach<TA, TB>(
+    componentTypeA: Class<TA>,
+    componentTypeB: Class<TB>,
+    callback: ForEach2Callback<TA, TB>,
+  ): void;
+  forEach<TA, TB, TC>(
+    componentTypeA: Class<TA>,
+    componentTypeB: Class<TB>,
+    componentTypeC: Class<TC>,
+    callback: ForEach3Callback<TA, TB, TC>,
+  ): void;
+
+  forEach1<TA>(componentTypeA: Class<TA>, callback: ForEach1Callback<TA>): void;
+  forEach2<TA, TB>(
+    componentTypeA: Class<TA>,
+    componentTypeB: Class<TB>,
+    callback: ForEach2Callback<TA, TB>,
+  ): void;
+  forEach3<TA, TB, TC>(
+    componentTypeA: Class<TA>,
+    componentTypeB: Class<TB>,
+    componentTypeC: Class<TC>,
+    callback: ForEach3Callback<TA, TB, TC>,
+  ): void;
 }
 
 export class UserWorld implements IUserWorld {
@@ -98,6 +136,73 @@ export class UserWorld implements IUserWorld {
 
   query(...componentTypes: Function[]): EntityId[] {
     return this.world.query(...componentTypes);
+  }
+
+  forEach<TA>(
+    componentTypeA: Class<TA>,
+    callback: ForEach1Callback<TA>,
+  ): void;
+  forEach<TA, TB>(
+    componentTypeA: Class<TA>,
+    componentTypeB: Class<TB>,
+    callback: ForEach2Callback<TA, TB>,
+  ): void;
+  forEach<TA, TB, TC>(
+    componentTypeA: Class<TA>,
+    componentTypeB: Class<TB>,
+    componentTypeC: Class<TC>,
+    callback: ForEach3Callback<TA, TB, TC>,
+  ): void;
+  forEach(
+    componentTypeA: Function,
+    componentTypeBOrCallback: Function,
+    componentTypeCOrCallback?: Function,
+    maybeCallback?: Function,
+  ): void {
+    if (typeof maybeCallback === "function" && componentTypeCOrCallback) {
+      this.world.forEach3(
+        componentTypeA as Class<unknown>,
+        componentTypeBOrCallback as Class<unknown>,
+        componentTypeCOrCallback as Class<unknown>,
+        maybeCallback as ForEach3Callback<unknown, unknown, unknown>,
+      );
+      return;
+    }
+
+    if (typeof componentTypeCOrCallback === "function") {
+      this.world.forEach2(
+        componentTypeA as Class<unknown>,
+        componentTypeBOrCallback as Class<unknown>,
+        componentTypeCOrCallback as ForEach2Callback<unknown, unknown>,
+      );
+      return;
+    }
+
+    this.world.forEach1(
+      componentTypeA as Class<unknown>,
+      componentTypeBOrCallback as ForEach1Callback<unknown>,
+    );
+  }
+
+  forEach1<TA>(componentTypeA: Class<TA>, callback: ForEach1Callback<TA>): void {
+    this.world.forEach1(componentTypeA, callback);
+  }
+
+  forEach2<TA, TB>(
+    componentTypeA: Class<TA>,
+    componentTypeB: Class<TB>,
+    callback: ForEach2Callback<TA, TB>,
+  ): void {
+    this.world.forEach2(componentTypeA, componentTypeB, callback);
+  }
+
+  forEach3<TA, TB, TC>(
+    componentTypeA: Class<TA>,
+    componentTypeB: Class<TB>,
+    componentTypeC: Class<TC>,
+    callback: ForEach3Callback<TA, TB, TC>,
+  ): void {
+    this.world.forEach3(componentTypeA, componentTypeB, componentTypeC, callback);
   }
 
   invariantQuery(...componentTypes: Function[]): [EntityId, ...EntityId[]] {
@@ -393,6 +498,147 @@ export class World {
     }
 
     return result;
+  }
+
+  forEach1<TA>(componentTypeA: Class<TA>, callback: ForEach1Callback<TA>): void {
+    const storeA = this.componentStores.get(componentTypeA) as ComponentStore<TA> | undefined;
+    if (!storeA) {
+      return;
+    }
+
+    const entities = storeA.entityIds();
+    const components = storeA.components();
+
+    for (let i = 0; i < entities.length; i += 1) {
+      const entityId = entities[i];
+      const componentA = components[i];
+
+      if (entityId === undefined || componentA === undefined) {
+        continue;
+      }
+
+      callback(entityId, componentA);
+    }
+  }
+
+  forEach2<TA, TB>(
+    componentTypeA: Class<TA>,
+    componentTypeB: Class<TB>,
+    callback: ForEach2Callback<TA, TB>,
+  ): void {
+    const storeA = this.componentStores.get(componentTypeA) as ComponentStore<TA> | undefined;
+    const storeB = this.componentStores.get(componentTypeB) as ComponentStore<TB> | undefined;
+
+    if (!storeA || !storeB) {
+      return;
+    }
+
+    const iterateAFirst = storeA.count() <= storeB.count();
+
+    if (iterateAFirst) {
+      const entityIds = storeA.entityIds();
+      const componentsA = storeA.components();
+
+      for (let i = 0; i < entityIds.length; i += 1) {
+        const entityId = entityIds[i];
+        const componentA = componentsA[i];
+        if (entityId === undefined || componentA === undefined) {
+          continue;
+        }
+
+        const componentB = storeB.getByEntityIndex(getEntityIndex(entityId));
+        if (componentB === undefined) {
+          continue;
+        }
+
+        callback(entityId, componentA, componentB);
+      }
+
+      return;
+    }
+
+    const entityIds = storeB.entityIds();
+    const componentsB = storeB.components();
+
+    for (let i = 0; i < entityIds.length; i += 1) {
+      const entityId = entityIds[i];
+      const componentB = componentsB[i];
+      if (entityId === undefined || componentB === undefined) {
+        continue;
+      }
+
+      const componentA = storeA.getByEntityIndex(getEntityIndex(entityId));
+      if (componentA === undefined) {
+        continue;
+      }
+
+      callback(entityId, componentA, componentB);
+    }
+  }
+
+  forEach3<TA, TB, TC>(
+    componentTypeA: Class<TA>,
+    componentTypeB: Class<TB>,
+    componentTypeC: Class<TC>,
+    callback: ForEach3Callback<TA, TB, TC>,
+  ): void {
+    const storeA = this.componentStores.get(componentTypeA) as ComponentStore<TA> | undefined;
+    const storeB = this.componentStores.get(componentTypeB) as ComponentStore<TB> | undefined;
+    const storeC = this.componentStores.get(componentTypeC) as ComponentStore<TC> | undefined;
+
+    if (!storeA || !storeB || !storeC) {
+      return;
+    }
+
+    let smallestStore: ComponentStore<unknown> = storeA;
+    let smallestKey: "A" | "B" | "C" = "A";
+
+    if (storeB.count() < smallestStore.count()) {
+      smallestStore = storeB;
+      smallestKey = "B";
+    }
+
+    if (storeC.count() < smallestStore.count()) {
+      smallestStore = storeC;
+      smallestKey = "C";
+    }
+
+    const entityIds = smallestStore.entityIds();
+
+    for (let i = 0; i < entityIds.length; i += 1) {
+      const entityId = entityIds[i];
+      if (entityId === undefined) {
+        continue;
+      }
+
+      const entityIndex = getEntityIndex(entityId);
+
+      const componentA =
+        smallestKey === "A"
+          ? storeA.components()[i]
+          : storeA.getByEntityIndex(entityIndex);
+      if (componentA === undefined) {
+        continue;
+      }
+
+      const componentB =
+        smallestKey === "B"
+          ? storeB.components()[i]
+          : storeB.getByEntityIndex(entityIndex);
+      if (componentB === undefined) {
+        continue;
+      }
+
+      const componentC =
+        smallestKey === "C"
+          ? storeC.components()[i]
+          : storeC.getByEntityIndex(entityIndex);
+      if (componentC === undefined) {
+        continue;
+      }
+
+      callback(entityId, componentA, componentB, componentC);
+    }
   }
 
   /**

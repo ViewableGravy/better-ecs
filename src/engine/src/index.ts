@@ -12,6 +12,7 @@ export { Rectangle } from "@engine/math/geometry/rectangle";
 export * from "@engine/serialization";
 export * from "@engine/systems/input";
 export * from "@engine/systems/transformSnapshot";
+export * from "@engine/systems/worldTransform2D";
 
 type AnySystemOpts = Omit<SystemOpts<any, any>, "schema"> & { name: string };
 type AnySystems = Record<string, any>;

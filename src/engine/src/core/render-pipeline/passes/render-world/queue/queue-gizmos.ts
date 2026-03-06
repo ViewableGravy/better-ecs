@@ -13,7 +13,7 @@ import {
 import { Color } from "@engine/components/sprite/sprite";
 import { Transform2D } from "@engine/components/transform";
 import { fromContext, FromRender } from "@engine/context";
-import { resolveWorldTransform2D } from "@engine/ecs/hierarchy";
+import { getWorldTransform2D } from "@engine/ecs/hierarchy";
 import type { UserWorld } from "@engine/ecs/world";
 import type {
   DenseShapeRenderData,
@@ -66,9 +66,6 @@ const SCALE_PREVIEW_FILL = new Color(1, 1, 1, SCALE_PREVIEW_FILL_ALPHA);
 const ROTATE_PREVIEW_FILL = new Color(0.3, 0.6, 1, ROTATE_PREVIEW_FILL_ALPHA);
 
 const TRANSPARENT_FILL = new Color(0, 0, 0, 0);
-
-const SHARED_TRANSFORM = new Transform2D();
-
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
@@ -94,13 +91,14 @@ export function queueGizmos(
   for (const entityId of world.query(Gizmo, Transform2D)) {
     const gizmo = world.require(entityId, Gizmo);
 
-    if (!resolveWorldTransform2D(world, entityId, SHARED_TRANSFORM)) {
+    const worldTransform = getWorldTransform2D(world, entityId);
+    if (!worldTransform) {
       continue;
     }
 
-    const centerX = SHARED_TRANSFORM.curr.pos.x;
-    const centerY = SHARED_TRANSFORM.curr.pos.y;
-    const rotation = SHARED_TRANSFORM.curr.rotation;
+    const centerX = worldTransform.curr.pos.x;
+    const centerY = worldTransform.curr.pos.y;
+    const rotation = worldTransform.curr.rotation;
     const activeHandle = gizmo.activeHandle;
 
     const axisXStroke = resolveHandleStroke(
@@ -664,6 +662,9 @@ function queueLine(
   command.world = null;
   command.entityId = null;
   command.shape = shape;
+  command.scope = "overlay";
+  command.bucketKind = "overlay-shape";
+  command.bucketKey = "overlay-shape";
   command.layer = GIZMO_LAYER;
   command.zOrder = GIZMO_Z_ORDER;
 
@@ -704,6 +705,9 @@ function queueCircle(
   command.world = null;
   command.entityId = null;
   command.shape = shape;
+  command.scope = "overlay";
+  command.bucketKind = "overlay-shape";
+  command.bucketKey = "overlay-shape";
   command.layer = GIZMO_LAYER;
   command.zOrder = GIZMO_Z_ORDER;
 
@@ -742,6 +746,9 @@ function queueRoundedRectangle(
   command.world = null;
   command.entityId = null;
   command.shape = shape;
+  command.scope = "overlay";
+  command.bucketKind = "overlay-shape";
+  command.bucketKey = "overlay-shape";
   command.layer = GIZMO_LAYER;
   command.zOrder = GIZMO_Z_ORDER;
 

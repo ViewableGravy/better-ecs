@@ -1,11 +1,14 @@
 import type { SceneDefinitionTuple } from "@engine/core/scene/scene.types";
 import type { EngineSystem } from "@engine/core/system";
 import { executeSystemCleanup, executeSystemInitialize } from "@engine/core/system";
+import { worldTransform2DSystem } from "@engine/systems/worldTransform2D";
 
 type SceneSystemEntry = {
   all: EngineSystem[];
   update: EngineSystem[];
 };
+
+const BUILT_IN_SCENE_SYSTEM_FACTORIES = [worldTransform2DSystem];
 
 export class SystemsManager {
   #engineSystems: Record<string, EngineSystem<any>>;
@@ -45,7 +48,7 @@ export class SystemsManager {
 
   public registerSceneSystems(scenes: SceneDefinitionTuple): void {
     for (const scene of scenes) {
-      const instances = scene.systems.map((factory) => factory());
+      const instances = [...scene.systems, ...BUILT_IN_SCENE_SYSTEM_FACTORIES].map((factory) => factory());
       this.#sceneSystems.set(scene.name, {
         all: instances,
         update: this.#sortSystemsForPhase(instances),

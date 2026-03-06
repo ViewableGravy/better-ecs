@@ -3,9 +3,9 @@
  * Runtime tests for scene management functionality.
  */
 
-import { describe, expect, it, vi } from "vitest";
 import { createEngine, createScene } from "@engine/core";
 import { SCENE_BRAND } from "@engine/core/scene/scene.types";
+import { describe, expect, it, vi } from "vitest";
 
 describe("createScene", () => {
   it("should create a scene definition with correct name", () => {
@@ -98,6 +98,16 @@ describe("EngineClass with scenes", () => {
     const world = engine.scene.world;
     expect(world).toBeDefined();
     expect(typeof world.create).toBe("function");
+  });
+
+  it("should allow createEngine without user systems", () => {
+    const engine = createEngine({
+      scenes: [],
+    });
+
+    expect(engine.scene.world).toBeDefined();
+    expect(engine.systems).toHaveProperty("engine:input");
+    expect(engine.systems).toHaveProperty("engine:transformSnapshot");
   });
 
   it("should expose scene manager via engine.scene", () => {

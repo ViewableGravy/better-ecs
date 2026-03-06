@@ -29,7 +29,6 @@ const assets = createAssetLoader({
 });
 
 const engine = createEngine({
-  systems: [],
   assetLoader: assets,
 });
 

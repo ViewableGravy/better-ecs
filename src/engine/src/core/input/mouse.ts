@@ -1,6 +1,6 @@
 import { Parent, Transform2D } from "@engine/components";
 import type { EntityId } from "@engine/ecs/entity";
-import { resolveWorldTransform2D } from "@engine/ecs/hierarchy";
+import { getWorldTransform2D } from "@engine/ecs/hierarchy";
 import type { UserWorld } from "@engine/ecs/world";
 import type { EngineClass } from "@engine/core/engine";
 import type { SceneDefinitionTuple } from "@engine/core/scene/scene.types";
@@ -26,9 +26,6 @@ export type EngineInputHost = EngineClass<
 export type EntityAtPointOptions = {
   preferParent?: boolean;
 };
-
-const SHARED_TRANSFORM2D = new Transform2D();
-
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
@@ -167,12 +164,13 @@ export function getEntityAtWorldPoint(
   let nearestDistanceSquared = maxDistanceSquared;
 
   for (const entityId of world.query(Transform2D)) {
-    if (!resolveWorldTransform2D(world, entityId, SHARED_TRANSFORM2D)) {
+    const worldTransform = getWorldTransform2D(world, entityId);
+    if (!worldTransform) {
       continue;
     }
 
-    const deltaX = SHARED_TRANSFORM2D.curr.pos.x - point.x;
-    const deltaY = SHARED_TRANSFORM2D.curr.pos.y - point.y;
+    const deltaX = worldTransform.curr.pos.x - point.x;
+    const deltaY = worldTransform.curr.pos.y - point.y;
     const distanceSquared = deltaX * deltaX + deltaY * deltaY;
     if (distanceSquared > nearestDistanceSquared) {
       continue;
@@ -209,12 +207,13 @@ function resolveHierarchyPreferredEntity(
       return preferredEntityId;
     }
 
-    if (!resolveWorldTransform2D(world, parent.entityId, SHARED_TRANSFORM2D)) {
+    const worldTransform = getWorldTransform2D(world, parent.entityId);
+    if (!worldTransform) {
       return preferredEntityId;
     }
 
-    const deltaX = SHARED_TRANSFORM2D.curr.pos.x - point.x;
-    const deltaY = SHARED_TRANSFORM2D.curr.pos.y - point.y;
+    const deltaX = worldTransform.curr.pos.x - point.x;
+    const deltaY = worldTransform.curr.pos.y - point.y;
     const distanceSquared = deltaX * deltaX + deltaY * deltaY;
     if (distanceSquared > currentDistanceSquared) {
       return preferredEntityId;

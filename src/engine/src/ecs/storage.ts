@@ -62,6 +62,18 @@ export class ComponentStore<T> {
   }
 
   /**
+   * Gets a component by entity index, or undefined if not present.
+   */
+  getByEntityIndex(entityIndex: number): T | undefined {
+    const denseIndex = this.sparse.get(entityIndex);
+    if (denseIndex === undefined) {
+      return undefined;
+    }
+
+    return this.denseComponents[denseIndex];
+  }
+
+  /**
    * Dense entity list (cache-friendly) matching component order.
    */
   entityIds(): readonly EntityId[] {

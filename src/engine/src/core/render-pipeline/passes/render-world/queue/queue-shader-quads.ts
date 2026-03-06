@@ -10,17 +10,18 @@ export function queueShaderQuads(
     FromRender.FrameAllocator,
   ),
 ): void {
-  for (const id of world.query(ShaderQuad)) {
-    const shaderQuad = world.require(id, ShaderQuad);
-
+  world.forEach(ShaderQuad, (id, shaderQuad) => {
     const command = frameAllocator.acquire("engine:render-command");
     command.type = "shader-entity";
     command.world = world;
     command.entityId = id;
     command.shape = null;
+    command.scope = "gameplay";
+    command.bucketKind = "shader";
+    command.bucketKey = `shader:${shaderQuad.assetId}`;
     command.layer = shaderQuad.layer;
     command.zOrder = shaderQuad.zOrder;
 
     queue.add(command);
-  }
+  });
 }

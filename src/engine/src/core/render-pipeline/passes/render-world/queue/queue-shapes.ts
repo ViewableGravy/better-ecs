@@ -10,17 +10,18 @@ export function queueShapes(
     FromRender.FrameAllocator,
   ),
 ): void {
-  for (const id of world.query(Shape)) {
-    const shape = world.require(id, Shape);
-
+  world.forEach(Shape, (id, shape) => {
     const command = frameAllocator.acquire("engine:render-command");
     command.type = "shape-entity";
     command.world = world;
     command.entityId = id;
     command.shape = null;
+    command.scope = "gameplay";
+    command.bucketKind = "shape";
+    command.bucketKey = "shape";
     command.layer = shape.layer;
     command.zOrder = shape.zOrder;
 
     queue.add(command);
-  }
+  });
 }

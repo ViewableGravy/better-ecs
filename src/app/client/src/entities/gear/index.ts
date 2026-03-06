@@ -1,6 +1,6 @@
 import { ironGearSheet } from "@client/assets/iron-gear";
-import { RENDER_LAYERS } from "@client/consts";
 import { OUTSIDE, RenderVisibility } from "@client/components/render-visibility";
+import { RENDER_LAYERS } from "@client/consts";
 import type { EntityId, UserWorld } from "@engine";
 import { Debug, Sprite, Transform2D } from "@engine/components";
 
@@ -29,6 +29,7 @@ export function spawnGear(world: UserWorld, options: SpawnGearOptions = {}): Ent
 
   sprite.layer = RENDER_LAYERS.world;
   sprite.zOrder = 0.3;
+  sprite.isDynamic = false;
 
   world.add(gear, new Transform2D(options.x ?? 0, options.y ?? 0, 0));
   world.add(gear, sprite);

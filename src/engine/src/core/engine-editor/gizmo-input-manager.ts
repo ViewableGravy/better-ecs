@@ -15,8 +15,9 @@ import {
 import { EngineEditorGizmoManager } from "@engine/core/engine-editor/gizmo-manager";
 import type { EngineInput, EngineKeyboardEvent, EngineMouseEvent } from "@engine/core/input";
 import type { EntityId } from "@engine/ecs/entity";
-import { resolveWorldTransform2D } from "@engine/ecs/hierarchy";
+import { getWorldTransform2D } from "@engine/ecs/hierarchy";
 import type { UserWorld } from "@engine/ecs/world";
+import { syncWorldTransform2DSubtree } from "@engine/systems/worldTransform2D";
 
 const PICK_RADIUS_PIXELS = 18;
 
@@ -67,8 +68,6 @@ export class GizmoInputManager {
   readonly #input: EngineInput;
   readonly #getWorld: () => UserWorld;
   readonly #gizmo: EngineEditorGizmoManager;
-
-  readonly #SHARED_TRANSFORM2D = new Transform2D();
   readonly #unsubscribers: Array<() => void> = [];
 
   #dragState: DragState | null = null;
@@ -201,6 +200,7 @@ export class GizmoInputManager {
 
       transform.curr.pos.set(nextX, nextY);
       transform.prev.pos.set(nextX, nextY);
+      syncWorldTransform2DSubtree(world, this.#dragState.entityId);
       this.#updateHoveredHandle(event);
       return;
     }
@@ -215,16 +215,17 @@ export class GizmoInputManager {
       transform.curr.pos.set(nextX, nextY);
       transform.prev.pos.set(nextX, nextY);
       this.#updateHoveredHandle(event);
+      syncWorldTransform2DSubtree(world, this.#dragState.entityId);
       return;
     }
 
-    if (!resolveWorldTransform2D(world, this.#dragState.entityId, this.#SHARED_TRANSFORM2D)) {
+    const worldTransform = getWorldTransform2D(world, this.#dragState.entityId);
+    if (!worldTransform) {
       return;
     }
 
-    const centerX = this.#SHARED_TRANSFORM2D.curr.pos.x;
-    const centerY = this.#SHARED_TRANSFORM2D.curr.pos.y;
-
+    const centerX = worldTransform.curr.pos.x;
+    const centerY = worldTransform.curr.pos.y;
     if (this.#dragState.mode === "rotate") {
       const angle = Math.atan2(worldY - centerY, worldX - centerX);
       const rotationDelta = angle - this.#dragState.startPointerAngle;
@@ -232,6 +233,7 @@ export class GizmoInputManager {
 
       transform.curr.rotation = nextRotation;
       transform.prev.rotation = nextRotation;
+      syncWorldTransform2DSubtree(world, this.#dragState.entityId);
 
       const gizmo = world.get(this.#dragState.entityId, Gizmo);
       if (gizmo && gizmo.rotateStartDeltaX !== null && gizmo.rotateStartDeltaY !== null) {
@@ -255,6 +257,7 @@ export class GizmoInputManager {
 
     transform.curr.scale.set(nextScaleX, nextScaleY);
     transform.prev.scale.set(nextScaleX, nextScaleY);
+    syncWorldTransform2DSubtree(world, this.#dragState.entityId);
 
     const gizmo = world.get(this.#dragState.entityId, Gizmo);
     if (gizmo) {
@@ -287,16 +290,17 @@ export class GizmoInputManager {
       return;
     }
 
-    if (!resolveWorldTransform2D(world, gizmoEntityId, this.#SHARED_TRANSFORM2D)) {
+    const worldTransform = getWorldTransform2D(world, gizmoEntityId);
+    if (!worldTransform) {
       return;
     }
 
     const handle = this.#getHandleAtPoint(
       event.worldX,
       event.worldY,
-      this.#SHARED_TRANSFORM2D.curr.pos.x,
-      this.#SHARED_TRANSFORM2D.curr.pos.y,
-      this.#SHARED_TRANSFORM2D.curr.rotation,
+      worldTransform.curr.pos.x,
+      worldTransform.curr.pos.y,
+      worldTransform.curr.rotation,
     );
 
     this.#gizmo.setHoveredHandle(gizmoEntityId, handle);
@@ -312,13 +316,14 @@ export class GizmoInputManager {
     const transform = world.require(gizmoEntityId, Transform2D);
     const gizmo = world.require(gizmoEntityId, Gizmo);
 
-    if (!resolveWorldTransform2D(world, gizmoEntityId, this.#SHARED_TRANSFORM2D)) {
+    const worldTransform = getWorldTransform2D(world, gizmoEntityId);
+    if (!worldTransform) {
       return false;
     }
 
-    const centerX = this.#SHARED_TRANSFORM2D.curr.pos.x;
-    const centerY = this.#SHARED_TRANSFORM2D.curr.pos.y;
-    const worldRotation = this.#SHARED_TRANSFORM2D.curr.rotation;
+    const centerX = worldTransform.curr.pos.x;
+    const centerY = worldTransform.curr.pos.y;
+    const worldRotation = worldTransform.curr.rotation;
 
     const handle = this.#getHandleAtPoint(event.worldX, event.worldY, centerX, centerY, worldRotation);
     if (handle === "plane-xy") {

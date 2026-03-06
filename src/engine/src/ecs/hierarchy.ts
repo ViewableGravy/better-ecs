@@ -1,4 +1,4 @@
-import { Parent, Transform2D } from "@engine/components";
+import { Parent, Transform2D, WorldTransform2D } from "@engine/components";
 import type { EntityId } from "@engine/ecs/entity";
 import type { IUserWorld } from "@engine/ecs/world";
 
@@ -14,6 +14,50 @@ const LOCAL_STACK: Array<Transform2D | undefined> = new Array(MAX_HIERARCHY_DEPT
  * - The result includes both `curr` and `prev` to preserve interpolation behavior.
  */
 export function resolveWorldTransform2D(
+  world: IUserWorld,
+  entityId: EntityId,
+  out: Transform2D,
+): boolean {
+  const worldTransform = getWorldTransform2D(world, entityId);
+  if (worldTransform) {
+    copyTransform2D(out, worldTransform);
+    return true;
+  }
+
+  return resolveWorldTransform2DFromHierarchy(world, entityId, out);
+}
+
+export function getWorldTransform2D(
+  world: IUserWorld,
+  entityId: EntityId,
+): WorldTransform2D | undefined {
+  return world.get(entityId, WorldTransform2D);
+}
+
+export function copyTransform2D(target: Transform2D, source: Transform2D): void {
+  target.curr.copyFrom(source.curr);
+  target.prev.copyFrom(source.prev);
+}
+
+export function composeWorldTransform2D(
+  target: Transform2D,
+  parent: Transform2D,
+  local: Transform2D,
+): void {
+  target.curr.pos.x = parent.curr.pos.x + local.curr.pos.x;
+  target.curr.pos.y = parent.curr.pos.y + local.curr.pos.y;
+  target.curr.rotation = parent.curr.rotation + local.curr.rotation;
+  target.curr.scale.x = parent.curr.scale.x * local.curr.scale.x;
+  target.curr.scale.y = parent.curr.scale.y * local.curr.scale.y;
+
+  target.prev.pos.x = parent.prev.pos.x + local.prev.pos.x;
+  target.prev.pos.y = parent.prev.pos.y + local.prev.pos.y;
+  target.prev.rotation = parent.prev.rotation + local.prev.rotation;
+  target.prev.scale.x = parent.prev.scale.x * local.prev.scale.x;
+  target.prev.scale.y = parent.prev.scale.y * local.prev.scale.y;
+}
+
+function resolveWorldTransform2DFromHierarchy(
   world: IUserWorld,
   entityId: EntityId,
   out: Transform2D,
@@ -42,8 +86,7 @@ export function resolveWorldTransform2D(
     }
 
     // Root transform (no Parent) is world-space.
-    out.curr.copyFrom(transform.curr);
-    out.prev.copyFrom(transform.prev);
+    copyTransform2D(out, transform);
     break;
   }
 
@@ -55,17 +98,7 @@ export function resolveWorldTransform2D(
       return false;
     }
 
-    out.curr.pos.x += localTransform.curr.pos.x;
-    out.curr.pos.y += localTransform.curr.pos.y;
-    out.curr.rotation += localTransform.curr.rotation;
-    out.curr.scale.x *= localTransform.curr.scale.x;
-    out.curr.scale.y *= localTransform.curr.scale.y;
-
-    out.prev.pos.x += localTransform.prev.pos.x;
-    out.prev.pos.y += localTransform.prev.pos.y;
-    out.prev.rotation += localTransform.prev.rotation;
-    out.prev.scale.x *= localTransform.prev.scale.x;
-    out.prev.scale.y *= localTransform.prev.scale.y;
+    composeWorldTransform2D(out, out, localTransform);
   }
 
   return true;
