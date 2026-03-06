@@ -13,7 +13,7 @@ import { handleShapeDrawCommand } from "@engine/core/render-pipeline/passes/rend
 import { handleShapeEntityCommand } from "@engine/core/render-pipeline/passes/render-world/render/handlers/shape-entity";
 import { handleSpriteEntityCommand } from "@engine/core/render-pipeline/passes/render-world/render/handlers/sprite-entity";
 import type { SpriteRenderRecord } from "@engine/core/render-pipeline/passes/render-world/sprite-render-record";
-import { resolveWorldTransform2D } from "@engine/ecs/hierarchy";
+import { getWorldTransform2D, resolveWorldTransform2D } from "@engine/ecs/hierarchy";
 import type { RenderQueue } from "@engine/render";
 
 const SHARED_RENDER_TRANSFORM = new Transform2D();
@@ -158,6 +158,13 @@ function resolveCommandWorldTransform(
   spriteRecord: SpriteRenderRecord | null,
 ): boolean {
   if (command.type === "sprite-entity" && spriteRecord) {
+    return true;
+  }
+
+  const worldTransform = getWorldTransform2D(world, entityId);
+  if (worldTransform) {
+    out.curr.copyFrom(worldTransform.curr);
+    out.prev.copyFrom(worldTransform.prev);
     return true;
   }
 

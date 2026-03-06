@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { Parent, Transform2D } from "@engine/components";
 import { UserWorld, World } from "@engine/ecs/world";
 import { EngineEditorSelectionManager } from "@engine/core/engine-editor/selection-manager";
+import { syncWorldTransform2D } from "@engine/systems/worldTransform2D";
 
 describe("EngineEditorSelectionManager", () => {
   it("prefers parent by default when parent and child overlap", () => {
@@ -14,6 +15,7 @@ describe("EngineEditorSelectionManager", () => {
     world.add(parent, new Transform2D(0, 0));
     world.add(child, new Transform2D(0, 0));
     world.add(child, new Parent(parent));
+    syncWorldTransform2D(world);
 
     const manager = new EngineEditorSelectionManager({
       getWorld: () => world,
@@ -32,6 +34,7 @@ describe("EngineEditorSelectionManager", () => {
     world.add(parent, new Transform2D(0, 0));
     world.add(child, new Transform2D(0, 0));
     world.add(child, new Parent(parent));
+    syncWorldTransform2D(world);
 
     const manager = new EngineEditorSelectionManager({
       getWorld: () => world,
@@ -50,6 +53,7 @@ describe("EngineEditorSelectionManager", () => {
     world.add(parent, new Transform2D(2, 0));
     world.add(child, new Transform2D(-2, 0));
     world.add(child, new Parent(parent));
+    syncWorldTransform2D(world);
 
     const manager = new EngineEditorSelectionManager({
       getWorld: () => world,

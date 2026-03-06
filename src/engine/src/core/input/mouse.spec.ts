@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { Parent, Transform2D } from "@engine/components";
 import { UserWorld, World } from "@engine/ecs/world";
 import { getEntityAtWorldPoint } from "@engine/core/input/mouse";
+import { syncWorldTransform2D } from "@engine/systems/worldTransform2D";
 
 describe("getEntityAtWorldPoint", () => {
   it("prefers parent by default when child and parent are both selectable", () => {
@@ -14,6 +15,7 @@ describe("getEntityAtWorldPoint", () => {
     world.add(parent, new Transform2D(0, 0));
     world.add(child, new Transform2D(0, 0));
     world.add(child, new Parent(parent));
+    syncWorldTransform2D(world);
 
     const picked = getEntityAtWorldPoint(world, { x: 0, y: 0 }, 1);
     expect(picked).toBe(parent);
@@ -28,6 +30,7 @@ describe("getEntityAtWorldPoint", () => {
     world.add(parent, new Transform2D(0, 0));
     world.add(child, new Transform2D(0, 0));
     world.add(child, new Parent(parent));
+    syncWorldTransform2D(world);
 
     const picked = getEntityAtWorldPoint(world, { x: 0, y: 0 }, 1, { preferParent: false });
     expect(picked).toBe(child);
@@ -42,6 +45,7 @@ describe("getEntityAtWorldPoint", () => {
     world.add(parent, new Transform2D(2, 0));
     world.add(child, new Transform2D(-2, 0));
     world.add(child, new Parent(parent));
+    syncWorldTransform2D(world);
 
     const picked = getEntityAtWorldPoint(world, { x: 0, y: 0 }, 3);
     expect(picked).toBe(child);
@@ -59,6 +63,7 @@ describe("getEntityAtWorldPoint", () => {
     world.add(child, new Transform2D(0, 0));
     world.add(parent, new Parent(root));
     world.add(child, new Parent(parent));
+    syncWorldTransform2D(world);
 
     const picked = getEntityAtWorldPoint(world, { x: 0, y: 0 }, 1);
     expect(picked).toBe(root);

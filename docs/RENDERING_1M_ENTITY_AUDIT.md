@@ -421,13 +421,13 @@ Conveyors are not an edge case. If they dominate real gameplay, the engine archi
 
 ## Current Phase
 
-**Current active phase target:** Phase 1 — Replace flat sorting with buckets
+**Current active phase target:** Phase 2 — Add precomputed transform pipeline
 
 Rationale:
 
-- sorting is currently a structural cost on every frame
-- bucket design sets up the rest of the roadmap
-- transform precomputation, atlas/material staging, and conveyor aggregate rendering all fit better once submission structure is bucket-driven
+- Phase 1 bucketed submission is now in place and the hot render traversal path no longer depends on callback-driven queue walking
+- transform resolution is still an architectural hotspot unless render, input, and editor paths can read cached world-space values directly
+- Phase 3+ work depends on world-space data becoming a maintained engine invariant rather than an on-demand hierarchy walk
 
 ## Current Implementation Status Summary
 
@@ -478,6 +478,36 @@ Caveat:
 
 - the currently reproducible main-scene setup appears much smaller than the earlier reported hotspot case, so this validation confirms the hot path is now cheap for the current scene state but does **not** yet explain the earlier 25ms trace by itself
 - if a heavier main-scene reproduction still exists, it should be re-profiled with the updated build before Phase 1 is declared fully closed
+
+### 2026-03-06 — Phase 2 world-transform cache checkpoint
+
+Status:
+
+- introduced `WorldTransform2D` cached storage in [src/engine/src/components/transform/world-transform2d.ts](src/engine/src/components/transform/world-transform2d.ts)
+- added cached transform helpers and compatibility fallback wiring in [src/engine/src/ecs/hierarchy.ts](src/engine/src/ecs/hierarchy.ts)
+- added a dedicated world-transform sync pass in [src/engine/src/systems/worldTransform2D.ts](src/engine/src/systems/worldTransform2D.ts)
+- registered that sync pass as a built-in scene system after scene-defined systems in [src/engine/src/core/engine/systems/index.ts](src/engine/src/core/engine/systems/index.ts)
+- migrated sprite queueing, gizmo queueing, mouse picking, gizmo interaction, and render-command transform resolution to prefer cached world transforms in steady-state hot paths
+- added subtree sync support for direct gizmo edits so editor interactions can keep cached world transforms current outside normal scene-system updates
+- added focused cache coverage in [src/engine/src/tests/ecs/world-transform2d.spec.ts](src/engine/src/tests/ecs/world-transform2d.spec.ts)
+
+Verification notes:
+
+- `engine:typecheck` passes
+- focused Vitest coverage passes for `src/engine/src/tests/ecs/world-transform2d.spec.ts`, `src/engine/src/core/input/mouse.spec.ts`, and `src/engine/src/core/engine-editor/selection-manager.spec.ts`
+- `engine:lint` is still blocked by pre-existing generated `.types/` lint errors unrelated to this phase
+- `engine:test` is still blocked by pre-existing shader import parsing and UI type-resolution failures unrelated to this phase
+
+Chrome MCP validation notes:
+
+- Chrome MCP performance tracing was run again against the current main-scene session on `http://127.0.0.1:3000`
+- the runtime no-navigation trace completed without surfacing a new dedicated performance insight set for world-transform work in the currently reproducible scene state
+- that trace at least confirms the Phase 2 build is running in-browser and should be treated as the baseline for the next heavier-scene repro pass
+
+Follow-up needed:
+
+- capture a heavier main-scene or benchmark-scene Chrome trace where transform traversal was previously material to quantify the before/after cost more directly
+- migrate any remaining non-critical `resolveWorldTransform2D()` callers out of steady-state hot paths before closing Phase 2 completely
 
 ### Completed investigation and accepted conclusions
 

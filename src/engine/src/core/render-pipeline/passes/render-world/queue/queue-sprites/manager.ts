@@ -1,5 +1,4 @@
 import { Sprite } from "@engine/components";
-import { Transform2D } from "@engine/components/transform";
 import {
   SpriteRenderRecordCache,
   type SpriteRenderRecordCacheEntry,
@@ -13,13 +12,12 @@ import {
 } from "@engine/core/render-pipeline/passes/render-world/render/culling/utils";
 import { SPRITE_RENDER_DIRTY_NONE, type SpriteRenderRecord } from "@engine/core/render-pipeline/passes/render-world/sprite-render-record";
 import type { EntityId } from "@engine/ecs/entity";
-import { resolveWorldTransform2D } from "@engine/ecs/hierarchy";
+import { getWorldTransform2D } from "@engine/ecs/hierarchy";
 import type { UserWorld } from "@engine/ecs/world";
 import type { EngineFrameAllocatorRegistry, InternalFrameAllocator, RenderQueue } from "@engine/render";
 
 /***** COMPONENT START *****/
 export class QueueSpriteEntityManager {
-  private static _shared_queue_transform = new Transform2D();
   private static _instance: QueueSpriteEntityManager | null = null;
 
   private constructor(
@@ -84,14 +82,15 @@ export class QueueSpriteEntityManager {
       return;
     }
 
-    if (!resolveWorldTransform2D(this.world, entityId, QueueSpriteEntityManager._shared_queue_transform)) {
+    const worldTransform = getWorldTransform2D(this.world, entityId);
+    if (!worldTransform) {
       return;
     }
 
     const record = entry.record;
 
     record.dirtyMask = writeSpriteRecord(record, assetId, sprite)
-      | writeTransformRecord(record, QueueSpriteEntityManager._shared_queue_transform);
+      | writeTransformRecord(record, worldTransform);
 
     record.isVisible = isSpriteWithinCullingBounds(this.cullingBounds, record.worldTransform, this.alpha, record);
     if (!record.isVisible) {
