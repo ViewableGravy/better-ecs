@@ -1,6 +1,6 @@
 import { DefaultEngineEditorView } from "@engine/ui/layout";
 import { attachCanvas, type AttachCanvasOptions, type AttachedCanvas } from "@engine/ui/utilities/attach-canvas";
-import { type EngineUiContextValue } from "@ui/utilities/engine-context";
+import { type EngineUiContextValue } from "@engine/ui/utilities/engine-context";
 import { createRoot } from "react-dom/client";
 
 /**********************************************************************************************************

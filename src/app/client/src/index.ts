@@ -12,7 +12,6 @@ async function main() {
   const engine = createAppEngine();
 
   // Start application
-  // prettier-ignore
   for await (const [update, frame] of engine.startEngine({ fps: 120, ups: 120 })) {
     if (update.shouldUpdate) {
       // Update phase - run update logic

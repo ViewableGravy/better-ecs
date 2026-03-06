@@ -29,7 +29,7 @@ export type CreateEngineOptions<
 	TAssetTypes extends Record<string, unknown> = Record<string, unknown>,
 > = {
 	rootElement?: HTMLElement | null;
-	systems: TSystems;
+	systems?: TSystems;
 	scenes?: TScenes;
 	initialScene?: SceneName<TScenes[number]>;
 	initialization?: EngineInitializationSystem;

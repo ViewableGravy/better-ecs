@@ -1,3 +1,4 @@
+import { canConveyorStoreEntities } from "@client/components/conveyor-belt";
 import { OUTSIDE } from "@client/components/render-visibility";
 import { spawnContextEntryRegion } from "@client/entities/context-entry-region";
 import { spawnDemoShaderQuad } from "@client/entities/demo-shader-quad";
@@ -205,12 +206,16 @@ export function defineOverworldContext(options: OverworldContextOptions) {
         centerY: 360,
       });
 
-      function testSpawnTransportWithGears(x: number, y: number, variant: TransportBeltVariant) {
-        const demoItemBelt = spawnTransportBelt(world, {
+      function spawnTransportDemo(x: number, y: number, variant: TransportBeltVariant) {
+        const demoBelt = spawnTransportBelt(world, {
           x: x,
           y: y,
           variant,
         });
+
+        if (!canConveyorStoreEntities(variant)) {
+          return;
+        }
 
         const leftA = spawnGear(world, { size: "large" });
         const leftB = spawnGear(world, { size: "large" });
@@ -219,12 +224,12 @@ export function defineOverworldContext(options: OverworldContextOptions) {
         const rightA = spawnGear(world, { size: "large" });
         const rightB = spawnGear(world, { size: "large" });
 
-        ConveyorUtils.addEntity(world, demoItemBelt, leftA, "left", 0);
-        ConveyorUtils.addEntity(world, demoItemBelt, leftB, "left", 1);
-        ConveyorUtils.addEntity(world, demoItemBelt, leftC, "left", 2);
-        ConveyorUtils.addEntity(world, demoItemBelt, leftD, "left", 3);
-        ConveyorUtils.addEntity(world, demoItemBelt, rightA, "right", 0);
-        ConveyorUtils.addEntity(world, demoItemBelt, rightB, "right", 2);
+        ConveyorUtils.addEntity(world, demoBelt, leftA, "left", 0);
+        ConveyorUtils.addEntity(world, demoBelt, leftB, "left", 1);
+        ConveyorUtils.addEntity(world, demoBelt, leftC, "left", 2);
+        ConveyorUtils.addEntity(world, demoBelt, leftD, "left", 3);
+        ConveyorUtils.addEntity(world, demoBelt, rightA, "right", 0);
+        ConveyorUtils.addEntity(world, demoBelt, rightB, "right", 2);
       }
 
       const demoGridStartX = -220;
@@ -236,7 +241,7 @@ export function defineOverworldContext(options: OverworldContextOptions) {
         const column = index % demoGridColumns;
         const row = Math.floor(index / demoGridColumns);
 
-        testSpawnTransportWithGears(
+        spawnTransportDemo(
           demoGridStartX + column * demoGridStep,
           demoGridStartY + row * demoGridStep,
           variant,
@@ -249,17 +254,17 @@ export function defineOverworldContext(options: OverworldContextOptions) {
       // performance testing (currently ~70-80 fps)
       for (const x of xs) {
         for (const y of ys) {
-          testSpawnTransportWithGears(x, y, "horizontal-right");
-          testSpawnTransportWithGears(x + 20, y, "horizontal-right");
-          testSpawnTransportWithGears(x + 40, y, "horizontal-right");
-          testSpawnTransportWithGears(x + 60, y, "horizontal-right");
-          testSpawnTransportWithGears(x + 80, y, "horizontal-right");
+          spawnTransportDemo(x, y, "horizontal-right");
+          spawnTransportDemo(x + 20, y, "horizontal-right");
+          spawnTransportDemo(x + 40, y, "horizontal-right");
+          spawnTransportDemo(x + 60, y, "horizontal-right");
+          spawnTransportDemo(x + 80, y, "horizontal-right");
 
-          testSpawnTransportWithGears(x, y, "horizontal-left");
-          testSpawnTransportWithGears(x + 20, y, "horizontal-left");
-          testSpawnTransportWithGears(x + 40, y, "horizontal-left");
-          testSpawnTransportWithGears(x + 60, y, "horizontal-left");
-          testSpawnTransportWithGears(x + 80, y, "horizontal-left");
+          spawnTransportDemo(x, y, "horizontal-left");
+          spawnTransportDemo(x + 20, y, "horizontal-left");
+          spawnTransportDemo(x + 40, y, "horizontal-left");
+          spawnTransportDemo(x + 60, y, "horizontal-left");
+          spawnTransportDemo(x + 80, y, "horizontal-left");
         }
       }
 

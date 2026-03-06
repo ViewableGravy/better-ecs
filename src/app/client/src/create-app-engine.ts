@@ -16,7 +16,6 @@ export const createAppEngine = () => {
     assetLoader: Loader,
     loading: createAppEngineLoadingOverlay(),
     initialization: Initialize,
-    systems: [],
     render: Render,
     scenes: [
       MainScene,

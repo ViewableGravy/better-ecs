@@ -16,12 +16,13 @@ import { attachCanvas } from "@engine/ui/utilities/attach-canvas";
 import type { EngineUiContextValue } from "@engine/ui/utilities/engine-context";
 
 export function createEngine<
-	TSystems extends SystemFactoryTuple,
+	TSystems extends SystemFactoryTuple = [],
 	TScenes extends SceneDefinitionTuple = [],
 	TAssets extends Record<string, unknown> = Record<string, unknown>,
 	TAssetTypes extends Record<string, unknown> = Record<string, unknown>,
 >(opts: CreateEngineOptions<TSystems, TScenes, TAssets, TAssetTypes>): EngineClass<TSystems, TScenes, TAssets, TAssetTypes> {
 	const systemsRecord: Record<string, EngineSystem<any>> = {};
+	const systems = opts.systems ?? ([] as unknown as TSystems);
 
 	const builtInSystems = [inputSystem, transformSnapshotSystem];
 	for (const factory of builtInSystems) {
@@ -29,7 +30,7 @@ export function createEngine<
 		systemsRecord[system.name] = system;
 	}
 
-	for (const factory of opts.systems) {
+	for (const factory of systems) {
 		const system = factory();
 		systemsRecord[system.name] = system;
 	}

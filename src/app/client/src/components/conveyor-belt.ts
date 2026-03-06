@@ -11,6 +11,10 @@ export type ConveyorSlots = [
   EntityId | null,
 ];
 
+export function canConveyorStoreEntities(variant: string): boolean {
+  return !variant.startsWith("start-") && !variant.startsWith("end-");
+}
+
 export class ConveyorBeltComponent {
   private readonly leftSlots: ConveyorSlots = [null, null, null, null];
   private readonly rightSlots: ConveyorSlots = [null, null, null, null];
@@ -28,11 +32,19 @@ export class ConveyorBeltComponent {
     return this.rightSlots;
   }
 
+  public get storesEntities(): boolean {
+    return canConveyorStoreEntities(this.variant);
+  }
+
   public getEntity(side: ConveyorSide, index: ConveyorSlotIndex): EntityId | null {
     return this.getSlots(side)[index];
   }
 
   public setEntity(side: ConveyorSide, index: ConveyorSlotIndex, entityId: EntityId): void {
+    if (!this.storesEntities) {
+      throw new Error(`Conveyor ${this.variant} is visual-only and cannot store entities`);
+    }
+
     const slots = this.getSlots(side);
 
     if (slots[index] !== null) {
