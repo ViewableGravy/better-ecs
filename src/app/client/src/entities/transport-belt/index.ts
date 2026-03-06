@@ -1,6 +1,6 @@
-import { RENDER_LAYERS } from "@client/consts";
 import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import { OUTSIDE, RenderVisibility } from "@client/components/render-visibility";
+import { RENDER_LAYERS } from "@client/consts";
 import { CollisionProfiles } from "@client/scenes/world/physics/collision-profiles";
 import { TRANSPORT_BELT_COLLIDER_SIZE } from "@client/systems/world/build-mode/const";
 import { Vec2, type EntityId, type UserWorld } from "@engine";
@@ -36,40 +36,11 @@ const TRANSPORT_BELT_FRAMES = [
   9, 10, 11, 12, 13, 14, 15, 16,
 ] as const;
 
-type TransportBeltFrame = (typeof TRANSPORT_BELT_FRAMES)[number];
-type TransportBeltAssetId = `transport-belt:${TransportBeltVariant}_${TransportBeltFrame}`;
-
 const TRANSPORT_BELT_QUAD_SIZE = 40;
 const TRANSPORT_BELT_FRAME_SIZE = 128;
 const TRANSPORT_BELT_Z_BASE = 0.2;
 const TRANSPORT_BELT_Z_PER_WORLD_Y = 0.000001;
 const HALF_TRANSPORT_BELT_COLLIDER_SIZE = TRANSPORT_BELT_COLLIDER_SIZE * 0.5;
-
-function createTransportBeltAssetId(variant: TransportBeltVariant, frame: TransportBeltFrame): TransportBeltAssetId {
-  return `transport-belt:${variant}_${frame}`;
-}
-
-function getTransportBeltAnimationAssets(variant: TransportBeltVariant): TransportBeltAssetId[] {
-  const assets: TransportBeltAssetId[] = [];
-
-  for (const frame of TRANSPORT_BELT_FRAMES) {
-    assets.push(createTransportBeltAssetId(variant, frame));
-  }
-
-  return assets;
-}
-
-export function getAllTransportBeltAssetIds(): TransportBeltAssetId[] {
-  const assets: TransportBeltAssetId[] = [];
-
-  for (const variant of TRANSPORT_BELT_VARIANTS) {
-    for (const frame of TRANSPORT_BELT_FRAMES) {
-      assets.push(createTransportBeltAssetId(variant, frame));
-    }
-  }
-
-  return assets;
-}
 
 type SpawnTransportBeltOptions = {
   x: number;
@@ -84,7 +55,7 @@ export function spawnTransportBelt(world: UserWorld, options: SpawnTransportBelt
 
   const belt = world.create();
   const sprite = new AnimatedSprite({
-    assets: getTransportBeltAnimationAssets(variant),
+    assets: TRANSPORT_BELT_FRAMES.map((frame) => `transport-belt:${variant}_${frame}` as const),
     width: TRANSPORT_BELT_FRAME_SIZE * scale,
     height: TRANSPORT_BELT_FRAME_SIZE * scale,
     useGlobalOffset: true,
