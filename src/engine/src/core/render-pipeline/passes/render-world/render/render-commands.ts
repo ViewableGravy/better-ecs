@@ -2,11 +2,11 @@ import { Transform2D } from "@engine/components/transform";
 import { fromContext, FromEngine, FromRender } from "@engine/context";
 import { drawCullingBoundsOverlay } from "@engine/core/render-pipeline/passes/render-world/render/culling/overlay";
 import {
-    CullingBounds,
-    isCommandWithinCullingBounds,
-    isEntityRenderCommand,
-    isShapeDrawRenderCommand,
-    type EntityRenderCommand,
+  CullingBounds,
+  isCommandWithinCullingBounds,
+  isEntityRenderCommand,
+  isShapeDrawRenderCommand,
+  type EntityRenderCommand,
 } from "@engine/core/render-pipeline/passes/render-world/render/culling/utils";
 import { handleShaderEntityCommand } from "@engine/core/render-pipeline/passes/render-world/render/handlers/shader-entity";
 import { handleShapeDrawCommand } from "@engine/core/render-pipeline/passes/render-world/render/handlers/shape-draw";
@@ -53,6 +53,12 @@ export function renderCommands(
 
     const { world, entityId } = command;
     const spriteRecord = resolveSpriteRecord(command, spriteRenderRecords);
+
+    if (command.type === "sprite-entity" && spriteRecord) {
+      handleSpriteEntityCommand(command, spriteRecord.worldTransform, renderer, interpolationAlpha, spriteRecord);
+      continue;
+    }
+
     const didResolveTransform = resolveCommandWorldTransform(command, world, entityId, SHARED_RENDER_TRANSFORM, spriteRecord);
     if (!didResolveTransform) {
       continue;
@@ -62,11 +68,6 @@ export function renderCommands(
 
     if (!isCommandWithinCullingBounds(command, cullingBounds, commandTransform, interpolationAlpha, spriteRecord))
       continue;
-
-    if (command.type === "sprite-entity") {
-      handleSpriteEntityCommand(command, commandTransform, renderer, interpolationAlpha, spriteRecord);
-      continue;
-    }
 
     if (command.type === "shader-entity") {
       handleShaderEntityCommand(command, commandTransform);
