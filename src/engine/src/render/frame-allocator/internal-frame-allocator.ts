@@ -1,4 +1,3 @@
-import { Pool } from "@utils";
 import type { ActivePool, FrameAllocatorRegistry, PoolArgs, PoolValue } from "@engine/render/frame-allocator/types";
 
 export class InternalFrameAllocator<TRegistry extends FrameAllocatorRegistry> {
@@ -8,15 +7,16 @@ export class InternalFrameAllocator<TRegistry extends FrameAllocatorRegistry> {
   /**
    * Create a frame allocator with a static pool registry.
    *
-   * Each registry entry defines how to create and reset a pooled value.
-   * Values acquired during a frame are automatically released on `endFrame`.
+    * Each registry entry defines how to create and reset a reusable value.
+    * Values acquired during a frame stay densely stored per pool and are
+    * reused by iterator reset on the next frame.
    */
   constructor(registry: TRegistry) {
     for (const poolName of Object.keys(registry) as Array<keyof TRegistry>) {
       const factory = registry[poolName];
       this.#pools.set(poolName, {
-        pool: new Pool(() => factory.create()),
-        active: [],
+        iterator: 0,
+        allocated: [],
         factory,
       });
     }
@@ -35,28 +35,21 @@ export class InternalFrameAllocator<TRegistry extends FrameAllocatorRegistry> {
   /**
    * End the current frame lifecycle.
    *
-   * This releases all acquired pooled values and clears scratch buffers.
+    * This rewinds pool iterators and clears scratch buffers.
    */
   endFrame(): void {
     this.reset();
   }
 
   /**
-   * Release all currently acquired pooled values and clear scratch arrays.
+   * Rewind all pool iterators and clear scratch arrays.
    *
    * This is called by both `beginFrame` and `endFrame` so frame boundaries
    * remain robust even when callers recover from errors.
    */
   reset(): void {
     for (const poolState of this.#pools.values()) {
-      const { pool, active } = poolState;
-      for (let i = active.length - 1; i >= 0; i -= 1) {
-        const item = active[i];
-        if (item !== undefined) {
-          pool.release(item);
-        }
-      }
-      active.length = 0;
+      poolState.iterator = 0;
     }
 
     for (const scratch of this.#scratchArrays.values()) {
@@ -85,8 +78,8 @@ export class InternalFrameAllocator<TRegistry extends FrameAllocatorRegistry> {
   /**
    * Acquire a pooled value from a named pool and reset it for immediate use.
    *
-   * The value remains active until `reset`/`endFrame`, where it is returned
-   * to its pool.
+    * The value remains resident in its pool's dense storage and becomes
+    * available again after `reset`/`endFrame` rewinds the pool iterator.
    */
   acquire<TKey extends keyof TRegistry>(
     name: TKey,
@@ -97,9 +90,17 @@ export class InternalFrameAllocator<TRegistry extends FrameAllocatorRegistry> {
       throw new Error(`FrameAllocator pool "${String(name)}" is not registered`);
     }
 
-    const value = poolState.pool.acquire();
+    const index = poolState.iterator;
+    const value = index < poolState.allocated.length
+      ? poolState.allocated[index]
+      : poolState.factory.create();
+
+    if (index >= poolState.allocated.length) {
+      poolState.allocated.push(value);
+    }
+
+    poolState.iterator = index + 1;
     poolState.factory.reset(value, ...args);
-    poolState.active.push(value);
 
     return value as PoolValue<TRegistry[TKey]>;
   }

@@ -1,11 +1,9 @@
-import type { Pool } from "@utils";
-
 export type FramePoolFactory<TValue, TArgs extends readonly unknown[]> = {
   create: () => TValue;
   reset(value: TValue, ...args: TArgs): void;
 };
 
-export type FrameAllocatorRegistry = Record<string, FramePoolFactory<any, readonly unknown[]>>;
+export type FrameAllocatorRegistry = Record<string, FramePoolFactory<unknown, readonly unknown[]>>;
 
 export type MergeFrameAllocatorRegistry<
   TBase extends FrameAllocatorRegistry,
@@ -19,7 +17,7 @@ export type PoolArgs<TFactory> =
   TFactory extends FramePoolFactory<unknown, infer TArgs> ? TArgs : never;
 
 export type ActivePool = {
-  pool: Pool<any>;
-  active: any[];
-  factory: FramePoolFactory<any, readonly unknown[]>;
+  iterator: number;
+  allocated: unknown[];
+  factory: FramePoolFactory<unknown, readonly unknown[]>;
 };
