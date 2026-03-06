@@ -13,12 +13,17 @@ export type RenderCommandBucketKind = "sprite" | "shader" | "shape" | "overlay-s
 
 type RenderCommandBucket = {
   readonly key: string;
+  readonly scope: RenderCommandScope;
+  readonly layer: number;
+  readonly subLayer: number;
+  readonly kind: RenderCommandBucketKind;
   readonly commands: RenderCommand[];
 };
 
+export type QueuedRenderBucket = RenderCommandBucket;
+
 type RenderBucketGroup = {
   readonly bucketsByKey: Map<string, RenderCommandBucket>;
-  readonly orderedBuckets: RenderCommandBucket[];
 };
 
 type RenderSubLayerBucket = {
@@ -36,7 +41,16 @@ type RenderScopeBuckets = {
 };
 
 const RENDER_SCOPE_ORDER: readonly RenderCommandScope[] = ["gameplay", "overlay"];
-const RENDER_BUCKET_KIND_ORDER: readonly RenderCommandBucketKind[] = ["sprite", "shader", "shape", "overlay-shape"];
+const RENDER_SCOPE_PRIORITY: Record<RenderCommandScope, number> = {
+  gameplay: 0,
+  overlay: 1,
+};
+const RENDER_BUCKET_KIND_PRIORITY: Record<RenderCommandBucketKind, number> = {
+  sprite: 0,
+  shader: 1,
+  shape: 2,
+  "overlay-shape": 3,
+};
 
 /**
  * A single render command entry.
@@ -63,6 +77,7 @@ export type RenderCommand = {
 export class RenderQueue {
   #nextSequence = 0;
   readonly #orderedCommands: RenderCommand[] = [];
+  readonly #orderedBuckets: RenderCommandBucket[] = [];
   readonly #scopes = new Map<RenderCommandScope, RenderScopeBuckets>();
   #commandsDirty = false;
 
@@ -77,6 +92,10 @@ export class RenderQueue {
     return this.#orderedCommands;
   }
 
+  get buckets(): readonly QueuedRenderBucket[] {
+    return this.#orderedBuckets;
+  }
+
   /**
    * Add a command to the queue while preserving stable insertion order.
    */
@@ -88,7 +107,7 @@ export class RenderQueue {
     const layer = resolveOrCreateLayerBucket(scope, command.layer);
     const subLayer = resolveOrCreateSubLayerBucket(layer, command.zOrder);
     const group = subLayer.groups[command.bucketKind];
-    const bucket = resolveOrCreateRenderBucket(group, command.bucketKey);
+    const bucket = this.#resolveOrCreateRenderBucket(group, command);
 
     bucket.commands.push(command);
     this.#commandsDirty = true;
@@ -103,32 +122,15 @@ export class RenderQueue {
   }
 
   forEachCommand(visitor: (command: RenderCommand) => void): void {
-    for (const scopeName of RENDER_SCOPE_ORDER) {
-      const scope = this.#resolveScopeBuckets(scopeName);
+    const commands = this.commands;
 
-      for (const layerKey of scope.orderedLayers) {
-        const layer = scope.layers.get(layerKey);
-        if (!layer) {
-          continue;
-        }
-
-        for (const subLayerKey of layer.orderedSubLayers) {
-          const subLayer = layer.subLayers.get(subLayerKey);
-          if (!subLayer) {
-            continue;
-          }
-
-          for (const bucketKind of RENDER_BUCKET_KIND_ORDER) {
-            const group = subLayer.groups[bucketKind];
-
-            for (const bucket of group.orderedBuckets) {
-              for (const command of bucket.commands) {
-                visitor(command);
-              }
-            }
-          }
-        }
+    for (let index = 0; index < commands.length; index += 1) {
+      const command = commands[index];
+      if (!command) {
+        continue;
       }
+
+      visitor(command);
     }
   }
 
@@ -137,6 +139,7 @@ export class RenderQueue {
    */
   clear(): void {
     this.#orderedCommands.length = 0;
+    this.#orderedBuckets.length = 0;
 
     for (const scope of this.#scopes.values()) {
       scope.orderedLayers.length = 0;
@@ -152,10 +155,27 @@ export class RenderQueue {
       return;
     }
 
-    this.#orderedCommands.length = 0;
-    this.forEachCommand((command) => {
-      this.#orderedCommands.push(command);
-    });
+    const orderedCommands = this.#orderedCommands;
+    const orderedBuckets = this.#orderedBuckets;
+
+    orderedCommands.length = 0;
+
+    for (let bucketIndex = 0; bucketIndex < orderedBuckets.length; bucketIndex += 1) {
+      const bucket = orderedBuckets[bucketIndex];
+      if (!bucket) {
+        continue;
+      }
+
+      const bucketCommands = bucket.commands;
+      for (let commandIndex = 0; commandIndex < bucketCommands.length; commandIndex += 1) {
+        const command = bucketCommands[commandIndex];
+        if (!command) {
+          continue;
+        }
+
+        orderedCommands.push(command);
+      }
+    }
 
     this.#commandsDirty = false;
   }
@@ -168,6 +188,29 @@ export class RenderQueue {
 
     const created = createRenderScopeBuckets();
     this.#scopes.set(scope, created);
+    return created;
+  }
+
+  #resolveOrCreateRenderBucket(
+    group: RenderBucketGroup,
+    command: RenderCommand,
+  ): RenderCommandBucket {
+    const existing = group.bucketsByKey.get(command.bucketKey);
+    if (existing) {
+      return existing;
+    }
+
+    const created: RenderCommandBucket = {
+      key: command.bucketKey,
+      scope: command.scope,
+      layer: command.layer,
+      subLayer: command.zOrder,
+      kind: command.bucketKind,
+      commands: [],
+    };
+
+    group.bucketsByKey.set(command.bucketKey, created);
+    insertRenderBucket(this.#orderedBuckets, created);
     return created;
   }
 }
@@ -200,7 +243,6 @@ function createRenderSubLayerBucket(): RenderSubLayerBucket {
 function createRenderBucketGroup(): RenderBucketGroup {
   return {
     bucketsByKey: new Map<string, RenderCommandBucket>(),
-    orderedBuckets: [],
   };
 }
 
@@ -228,22 +270,6 @@ function resolveOrCreateSubLayerBucket(layer: RenderLayerBucket, subLayerKey: nu
   return created;
 }
 
-function resolveOrCreateRenderBucket(group: RenderBucketGroup, bucketKey: string): RenderCommandBucket {
-  const existing = group.bucketsByKey.get(bucketKey);
-  if (existing) {
-    return existing;
-  }
-
-  const created: RenderCommandBucket = {
-    key: bucketKey,
-    commands: [],
-  };
-
-  group.bucketsByKey.set(bucketKey, created);
-  group.orderedBuckets.push(created);
-  return created;
-}
-
 function insertNumericKey(target: number[], key: number): void {
   let index = 0;
 
@@ -252,4 +278,40 @@ function insertNumericKey(target: number[], key: number): void {
   }
 
   target.splice(index, 0, key);
+}
+
+function insertRenderBucket(target: RenderCommandBucket[], bucket: RenderCommandBucket): void {
+  let index = 0;
+
+  while (index < target.length) {
+    const existing = target[index];
+    if (!existing) {
+      break;
+    }
+
+    if (compareRenderBuckets(existing, bucket) > 0) {
+      break;
+    }
+
+    index += 1;
+  }
+
+  target.splice(index, 0, bucket);
+}
+
+function compareRenderBuckets(left: RenderCommandBucket, right: RenderCommandBucket): number {
+  const scopeDelta = RENDER_SCOPE_PRIORITY[left.scope] - RENDER_SCOPE_PRIORITY[right.scope];
+  if (scopeDelta !== 0) {
+    return scopeDelta;
+  }
+
+  if (left.layer !== right.layer) {
+    return left.layer - right.layer;
+  }
+
+  if (left.subLayer !== right.subLayer) {
+    return left.subLayer - right.subLayer;
+  }
+
+  return RENDER_BUCKET_KIND_PRIORITY[left.kind] - RENDER_BUCKET_KIND_PRIORITY[right.kind];
 }

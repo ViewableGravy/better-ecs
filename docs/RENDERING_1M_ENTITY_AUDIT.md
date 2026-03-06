@@ -457,6 +457,28 @@ Performance observation:
 - at that cost, the current implementation is still structurally too expensive even though it removed the old global compare-sort path
 - Phase 1 should therefore be treated as **architecturally redirected but not performance-complete** until bucket traversal overhead is reduced substantially
 
+### 2026-03-06 — Phase 1 traversal follow-up
+
+Status:
+
+- removed render-path use of `forEachCommand()`
+- removed render-path use of per-frame flattened `queue.commands` materialization
+- switched the hot render loop to iterate preordered buckets directly
+- kept `queue.commands` only as a compatibility/debug view instead of the main render-path structure
+- added an opt-in runtime measurement hook for render-queue traversal so Chrome MCP validation can sample real scene cost directly in-browser
+
+Chrome MCP validation notes:
+
+- Chrome MCP performance tracing was re-run on the main scene after the traversal change
+- the current main-scene run did **not** reproduce the previous 25ms `forEachCommand()` hotspot
+- the opt-in runtime traversal sample on the current main-scene/full-zoom run measured roughly **0.0013ms average traversal cost per frame** with about **23 queued commands per frame**
+- this means the old callback-driven traversal bottleneck has been eliminated in the currently reproducible scene state
+
+Caveat:
+
+- the currently reproducible main-scene setup appears much smaller than the earlier reported hotspot case, so this validation confirms the hot path is now cheap for the current scene state but does **not** yet explain the earlier 25ms trace by itself
+- if a heavier main-scene reproduction still exists, it should be re-profiled with the updated build before Phase 1 is declared fully closed
+
 ### Completed investigation and accepted conclusions
 
 - confirmed dense ECS iteration exists and is worth preserving
