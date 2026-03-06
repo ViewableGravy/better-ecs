@@ -16,6 +16,9 @@ export function queueShaderQuads(
     command.world = world;
     command.entityId = id;
     command.shape = null;
+    command.scope = "gameplay";
+    command.bucketKind = "shader";
+    command.bucketKey = `shader:${shaderQuad.assetId}`;
     command.layer = shaderQuad.layer;
     command.zOrder = shaderQuad.zOrder;
 

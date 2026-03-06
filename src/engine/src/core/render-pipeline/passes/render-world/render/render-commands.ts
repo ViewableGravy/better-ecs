@@ -35,52 +35,52 @@ export function renderCommands(
   const showCullingBounds = engine.editor.viewState.showCullingBounds || engine.renderCulling.debugOutline;
 
   renderer.setMeshOverlayEnabled(showQuadOutlines);
-  
-  for (const command of queue.commands) {
+
+  queue.forEachCommand((command) => {
     /***** RAW DRAW COMMANDS *****/
     if (isShapeDrawRenderCommand(command)) {
       if (!isCommandWithinCullingBounds(command, cullingBounds)) {
-        continue;
+        return;
       }
 
       handleShapeDrawCommand(command);
-      continue;
+      return;
     }
 
     /***** ECS RENDER COMMANDS *****/
     if (!isEntityRenderCommand(command))
-      continue;
+      return;
 
     const { world, entityId } = command;
     const spriteRecord = resolveSpriteRecord(command, spriteRenderRecords);
 
     if (command.type === "sprite-entity" && spriteRecord) {
       handleSpriteEntityCommand(command, spriteRecord.worldTransform, renderer, interpolationAlpha, spriteRecord);
-      continue;
+      return;
     }
 
     const didResolveTransform = resolveCommandWorldTransform(command, world, entityId, SHARED_RENDER_TRANSFORM, spriteRecord);
     if (!didResolveTransform) {
-      continue;
+      return;
     }
 
     const commandTransform = resolveCommandTransformRef(command, SHARED_RENDER_TRANSFORM, spriteRecord);
 
     if (!isCommandWithinCullingBounds(command, cullingBounds, commandTransform, interpolationAlpha, spriteRecord))
-      continue;
+      return;
 
     if (command.type === "shader-entity") {
       handleShaderEntityCommand(command, commandTransform);
-      continue;
+      return;
     }
 
     if (command.type === "shape-entity") {
       handleShapeEntityCommand(command, commandTransform);
-      continue;
+      return;
     }
 
     console.warn(`[Render Commands] Unhandled render command type: ${command.type}`);
-  }
+  });
 
 
 

@@ -389,6 +389,20 @@ Success criteria:
 
 Large refactors are acceptable when they reduce architectural ambiguity and prevent future slow-path regressions.
 
+### Rule 1.5: Every major step must be validated with Chrome MCP performance tracing
+
+Do not treat architectural changes as wins without measuring them in a real scene.
+
+Required validation process for each meaningful rendering change:
+
+1. run the scene in Chrome
+2. capture a trace with Chrome MCP performance tooling
+3. inspect actual function-level time spent in the hot path
+4. record whether the change reduced, preserved, or regressed frame cost
+
+This effort should prioritize **measured function time** over assumptions or structural cleanliness alone.
+If a new abstraction is architecturally better but still consumes a large fraction of the frame, it is not finished.
+
 ### Rule 2: New hot paths must be hard to misuse
 
 If a fast system relies on subtle rules, wrap those rules in engine-owned abstractions.
@@ -416,6 +430,32 @@ Rationale:
 - transform precomputation, atlas/material staging, and conveyor aggregate rendering all fit better once submission structure is bucket-driven
 
 ## Current Implementation Status Summary
+
+### 2026-03-06 — Phase 1 bucketed submission checkpoint
+
+Status:
+
+- replaced the flat `RenderQueue.commands.sort(...)` path with bucketed submission storage keyed by render scope, layer, sub-layer, and bucket kind
+- grouped gameplay sprite commands by material-style bucket keys during queue emission
+- grouped shader quad commands by shader bucket keys during queue emission
+- separated overlay gizmo shape draws from gameplay buckets through an explicit render scope
+- removed the standalone render-world sort pass so render iteration now walks bucket structure directly
+- added focused queue tests for bucket grouping and scope/layer ordering
+
+Verification notes:
+
+- `engine:typecheck` passes
+- focused `src/render/queue/render-queue.spec.ts` passes
+- workspace `engine:lint` is currently blocked by pre-existing `.types/` lint failures unrelated to this phase
+- workspace `engine:test` is currently blocked by pre-existing shader import / UI type-resolution failures unrelated to this phase
+- Chrome MCP performance tracing is required before considering Phase 1 complete from a performance perspective
+
+Performance observation:
+
+- `forEachCommand()` is still showing roughly **25ms per frame** in the main scene during Chrome performance tracing
+- that means bucket iteration alone is currently consuming roughly **25% of total frame time** in the measured scenario
+- at that cost, the current implementation is still structurally too expensive even though it removed the old global compare-sort path
+- Phase 1 should therefore be treated as **architecturally redirected but not performance-complete** until bucket traversal overhead is reduced substantially
 
 ### Completed investigation and accepted conclusions
 
@@ -464,6 +504,8 @@ Current note:
 
 - global sort cost is guaranteed work every frame
 - replacing it is a foundational requirement, not a later polish task
+- bucket traversal itself must also be treated as a measurable hot path, not assumed free simply because compare-sort was removed
+- if bucket iteration (`forEachCommand()`) remains double-digit milliseconds in real scenes, it is still a Phase 1 bottleneck and should be optimized further
 
 ### Transform traversal
 
@@ -492,9 +534,10 @@ When work progresses, update this section with:
 
 1. **Current active phase**
 2. **Completed steps in that phase**
-3. **New benchmark tables**
-4. **Observed regressions or surprises**
-5. **Decision changes**
+3. **Chrome MCP trace evidence with actual hot-function timings**
+4. **New benchmark tables**
+5. **Observed regressions or surprises**
+6. **Decision changes**
 
 Recommended log format for future entries:
 
@@ -514,6 +557,7 @@ Observations:
 
 - key result 1
 - key result 2
+- top hot functions from Chrome trace and their measured times
 
 Decision:
 

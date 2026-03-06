@@ -104,7 +104,16 @@ export class QueueSpriteEntityManager {
     entry.cohort = this.resolveEntryCohort(record, sprite, isAnimatedSprite);
 
     const spriteRecordIndex = pushSpriteRecord(this.spriteRecords, record);
-    queueSpriteCommand(entityId, this.world, sprite.layer, sprite.zOrder, spriteRecordIndex, this.renderQueue, this.frameAllocator);
+    queueSpriteCommand(
+      entityId,
+      this.world,
+      assetId,
+      sprite.layer,
+      sprite.zOrder,
+      spriteRecordIndex,
+      this.renderQueue,
+      this.frameAllocator,
+    );
   }
 
   private reuseStaticEntryIfPossible(
@@ -147,6 +156,7 @@ export class QueueSpriteEntityManager {
     queueSpriteCommand(
       entityId,
       this.world,
+      sprite.assetId,
       sprite.layer,
       sprite.zOrder,
       spriteRecordIndex,

@@ -8,7 +8,6 @@ import { queueShaderQuads } from "@engine/core/render-pipeline/passes/render-wor
 import { queueShapes } from "@engine/core/render-pipeline/passes/render-world/queue/queue-shapes";
 import { queueSprites } from "@engine/core/render-pipeline/passes/render-world/queue/queue-sprites";
 import { renderCommands } from "@engine/core/render-pipeline/passes/render-world/render/render-commands";
-import { sortCommands } from "@engine/core/render-pipeline/passes/render-world/sort/sort-commands";
 
 export const RenderWorldPass = createRenderPass("world-render")({
   scope: "world",
@@ -18,7 +17,6 @@ export const RenderWorldPass = createRenderPass("world-render")({
     queueShapes();
     queueGizmos();
 
-    sortCommands();
     renderCommands();
     
     fromContext(FromRender.Queue).clear();

@@ -664,6 +664,9 @@ function queueLine(
   command.world = null;
   command.entityId = null;
   command.shape = shape;
+  command.scope = "overlay";
+  command.bucketKind = "overlay-shape";
+  command.bucketKey = "overlay-shape";
   command.layer = GIZMO_LAYER;
   command.zOrder = GIZMO_Z_ORDER;
 
@@ -704,6 +707,9 @@ function queueCircle(
   command.world = null;
   command.entityId = null;
   command.shape = shape;
+  command.scope = "overlay";
+  command.bucketKind = "overlay-shape";
+  command.bucketKey = "overlay-shape";
   command.layer = GIZMO_LAYER;
   command.zOrder = GIZMO_Z_ORDER;
 
@@ -742,6 +748,9 @@ function queueRoundedRectangle(
   command.world = null;
   command.entityId = null;
   command.shape = shape;
+  command.scope = "overlay";
+  command.bucketKind = "overlay-shape";
+  command.bucketKey = "overlay-shape";
   command.layer = GIZMO_LAYER;
   command.zOrder = GIZMO_Z_ORDER;
 

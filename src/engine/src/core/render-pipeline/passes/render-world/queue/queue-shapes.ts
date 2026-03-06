@@ -16,6 +16,9 @@ export function queueShapes(
     command.world = world;
     command.entityId = id;
     command.shape = null;
+    command.scope = "gameplay";
+    command.bucketKind = "shape";
+    command.bucketKey = "shape";
     command.layer = shape.layer;
     command.zOrder = shape.zOrder;
 

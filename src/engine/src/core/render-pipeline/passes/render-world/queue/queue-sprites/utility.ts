@@ -7,6 +7,7 @@ import type { EngineFrameAllocatorRegistry, InternalFrameAllocator, RenderQueue 
 export function queueSpriteCommand(
   entityId: EntityId,
   world: UserWorld,
+  assetId: string,
   layer: number,
   zOrder: number,
   spriteRecordIndex: number,
@@ -18,6 +19,9 @@ export function queueSpriteCommand(
   command.world = world;
   command.entityId = entityId;
   command.shape = null;
+  command.scope = "gameplay";
+  command.bucketKind = "sprite";
+  command.bucketKey = `sprite:${assetId}`;
   command.layer = layer;
   command.zOrder = zOrder;
   command.spriteRecordIndex = spriteRecordIndex;

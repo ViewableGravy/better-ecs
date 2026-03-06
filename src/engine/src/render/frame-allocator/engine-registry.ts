@@ -75,6 +75,9 @@ export const engineFrameAllocatorRegistry: EngineFrameAllocatorRegistry = {
       world: null,
       entityId: null,
       shape: null,
+      scope: "gameplay",
+      bucketKind: "shape",
+      bucketKey: "shape",
       layer: 0,
       zOrder: 0,
       sequence: 0,
@@ -85,6 +88,9 @@ export const engineFrameAllocatorRegistry: EngineFrameAllocatorRegistry = {
       value.world = null;
       value.entityId = null;
       value.shape = null;
+      value.scope = "gameplay";
+      value.bucketKind = "shape";
+      value.bucketKey = "shape";
       value.layer = 0;
       value.zOrder = 0;
       value.sequence = 0;
