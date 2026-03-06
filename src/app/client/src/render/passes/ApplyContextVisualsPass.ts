@@ -1,16 +1,16 @@
 import { PlayerComponent } from "@client/components/player";
-import { ContextVisualBinding } from "@client/scenes/world/components/context-visual-binding";
-import { InsideContext } from "@client/scenes/world/components/inside-context";
+import { ContextVisualBinding } from "@client/components/context-visual-binding";
+import { InsideContext } from "@client/components/inside-context";
 import {
   HOUSE_INTERIOR,
   HOUSE_ROOF,
   OUTSIDE,
   RenderVisibility,
-} from "@client/scenes/world/components/render-visibility";
+} from "@client/components/render-visibility";
 import {
   BlendTransition,
   BlendTransitionMutator,
-} from "@client/scenes/world/systems/houseTransition/transitionMutator";
+} from "@client/systems/world/house-transition/transitionMutator";
 import { lerp } from "@client/utilities/math";
 import { createRenderPass, type UserWorld } from "@engine";
 import { fromContext, Engine } from "@engine/context";

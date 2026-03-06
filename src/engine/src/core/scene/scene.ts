@@ -1,6 +1,6 @@
 // packages/engine/src/core/scene/scene.ts
-import type { SystemFactoryTuple } from "@engine/core/system";
 import { SCENE_BRAND, type SceneConfig, type SceneDefinition } from "@engine/core/scene/scene.types";
+import type { SystemFactoryTuple } from "@engine/core/system";
 
 /**
  * Creates a scene definition with the given name and configuration.
@@ -39,6 +39,7 @@ export const createScene = <TName extends string>(name: TName) => {
       // `TSystems` (especially when `systems` is omitted and `TSystems` defaults).
       // This cast is the minimal, contained workaround.
       systems: (config.systems ?? []) as TSystems,
+      loading: config.loading ?? null,
       setup: config.setup,
       sceneSetup: config.sceneSetup ?? defaultSceneHook,
       teardown: config.teardown ?? defaultTeardown,

@@ -25,3 +25,4 @@ src/**/*.types/**/*.d.ts.map
 
 # Ignore playwright last run json files
 .last-run.json
+Trace-*.json.gz

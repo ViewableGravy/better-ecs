@@ -36,6 +36,7 @@ export interface LooseAssetManager {
 
 type Registry<TAssets extends Assets> = {
   assets: { [K in AssetKey<TAssets>]?: AssetAdapter<TAssets[K], AssetType> };
+  sheets?: Record<string, ReadonlyArray<string>>;
 };
 
 type AssetStorage<TAssets extends Assets> = {
@@ -46,9 +47,19 @@ type AssetRequests<TAssets extends Assets> = {
   [K in AssetKey<TAssets>]?: Promise<TAssets[K]>;
 };
 
+type SheetMap = Record<string, unknown>;
+type SheetKey<TSheetMap extends SheetMap> = Extract<keyof TSheetMap, string>;
+type SpriteKey<
+  TSheetMap extends SheetMap,
+  TSheet extends SheetKey<TSheetMap>,
+> = Extract<TSheetMap[TSheet], string> extends never
+  ? string
+  : Extract<TSheetMap[TSheet], string>;
+
 export class AssetManager<
   TAssets extends Assets = Assets,
   TAssetTypes extends Record<string, unknown> = Record<string, AssetType>,
+  TSheetMap extends SheetMap = SheetMap,
 > implements LooseAssetManager {
   /**
    * Internal storage for resolved assets.
@@ -280,6 +291,37 @@ export class AssetManager<
     this.requests[key] = promise;
 
     return promise;
+  }
+
+  public getFromSheet<
+    TSheet extends SheetKey<TSheetMap>,
+    TSprite extends SpriteKey<TSheetMap, TSheet>,
+  >(sheet: TSheet, sprite: TSprite): TAssets[Extract<`${TSheet}:${TSprite}`, AssetKey<TAssets>>] | undefined {
+    const key = `${sheet}:${sprite}`;
+
+    if (!this.isRegisteredKey(key)) {
+      return undefined;
+    }
+
+    return this.get(key) as TAssets[Extract<`${TSheet}:${TSprite}`, AssetKey<TAssets>>] | undefined;
+  }
+
+  public getFromSheetStrict<
+    TSheet extends SheetKey<TSheetMap>,
+    TSprite extends SpriteKey<TSheetMap, TSheet>,
+  >(sheet: TSheet, sprite: TSprite): TAssets[Extract<`${TSheet}:${TSprite}`, AssetKey<TAssets>>] {
+    const key = `${sheet}:${sprite}`;
+
+    if (!this.isRegisteredKey(key)) {
+      throw new Error(`[AssetManager] Asset "${key}" not found.`);
+    }
+
+    return this.getStrict(key) as unknown as TAssets[Extract<`${TSheet}:${TSprite}`, AssetKey<TAssets>>];
+  }
+
+  public async loadSheet<TSheet extends SheetKey<TSheetMap>>(sheet: TSheet): Promise<void> {
+    const sheetKey = sheet as unknown as AssetKey<TAssets>;
+    await this.load(sheetKey);
   }
 
   public type<TType extends AssetType>(assetType: TType): {

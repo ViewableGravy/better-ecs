@@ -1,6 +1,6 @@
-import { describe, expect, it, vi } from "vitest";
 import { AssetManager } from "@engine/asset/AssetManager";
 import { AssetAdapter } from "@engine/asset/asset";
+import { describe, expect, it, vi } from "vitest";
 
 describe("AssetManager", () => {
   it("should throw when getting non-existent asset strictly", () => {
@@ -93,5 +93,45 @@ describe("AssetManager", () => {
     expect(manager.getStrict("sheet")).toBe("sheet");
     expect(manager.getStrict("sheet:100_a")).toBe("a");
     expect(manager.getStrict("sheet:80_a")).toBe("b");
+  });
+
+  it("should support loading sheet sprites by sheet key", async () => {
+    const registry = {
+      assets: {
+        sheet: { type: "text" as const, load: vi.fn().mockResolvedValue("sheet") },
+        "sheet:large": { type: "text" as const, load: vi.fn().mockResolvedValue("large") },
+        "sheet:small": { type: "text" as const, load: vi.fn().mockResolvedValue("small") },
+      },
+      sheets: {
+        sheet: ["large", "small"] as const,
+      },
+    };
+
+    const manager = new AssetManager(registry);
+    await manager.loadSheet("sheet");
+
+    expect(manager.getFromSheetStrict("sheet", "large")).toBe("large");
+    expect(manager.getFromSheetStrict("sheet", "small")).toBe("small");
+  });
+
+  it("should support reading sprite assets from a sheet without manual key interpolation", async () => {
+    const registry = {
+      assets: {
+        sheet: { type: "text" as const, load: vi.fn().mockResolvedValue("sheet") },
+        "sheet:large": { type: "text" as const, load: vi.fn().mockResolvedValue("large") },
+      },
+      sheets: {
+        sheet: ["large"] as const,
+      },
+    };
+
+    const manager = new AssetManager(registry);
+
+    expect(manager.getFromSheet("sheet", "large")).toBeUndefined();
+
+    await manager.loadSheet("sheet");
+
+    expect(manager.getFromSheet("sheet", "large")).toBe("large");
+    expect(manager.getFromSheetStrict("sheet", "large")).toBe("large");
   });
 });

@@ -3,7 +3,7 @@ import type { LooseAssetManager } from "@engine/asset/AssetManager";
 import { Camera } from "@engine/components/camera";
 import { Shape } from "@engine/components/shape";
 import { Color, Sprite } from "@engine/components/sprite/sprite";
-import type { Texture } from "@engine/components/texture";
+import { Texture, type TextureSourceData } from "@engine/components/texture";
 import type { ShaderTransform2D, Transform2D } from "@engine/components/transform";
 import { RenderCommand } from "@engine/render/render-command";
 import { TextureCache } from "@engine/render/textureCache/texture-cache";
@@ -66,6 +66,7 @@ const SHARED_FALLBACK_SHAPE_DATA: DenseShapeRenderData = {
 export class Renderer2D implements Renderer {
   readonly #command: RenderCommand;
   readonly #showFallback: boolean;
+  #assets: LooseAssetManager | null = null;
 
   #sharedSpriteData: SpriteRenderData | undefined;
   #sharedTexturedQuadData: TexturedQuadRenderData | undefined;
@@ -87,6 +88,48 @@ export class Renderer2D implements Renderer {
   async initialize(canvas: HTMLCanvasElement, assets: LooseAssetManager): Promise<void> {
     await this.#command.initialize(canvas, assets);
     this.cache.initialize(assets);
+    this.#assets = assets;
+  }
+
+  async warmupLoadedTextures(): Promise<void> {
+    const assets = this.#assets;
+
+    if (!assets) {
+      return;
+    }
+
+    const loadedTextureAssets = assets.getLoadedByType("texture");
+    if (loadedTextureAssets.length === 0) {
+      return;
+    }
+
+    const assetIds: string[] = [];
+    const gpuSources: TextureSourceData[] = [];
+    const seenSources = new Set<object>();
+
+    for (const loaded of loadedTextureAssets) {
+      if (!(loaded.asset instanceof Texture)) {
+        continue;
+      }
+
+      assetIds.push(loaded.key);
+
+      const source = loaded.asset.source.resource;
+      const cacheKey = source as unknown as object;
+      if (seenSources.has(cacheKey)) {
+        continue;
+      }
+
+      seenSources.add(cacheKey);
+      gpuSources.push(source);
+    }
+
+    if (assetIds.length === 0) {
+      return;
+    }
+
+    await this.cache.preload(assetIds);
+    this.#command.preloadTextures(gpuSources);
   }
 
   begin(): void {

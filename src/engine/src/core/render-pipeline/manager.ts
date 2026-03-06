@@ -2,6 +2,7 @@ import type { RenderPipeline } from "@engine/core/render-pipeline/types";
 
 export class RenderManager {
   readonly #renderPipeline: RenderPipeline | null;
+  #initialized = false;
 
   constructor(renderPipeline: RenderPipeline | null) {
     this.#renderPipeline = renderPipeline;
@@ -13,6 +14,19 @@ export class RenderManager {
     }
 
     await this.#renderPipeline.initialize();
+    this.#initialized = true;
+  }
+
+  async warmupLoadedTextures(): Promise<void> {
+    if (!this.#renderPipeline) {
+      return;
+    }
+
+    if (!this.#initialized) {
+      return;
+    }
+
+    await this.#renderPipeline.warmupLoadedTextures();
   }
 
   render(): void {

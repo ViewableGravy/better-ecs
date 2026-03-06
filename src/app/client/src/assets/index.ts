@@ -1,4 +1,5 @@
 import { transportBeltSheet } from "@client/assets/conveyor";
+import { ironGearSheet } from "@client/assets/iron-gear";
 import { ironOreSheet } from "@client/assets/iron-ore";
 import PlayerSprite from "@client/assets/sprites/player.png";
 import { createAssetLoader, createLoadShaderSource, createLoadTexture } from "@engine/asset";
@@ -8,6 +9,7 @@ const demoShaderFragmentPath = new URL("./shaders/editor-quad.frag", import.meta
 
 export const Loader = createAssetLoader({
   "player-sprite": createLoadTexture(PlayerSprite),
+  "iron-gear": ironGearSheet,
   "iron-ore": ironOreSheet,
   "transport-belt": transportBeltSheet,
   "editor:demo-quad-shader": createLoadShaderSource(

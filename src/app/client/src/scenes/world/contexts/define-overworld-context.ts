@@ -1,17 +1,23 @@
+import { OUTSIDE } from "@client/components/render-visibility";
+import { spawnContextEntryRegion } from "@client/entities/context-entry-region";
+import { spawnDemoShaderQuad } from "@client/entities/demo-shader-quad";
+import { spawnDoor } from "@client/entities/door";
+import { spawnGear } from "@client/entities/gear";
+import { spawnHouse } from "@client/entities/house";
+import { spawnOreField } from "@client/entities/ore-field";
+import {
+  spawnTransportBelt,
+  TRANSPORT_BELT_VARIANTS,
+  type TransportBeltVariant,
+} from "@client/entities/transport-belt";
+import { ConveyorUtils } from "@client/entities/transport-belt/conveyor-utils";
+import { spawnTree } from "@client/entities/tree";
+import { spawnWall } from "@client/entities/wall";
+import { setupContextPlayer } from "@client/scenes/world/contexts/shared";
+import { createHouseLayout } from "@client/scenes/world/utilities/house-layout";
 import type { UserWorld } from "@engine";
 import { Color } from "@engine/components";
 import { defineContext, type ContextId } from "@libs/spatial-contexts";
-import { OUTSIDE } from "@client/scenes/world/components/render-visibility";
-import { spawnContextEntryRegion } from "@client/scenes/world/factories/spawnContextEntryRegion";
-import { spawnDemoShaderQuad } from "@client/scenes/world/factories/spawnDemoShaderQuad";
-import { spawnDoor } from "@client/scenes/world/factories/spawnDoor";
-import { spawnHouse } from "@client/scenes/world/factories/spawnHouse";
-import { spawnOreField } from "@client/scenes/world/factories/spawnOreField";
-import { spawnTransportBelt, type TransportBeltVariant } from "@client/scenes/world/factories/spawnTransportBelt";
-import { spawnTree } from "@client/scenes/world/factories/spawnTree";
-import { spawnWall } from "@client/scenes/world/factories/spawnWall";
-import { createHouseLayout } from "@client/scenes/world/utilities/house-layout";
-import { setupContextPlayer } from "@client/scenes/world/contexts/shared";
 
 type OverworldContextOptions = {
   overworldId: ContextId;
@@ -198,6 +204,64 @@ export function defineOverworldContext(options: OverworldContextOptions) {
         centerX: 700,
         centerY: 360,
       });
+
+      function testSpawnTransportWithGears(x: number, y: number, variant: TransportBeltVariant) {
+        const demoItemBelt = spawnTransportBelt(world, {
+          x: x,
+          y: y,
+          variant,
+        });
+
+        const leftA = spawnGear(world, { size: "large" });
+        const leftB = spawnGear(world, { size: "large" });
+        const leftC = spawnGear(world, { size: "large" });
+        const leftD = spawnGear(world, { size: "large" });
+        const rightA = spawnGear(world, { size: "large" });
+        const rightB = spawnGear(world, { size: "large" });
+
+        ConveyorUtils.addEntity(world, demoItemBelt, leftA, "left", 0);
+        ConveyorUtils.addEntity(world, demoItemBelt, leftB, "left", 1);
+        ConveyorUtils.addEntity(world, demoItemBelt, leftC, "left", 2);
+        ConveyorUtils.addEntity(world, demoItemBelt, leftD, "left", 3);
+        ConveyorUtils.addEntity(world, demoItemBelt, rightA, "right", 0);
+        ConveyorUtils.addEntity(world, demoItemBelt, rightB, "right", 2);
+      }
+
+      const demoGridStartX = -220;
+      const demoGridStartY = 540;
+      const demoGridColumns = 5;
+      const demoGridStep = BELT_SPACING * 2;
+
+      for (const [index, variant] of TRANSPORT_BELT_VARIANTS.entries()) {
+        const column = index % demoGridColumns;
+        const row = Math.floor(index / demoGridColumns);
+
+        testSpawnTransportWithGears(
+          demoGridStartX + column * demoGridStep,
+          demoGridStartY + row * demoGridStep,
+          variant,
+        );
+      }
+
+      const xs = Array.from({ length: 10 }, (_, i) => 500 + i * 100);
+      const ys = Array.from({ length: 4 }, (_, i) => 60 + i * 20);
+
+      // performance testing (currently ~70-80 fps)
+      for (const x of xs) {
+        for (const y of ys) {
+          testSpawnTransportWithGears(x, y, "horizontal-right");
+          testSpawnTransportWithGears(x + 20, y, "horizontal-right");
+          testSpawnTransportWithGears(x + 40, y, "horizontal-right");
+          testSpawnTransportWithGears(x + 60, y, "horizontal-right");
+          testSpawnTransportWithGears(x + 80, y, "horizontal-right");
+
+          testSpawnTransportWithGears(x, y, "horizontal-left");
+          testSpawnTransportWithGears(x + 20, y, "horizontal-left");
+          testSpawnTransportWithGears(x + 40, y, "horizontal-left");
+          testSpawnTransportWithGears(x + 60, y, "horizontal-left");
+          testSpawnTransportWithGears(x + 80, y, "horizontal-left");
+        }
+      }
 
       const demoStartX = -450;
       const leftRowY = 287;

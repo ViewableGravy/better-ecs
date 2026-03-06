@@ -8,17 +8,17 @@ import { InitState } from "@engine/core/engine/init";
 import { Meta } from "@engine/core/engine/meta";
 import { PhaseState } from "@engine/core/engine/phase";
 import {
-	resolveEngineRenderCullingSettings,
-	type EngineRenderCullingSettings,
+    resolveEngineRenderCullingSettings,
+    type EngineRenderCullingSettings,
 } from "@engine/core/engine/render-culling";
 import { SystemsManager } from "@engine/core/engine/systems";
 import type { AllSystems, ScenesTupleToRecord, StartEngineGenerator, StartEngineOpts } from "@engine/core/engine/types";
-import type { EngineRenderCullingOptions } from "@engine/core/factory/types";
+import type { EngineOverlay, EngineRenderCullingOptions } from "@engine/core/factory/types";
 import { EngineInput } from "@engine/core/input";
 import type { RenderPipeline } from "@engine/core/render-pipeline";
 import { RenderManager } from "@engine/core/render-pipeline";
 import { SceneManager } from "@engine/core/scene/scene-manager";
-import type { SceneDefinitionTuple } from "@engine/core/scene/scene.types";
+import type { SceneDefinitionTuple, SceneName } from "@engine/core/scene/scene.types";
 import type { EngineInitializationSystem, EngineSystem, SystemFactoryTuple } from "@engine/core/system/types";
 import type { UserWorld } from "@engine/ecs/world";
 
@@ -36,6 +36,8 @@ export class EngineClass<
 	#phase: PhaseState = new PhaseState();
 	#init: InitState = new InitState();
 	#delta: DeltaState = new DeltaState();
+	#initialSceneName: SceneName<TScenes[number]> | null = null;
+	#engineLoadingOverlay: EngineOverlay | null;
 
 	public readonly scene: SceneManager<TScenes>;
 	public readonly editor: EngineEditor;
@@ -49,6 +51,7 @@ export class EngineClass<
 		scenes: SceneDefinitionTuple = [],
 		public readonly assets: AssetManager<TAssets, TAssetTypes>,
 		public readonly render: RenderPipeline | null,
+		loadingOverlay: EngineOverlay | undefined,
 		renderCulling: EngineRenderCullingOptions | undefined,
 		canvas: HTMLCanvasElement | null,
 		awaitCanvasBeforeStart = false,
@@ -64,6 +67,7 @@ export class EngineClass<
 		});
 		this.renderCulling = resolveEngineRenderCullingSettings(renderCulling);
 		this.editor = new EngineEditor(this);
+		this.#engineLoadingOverlay = loadingOverlay ?? null;
 
 		this.#systemsView = this.#systemsManager.createSystemsView((name) => {
 			return this.#systemsManager.getSceneSystem(this.scene.definition?.name ?? null, name);
@@ -107,18 +111,44 @@ export class EngineClass<
 		this.#init.setInitializationSystem(system);
 	}
 
+	public setInitialScene(name: SceneName<TScenes[number]>): void {
+		this.#initialSceneName = name;
+	}
+
+	public async warmupLoadedTextures(): Promise<void> {
+		await executeWithContext({ engine: this, scene: this.scene.context }, async () => {
+			await this.#renderManager.warmupLoadedTextures();
+		});
+	}
+
 	public async initialize(): Promise<void> {
 		if (this.#init.initialized) return;
 
-		await executeWithContext({ engine: this, scene: this.scene.context }, async () => {
-			if (this.#init.initializationSystem) {
-				await this.#init.initializationSystem.system();
+		if (this.#engineLoadingOverlay) {
+			await this.#engineLoadingOverlay.begin();
+		}
+
+		try {
+			await executeWithContext({ engine: this, scene: this.scene.context }, async () => {
+				if (this.#init.initializationSystem) {
+					await this.#init.initializationSystem.system();
+				}
+
+				this.#systemsManager.initializeEngineSystems();
+
+				await this.#renderManager.initialize();
+				await this.#renderManager.warmupLoadedTextures();
+			});
+		} finally {
+			if (this.#engineLoadingOverlay) {
+				await this.#engineLoadingOverlay.end();
+				await this.#engineLoadingOverlay.dispose();
 			}
+		}
 
-			this.#systemsManager.initializeEngineSystems();
-
-			await this.#renderManager.initialize();
-		});
+		if (this.#initialSceneName && this.scene.activeSceneName === null) {
+			await this.scene.set(this.#initialSceneName);
+		}
 
 		this.#init.markInitialized();
 	}

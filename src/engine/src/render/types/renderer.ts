@@ -69,6 +69,7 @@ export { DEFAULT_RENDERER_CONFIG };
  */
 export interface Renderer {
   initialize(canvas: HTMLCanvasElement, assets: LooseAssetManager): Promise<void>;
+  warmupLoadedTextures(): Promise<void>;
 
   begin(): void;
   end(): void;

@@ -27,11 +27,25 @@ export function setContext(cb: (ctx: Context) => void) {
   cb(context);
 }
 
-function resetContext() {
+type ContextSnapshot = {
+  engine: Context["engine"];
+  scene: Context["scene"];
+  render: Context["render"];
+};
+
+function snapshotContext(): ContextSnapshot {
+  return {
+    engine: context.engine,
+    scene: context.scene,
+    render: context.render,
+  };
+}
+
+function restoreContext(snapshot: ContextSnapshot): void {
   setContext((ctx) => {
-    ctx.engine = null;
-    ctx.scene = null;
-    ctx.render = null;
+    ctx.engine = snapshot.engine;
+    ctx.scene = snapshot.scene;
+    ctx.render = snapshot.render;
   });
 }
 
@@ -50,6 +64,8 @@ export function setContextRender<TRenderContext extends object>(
 }
 
 export function executeWithContext<T>(context: Partial<LooseContext>, fn: () => T): T {
+  const previousContext = snapshotContext();
+
   setContext((ctx) => {
     for (const key in context) {
       (ctx as any)[key] = (context as any)[key];
@@ -60,15 +76,15 @@ export function executeWithContext<T>(context: Partial<LooseContext>, fn: () => 
   try {
     result = fn();
   } catch (err) {
-    resetContext();
+    restoreContext(previousContext);
     throw err;
   }
 
   if (result instanceof Promise) {
-    return result.finally(resetContext) as any;
+    return result.finally(() => restoreContext(previousContext)) as any;
   }
 
-  resetContext();
+  restoreContext(previousContext);
   return result as any;
 }
 

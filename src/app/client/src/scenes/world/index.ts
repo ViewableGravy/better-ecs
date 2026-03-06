@@ -1,19 +1,25 @@
+import { createDomLoadingOverlay } from "@client/overlays/create-dom-loading-overlay";
 import { sceneConfig } from "@client/scenes/world/const";
 import { defineDungeonContext } from "@client/scenes/world/contexts/define-dungeon-context";
 import { defineHouseContext } from "@client/scenes/world/contexts/define-house-context";
 import { defineOverworldContext } from "@client/scenes/world/contexts/define-overworld-context";
-import { getAllTransportBeltAssetIds } from "@client/scenes/world/factories/spawnTransportBelt";
-import { System as BuildModeSystem } from "@client/scenes/world/systems/build-mode";
-import { DebugOverlaySystem } from "@client/scenes/world/systems/debug-overlay.system";
-import { HouseContextSystem } from "@client/scenes/world/systems/houseTransition/house-context.system";
-import { PlayerOrbitSystem } from "@client/scenes/world/systems/player-orbit.system";
-import { System as PortalSystem } from "@client/scenes/world/systems/portal";
+import { System as BuildModeSystem } from "@client/systems/world/build-mode";
+import { DebugOverlaySystem } from "@client/systems/world/debug-overlay";
+import { HouseContextSystem } from "@client/systems/world/house-transition";
+import { PlayerOrbitSystem } from "@client/systems/world/player-orbit";
+import { System as PortalSystem } from "@client/systems/world/portal";
 import { fromContext, FromEngine } from "@engine/context";
 import {
   createContextScene
 } from "@libs/spatial-contexts";
 
 export const Scene = createContextScene("MainScene")({
+  loading: createDomLoadingOverlay({
+    id: "scene-loading-overlay-main",
+    message: "Loading Main Scene...",
+    zIndex: 10001,
+    scope: "canvas-parent",
+  }),
   systems: [
     PlayerOrbitSystem,
     HouseContextSystem, 
@@ -48,7 +54,10 @@ export const Scene = createContextScene("MainScene")({
 
     const assets = fromContext(FromEngine.Assets);
 
+    await new Promise((resolve) => setTimeout(resolve, 500)); // artificial delay to show loading overlay
+
     await assets.load("player-sprite");
-    await assets.loadMany(getAllTransportBeltAssetIds());
+    await assets.loadSheet("iron-gear");
+    await assets.loadSheet("transport-belt");
   },
 });

@@ -1,14 +1,14 @@
-import invariant from "tiny-invariant";
+import { createProgram } from "@engine/render/renderers/webGL/registry/create";
 import spriteFragmentShaderSource from "@engine/render/renderers/webGL/shaders/sprite.frag";
 import spriteVertexShaderSource from "@engine/render/renderers/webGL/shaders/sprite.vert";
-import { createProgram } from "@engine/render/renderers/webGL/registry/create";
+import invariant from "tiny-invariant";
 
 export interface SpriteProgram {
   program: WebGLProgram;
-  positionBuffer: WebGLBuffer;
-  uvBuffer: WebGLBuffer;
+  cornerBuffer: WebGLBuffer;
+  instanceBuffer: WebGLBuffer;
   vertexArray: WebGLVertexArrayObject;
-  tintLocation: WebGLUniformLocation | null;
+  viewportLocation: WebGLUniformLocation | null;
   samplerLocation: WebGLUniformLocation | null;
 }
 
@@ -18,35 +18,69 @@ export const createSpriteProgram = createProgram<SpriteProgram>((gl, compiler) =
     compiler.compile(gl.FRAGMENT_SHADER, spriteFragmentShaderSource, "sprite.frag")
   );
 
-  const positionBuffer = gl.createBuffer();
-  const uvBuffer = gl.createBuffer();
+  const cornerBuffer = gl.createBuffer();
+  const instanceBuffer = gl.createBuffer();
   const vertexArray = gl.createVertexArray();
 
-  invariant(positionBuffer, "Failed to create position buffer for sprite program");
-  invariant(uvBuffer, "Failed to create UV buffer for sprite program");
+  invariant(cornerBuffer, "Failed to create corner buffer for sprite program");
+  invariant(instanceBuffer, "Failed to create instance buffer for sprite program");
   invariant(vertexArray, "Failed to create vertex array for sprite program");
 
-  const positionLocation = 0;
-  const uvLocation = 1;
+  const instanceStride = 17 * Float32Array.BYTES_PER_ELEMENT;
 
   gl.bindVertexArray(vertexArray);
 
-  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-  gl.enableVertexAttribArray(positionLocation);
-  gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+  gl.bindBuffer(gl.ARRAY_BUFFER, cornerBuffer);
+  gl.bufferData(
+    gl.ARRAY_BUFFER,
+    new Float32Array([
+      0, 1,
+      1, 1,
+      0, 0,
+      1, 0,
+    ]),
+    gl.STATIC_DRAW,
+  );
+  gl.enableVertexAttribArray(0);
+  gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
 
-  gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer);
-  gl.enableVertexAttribArray(uvLocation);
-  gl.vertexAttribPointer(uvLocation, 2, gl.FLOAT, false, 0, 0);
+  gl.bindBuffer(gl.ARRAY_BUFFER, instanceBuffer);
+  gl.enableVertexAttribArray(1);
+  gl.vertexAttribPointer(1, 2, gl.FLOAT, false, instanceStride, 0);
+  gl.vertexAttribDivisor(1, 1);
+
+  gl.enableVertexAttribArray(2);
+  gl.vertexAttribPointer(2, 2, gl.FLOAT, false, instanceStride, 2 * Float32Array.BYTES_PER_ELEMENT);
+  gl.vertexAttribDivisor(2, 1);
+
+  gl.enableVertexAttribArray(3);
+  gl.vertexAttribPointer(3, 1, gl.FLOAT, false, instanceStride, 4 * Float32Array.BYTES_PER_ELEMENT);
+  gl.vertexAttribDivisor(3, 1);
+
+  gl.enableVertexAttribArray(4);
+  gl.vertexAttribPointer(4, 2, gl.FLOAT, false, instanceStride, 5 * Float32Array.BYTES_PER_ELEMENT);
+  gl.vertexAttribDivisor(4, 1);
+
+  gl.enableVertexAttribArray(5);
+  gl.vertexAttribPointer(5, 2, gl.FLOAT, false, instanceStride, 7 * Float32Array.BYTES_PER_ELEMENT);
+  gl.vertexAttribDivisor(5, 1);
+
+  gl.enableVertexAttribArray(6);
+  gl.vertexAttribPointer(6, 4, gl.FLOAT, false, instanceStride, 9 * Float32Array.BYTES_PER_ELEMENT);
+  gl.vertexAttribDivisor(6, 1);
+
+  gl.enableVertexAttribArray(7);
+  gl.vertexAttribPointer(7, 4, gl.FLOAT, false, instanceStride, 13 * Float32Array.BYTES_PER_ELEMENT);
+  gl.vertexAttribDivisor(7, 1);
 
   gl.bindVertexArray(null);
 
   return {
     program,
-    positionBuffer,
-    uvBuffer,
+    cornerBuffer,
+    instanceBuffer,
     vertexArray,
-    tintLocation: gl.getUniformLocation(program, "uTint"),
+    viewportLocation: gl.getUniformLocation(program, "uViewport"),
     samplerLocation: gl.getUniformLocation(program, "uTexture"),
   };
 });

@@ -1,7 +1,8 @@
 // packages/engine/src/core/scene/scene.types.ts
-import type { UserWorld } from "@engine/ecs/world";
-import type { SystemFactoryTuple } from "@engine/core/system";
+import type { EngineOverlay } from "@engine/core/factory/types";
 import type { SceneContext } from "@engine/core/scene/scene-context";
+import type { SystemFactoryTuple } from "@engine/core/system";
+import type { UserWorld } from "@engine/ecs/world";
 
 /**
  * Internal symbol used to identify scene definitions.
@@ -16,6 +17,9 @@ export const SCENE_BRAND: unique symbol = Symbol.for("@repo/engine:scene");
 export type SceneConfig<TSystems extends SystemFactoryTuple = SystemFactoryTuple> = {
   /** Optional scene-level systems that only run while this scene is active. */
   systems?: TSystems;
+
+  /** Optional loading overlay that runs during scene setup/teardown transitions. */
+  loading?: EngineOverlay;
 
   /**
    * Called when the scene becomes active. Use this to create entities and set up the scene.
@@ -55,6 +59,9 @@ export type SceneDefinition<
 
   /** Scene-specific systems (instantiated per engine) */
   readonly systems: TSystems;
+
+  /** Optional loading overlay for scene transitions. */
+  loading: EngineOverlay | null;
 
   /** Set up the scene (create entities, etc.) */
   setup: (world: UserWorld) => void | Promise<void>;

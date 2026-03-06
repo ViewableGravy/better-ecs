@@ -1,8 +1,5 @@
 /// <reference types="vite/client" />
 
-import { inputSystem } from "@engine/systems/input";
-import { transformSnapshotSystem } from "@engine/systems/transformSnapshot";
-import { attachCanvas } from "@engine/ui/utilities/attach-canvas";
 import { AssetManager } from "@engine/asset/AssetManager";
 import { executeWithContext } from "@engine/core/context";
 import { EngineClass } from "@engine/core/engine";
@@ -13,6 +10,9 @@ import {
     executeSystemInitialize as runSystemInitialize,
 } from "@engine/core/system";
 import type { EngineSystem, SystemFactoryTuple } from "@engine/core/system/types";
+import { inputSystem } from "@engine/systems/input";
+import { transformSnapshotSystem } from "@engine/systems/transformSnapshot";
+import { attachCanvas } from "@engine/ui/utilities/attach-canvas";
 import type { EngineUiContextValue } from "@engine/ui/utilities/engine-context";
 
 export function createEngine<
@@ -44,6 +44,7 @@ export function createEngine<
 		scenes,
 		assets,
 		opts.render ?? null,
+		opts.loading,
 		opts.config?.render?.culling,
 		null,
 		shouldBootstrapCanvasFromRoot,
@@ -108,16 +109,15 @@ export function createEngine<
 		const initialScene = opts.initialScene ?? firstScene;
 
 		if (initialScene) {
-			const originalInitialize = engine.initialize.bind(engine);
-			(engine as any).initialize = async function () {
-				await originalInitialize();
-				await engine.scene.set(initialScene);
-			};
+			engine.setInitialScene(initialScene);
 		}
 	}
 
 	return engine;
 }
 
-export type { CreateEngineOptions } from "@engine/core/factory/types";
+export type {
+    CreateEngineOptions,
+    EngineOverlay
+} from "@engine/core/factory/types";
 
