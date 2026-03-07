@@ -1,5 +1,6 @@
 import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
-import { ConveyorUtils } from "@client/entities/transport-belt/conveyor-utils";
+import { TransportBeltLeaf } from "@client/components/transport-belt-leaf";
+import { ConveyorUtils } from "@client/entities/transport-belt";
 import { DEMO_SLOT_PROGRESS_PER_MILLISECOND } from "@client/systems/world/conveyor-entity-motion/constants";
 import { ConveyorEntityMotionUtils } from "@client/systems/world/conveyor-entity-motion/utils";
 import { createSystem } from "@engine";
@@ -15,14 +16,12 @@ export const System = createSystem("main:conveyor-entity-motion")({
       return;
     }
 
-    for (const conveyorEntityId of world.query(ConveyorBeltComponent)) {
-      const conveyor = world.require(conveyorEntityId, ConveyorBeltComponent);
-
+    world.forEach2(TransportBeltLeaf, ConveyorBeltComponent, (conveyorEntityId, _, conveyor) => {
       if (!ConveyorUtils.supportsStraightItemAnimation(conveyor.variant)) {
-        continue;
+        return;
       }
 
-      ConveyorEntityMotionUtils.advanceConveyor(world, conveyor, progressDelta);
-    }
+      ConveyorEntityMotionUtils.advanceBeltLineFromLeaf(world, conveyorEntityId, progressDelta);
+    });
   },
 });

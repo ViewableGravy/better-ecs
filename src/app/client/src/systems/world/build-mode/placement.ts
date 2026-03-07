@@ -1,3 +1,5 @@
+import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
+import { destroyTransportBelt } from "@client/entities/transport-belt";
 import { PhysicsWorldManager } from "@client/scenes/world/physics/physics-world-manager";
 import type { BuildItemType } from "@client/systems/world/build-mode/const";
 import {
@@ -60,6 +62,11 @@ export class Placement {
     });
 
     if (hit) {
+      if (world.has(hit.entityId, ConveyorBeltComponent)) {
+        destroyTransportBelt(world, hit.entityId);
+        return;
+      }
+
       world.destroy(hit.entityId);
     }
   }
@@ -108,7 +115,7 @@ export class Placement {
         continue;
       }
 
-      world.destroy(overlap.entityId);
+      destroyTransportBelt(world, overlap.entityId);
     }
   }
 

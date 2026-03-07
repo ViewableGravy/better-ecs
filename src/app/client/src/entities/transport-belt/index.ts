@@ -1,4 +1,6 @@
 import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
+import type { TransportBeltVariant } from "@client/entities/transport-belt/consts";
+import { TransportBeltConnectionUtils } from "@client/entities/transport-belt/utils/connection";
 import { OUTSIDE, RenderVisibility } from "@client/components/render-visibility";
 import { RENDER_LAYERS } from "@client/consts";
 import { CollisionProfiles } from "@client/scenes/world/physics/collision-profiles";
@@ -6,31 +8,6 @@ import { TRANSPORT_BELT_COLLIDER_SIZE } from "@client/systems/world/build-mode/c
 import { Vec2, type EntityId, type UserWorld } from "@engine";
 import { AnimatedSprite, Debug, Transform2D } from "@engine/components";
 import { RectangleCollider } from "@libs/physics";
-
-export const TRANSPORT_BELT_VARIANTS = [
-  "horizontal-right",
-  "horizontal-left",
-  "vertical-up",
-  "vertical-down",
-  "angled-right-up",
-  "angled-up-right",
-  "angled-left-up",
-  "angled-top-left",
-  "angled-bottom-right",
-  "angled-right-bottom",
-  "angled-bottom-left",
-  "angled-left-bottom",
-  "start-bottom",
-  "end-bottom",
-  "start-left",
-  "end-left",
-  "start-top",
-  "end-top",
-  "start-right",
-  "end-right",
-] as const;
-
-export type TransportBeltVariant = (typeof TRANSPORT_BELT_VARIANTS)[number];
 const TRANSPORT_BELT_FRAMES = [
   1, 2, 3, 4, 5, 6, 7, 8,
   9, 10, 11, 12, 13, 14, 15, 16,
@@ -80,5 +57,16 @@ export function spawnTransportBelt(world: UserWorld, options: SpawnTransportBelt
   world.add(belt, new RenderVisibility(OUTSIDE, 1));
   world.add(belt, new Debug("transport-belt"));
 
+  TransportBeltConnectionUtils.connectSpawnedBelt(world, belt);
+
   return belt;
 }
+
+export function destroyTransportBelt(world: UserWorld, beltEntityId: EntityId): void {
+  TransportBeltConnectionUtils.destroyBelt(world, beltEntityId);
+}
+
+export { TRANSPORT_BELT_VARIANTS } from "@client/entities/transport-belt/consts";
+export { TransportBeltConnectionUtils } from "@client/entities/transport-belt/utils/connection";
+export { ConveyorUtils } from "@client/entities/transport-belt/utils/general";
+export type { TransportBeltVariant } from "@client/entities/transport-belt/consts";

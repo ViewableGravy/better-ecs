@@ -68,6 +68,12 @@ This is the single source of truth for agent behavior and coding conventions in 
   - Example: prefer `Engine` over `ReturnType<typeof makeEngine>[0]`.
   - Use `typeof`/`ReturnType` only when a concrete type is not reasonably importable (for example complex inferred unions/intersections).
 
+## Comment preservation
+
+- Do not remove existing code comments unless they are explicitly wrong or stale.
+- If a comment seems unnecessary but is not clearly wrong, ask before removing it.
+- Add comments for public-facing functions and where clarification would help someone with less context understand the code.
+
 ## Architecture principles
 
 - Prefer **colocation over hoisting** by default.
@@ -75,12 +81,6 @@ This is the single source of truth for agent behavior and coding conventions in 
   - Hoist to engine-level/global scope only when truly cross-cutting and shared across most scenes/features.
 - For React/userland adapters, prefer moving state and orchestration downward toward the smallest owning component/module that can safely manage it.
 - When introducing new lifecycle hooks/options, start at the lowest meaningful layer and only promote upward if repeated usage demonstrates global ownership.
-
-## Conveyor work
-
-- Keep conveyor components **data-only**; place slot-transfer and animation logic in neighboring utilities/systems instead of component methods.
-- Keep conveyor systems declarative at the entrypoint and move slot math / mutation details into focused helper modules.
-- For early conveyor item-motion prototypes, prefer CPU-driven straight-belt behavior first; add curves, connection ordering, or shader-based motion only when the task explicitly calls for them.
 
 ## Performance guidance
 

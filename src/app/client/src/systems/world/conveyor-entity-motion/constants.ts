@@ -6,5 +6,4 @@ export const CONVEYOR_SLOT_INDICES_ASC: readonly ConveyorSlotIndex[] = [0, 1, 2,
 export const CONVEYOR_SLOT_INDICES_DESC: readonly ConveyorSlotIndex[] = [3, 2, 1, 0];
 export const DEMO_SLOT_ADVANCE_DURATION_MS = 5_000;
 export const DEMO_SLOT_PROGRESS_PER_MILLISECOND = 1 / DEMO_SLOT_ADVANCE_DURATION_MS;
-export const WRAP_LAST_SLOT_TO_START = true;
 export const SHARED_SLOT_POSITION = new Vec2();

@@ -1,31 +1,12 @@
 import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
-import { ConveyorUtils } from "@client/entities/transport-belt/conveyor-utils";
+import { TransportBeltLeaf } from "@client/components/transport-belt-leaf";
 import { ConveyorEntityMotionUtils } from "@client/systems/world/conveyor-entity-motion/utils";
-import { UserWorld, Vec2, World } from "@engine";
-import { Transform2D } from "@engine/components";
+import { UserWorld, World } from "@engine";
+import { Parent, Transform2D } from "@engine/components";
+import { resolveWorldTransform2D } from "@engine/ecs/hierarchy";
 import { describe, expect, it } from "vitest";
 
-describe("ConveyorUtils.resolveAnimatedSlotLocalPositionInto", () => {
-  it("uses the configured half-step span between adjacent straight-belt slots", () => {
-    const out = new Vec2();
-
-    ConveyorUtils.resolveAnimatedSlotLocalPositionInto("horizontal-right", "left", 0, 0, out);
-    expect(out.x).toBe(-10);
-    expect(out.y).toBe(-4);
-
-    ConveyorUtils.resolveAnimatedSlotLocalPositionInto("horizontal-right", "left", 0, 1, out);
-    expect(out.x).toBe(-5);
-    expect(out.y).toBe(-4);
-
-    ConveyorUtils.resolveAnimatedSlotLocalPositionInto("horizontal-right", "left", 1, 0, out);
-    expect(out.x).toBe(-5);
-    expect(out.y).toBe(-4);
-
-    ConveyorUtils.resolveAnimatedSlotLocalPositionInto("horizontal-right", "left", 1, 1, out);
-    expect(out.x).toBe(0);
-    expect(out.y).toBe(-4);
-  });
-});
+const SHARED_WORLD_TRANSFORM = new Transform2D();
 
 describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
   it("advances later slots first so earlier slots can move into newly freed space", () => {
@@ -44,7 +25,8 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     conveyor.leftProgress[0] = 1;
     conveyor.leftProgress[1] = 1;
 
-    ConveyorEntityMotionUtils.advanceConveyor(world, conveyor, 0);
+    ConveyorEntityMotionUtils.advanceConveyor(world, conveyor, null, null, 0);
+    ConveyorEntityMotionUtils.syncConveyorTransforms(world, conveyor);
 
     expect(conveyor.left).toEqual([null, slot0EntityId, slot1EntityId, null]);
     expect(conveyor.leftProgress).toEqual([0, 0, 0, 0]);
@@ -78,7 +60,8 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     conveyor.leftProgress[2] = 1;
     conveyor.rightProgress[1] = 1;
 
-    ConveyorEntityMotionUtils.advanceConveyor(world, conveyor, 0);
+    ConveyorEntityMotionUtils.advanceConveyor(world, conveyor, null, null, 0);
+    ConveyorEntityMotionUtils.syncConveyorTransforms(world, conveyor);
 
     expect(conveyor.left).toEqual([null, slot0EntityId, null, slot2EntityId]);
     expect(conveyor.right).toEqual([null, null, right1EntityId, null]);
@@ -110,7 +93,8 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     conveyor.leftProgress[2] = 1;
     conveyor.rightProgress[0] = 1;
 
-    ConveyorEntityMotionUtils.advanceConveyor(world, conveyor, 0);
+    ConveyorEntityMotionUtils.advanceConveyor(world, conveyor, null, null, 0);
+    ConveyorEntityMotionUtils.syncConveyorTransforms(world, conveyor);
 
     expect(conveyor.left).toEqual([null, left0EntityId, left1EntityId, left2EntityId]);
     expect(conveyor.right).toEqual([null, right0EntityId, null, null]);
@@ -118,7 +102,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     expect(conveyor.rightProgress).toEqual([0, 0, 0, 0]);
   });
 
-  it("wraps the final slot back to the first slot for the demo loop", () => {
+  it("keeps the tail slot occupied when there is no downstream conveyor", () => {
     const world = new UserWorld(new World("scene"));
     const conveyorEntityId = world.create();
     const conveyor = new ConveyorBeltComponent("horizontal-right");
@@ -130,14 +114,53 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     conveyor.right[3] = entityId;
     conveyor.rightProgress[3] = 1;
 
-    ConveyorEntityMotionUtils.advanceConveyor(world, conveyor, 0);
+    ConveyorEntityMotionUtils.advanceConveyor(world, conveyor, null, null, 0);
+    ConveyorEntityMotionUtils.syncConveyorTransforms(world, conveyor);
 
-    expect(conveyor.right).toEqual([entityId, null, null, null]);
-    expect(conveyor.rightProgress).toEqual([0, 0, 0, 0]);
+    expect(conveyor.right).toEqual([null, null, null, entityId]);
+    expect(conveyor.rightProgress).toEqual([0, 0, 0, 1]);
+
+    const transform = world.require(entityId, Transform2D);
+
+    expect(transform.curr.pos.x).toBe(10);
+    expect(transform.curr.pos.y).toBe(4);
+  });
+
+  it("moves items into the next connected conveyor when traversing from the leaf", () => {
+    const world = new UserWorld(new World("scene"));
+    const headBeltId = world.create();
+    const tailBeltId = world.create();
+    const headBelt = new ConveyorBeltComponent("horizontal-right");
+    const tailBelt = new ConveyorBeltComponent("horizontal-right");
+    const entityId = world.create();
+
+    headBelt.nextEntityId = tailBeltId;
+    tailBelt.previousEntityId = headBeltId;
+
+    world.add(headBeltId, headBelt);
+    world.add(tailBeltId, tailBelt);
+    world.add(headBeltId, new Transform2D(0, 0, 0));
+    world.add(tailBeltId, new Transform2D(20, 0, 0));
+    world.add(tailBeltId, new TransportBeltLeaf());
+    world.add(entityId, new Parent(headBeltId));
+    world.add(entityId, new Transform2D());
+
+    headBelt.left[3] = entityId;
+    headBelt.leftProgress[3] = 1;
+
+    ConveyorEntityMotionUtils.advanceBeltLineFromLeaf(world, tailBeltId, 0);
+
+    expect(headBelt.left).toEqual([null, null, null, null]);
+    expect(tailBelt.left).toEqual([entityId, null, null, null]);
+    expect(tailBelt.leftProgress).toEqual([0, 0, 0, 0]);
+    expect(world.require(entityId, Parent).entityId).toBe(tailBeltId);
 
     const transform = world.require(entityId, Transform2D);
 
     expect(transform.curr.pos.x).toBe(-10);
-    expect(transform.curr.pos.y).toBe(4);
+    expect(transform.curr.pos.y).toBe(-4);
+    expect(resolveWorldTransform2D(world, entityId, SHARED_WORLD_TRANSFORM)).toBe(true);
+    expect(SHARED_WORLD_TRANSFORM.curr.pos.x).toBe(10);
+    expect(SHARED_WORLD_TRANSFORM.curr.pos.y).toBe(-4);
   });
 });

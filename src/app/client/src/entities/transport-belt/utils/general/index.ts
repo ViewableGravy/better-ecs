@@ -4,7 +4,7 @@ import {
   type ConveyorSide,
   type ConveyorSlotIndex,
 } from "@client/components/conveyor-belt";
-import { CONVEYOR_SLOT_POSITIONS } from "@client/entities/transport-belt/slot-lookup";
+import { CONVEYOR_SLOT_POSITIONS } from "@client/entities/transport-belt/consts";
 import { Vec2, type EntityId, type UserWorld } from "@engine";
 import { Parent, Transform2D } from "@engine/components";
 import invariant from "tiny-invariant";
@@ -12,6 +12,9 @@ import invariant from "tiny-invariant";
 const SHARED_ADD_ENTITY_POSITION = new Vec2();
 
 export class ConveyorUtils {
+  /**
+   * Parents an entity to a conveyor and places it into a specific lane slot.
+   */
   public static addEntity(
     world: UserWorld,
     conveyorEntityId: EntityId,
@@ -21,12 +24,8 @@ export class ConveyorUtils {
     progress: number = 0.5,
   ): void {
     const conveyor = world.require(conveyorEntityId, ConveyorBeltComponent);
-    const slots = side === "left" 
-      ? conveyor.left 
-      : conveyor.right;
-    const slotProgress = side === "left" 
-      ? conveyor.leftProgress 
-      : conveyor.rightProgress;
+    const slots = this.resolveSlots(conveyor, side);
+    const slotProgress = this.resolveSlotProgress(conveyor, side);
 
     invariant(
       canConveyorStoreEntities(conveyor.variant),
@@ -53,7 +52,7 @@ export class ConveyorUtils {
   }
 
   /**
-   * Temporary until we support entities on all types of belts and do not require conditions
+   * Temporary until all belt variants support carried entities and motion.
    */
   public static supportsStraightItemAnimation(variant: string): boolean {
     if (!canConveyorStoreEntities(variant)) {
@@ -63,6 +62,9 @@ export class ConveyorUtils {
     return variant.startsWith("horizontal-") || variant.startsWith("vertical-");
   }
 
+  /**
+   * Resolves the local animated position for an item in a lane slot into `out`.
+   */
   public static resolveAnimatedSlotLocalPositionInto(
     variant: string,
     side: ConveyorSide,
@@ -80,6 +82,9 @@ export class ConveyorUtils {
     );
   }
 
+  /**
+   * Resolves the static center position of a slot on the local belt transform.
+   */
   public static resolveSlotLocalPosition(
     variant: string,
     side: ConveyorSide,
@@ -110,5 +115,21 @@ export class ConveyorUtils {
     const [previousX, previousY] = ConveyorUtils.resolveSlotLocalPosition(variant, side, previousIndex);
 
     return [currentX - previousX, currentY - previousY];
+  }
+
+  private static resolveSlots(conveyor: ConveyorBeltComponent, side: ConveyorSide): ConveyorBeltComponent["left"] {
+    if (side === "left") {
+      return conveyor.left;
+    }
+
+    return conveyor.right;
+  }
+
+  private static resolveSlotProgress(conveyor: ConveyorBeltComponent, side: ConveyorSide): ConveyorBeltComponent["leftProgress"] {
+    if (side === "left") {
+      return conveyor.leftProgress;
+    }
+
+    return conveyor.rightProgress;
   }
 }

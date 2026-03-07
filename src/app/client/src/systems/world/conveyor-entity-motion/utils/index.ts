@@ -1,63 +1,101 @@
 import {
-  type ConveyorBeltComponent,
-  type ConveyorSide,
-  type ConveyorSlotIndex,
+    ConveyorBeltComponent,
+    type ConveyorSide,
+    type ConveyorSlotIndex,
 } from "@client/components/conveyor-belt";
-import { ConveyorUtils } from "@client/entities/transport-belt/conveyor-utils";
+import { ConveyorUtils } from "@client/entities/transport-belt";
 import {
-  CONVEYOR_SIDES,
-  CONVEYOR_SLOT_INDICES_ASC,
-  CONVEYOR_SLOT_INDICES_DESC,
-  SHARED_SLOT_POSITION,
-  WRAP_LAST_SLOT_TO_START,
+    CONVEYOR_SIDES,
+    CONVEYOR_SLOT_INDICES_ASC,
+    CONVEYOR_SLOT_INDICES_DESC,
+    SHARED_SLOT_POSITION,
 } from "@client/systems/world/conveyor-entity-motion/constants";
-import type { UserWorld } from "@engine";
-import { Transform2D } from "@engine/components";
+import type { EntityId, UserWorld } from "@engine";
+import { Parent, Transform2D } from "@engine/components";
 
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
+
 export class ConveyorEntityMotionUtils {
-  /**
-   * Advances the entities on a conveyor belt based on the belt's speed and the elapsed time since the last update, 
-   * and syncs their transforms to match their expected positions on the conveyor's animation.
-   * 
-   * @param world The world containing the entities to advance.
-   * @param conveyor The conveyor belt component containing the entities.
-   * @param progressDelta The amount to advance the progress of each entity on the conveyor, typically computed as `speed * deltaTime`.
-   */
+  public static advanceBeltLineFromLeaf(
+    world: UserWorld,
+    leafEntityId: EntityId,
+    progressDelta: number,
+  ): void {
+    let nextEntityId: EntityId | null = null;
+    let currentEntityId: EntityId | null = leafEntityId;
+
+    while (currentEntityId !== null) {
+      const currentConveyor: ConveyorBeltComponent | undefined = world.get(currentEntityId, ConveyorBeltComponent);
+
+      if (!currentConveyor) {
+        break;
+      }
+
+      const nextConveyor = nextEntityId === null
+        ? null
+        : world.get(nextEntityId, ConveyorBeltComponent) ?? null;
+
+      this.advanceConveyor(
+        world,
+        currentConveyor,
+        nextEntityId,
+        nextConveyor,
+        progressDelta,
+      );
+      nextEntityId = currentEntityId;
+      currentEntityId = currentConveyor.previousEntityId;
+    }
+
+    currentEntityId = leafEntityId;
+
+    while (currentEntityId !== null) {
+      const currentConveyor: ConveyorBeltComponent | undefined = world.get(currentEntityId, ConveyorBeltComponent);
+
+      if (!currentConveyor) {
+        break;
+      }
+
+      this.syncConveyorTransforms(world, currentConveyor);
+      currentEntityId = currentConveyor.previousEntityId;
+    }
+  }
+
   public static advanceConveyor(
     world: UserWorld,
     conveyor: ConveyorBeltComponent,
+    nextConveyorEntityId: EntityId | null,
+    nextConveyor: ConveyorBeltComponent | null,
     progressDelta: number,
   ): void {
     for (const side of CONVEYOR_SIDES) {
-      this.advanceLane(conveyor, side, progressDelta);
+      this.advanceLane(world, conveyor, nextConveyorEntityId, nextConveyor, side, progressDelta);
+    }
+  }
+
+  public static syncConveyorTransforms(
+    world: UserWorld,
+    conveyor: ConveyorBeltComponent,
+  ): void {
+    for (const side of CONVEYOR_SIDES) {
       this.syncLaneTransforms(world, conveyor, side);
     }
   }
 
-  /**
-   * Advances the entities in a single lane of the conveyor belt.
-   * 
-   * @param conveyor The conveyor belt to advance entities on.
-   * @param side The side of the conveyor belt to advance entities on.
-   * @param progressDelta The amount to advance the progress of each entity on the lane, typically computed as `speed * deltaTime`.
-   */
   private static advanceLane(
+    world: UserWorld,
     conveyor: ConveyorBeltComponent,
+    nextConveyorEntityId: EntityId | null,
+    nextConveyor: ConveyorBeltComponent | null,
     side: ConveyorSide,
     progressDelta: number,
   ): void {
-    const slots = side === "left" 
-      ? conveyor.left 
-      : conveyor.right;
-    const progress = side === "left" 
-      ? conveyor.leftProgress 
-      : conveyor.rightProgress;
+    const slots = this.resolveSlots(conveyor, side);
+    const progress = this.resolveProgress(conveyor, side);
+    const nextSlots = nextConveyor ? this.resolveSlots(nextConveyor, side) : null;
+    const nextProgress = nextConveyor ? this.resolveProgress(nextConveyor, side) : null;
 
-    // iterate from end first, this allows us to ensure that entities are moved into their
-    // new slots before attempting to move entities into their slots from earlier slots.
     for (const index of CONVEYOR_SLOT_INDICES_DESC) {
       const entityId = slots[index];
 
@@ -72,7 +110,20 @@ export class ConveyorEntityMotionUtils {
         continue;
       }
 
-      const destinationIndex = this.computeDestinationIndex(index);
+      if (index === 3) {
+        this.transferToNextConveyor(
+          world,
+          entityId,
+          nextConveyorEntityId,
+          slots,
+          progress,
+          nextSlots,
+          nextProgress,
+        );
+        continue;
+      }
+
+      const destinationIndex = this.computeIntraConveyorDestinationIndex(index);
 
       if (destinationIndex === undefined) {
         progress[index] = 1;
@@ -91,24 +142,13 @@ export class ConveyorEntityMotionUtils {
     }
   }
 
-  /**
-   * Syncs the transforms of all entities on a conveyor lane to match their expected positions based on the conveyor's animation.
-   * 
-   * @param world The world containing the entities to sync.
-   * @param conveyor The conveyor belt component containing the entities.
-   * @param side The side of the conveyor belt to sync entities on.
-   */
   private static syncLaneTransforms(
     world: UserWorld,
     conveyor: ConveyorBeltComponent,
     side: ConveyorSide,
   ): void {
-    const slots = side === "left" 
-      ? conveyor.left 
-      : conveyor.right;
-    const progress = side === "left" 
-      ? conveyor.leftProgress 
-      : conveyor.rightProgress;
+    const slots = this.resolveSlots(conveyor, side);
+    const progress = this.resolveProgress(conveyor, side);
 
     for (const index of CONVEYOR_SLOT_INDICES_ASC) {
       const entityId = slots[index];
@@ -137,19 +177,67 @@ export class ConveyorEntityMotionUtils {
     }
   }
 
-  /**
-   * Computes the destination index for an entity in a conveyor slot, returning undefined if the entity 
-   * should not advance to a new slot.
-   */
-  private static computeDestinationIndex(index: ConveyorSlotIndex): ConveyorSlotIndex | undefined {
-    if (index === 3) {
-      if (!WRAP_LAST_SLOT_TO_START) {
-        return undefined;
-      }
-
-      return 0;
+  private static computeIntraConveyorDestinationIndex(index: ConveyorSlotIndex): ConveyorSlotIndex | undefined {
+    if (index === 0) {
+      return 1;
     }
 
-    return (index + 1) as ConveyorSlotIndex;
+    if (index === 1) {
+      return 2;
+    }
+
+    if (index === 2) {
+      return 3;
+    }
+
+    return undefined;
+  }
+
+  private static transferToNextConveyor(
+    world: UserWorld,
+    entityId: EntityId,
+    nextConveyorEntityId: EntityId | null,
+    slots: ConveyorBeltComponent["left"],
+    progress: ConveyorBeltComponent["leftProgress"],
+    nextSlots: ConveyorBeltComponent["left"] | null,
+    nextProgress: ConveyorBeltComponent["leftProgress"] | null,
+  ): void {
+    if (
+      nextConveyorEntityId === null
+      || nextSlots === null
+      || nextProgress === null
+      || nextSlots[0] !== null
+    ) {
+      progress[3] = 1;
+      return;
+    }
+
+    nextSlots[0] = entityId;
+    nextProgress[0] = progress[3] - 1;
+    slots[3] = null;
+    progress[3] = 0;
+    world.add(entityId, new Parent(nextConveyorEntityId));
+  }
+
+  private static resolveSlots(
+    conveyor: ConveyorBeltComponent,
+    side: ConveyorSide,
+  ): ConveyorBeltComponent["left"] {
+    if (side === "left") {
+      return conveyor.left;
+    }
+
+    return conveyor.right;
+  }
+
+  private static resolveProgress(
+    conveyor: ConveyorBeltComponent,
+    side: ConveyorSide,
+  ): ConveyorBeltComponent["leftProgress"] {
+    if (side === "left") {
+      return conveyor.leftProgress;
+    }
+
+    return conveyor.rightProgress;
   }
 }

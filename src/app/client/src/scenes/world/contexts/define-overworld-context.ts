@@ -11,11 +11,11 @@ import { spawnGear } from "@client/entities/gear";
 import { spawnHouse } from "@client/entities/house";
 import { spawnOreField } from "@client/entities/ore-field";
 import {
+  ConveyorUtils,
   spawnTransportBelt,
   TRANSPORT_BELT_VARIANTS,
   type TransportBeltVariant,
 } from "@client/entities/transport-belt";
-import { ConveyorUtils } from "@client/entities/transport-belt/conveyor-utils";
 import { spawnTree } from "@client/entities/tree";
 import { spawnWall } from "@client/entities/wall";
 import { setupContextPlayer } from "@client/scenes/world/contexts/shared";
@@ -267,10 +267,28 @@ export function defineOverworldContext(options: OverworldContextOptions) {
         }
       }
 
-      function spawnAnimatedTransportDemo(x: number, y: number, variant: TransportBeltVariant) {
-        const demoBelt = spawnTransportBelt(world, {
-          x: x,
-          y: y,
+      function spawnAnimatedTransportDemoRow(x: number, y: number, variant: TransportBeltVariant) {
+        const firstBelt = spawnTransportBelt(world, {
+          x,
+          y,
+          variant,
+        });
+
+        spawnTransportBelt(world, {
+          x: x + BELT_SPACING,
+          y,
+          variant,
+        });
+
+        spawnTransportBelt(world, {
+          x: x + BELT_SPACING * 2,
+          y,
+          variant,
+        });
+
+        spawnTransportBelt(world, {
+          x: x + BELT_SPACING * 3,
+          y,
           variant,
         });
 
@@ -281,8 +299,8 @@ export function defineOverworldContext(options: OverworldContextOptions) {
         const leftA = spawnGear(world, { size: "large" });
         const rightA = spawnGear(world, { size: "large" });
 
-        ConveyorUtils.addEntity(world, demoBelt, leftA, "left", 0, 0);
-        ConveyorUtils.addEntity(world, demoBelt, rightA, "right", 1, 0);
+        ConveyorUtils.addEntity(world, firstBelt, leftA, "left", 0, 0);
+        ConveyorUtils.addEntity(world, firstBelt, rightA, "right", 1, 0);
       }
 
       const demoGridStartX = -220;
@@ -301,7 +319,7 @@ export function defineOverworldContext(options: OverworldContextOptions) {
         );
       }
 
-      spawnAnimatedTransportDemo(-300, 460, "horizontal-right");
+      spawnAnimatedTransportDemoRow(-300, 460, "horizontal-right");
 
       const xs = Array.from({ length: 5 }, (_, i) => 500 + i * 100);
       const ys = Array.from({ length: 5 }, (_, i) => 60 + i * 20);

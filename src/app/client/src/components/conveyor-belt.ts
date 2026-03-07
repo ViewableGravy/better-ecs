@@ -21,6 +21,8 @@ export class ConveyorBeltComponent {
   public readonly right: ConveyorSlots = [null, null, null, null];
   public readonly leftProgress: ConveyorSlotProgress = [0, 0, 0, 0];
   public readonly rightProgress: ConveyorSlotProgress = [0, 0, 0, 0];
+  public previousEntityId: EntityId | null = null;
+  public nextEntityId: EntityId | null = null;
 
   constructor(
     public readonly variant: string,
