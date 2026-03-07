@@ -1,6 +1,12 @@
 import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import { TransportBeltLeaf } from "@client/components/transport-belt-leaf";
-import { CONVEYOR_SLOT_COUNT_PER_LANE, SLOT_ADVANCE_DURATION_MS, SLOT_PROGRESS_PER_MILLISECOND } from "@client/systems/world/conveyor-entity-motion/constants";
+import {
+  CONVEYOR_SLOT_COUNT_PER_LANE,
+  getCurveLaneSides,
+  getSlotAdvanceDurations,
+  INSIDE_CURVE_SLOT_ADVANCE_DURATION_MS,
+  SLOT_ADVANCE_DURATION_MS,
+} from "@client/systems/world/conveyor-entity-motion/constants";
 import { ConveyorEntityMotionUtils } from "@client/systems/world/conveyor-entity-motion/utils";
 import { UserWorld, World } from "@engine";
 import { Parent, Transform2D } from "@engine/components";
@@ -125,6 +131,29 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
 
     expect(transform.curr.pos.x).toBe(10);
     expect(transform.curr.pos.y).toBe(4);
+  });
+
+  it("keeps straight belts on the same timing as the previous full-belt duration", () => {
+    const world = new UserWorld(new World("scene"));
+    const conveyorEntityId = world.create();
+    const conveyor = new ConveyorBeltComponent("horizontal-right");
+    const entityId = world.create();
+
+    world.add(conveyorEntityId, conveyor);
+    world.add(entityId, new Transform2D());
+
+    conveyor.left[0] = entityId;
+
+    ConveyorEntityMotionUtils.advanceConveyor(
+      world,
+      conveyor,
+      null,
+      null,
+      SLOT_ADVANCE_DURATION_MS / CONVEYOR_SLOT_COUNT_PER_LANE,
+    );
+
+    expect(conveyor.left).toEqual([null, entityId, null, null]);
+    expect(conveyor.leftProgress).toEqual([0, 0, 0, 0]);
   });
 
   it("moves items into the next connected conveyor when traversing from the leaf", () => {
@@ -289,7 +318,31 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
 });
 
 describe("conveyor motion timing constants", () => {
-  it("treats the configured demo duration as one full belt traversal", () => {
-    expect(SLOT_PROGRESS_PER_MILLISECOND * SLOT_ADVANCE_DURATION_MS).toBe(CONVEYOR_SLOT_COUNT_PER_LANE);
+  it("returns null lane roles for non-curved belts", () => {
+    expect(getCurveLaneSides("horizontal-right")).toEqual([null, null]);
+  });
+
+  it("marks the correct inside lane for curved belts", () => {
+    expect(getCurveLaneSides("angled-right-up")).toEqual(["right", "left"]);
+    expect(getCurveLaneSides("angled-left-up")).toEqual(["left", "right"]);
+  });
+
+  it("uses a faster advance duration only for the inside curved lane", () => {
+    expect(getSlotAdvanceDurations("horizontal-right")).toEqual([
+      SLOT_ADVANCE_DURATION_MS,
+      SLOT_ADVANCE_DURATION_MS,
+    ]);
+    expect(getSlotAdvanceDurations("angled-right-up")).toEqual([
+      SLOT_ADVANCE_DURATION_MS,
+      INSIDE_CURVE_SLOT_ADVANCE_DURATION_MS,
+    ]);
+    expect(getSlotAdvanceDurations("angled-left-up")).toEqual([
+      INSIDE_CURVE_SLOT_ADVANCE_DURATION_MS,
+      SLOT_ADVANCE_DURATION_MS,
+    ]);
+  });
+
+  it("keeps the inside curved duration at 120 percent speed", () => {
+    expect(INSIDE_CURVE_SLOT_ADVANCE_DURATION_MS).toBe(SLOT_ADVANCE_DURATION_MS / 1.2);
   });
 });

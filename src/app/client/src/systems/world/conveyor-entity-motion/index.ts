@@ -1,7 +1,6 @@
 import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import { TransportBeltLeaf } from "@client/components/transport-belt-leaf";
 import { ConveyorUtils } from "@client/entities/transport-belt";
-import { SLOT_PROGRESS_PER_MILLISECOND } from "@client/systems/world/conveyor-entity-motion/constants";
 import { ConveyorEntityMotionUtils } from "@client/systems/world/conveyor-entity-motion/utils";
 import { createSystem } from "@engine";
 import { Delta, fromContext, World } from "@engine/context";
@@ -10,9 +9,8 @@ export const System = createSystem("main:conveyor-entity-motion")({
   system() {
     const world = fromContext(World);
     const [updateDelta] = fromContext(Delta);
-    const progressDelta = updateDelta * SLOT_PROGRESS_PER_MILLISECOND;
 
-    if (progressDelta <= 0) {
+    if (updateDelta <= 0) {
       return;
     }
 
@@ -21,7 +19,7 @@ export const System = createSystem("main:conveyor-entity-motion")({
         return;
       }
 
-      ConveyorEntityMotionUtils.advanceBeltLineFromLeaf(world, conveyorEntityId, progressDelta);
+      ConveyorEntityMotionUtils.advanceBeltLineFromLeaf(world, conveyorEntityId, updateDelta);
     });
   },
 });

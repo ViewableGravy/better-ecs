@@ -1,14 +1,16 @@
 import {
-  ConveyorBeltComponent,
-  type ConveyorSide,
-  type ConveyorSlotIndex,
+    ConveyorBeltComponent,
+    type ConveyorSide,
+    type ConveyorSlotIndex,
 } from "@client/components/conveyor-belt";
 import { BeltItemRailsUtility } from "@client/entities/transport-belt";
 import {
-  CONVEYOR_SIDES,
-  CONVEYOR_SLOT_INDICES_ASC,
-  CONVEYOR_SLOT_INDICES_DESC,
-  SHARED_SLOT_POSITION,
+    CONVEYOR_SIDES,
+    CONVEYOR_SLOT_COUNT_PER_LANE,
+    CONVEYOR_SLOT_INDICES_ASC,
+    CONVEYOR_SLOT_INDICES_DESC,
+    getSlotAdvanceDurations,
+    SHARED_SLOT_POSITION,
 } from "@client/systems/world/conveyor-entity-motion/constants";
 import type { EntityId, UserWorld } from "@engine";
 import { Parent, Transform2D } from "@engine/components";
@@ -21,7 +23,7 @@ export class ConveyorEntityMotionUtils {
   public static advanceBeltLineFromLeaf(
     world: UserWorld,
     leafEntityId: EntityId,
-    progressDelta: number,
+    updateDelta: number,
   ): void {
     let nextEntityId = this.resolveTraversalNextEntityId(world, leafEntityId);
     let currentEntityId: EntityId | null = leafEntityId;
@@ -43,7 +45,7 @@ export class ConveyorEntityMotionUtils {
         currentConveyor,
         nextEntityId,
         nextConveyor,
-        progressDelta,
+        updateDelta,
       );
       nextEntityId = currentEntityId;
 
@@ -79,11 +81,26 @@ export class ConveyorEntityMotionUtils {
     conveyor: ConveyorBeltComponent,
     nextConveyorEntityId: EntityId | null,
     nextConveyor: ConveyorBeltComponent | null,
-    progressDelta: number,
+    updateDelta: number,
   ): void {
-    for (const side of CONVEYOR_SIDES) {
-      this.advanceLane(world, conveyor, nextConveyorEntityId, nextConveyor, side, progressDelta);
-    }
+    const [leftAdvanceDuration, rightAdvanceDuration] = getSlotAdvanceDurations(conveyor.variant);
+
+    this.advanceLane(
+      world,
+      conveyor,
+      nextConveyorEntityId,
+      nextConveyor,
+      "left",
+      updateDelta * CONVEYOR_SLOT_COUNT_PER_LANE / leftAdvanceDuration,
+    );
+    this.advanceLane(
+      world,
+      conveyor,
+      nextConveyorEntityId,
+      nextConveyor,
+      "right",
+      updateDelta * CONVEYOR_SLOT_COUNT_PER_LANE / rightAdvanceDuration,
+    );
   }
 
   public static syncConveyorTransforms(
