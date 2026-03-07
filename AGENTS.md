@@ -100,6 +100,8 @@ This is the single source of truth for agent behavior and coding conventions in 
   - If edge cases are found, bring these up and ask clarifying questions
   - Do not "assume" implicit requirements if they are not at least 80% guaranteed
   - If one requirement conflicts with another, or an answer conflicts with an existing requirement, seek confirmation
+- Always verify correctness of task with user
+  - Once the task feels like it is done, and you would claim finished, ask the user using the AskQuestions tool to verify that everything looks as intended or if further iteration towards the goal is required.
 
 ## No legacy code policy
 
@@ -135,8 +137,10 @@ This section is intentionally explicit to reduce drift.
 
 ### `resolve` vs out-parameter naming
 
-- Use `resolve*` for computing/deriving a value or decision from current state.
+- Use `resolve*` for deriving a value or decision from current state.
   - Good fit today: `resolvePlacementWorld`, `resolveCameraView`, collision `resolve*` functions.
+- Use `compute*` for derivation that is primarily computation based
+  - Good fit today: `computeBeltRailPosition`
 - Do not use `resolve*` for simple owner reads/getters.
   - If no derivation occurs, use `get*` (or `require*` for non-nullable access).
 - Avoid plain `resolve*` for APIs whose primary contract is “write into provided object”.

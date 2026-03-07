@@ -1,5 +1,6 @@
 import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import { TransportBeltLeaf } from "@client/components/transport-belt-leaf";
+import { CONVEYOR_SLOT_COUNT_PER_LANE, DEMO_SLOT_ADVANCE_DURATION_MS, DEMO_SLOT_PROGRESS_PER_MILLISECOND } from "@client/systems/world/conveyor-entity-motion/constants";
 import { ConveyorEntityMotionUtils } from "@client/systems/world/conveyor-entity-motion/utils";
 import { UserWorld, World } from "@engine";
 import { Parent, Transform2D } from "@engine/components";
@@ -240,5 +241,55 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     expect(fourthBelt.left).toEqual([null, null, null, null]);
     expect(anchorBelt.left).toEqual([entityId, null, null, null]);
     expect(world.require(entityId, Parent).entityId).toBe(anchorBeltId);
+  });
+
+  it("lets the designated loop anchor transfer into its downstream belt", () => {
+    const world = new UserWorld(new World("scene"));
+    const anchorBeltId = world.create();
+    const secondBeltId = world.create();
+    const thirdBeltId = world.create();
+    const fourthBeltId = world.create();
+    const anchorBelt = new ConveyorBeltComponent("angled-bottom-right");
+    const secondBelt = new ConveyorBeltComponent("angled-left-bottom");
+    const thirdBelt = new ConveyorBeltComponent("angled-top-left");
+    const fourthBelt = new ConveyorBeltComponent("angled-right-up");
+    const entityId = world.create();
+
+    anchorBelt.previousEntityId = fourthBeltId;
+    anchorBelt.nextEntityId = secondBeltId;
+    anchorBelt.isLeaf = true;
+    secondBelt.previousEntityId = anchorBeltId;
+    secondBelt.nextEntityId = thirdBeltId;
+    thirdBelt.previousEntityId = secondBeltId;
+    thirdBelt.nextEntityId = fourthBeltId;
+    fourthBelt.previousEntityId = thirdBeltId;
+    fourthBelt.nextEntityId = anchorBeltId;
+
+    world.add(anchorBeltId, anchorBelt);
+    world.add(secondBeltId, secondBelt);
+    world.add(thirdBeltId, thirdBelt);
+    world.add(fourthBeltId, fourthBelt);
+    world.add(anchorBeltId, new Transform2D(0, 0, 0));
+    world.add(secondBeltId, new Transform2D(20, 0, 0));
+    world.add(thirdBeltId, new Transform2D(20, 20, 0));
+    world.add(fourthBeltId, new Transform2D(0, 20, 0));
+    world.add(anchorBeltId, new TransportBeltLeaf());
+    world.add(entityId, new Parent(anchorBeltId));
+    world.add(entityId, new Transform2D());
+
+    anchorBelt.left[3] = entityId;
+    anchorBelt.leftProgress[3] = 1;
+
+    ConveyorEntityMotionUtils.advanceBeltLineFromLeaf(world, anchorBeltId, 0);
+
+    expect(anchorBelt.left).toEqual([null, null, null, null]);
+    expect(secondBelt.left).toEqual([entityId, null, null, null]);
+    expect(world.require(entityId, Parent).entityId).toBe(secondBeltId);
+  });
+});
+
+describe("conveyor motion timing constants", () => {
+  it("treats the configured demo duration as one full belt traversal", () => {
+    expect(DEMO_SLOT_PROGRESS_PER_MILLISECOND * DEMO_SLOT_ADVANCE_DURATION_MS).toBe(CONVEYOR_SLOT_COUNT_PER_LANE);
   });
 });

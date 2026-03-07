@@ -1,9 +1,13 @@
 import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import { TransportBeltLeaf } from "@client/components/transport-belt-leaf";
 import { destroyTransportBelt, spawnTransportBelt } from "@client/entities/transport-belt";
-import { UserWorld, World } from "@engine";
+import { EntityId, UserWorld, World } from "@engine";
 import { Parent, Transform2D } from "@engine/components";
 import { describe, expect, it } from "vitest";
+
+function countLeafBelts(world: UserWorld, beltEntityIds: readonly EntityId[]): number {
+  return beltEntityIds.filter((beltEntityId) => world.has(beltEntityId, TransportBeltLeaf)).length;
+}
 
 describe("spawnTransportBelt connectivity", () => {
   it("connects adjacent straight belts and marks the tail as a leaf", () => {
@@ -80,6 +84,7 @@ describe("spawnTransportBelt connectivity", () => {
     expect(world.has(firstBeltId, TransportBeltLeaf)).toBe(false);
     expect(world.has(secondBeltId, TransportBeltLeaf)).toBe(false);
     expect(world.has(fourthBeltId, TransportBeltLeaf)).toBe(false);
+    expect(countLeafBelts(world, [firstBeltId, secondBeltId, thirdBeltId, fourthBeltId])).toBe(1);
   });
 
   it("rewires an inserted middle belt into the existing line", () => {
@@ -96,7 +101,13 @@ describe("spawnTransportBelt connectivity", () => {
     expect(secondBelt.previousEntityId).toBe(firstBeltId);
     expect(secondBelt.nextEntityId).toBe(thirdBeltId);
     expect(thirdBelt.previousEntityId).toBe(secondBeltId);
+    expect(firstBelt.isLeaf).toBe(false);
+    expect(secondBelt.isLeaf).toBe(false);
+    expect(thirdBelt.isLeaf).toBe(true);
+    expect(world.has(firstBeltId, TransportBeltLeaf)).toBe(false);
+    expect(world.has(secondBeltId, TransportBeltLeaf)).toBe(false);
     expect(world.has(thirdBeltId, TransportBeltLeaf)).toBe(true);
+    expect(countLeafBelts(world, [firstBeltId, secondBeltId, thirdBeltId])).toBe(1);
   });
 
   it("does not connect belts that are adjacent but flowing the opposite direction", () => {

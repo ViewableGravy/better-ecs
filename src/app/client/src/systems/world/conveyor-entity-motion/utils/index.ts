@@ -23,7 +23,7 @@ export class ConveyorEntityMotionUtils {
     leafEntityId: EntityId,
     progressDelta: number,
   ): void {
-    let nextEntityId: EntityId | null = null;
+    let nextEntityId = this.resolveTraversalNextEntityId(world, leafEntityId);
     let currentEntityId: EntityId | null = leafEntityId;
     let shouldStopOnLeafEntityId = false;
 
@@ -251,5 +251,22 @@ export class ConveyorEntityMotionUtils {
     }
 
     return conveyor.rightProgress;
+  }
+
+  private static resolveTraversalNextEntityId(
+    world: UserWorld,
+    leafEntityId: EntityId,
+  ): EntityId | null {
+    const leafConveyor = world.get(leafEntityId, ConveyorBeltComponent);
+
+    if (!leafConveyor) {
+      return null;
+    }
+
+    if (leafConveyor.previousEntityId === null) {
+      return null;
+    }
+
+    return leafConveyor.nextEntityId;
   }
 }

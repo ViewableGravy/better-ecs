@@ -1,7 +1,7 @@
 import {
-  canConveyorStoreEntities,
-  type ConveyorSide,
-  type ConveyorSlotIndex,
+    canConveyorStoreEntities,
+    type ConveyorSide,
+    type ConveyorSlotIndex,
 } from "@client/components/conveyor-belt";
 import { OUTSIDE } from "@client/components/render-visibility";
 import { spawnContextEntryRegion } from "@client/entities/context-entry-region";
@@ -11,10 +11,10 @@ import { spawnGear } from "@client/entities/gear";
 import { spawnHouse } from "@client/entities/house";
 import { spawnOreField } from "@client/entities/ore-field";
 import {
-  ConveyorUtils,
-  spawnTransportBelt,
-  TRANSPORT_BELT_VARIANTS,
-  type TransportBeltVariant,
+    ConveyorUtils,
+    spawnTransportBelt,
+    TRANSPORT_BELT_VARIANTS,
+    type TransportBeltVariant,
 } from "@client/entities/transport-belt";
 import { spawnTree } from "@client/entities/tree";
 import { spawnWall } from "@client/entities/wall";
@@ -373,7 +373,7 @@ export function defineOverworldContext(options: OverworldContextOptions) {
       spawnAnimatedTransportDemoRow(-300, 460, "horizontal-right");
 
       const xs = Array.from({ length: 5 }, (_, i) => 500 + i * 100);
-      const ys = Array.from({ length: 5 }, (_, i) => 60 + i * 20);
+      const ys = Array.from({ length: 5 }, (_, i) => 60 + i * BELT_SPACING * 2);
 
       // performance testing (currently ~70-80 fps)
       for (const x of xs) {
@@ -384,11 +384,11 @@ export function defineOverworldContext(options: OverworldContextOptions) {
           spawnTransportDemo(x + 60, y, "horizontal-right");
           spawnTransportDemo(x + 80, y, "horizontal-right");
 
-          spawnTransportDemo(x, y, "horizontal-left");
-          spawnTransportDemo(x + 20, y, "horizontal-left");
-          spawnTransportDemo(x + 40, y, "horizontal-left");
-          spawnTransportDemo(x + 60, y, "horizontal-left");
-          spawnTransportDemo(x + 80, y, "horizontal-left");
+          spawnTransportDemo(x, y + BELT_SPACING, "horizontal-left");
+          spawnTransportDemo(x + 20, y + BELT_SPACING, "horizontal-left");
+          spawnTransportDemo(x + 40, y + BELT_SPACING, "horizontal-left");
+          spawnTransportDemo(x + 60, y + BELT_SPACING, "horizontal-left");
+          spawnTransportDemo(x + 80, y + BELT_SPACING, "horizontal-left");
         }
       }
 

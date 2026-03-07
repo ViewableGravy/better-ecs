@@ -1,8 +1,8 @@
 import { canConveyorStoreEntities, ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import { TransportBeltLeaf } from "@client/components/transport-belt-leaf";
 import {
-    getTransportBeltFlow,
-    TRANSPORT_BELT_SIDE_GRID_OFFSETS,
+  getTransportBeltFlow,
+  TRANSPORT_BELT_SIDE_GRID_OFFSETS,
 } from "@client/entities/transport-belt/consts";
 import { GridSingleton, type GridCoordinate, type GridCoordinates } from "@client/systems/world/build-mode/grid-singleton";
 import type { EntityId, UserWorld } from "@engine";
@@ -63,13 +63,16 @@ export class TransportBeltConnectionUtils {
     belt.previousEntityId = previousEntityId;
     belt.nextEntityId = nextEntityId;
 
-    let shouldKeepPreviousLeafAnchor = false;
+    const shouldKeepPreviousLeafAnchor = this.shouldKeepPreviousLeafAnchor(
+      world,
+      previousEntityId,
+      nextEntityId,
+    );
 
     if (previousEntityId !== null) {
       const previousBelt = world.get(previousEntityId, ConveyorBeltComponent);
 
       if (previousBelt) {
-        shouldKeepPreviousLeafAnchor = previousBelt.isLeaf && nextEntityId !== null;
         previousBelt.nextEntityId = beltEntityId;
         this.syncLeafMarker(world, previousEntityId, previousBelt, shouldKeepPreviousLeafAnchor);
       }
@@ -235,6 +238,51 @@ export class TransportBeltConnectionUtils {
 
   private static isConnectableVariant(variant: string): boolean {
     return canConveyorStoreEntities(variant) && getTransportBeltFlow(variant) !== undefined;
+  }
+
+  private static shouldKeepPreviousLeafAnchor(
+    world: UserWorld,
+    previousEntityId: EntityId | null,
+    nextEntityId: EntityId | null,
+  ): boolean {
+    if (previousEntityId === null || nextEntityId === null) {
+      return false;
+    }
+
+    const previousBelt = world.get(previousEntityId, ConveyorBeltComponent);
+
+    if (!previousBelt || !previousBelt.isLeaf) {
+      return false;
+    }
+
+    return this.doesNextChainReachEntity(world, nextEntityId, previousEntityId);
+  }
+
+  private static doesNextChainReachEntity(
+    world: UserWorld,
+    startEntityId: EntityId,
+    targetEntityId: EntityId,
+  ): boolean {
+    let currentEntityId: EntityId | null = startEntityId;
+
+    while (currentEntityId !== null) {
+      if (currentEntityId === targetEntityId) {
+        return true;
+      }
+
+      const currentBelt: ConveyorBeltComponent | undefined = world.get(
+        currentEntityId,
+        ConveyorBeltComponent,
+      );
+
+      if (!currentBelt) {
+        return false;
+      }
+
+      currentEntityId = currentBelt.nextEntityId;
+    }
+
+    return false;
   }
 
   private static offsetGridCoordinates(
