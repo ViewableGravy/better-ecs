@@ -10,12 +10,15 @@ import {
   TRANSPORT_BELT_OFFSET_Y,
 } from "@client/systems/world/build-mode/const";
 import { BuildModeDomEvents, HUD } from "@client/systems/world/build-mode/dom";
+import { GhostPreviewScopeUtils } from "@client/systems/world/build-mode/ghost-preview-scope";
 import { GridSingleton, type GridCoordinates } from "@client/systems/world/build-mode/grid-singleton";
 import * as Keybinds from '@client/systems/world/build-mode/input';
 import { Placement } from "@client/systems/world/build-mode/placement";
 import { resolvePlacementWorld, type PlacementWorldResolution } from "@client/systems/world/build-mode/placement-target";
+import { TransportBeltAutoShapeManager } from "@client/systems/world/build-mode/transport-belt-auto-shape-manager";
+import { TransportBeltPlacementRotationManager } from "@client/systems/world/build-mode/transport-belt-placement-rotation-manager";
 import { createSystem, type RegisteredEngine, type RegisteredSystems } from "@engine";
-import { System as ContextSystem, Engine, fromContext, Mouse } from "@engine/context";
+import { System as ContextSystem, Engine, fromContext, FromEngine, Mouse } from "@engine/context";
 import { ActiveCameraView } from "@engine/context-utils";
 import { SpatialContexts, type ContextId } from "@libs/spatial-contexts";
 
@@ -37,6 +40,7 @@ export const System = createSystem("main:build-mode")({
     const { data } = fromContext(ContextSystem("main:build-mode"));
     const engine = fromContext(Engine);
     const mouse = fromContext(Mouse);
+    const rootWorld = fromContext(FromEngine.World);
 
     const manager = SpatialContexts.requireManager(engine.scene.context);
     const focusedWorld = manager.focusedWorld;
@@ -50,27 +54,39 @@ export const System = createSystem("main:build-mode")({
 
     const gridCoordinates = GridSingleton.worldToGridCoordinates(worldPointer.x, worldPointer.y);
     const [snappedX, snappedY] = GridSingleton.gridCoordinatesToWorldOrigin(gridCoordinates);
+
     const placementTarget = resolvePlacementWorld(engine, worldPointer);
     const placementWorld = placementTarget.world;
+    const selectedTransportBeltVariant = data.selectedItem === "transport-belt" && placementWorld
+      ? TransportBeltPlacementRotationManager.resolveVariant(
+        placementWorld,
+        gridCoordinates,
+        data.placementEndSide,
+      )
+      : null;
 
-    // Keep ghosts scoped to the active world only.
-    // This avoids leaked transient entities during world/context transitions.
-    for (const sceneWorld of sceneWorlds) {
-      if (sceneWorld !== focusedWorld) {
-        sceneWorld.destroy(GhostPreview);
-      }
-    }
+    GhostPreviewScopeUtils.pruneGhosts(rootWorld, focusedWorld, sceneWorlds);
 
     if (data.selectedItem === null || placementTarget.blocked) {
       focusedWorld.destroy(GhostPreview);
       data.ghostEntityId = null;
     } else {
-      data.ghostEntityId = GhostPreview.sync(
-        focusedWorld,
-        data.ghostEntityId,
-        snappedX,
-        snappedY,
-      );
+      if (data.selectedItem === "transport-belt" && selectedTransportBeltVariant !== null) {
+        data.ghostEntityId = GhostPreview.syncTransportBelt(
+          focusedWorld,
+          data.ghostEntityId,
+          snappedX,
+          snappedY,
+          selectedTransportBeltVariant,
+        );
+      } else {
+        data.ghostEntityId = GhostPreview.sync(
+          focusedWorld,
+          data.ghostEntityId,
+          snappedX,
+          snappedY,
+        );
+      }
     }
 
     const shouldDelete = data.pendingDelete;
@@ -97,7 +113,7 @@ export const System = createSystem("main:build-mode")({
           });
         }
 
-        if (data.selectedItem === "transport-belt-horizontal-right") {
+        if (data.selectedItem === "transport-belt" && selectedTransportBeltVariant !== null) {
           const beltX = snappedX + TRANSPORT_BELT_OFFSET_X;
           const beltY = snappedY + TRANSPORT_BELT_OFFSET_Y;
 
@@ -106,12 +122,14 @@ export const System = createSystem("main:build-mode")({
           const beltEntityId = spawnTransportBelt(placementTarget.world, {
             x: beltX,
             y: beltY,
-            variant: "horizontal-right",
+            variant: selectedTransportBeltVariant,
           });
+
+          TransportBeltAutoShapeManager.refreshAffectedBelts(placementTarget.world, beltEntityId);
 
           placementTarget.world.add(
             beltEntityId,
-            new Placeable("transport-belt-horizontal-right"),
+            new Placeable("transport-belt"),
           );
         }
       }

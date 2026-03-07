@@ -40,7 +40,7 @@ export class ConveyorBeltComponent {
   public isLeaf = false;
 
   constructor(
-    public readonly variant: string,
+    public variant: string,
     public speed = DEFAULT_CONVEYOR_BELT_SPEED,
   ) {}
 }

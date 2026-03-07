@@ -131,6 +131,78 @@ export class TransportBeltConnectionUtils {
     world.destroy(beltEntityId);
   }
 
+  public static reconnectBelt(world: UserWorld, beltEntityId: EntityId): void {
+    const belt = world.get(beltEntityId, ConveyorBeltComponent);
+
+    if (!belt || !this.isConnectableVariant(belt.variant)) {
+      return;
+    }
+
+    const coordinates = this.resolveBeltGridCoordinates(world, beltEntityId);
+
+    if (!coordinates) {
+      return;
+    }
+
+    const previousEntityId = this.findAdjacentBeltEntityId(
+      world,
+      beltEntityId,
+      belt.variant,
+      coordinates,
+      "previous",
+    );
+    const nextEntityId = this.findAdjacentBeltEntityId(
+      world,
+      beltEntityId,
+      belt.variant,
+      coordinates,
+      "next",
+    );
+    const oldPreviousEntityId = belt.previousEntityId;
+    const oldNextEntityId = belt.nextEntityId;
+
+    belt.previousEntityId = previousEntityId;
+    belt.nextEntityId = nextEntityId;
+
+    if (oldPreviousEntityId !== null && oldPreviousEntityId !== previousEntityId) {
+      const oldPreviousBelt = world.get(oldPreviousEntityId, ConveyorBeltComponent);
+
+      if (oldPreviousBelt && oldPreviousBelt.nextEntityId === beltEntityId) {
+        oldPreviousBelt.nextEntityId = null;
+        this.syncLeafMarker(world, oldPreviousEntityId, oldPreviousBelt);
+      }
+    }
+
+    if (oldNextEntityId !== null && oldNextEntityId !== nextEntityId) {
+      const oldNextBelt = world.get(oldNextEntityId, ConveyorBeltComponent);
+
+      if (oldNextBelt && oldNextBelt.previousEntityId === beltEntityId) {
+        oldNextBelt.previousEntityId = null;
+        this.syncLeafMarker(world, oldNextEntityId, oldNextBelt);
+      }
+    }
+
+    if (previousEntityId !== null) {
+      const previousBelt = world.get(previousEntityId, ConveyorBeltComponent);
+
+      if (previousBelt) {
+        previousBelt.nextEntityId = beltEntityId;
+        this.syncLeafMarker(world, previousEntityId, previousBelt, false);
+      }
+    }
+
+    if (nextEntityId !== null) {
+      const nextBelt = world.get(nextEntityId, ConveyorBeltComponent);
+
+      if (nextBelt) {
+        nextBelt.previousEntityId = beltEntityId;
+        this.syncLeafMarker(world, nextEntityId, nextBelt);
+      }
+    }
+
+    this.syncLeafMarker(world, beltEntityId, belt);
+  }
+
   private static findAdjacentBeltEntityId(
     world: UserWorld,
     beltEntityId: EntityId,

@@ -26,11 +26,12 @@ type SpawnTransportBeltOptions = {
   speed?: number;
 };
 
-export function spawnTransportBelt(world: UserWorld, options: SpawnTransportBeltOptions): EntityId {
-  const variant = options.variant ?? "horizontal-right";
+function createTransportBeltSprite(
+  variant: TransportBeltVariant,
+  worldY: number,
+  previousSprite?: AnimatedSprite,
+): AnimatedSprite {
   const scale = TRANSPORT_BELT_QUAD_SIZE / TRANSPORT_BELT_FRAME_SIZE;
-
-  const belt = world.create();
   const sprite = new AnimatedSprite({
     assets: TRANSPORT_BELT_FRAMES.map((frame) => `transport-belt:${variant}_${frame}` as const),
     width: TRANSPORT_BELT_FRAME_SIZE * scale,
@@ -38,10 +39,19 @@ export function spawnTransportBelt(world: UserWorld, options: SpawnTransportBelt
     useGlobalOffset: true,
   });
 
-  sprite.playbackRate = 0.5;
+  sprite.playbackRate = previousSprite?.playbackRate ?? 0.5;
+  sprite.startTime = previousSprite?.startTime ?? sprite.startTime;
+  sprite.layer = previousSprite?.layer ?? RENDER_LAYERS.world;
+  sprite.zOrder = TRANSPORT_BELT_Z_BASE + worldY * TRANSPORT_BELT_Z_PER_WORLD_Y;
 
-  sprite.layer = RENDER_LAYERS.world;
-  sprite.zOrder = TRANSPORT_BELT_Z_BASE + options.y * TRANSPORT_BELT_Z_PER_WORLD_Y;
+  return sprite;
+}
+
+export function spawnTransportBelt(world: UserWorld, options: SpawnTransportBeltOptions): EntityId {
+  const variant = options.variant ?? "horizontal-right";
+
+  const belt = world.create();
+  const sprite = createTransportBeltSprite(variant, options.y);
 
   world.add(belt, new Transform2D(options.x, options.y, 0));
   world.add(
@@ -64,6 +74,32 @@ export function spawnTransportBelt(world: UserWorld, options: SpawnTransportBelt
 
 export function destroyTransportBelt(world: UserWorld, beltEntityId: EntityId): void {
   TransportBeltConnectionUtils.destroyBelt(world, beltEntityId);
+}
+
+export function updateTransportBeltVariant(
+  world: UserWorld,
+  beltEntityId: EntityId,
+  variant: TransportBeltVariant,
+): void {
+  const belt = world.get(beltEntityId, ConveyorBeltComponent);
+
+  if (!belt || belt.variant === variant) {
+    return;
+  }
+
+  const transform = world.get(beltEntityId, Transform2D);
+
+  if (!transform) {
+    return;
+  }
+
+  const currentSprite = world.get(beltEntityId, AnimatedSprite);
+
+  belt.variant = variant;
+  world.add(
+    beltEntityId,
+    createTransportBeltSprite(variant, transform.curr.pos.y, currentSprite),
+  );
 }
 
 export { TRANSPORT_BELT_VARIANTS } from "@client/entities/transport-belt/consts";

@@ -69,10 +69,21 @@ export const TRANSPORT_BELT_FLOW_BY_VARIANT: Readonly<Record<string, TransportBe
   "end-right": ["left", "right"],
 };
 
+const TRANSPORT_BELT_VARIANT_BY_FLOW_KEY: Readonly<Record<string, TransportBeltVariant>> = Object.fromEntries(
+  Object.entries(TRANSPORT_BELT_FLOW_BY_VARIANT).map(([variant, [start, end]]) => [`${start}:${end}`, variant as TransportBeltVariant]),
+);
+
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
 
 export function getTransportBeltFlow(variant: string): TransportBeltFlow | undefined {
   return TRANSPORT_BELT_FLOW_BY_VARIANT[variant];
+}
+
+export function getTransportBeltVariantByFlow(
+  start: TransportBeltSide,
+  end: TransportBeltSide,
+): TransportBeltVariant | undefined {
+  return TRANSPORT_BELT_VARIANT_BY_FLOW_KEY[`${start}:${end}`];
 }

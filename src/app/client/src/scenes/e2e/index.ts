@@ -1,7 +1,7 @@
 import { ensurePlayer } from "@client/entities/player";
 import { setupContextPlayer } from "@client/scenes/world/contexts/shared";
 import { System as BuildModeSystem } from "@client/systems/world/build-mode";
-import { Placeable } from "@client/systems/world/build-mode/components";
+import { GhostPreview, Placeable } from "@client/systems/world/build-mode/components";
 import { DebugOverlaySystem } from "@client/systems/world/debug-overlay";
 import type { UserWorld } from "@engine";
 import { Transform2D } from "@engine/components";
@@ -16,6 +16,7 @@ type E2ESceneHarness = {
   placeableCount: () => number;
   focusedContextId: () => string;
   resetPlayer: () => void;
+  ghostPosition: () => { x: number; y: number } | null;
 };
 
 declare global {
@@ -59,6 +60,20 @@ export const Scene = createContextScene("E2EScene")({
           playerTransform.curr.pos.set(PLAYER_START_X, PLAYER_START_Y);
           playerTransform.prev.pos.set(PLAYER_START_X, PLAYER_START_Y);
         }
+      },
+      ghostPosition() {
+        const [ghostEntityId] = rootWorld.query(GhostPreview, Transform2D);
+
+        if (ghostEntityId === undefined) {
+          return null;
+        }
+
+        const transform = rootWorld.require(ghostEntityId, Transform2D);
+
+        return {
+          x: transform.curr.pos.x,
+          y: transform.curr.pos.y,
+        };
       },
     };
   },

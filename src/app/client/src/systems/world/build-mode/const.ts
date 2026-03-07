@@ -1,3 +1,4 @@
+import type { TransportBeltSide } from "@client/entities/transport-belt/consts";
 import { GridSingleton } from "@client/systems/world/build-mode/grid-singleton";
 import type { EntityId, KeyBind } from "@engine";
 import { Color } from "@engine/components";
@@ -24,6 +25,11 @@ export const HOTBAR_SLOT_EMPTY: KeyBind = {
   modifiers: {},
 };
 
+export const ROTATE_BUILD_ITEM: KeyBind = {
+  code: "KeyR",
+  modifiers: {},
+};
+
 export const GRID_TOGGLE_CTRL: KeyBind = {
   code: "KeyG",
   modifiers: { alt: true },
@@ -41,17 +47,19 @@ export const PLACED_STROKE = new Color(1, 1, 1, 1);
 
 export const DELETE_POINT_RADIUS = 0.001;
 export const HOTBAR_INDICATOR_ID = "build-hotbar-indicator";
+export const TRANSPORT_BELT_ROTATION_END_SIDES: readonly TransportBeltSide[] = ["top", "right", "bottom", "left"];
 
 /**********************************************************************************************************
 *   STATE
 **********************************************************************************************************/
-export type BuildItemType = "box" | "transport-belt-horizontal-right";
+export type BuildItemType = "box" | "transport-belt";
 
 export type BuildModeState = {
   selectedItem: BuildItemType | null;
   gridVisible: boolean;
   pendingPlace: boolean;
   pendingDelete: boolean;
+  placementEndSide: TransportBeltSide;
   ghostEntityId: EntityId | null;
 };
 
@@ -60,14 +68,16 @@ export const buildModeStateDefault: BuildModeState = {
   gridVisible: false,
   pendingPlace: false,
   pendingDelete: false,
+  placementEndSide: "top",
   ghostEntityId: null,
 };
 
 export const buildModeStateSchema = z.object({
-  selectedItem: z.enum(["box", "transport-belt-horizontal-right"]).nullable(),
+  selectedItem: z.enum(["box", "transport-belt"]).nullable(),
   gridVisible: z.boolean(),
   pendingPlace: z.boolean(),
   pendingDelete: z.boolean(),
+  placementEndSide: z.enum(["top", "right", "bottom", "left"]),
   ghostEntityId: z
     .custom<EntityId>((value) => typeof value === "number" && Number.isInteger(value))
     .nullable(),

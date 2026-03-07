@@ -80,7 +80,7 @@ export class Placement {
       return Placement.canSpawnBox(world, gridCoordinates);
     }
 
-    if (selectedItem === "transport-belt-horizontal-right") {
+    if (selectedItem === "transport-belt") {
       return Placement.canSpawnTransportBelt(world, gridCoordinates);
     }
 

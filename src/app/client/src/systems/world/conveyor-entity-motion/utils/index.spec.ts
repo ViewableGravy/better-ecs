@@ -1,11 +1,12 @@
 import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import { TransportBeltLeaf } from "@client/components/transport-belt-leaf";
 import {
-  CONVEYOR_SLOT_COUNT_PER_LANE,
-  getCurveLaneSides,
-  getSlotAdvanceDurations,
-  INSIDE_CURVE_SLOT_ADVANCE_DURATION_MS,
-  SLOT_ADVANCE_DURATION_MS,
+    CONVEYOR_SLOT_COUNT_PER_LANE,
+    getCurveLaneSides,
+    getSlotAdvanceDurations,
+    INSIDE_CURVE_SLOT_ADVANCE_DURATION_MS,
+    INSIDE_CURVE_SPEED_MULTIPLIER,
+    SLOT_ADVANCE_DURATION_MS,
 } from "@client/systems/world/conveyor-entity-motion/constants";
 import { ConveyorEntityMotionUtils } from "@client/systems/world/conveyor-entity-motion/utils";
 import { UserWorld, World } from "@engine";
@@ -342,7 +343,9 @@ describe("conveyor motion timing constants", () => {
     ]);
   });
 
-  it("keeps the inside curved duration at 120 percent speed", () => {
-    expect(INSIDE_CURVE_SLOT_ADVANCE_DURATION_MS).toBe(SLOT_ADVANCE_DURATION_MS / 1.2);
+  it("keeps the inside curved duration aligned with the configured speed multiplier", () => {
+    expect(INSIDE_CURVE_SLOT_ADVANCE_DURATION_MS).toBe(
+      SLOT_ADVANCE_DURATION_MS / INSIDE_CURVE_SPEED_MULTIPLIER,
+    );
   });
 });
