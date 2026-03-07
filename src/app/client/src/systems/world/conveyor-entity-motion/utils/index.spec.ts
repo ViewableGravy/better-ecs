@@ -1,6 +1,6 @@
 import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import { TransportBeltLeaf } from "@client/components/transport-belt-leaf";
-import { CONVEYOR_SLOT_COUNT_PER_LANE, DEMO_SLOT_ADVANCE_DURATION_MS, DEMO_SLOT_PROGRESS_PER_MILLISECOND } from "@client/systems/world/conveyor-entity-motion/constants";
+import { CONVEYOR_SLOT_COUNT_PER_LANE, SLOT_ADVANCE_DURATION_MS, SLOT_PROGRESS_PER_MILLISECOND } from "@client/systems/world/conveyor-entity-motion/constants";
 import { ConveyorEntityMotionUtils } from "@client/systems/world/conveyor-entity-motion/utils";
 import { UserWorld, World } from "@engine";
 import { Parent, Transform2D } from "@engine/components";
@@ -290,6 +290,6 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
 
 describe("conveyor motion timing constants", () => {
   it("treats the configured demo duration as one full belt traversal", () => {
-    expect(DEMO_SLOT_PROGRESS_PER_MILLISECOND * DEMO_SLOT_ADVANCE_DURATION_MS).toBe(CONVEYOR_SLOT_COUNT_PER_LANE);
+    expect(SLOT_PROGRESS_PER_MILLISECOND * SLOT_ADVANCE_DURATION_MS).toBe(CONVEYOR_SLOT_COUNT_PER_LANE);
   });
 });
