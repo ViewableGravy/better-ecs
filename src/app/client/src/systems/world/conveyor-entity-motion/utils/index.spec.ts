@@ -141,6 +141,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     world.add(tailBeltId, tailBelt);
     world.add(headBeltId, new Transform2D(0, 0, 0));
     world.add(tailBeltId, new Transform2D(20, 0, 0));
+    tailBelt.isLeaf = true;
     world.add(tailBeltId, new TransportBeltLeaf());
     world.add(entityId, new Parent(headBeltId));
     world.add(entityId, new Transform2D());
@@ -162,5 +163,82 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     expect(resolveWorldTransform2D(world, entityId, SHARED_WORLD_TRANSFORM)).toBe(true);
     expect(SHARED_WORLD_TRANSFORM.curr.pos.x).toBe(10);
     expect(SHARED_WORLD_TRANSFORM.curr.pos.y).toBe(-4);
+  });
+
+  it("moves items from a curve into the next connected straight conveyor", () => {
+    const world = new UserWorld(new World("scene"));
+    const curveBeltId = world.create();
+    const tailBeltId = world.create();
+    const curveBelt = new ConveyorBeltComponent("angled-left-up");
+    const tailBelt = new ConveyorBeltComponent("vertical-up");
+    const entityId = world.create();
+
+    curveBelt.nextEntityId = tailBeltId;
+    tailBelt.previousEntityId = curveBeltId;
+
+    world.add(curveBeltId, curveBelt);
+    world.add(tailBeltId, tailBelt);
+    world.add(curveBeltId, new Transform2D(20, 0, 0));
+    world.add(tailBeltId, new Transform2D(20, -20, 0));
+    tailBelt.isLeaf = true;
+    world.add(tailBeltId, new TransportBeltLeaf());
+    world.add(entityId, new Parent(curveBeltId));
+    world.add(entityId, new Transform2D());
+
+    curveBelt.left[3] = entityId;
+    curveBelt.leftProgress[3] = 1;
+
+    ConveyorEntityMotionUtils.advanceBeltLineFromLeaf(world, tailBeltId, 0);
+
+    expect(curveBelt.left).toEqual([null, null, null, null]);
+    expect(tailBelt.left).toEqual([entityId, null, null, null]);
+    expect(world.require(entityId, Parent).entityId).toBe(tailBeltId);
+    expect(resolveWorldTransform2D(world, entityId, SHARED_WORLD_TRANSFORM)).toBe(true);
+    expect(SHARED_WORLD_TRANSFORM.curr.pos.x).toBe(16);
+    expect(SHARED_WORLD_TRANSFORM.curr.pos.y).toBe(-10);
+  });
+
+  it("advances a closed loop from its designated leaf anchor without revisiting it forever", () => {
+    const world = new UserWorld(new World("scene"));
+    const anchorBeltId = world.create();
+    const secondBeltId = world.create();
+    const thirdBeltId = world.create();
+    const fourthBeltId = world.create();
+    const anchorBelt = new ConveyorBeltComponent("angled-bottom-right");
+    const secondBelt = new ConveyorBeltComponent("angled-left-bottom");
+    const thirdBelt = new ConveyorBeltComponent("angled-top-left");
+    const fourthBelt = new ConveyorBeltComponent("angled-right-up");
+    const entityId = world.create();
+
+    anchorBelt.previousEntityId = fourthBeltId;
+    anchorBelt.nextEntityId = secondBeltId;
+    anchorBelt.isLeaf = true;
+    secondBelt.previousEntityId = anchorBeltId;
+    secondBelt.nextEntityId = thirdBeltId;
+    thirdBelt.previousEntityId = secondBeltId;
+    thirdBelt.nextEntityId = fourthBeltId;
+    fourthBelt.previousEntityId = thirdBeltId;
+    fourthBelt.nextEntityId = anchorBeltId;
+
+    world.add(anchorBeltId, anchorBelt);
+    world.add(secondBeltId, secondBelt);
+    world.add(thirdBeltId, thirdBelt);
+    world.add(fourthBeltId, fourthBelt);
+    world.add(anchorBeltId, new Transform2D(0, 0, 0));
+    world.add(secondBeltId, new Transform2D(20, 0, 0));
+    world.add(thirdBeltId, new Transform2D(20, 20, 0));
+    world.add(fourthBeltId, new Transform2D(0, 20, 0));
+    world.add(anchorBeltId, new TransportBeltLeaf());
+    world.add(entityId, new Parent(fourthBeltId));
+    world.add(entityId, new Transform2D());
+
+    fourthBelt.left[3] = entityId;
+    fourthBelt.leftProgress[3] = 1;
+
+    ConveyorEntityMotionUtils.advanceBeltLineFromLeaf(world, anchorBeltId, 0);
+
+    expect(fourthBelt.left).toEqual([null, null, null, null]);
+    expect(anchorBelt.left).toEqual([entityId, null, null, null]);
+    expect(world.require(entityId, Parent).entityId).toBe(anchorBeltId);
   });
 });

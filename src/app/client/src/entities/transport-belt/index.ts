@@ -1,8 +1,8 @@
 import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
-import type { TransportBeltVariant } from "@client/entities/transport-belt/consts";
-import { TransportBeltConnectionUtils } from "@client/entities/transport-belt/utils/connection";
 import { OUTSIDE, RenderVisibility } from "@client/components/render-visibility";
 import { RENDER_LAYERS } from "@client/consts";
+import type { TransportBeltVariant } from "@client/entities/transport-belt/consts";
+import { TransportBeltConnectionUtils } from "@client/entities/transport-belt/utils/connection";
 import { CollisionProfiles } from "@client/scenes/world/physics/collision-profiles";
 import { TRANSPORT_BELT_COLLIDER_SIZE } from "@client/systems/world/build-mode/const";
 import { Vec2, type EntityId, type UserWorld } from "@engine";
@@ -67,6 +67,8 @@ export function destroyTransportBelt(world: UserWorld, beltEntityId: EntityId): 
 }
 
 export { TRANSPORT_BELT_VARIANTS } from "@client/entities/transport-belt/consts";
+export type { TransportBeltVariant } from "@client/entities/transport-belt/consts";
 export { TransportBeltConnectionUtils } from "@client/entities/transport-belt/utils/connection";
 export { ConveyorUtils } from "@client/entities/transport-belt/utils/general";
-export type { TransportBeltVariant } from "@client/entities/transport-belt/consts";
+export { BeltItemRailsUtility } from "@client/entities/transport-belt/utils/rails";
+

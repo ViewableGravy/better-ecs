@@ -95,6 +95,11 @@ This is the single source of truth for agent behavior and coding conventions in 
 - Use `bun` for installs, scripts, and tests (unless package-local vitest workflow is required).
 - Use `nx` for task orchestration and package bootstrapping.
 - Do not write files outside this repository.
+- Always prefer to ask the user any clarifying questions before blatantly doing what is asked. 
+  - Use the AskQuestions MCP tool for asking questions
+  - If edge cases are found, bring these up and ask clarifying questions
+  - Do not "assume" implicit requirements if they are not at least 80% guaranteed
+  - If one requirement conflicts with another, or an answer conflicts with an existing requirement, seek confirmation
 
 ## No legacy code policy
 

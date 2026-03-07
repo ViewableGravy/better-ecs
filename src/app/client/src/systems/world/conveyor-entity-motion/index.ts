@@ -17,7 +17,7 @@ export const System = createSystem("main:conveyor-entity-motion")({
     }
 
     world.forEach2(TransportBeltLeaf, ConveyorBeltComponent, (conveyorEntityId, _, conveyor) => {
-      if (!ConveyorUtils.supportsStraightItemAnimation(conveyor.variant)) {
+      if (!ConveyorUtils.supportsItemAnimation(conveyor.variant)) {
         return;
       }
 

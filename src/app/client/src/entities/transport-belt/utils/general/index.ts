@@ -4,7 +4,8 @@ import {
   type ConveyorSide,
   type ConveyorSlotIndex,
 } from "@client/components/conveyor-belt";
-import { CONVEYOR_SLOT_POSITIONS } from "@client/entities/transport-belt/consts";
+import { CONVEYOR_SLOT_POSITIONS, getTransportBeltFlow } from "@client/entities/transport-belt/consts";
+import { BeltItemRailsUtility } from "@client/entities/transport-belt/utils/rails";
 import { Vec2, type EntityId, type UserWorld } from "@engine";
 import { Parent, Transform2D } from "@engine/components";
 import invariant from "tiny-invariant";
@@ -36,7 +37,7 @@ export class ConveyorUtils {
       `Conveyor ${conveyor.variant} already has an entity at ${side}[${index}]`,
     );
 
-    ConveyorUtils.resolveAnimatedSlotLocalPositionInto(
+    BeltItemRailsUtility.resolvePositionInto(
       conveyor.variant,
       side,
       index,
@@ -54,32 +55,12 @@ export class ConveyorUtils {
   /**
    * Temporary until all belt variants support carried entities and motion.
    */
-  public static supportsStraightItemAnimation(variant: string): boolean {
+  public static supportsItemAnimation(variant: string): boolean {
     if (!canConveyorStoreEntities(variant)) {
       return false;
     }
 
-    return variant.startsWith("horizontal-") || variant.startsWith("vertical-");
-  }
-
-  /**
-   * Resolves the local animated position for an item in a lane slot into `out`.
-   */
-  public static resolveAnimatedSlotLocalPositionInto(
-    variant: string,
-    side: ConveyorSide,
-    index: ConveyorSlotIndex,
-    progress: number,
-    out: Vec2,
-  ): void {
-    const [centerX, centerY] = ConveyorUtils.resolveSlotLocalPosition(variant, side, index);
-    const [stepX, stepY] = ConveyorUtils.resolveSlotStepVector(variant, side, index);
-    const progressOffset = progress - 0.5;
-
-    out.set(
-      centerX + stepX * progressOffset,
-      centerY + stepY * progressOffset,
-    );
+    return getTransportBeltFlow(variant) !== undefined;
   }
 
   /**
@@ -95,26 +76,6 @@ export class ConveyorUtils {
     invariant(mappedPosition, `No slot position found for variant ${variant}, side ${side}, index ${index}`);
 
     return mappedPosition;
-  }
-
-  private static resolveSlotStepVector(
-    variant: string,
-    side: ConveyorSide,
-    index: ConveyorSlotIndex,
-  ): readonly [number, number] {
-    const [currentX, currentY] = ConveyorUtils.resolveSlotLocalPosition(variant, side, index);
-
-    if (index === 0 || index === 1 || index === 2) {
-      const nextIndex: ConveyorSlotIndex = index === 0 ? 1 : index === 1 ? 2 : 3;
-      const [nextX, nextY] = ConveyorUtils.resolveSlotLocalPosition(variant, side, nextIndex);
-
-      return [nextX - currentX, nextY - currentY];
-    }
-
-    const previousIndex: ConveyorSlotIndex = 2;
-    const [previousX, previousY] = ConveyorUtils.resolveSlotLocalPosition(variant, side, previousIndex);
-
-    return [currentX - previousX, currentY - previousY];
   }
 
   private static resolveSlots(conveyor: ConveyorBeltComponent, side: ConveyorSide): ConveyorBeltComponent["left"] {

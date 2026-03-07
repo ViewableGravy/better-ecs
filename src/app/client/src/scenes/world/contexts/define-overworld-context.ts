@@ -20,7 +20,7 @@ import { spawnTree } from "@client/entities/tree";
 import { spawnWall } from "@client/entities/wall";
 import { setupContextPlayer } from "@client/scenes/world/contexts/shared";
 import { createHouseLayout } from "@client/scenes/world/utilities/house-layout";
-import type { UserWorld } from "@engine";
+import type { EntityId, UserWorld } from "@engine";
 import { Color } from "@engine/components";
 import { defineContext, type ContextId } from "@libs/spatial-contexts";
 
@@ -36,6 +36,17 @@ type DemoCogPlacement = {
   side: ConveyorSide;
   index: ConveyorSlotIndex;
   progress: number;
+};
+
+type BeltLoopEntityIds = {
+  topLeft: EntityId;
+  topRight: EntityId;
+  bottomRight: EntityId;
+  bottomLeft: EntityId;
+  topEdges: EntityId[];
+  rightEdges: EntityId[];
+  bottomEdges: EntityId[];
+  leftEdges: EntityId[];
 };
 
 const BELT_SPACING = 20;
@@ -107,51 +118,91 @@ function spawnBeltLoop(
     bottomRight: TransportBeltVariant;
     bottomLeft: TransportBeltVariant;
   },
-) {
+): BeltLoopEntityIds {
   const maxOffset = options.sideLength - 1;
+  const topEdges: EntityId[] = [];
+  const rightEdges: EntityId[] = [];
+  const bottomEdges: EntityId[] = [];
+  const leftEdges: EntityId[] = [];
 
-  spawnTransportBelt(world, {
+  const topLeft = spawnTransportBelt(world, {
     x: options.x,
     y: options.y,
     variant: options.topLeft,
   });
-  spawnTransportBelt(world, {
+  const topRight = spawnTransportBelt(world, {
     x: options.x + maxOffset * BELT_SPACING,
     y: options.y,
     variant: options.topRight,
   });
-  spawnTransportBelt(world, {
+  const bottomRight = spawnTransportBelt(world, {
     x: options.x + maxOffset * BELT_SPACING,
     y: options.y + maxOffset * BELT_SPACING,
     variant: options.bottomRight,
   });
-  spawnTransportBelt(world, {
+  const bottomLeft = spawnTransportBelt(world, {
     x: options.x,
     y: options.y + maxOffset * BELT_SPACING,
     variant: options.bottomLeft,
   });
 
   for (let offset = 1; offset < maxOffset; offset += 1) {
-    spawnTransportBelt(world, {
+    topEdges.push(spawnTransportBelt(world, {
       x: options.x + offset * (BELT_SPACING),
       y: options.y,
       variant: options.top,
-    });
-    spawnTransportBelt(world, {
+    }));
+    rightEdges.push(spawnTransportBelt(world, {
       x: options.x + maxOffset * BELT_SPACING,
       y: options.y + offset * BELT_SPACING,
       variant: options.right,
-    });
-    spawnTransportBelt(world, {
+    }));
+    bottomEdges.push(spawnTransportBelt(world, {
       x: options.x + offset * BELT_SPACING,
       y: options.y + maxOffset * BELT_SPACING,
       variant: options.bottom,
-    });
-    spawnTransportBelt(world, {
+    }));
+    leftEdges.push(spawnTransportBelt(world, {
       x: options.x,
       y: options.y + offset * BELT_SPACING,
       variant: options.left,
-    });
+    }));
+  }
+
+  return {
+    topLeft,
+    topRight,
+    bottomRight,
+    bottomLeft,
+    topEdges,
+    rightEdges,
+    bottomEdges,
+    leftEdges,
+  };
+}
+
+function spawnAnimatedTransportLoop(world: UserWorld, loop: BeltLoopEntityIds): void {
+  const candidateBelts = [
+    loop.topLeft,
+    ...loop.topEdges,
+    loop.topRight,
+    ...loop.rightEdges,
+    loop.bottomRight,
+    ...loop.bottomEdges,
+    loop.bottomLeft,
+    ...loop.leftEdges,
+  ];
+
+  const placements: ReadonlyArray<readonly [beltEntityId: EntityId, side: ConveyorSide, index: ConveyorSlotIndex]> = [
+    [candidateBelts[0], "left", 0],
+    [candidateBelts[2], "right", 2],
+    [candidateBelts[4], "left", 1],
+    [candidateBelts[6], "right", 3],
+  ];
+
+  for (const [beltEntityId, side, index] of placements) {
+    const gear = spawnGear(world, { size: "large" });
+    ConveyorUtils.addEntity(world, beltEntityId, gear, side, index, 0);
   }
 }
 
@@ -363,7 +414,7 @@ export function defineOverworldContext(options: OverworldContextOptions) {
         rightEdge: "end-right",
       });
 
-      spawnBeltLoop(world, {
+      const clockwiseLoop = spawnBeltLoop(world, {
         x: demoStartX,
         y: 426,
         sideLength: 5,
@@ -377,7 +428,7 @@ export function defineOverworldContext(options: OverworldContextOptions) {
         bottomLeft: "angled-right-up",
       });
 
-      spawnBeltLoop(world, {
+      const counterClockwiseLoop = spawnBeltLoop(world, {
         x: 340,
         y: 420,
         sideLength: 5,
@@ -390,6 +441,9 @@ export function defineOverworldContext(options: OverworldContextOptions) {
         bottomRight: "angled-left-up",
         bottomLeft: "angled-up-right",
       });
+
+      spawnAnimatedTransportLoop(world, clockwiseLoop);
+      spawnAnimatedTransportLoop(world, counterClockwiseLoop);
     },
   });
 }

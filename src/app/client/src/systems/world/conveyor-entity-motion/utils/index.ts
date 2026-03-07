@@ -1,14 +1,14 @@
 import {
-    ConveyorBeltComponent,
-    type ConveyorSide,
-    type ConveyorSlotIndex,
+  ConveyorBeltComponent,
+  type ConveyorSide,
+  type ConveyorSlotIndex,
 } from "@client/components/conveyor-belt";
-import { ConveyorUtils } from "@client/entities/transport-belt";
+import { BeltItemRailsUtility } from "@client/entities/transport-belt";
 import {
-    CONVEYOR_SIDES,
-    CONVEYOR_SLOT_INDICES_ASC,
-    CONVEYOR_SLOT_INDICES_DESC,
-    SHARED_SLOT_POSITION,
+  CONVEYOR_SIDES,
+  CONVEYOR_SLOT_INDICES_ASC,
+  CONVEYOR_SLOT_INDICES_DESC,
+  SHARED_SLOT_POSITION,
 } from "@client/systems/world/conveyor-entity-motion/constants";
 import type { EntityId, UserWorld } from "@engine";
 import { Parent, Transform2D } from "@engine/components";
@@ -25,6 +25,7 @@ export class ConveyorEntityMotionUtils {
   ): void {
     let nextEntityId: EntityId | null = null;
     let currentEntityId: EntityId | null = leafEntityId;
+    let shouldStopOnLeafEntityId = false;
 
     while (currentEntityId !== null) {
       const currentConveyor: ConveyorBeltComponent | undefined = world.get(currentEntityId, ConveyorBeltComponent);
@@ -45,10 +46,16 @@ export class ConveyorEntityMotionUtils {
         progressDelta,
       );
       nextEntityId = currentEntityId;
-      currentEntityId = currentConveyor.previousEntityId;
+
+      if (currentConveyor.previousEntityId === leafEntityId) {
+        shouldStopOnLeafEntityId = true;
+      }
+
+      currentEntityId = shouldStopOnLeafEntityId ? null : currentConveyor.previousEntityId;
     }
 
     currentEntityId = leafEntityId;
+    shouldStopOnLeafEntityId = false;
 
     while (currentEntityId !== null) {
       const currentConveyor: ConveyorBeltComponent | undefined = world.get(currentEntityId, ConveyorBeltComponent);
@@ -58,7 +65,12 @@ export class ConveyorEntityMotionUtils {
       }
 
       this.syncConveyorTransforms(world, currentConveyor);
-      currentEntityId = currentConveyor.previousEntityId;
+
+      if (currentConveyor.previousEntityId === leafEntityId) {
+        shouldStopOnLeafEntityId = true;
+      }
+
+      currentEntityId = shouldStopOnLeafEntityId ? null : currentConveyor.previousEntityId;
     }
   }
 
@@ -164,7 +176,7 @@ export class ConveyorEntityMotionUtils {
         continue;
       }
 
-      ConveyorUtils.resolveAnimatedSlotLocalPositionInto(
+      BeltItemRailsUtility.resolvePositionInto(
         conveyor.variant,
         side,
         index,

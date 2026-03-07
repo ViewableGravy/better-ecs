@@ -1,3 +1,4 @@
+import { getTransportBeltFlow } from "@client/entities/transport-belt/consts";
 import { dotNormalized, setNormalized, Vec2 } from "@engine";
 import { Transform2D } from "@engine/components";
 import { RectangleCollider } from "@libs/physics";
@@ -13,15 +14,6 @@ import { type BeltFlow, type Side } from "../types";
 import { ConveyorGeometryUtils } from "./geometry-utils";
 
 export class ConveyorMovementUtils {
-  private static readonly SIDE_ALIASES: Record<string, Side> = {
-    left: "left",
-    right: "right",
-    top: "top",
-    bottom: "bottom",
-    up: "top",
-    down: "bottom",
-  };
-
   public static resolveBeltMotionVector(
     variant: string,
     playerX: number,
@@ -42,75 +34,35 @@ export class ConveyorMovementUtils {
   }
 
   private static resolveBeltFlow(variant: string): BeltFlow | undefined {
-    if (variant.startsWith("horizontal_") || variant.startsWith("vertical_")) {
-      const flowSides = variant.slice(variant.indexOf("_") + 1).split("-");
-      if (flowSides.length === 2) {
-        const toSide = flowSides[1];
-        if (this.isSide(toSide)) {
-          return {
-            type: "straight",
-            direction: SIDE_TO_OUTWARD[toSide],
-          };
-        }
-      }
-    }
+    const flow = getTransportBeltFlow(variant);
 
-    const normalizedVariant = variant.startsWith("curved_")
-      ? `angled-${variant.slice("curved_".length)}`
-      : variant;
-
-    switch (variant) {
-      case "horizontal-right":
-      case "start-left":
-      case "end-right":
-        return { type: "straight", direction: DIRECTION_RIGHT };
-      case "horizontal-left":
-      case "end-left":
-      case "start-right":
-        return { type: "straight", direction: DIRECTION_LEFT };
-      case "vertical-up":
-      case "start-bottom":
-      case "end-top":
-        return { type: "straight", direction: DIRECTION_UP };
-      case "vertical-down":
-      case "start-top":
-      case "end-bottom":
-        return { type: "straight", direction: DIRECTION_DOWN };
-      default:
-        break;
-    }
-
-    if (!normalizedVariant.startsWith("angled-")) {
+    if (!flow) {
       return undefined;
     }
 
-    const sideLabel = normalizedVariant.slice("angled-".length);
-    const sideParts = sideLabel.split("-");
+    const [start, end] = flow;
 
-    if (sideParts.length !== 2) {
-      return undefined;
+    if (start === "left" && end === "right") {
+      return { type: "straight", direction: DIRECTION_RIGHT };
     }
 
-    const from = this.normalizeSideToken(sideParts[0]);
-    const to = this.normalizeSideToken(sideParts[1]);
+    if (start === "right" && end === "left") {
+      return { type: "straight", direction: DIRECTION_LEFT };
+    }
 
-    if (!from || !to) {
-      return undefined;
+    if (start === "bottom" && end === "top") {
+      return { type: "straight", direction: DIRECTION_UP };
+    }
+
+    if (start === "top" && end === "bottom") {
+      return { type: "straight", direction: DIRECTION_DOWN };
     }
 
     return {
       type: "curve",
-      from,
-      to,
+      from: start,
+      to: end,
     };
-  }
-
-  private static isSide(value: string): value is Side {
-    return value === "left" || value === "right" || value === "top" || value === "bottom";
-  }
-
-  private static normalizeSideToken(value: string): Side | undefined {
-    return this.SIDE_ALIASES[value];
   }
 
   private static resolveCurveMotion(

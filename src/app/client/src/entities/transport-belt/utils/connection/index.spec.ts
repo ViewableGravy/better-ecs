@@ -1,8 +1,8 @@
 import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import { TransportBeltLeaf } from "@client/components/transport-belt-leaf";
 import { destroyTransportBelt, spawnTransportBelt } from "@client/entities/transport-belt";
-import { Parent, Transform2D } from "@engine/components";
 import { UserWorld, World } from "@engine";
+import { Parent, Transform2D } from "@engine/components";
 import { describe, expect, it } from "vitest";
 
 describe("spawnTransportBelt connectivity", () => {
@@ -18,8 +18,68 @@ describe("spawnTransportBelt connectivity", () => {
     expect(firstBelt.nextEntityId).toBe(secondBeltId);
     expect(secondBelt.previousEntityId).toBe(firstBeltId);
     expect(secondBelt.nextEntityId).toBeNull();
+    expect(firstBelt.isLeaf).toBe(false);
+    expect(secondBelt.isLeaf).toBe(true);
     expect(world.has(firstBeltId, TransportBeltLeaf)).toBe(false);
     expect(world.has(secondBeltId, TransportBeltLeaf)).toBe(true);
+  });
+
+  it("connects a straight belt into a compatible curve", () => {
+    const world = new UserWorld(new World("scene"));
+    const straightBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "horizontal-right" });
+    const curveBeltId = spawnTransportBelt(world, { x: 20, y: 0, variant: "angled-left-up" });
+
+    const straightBelt = world.require(straightBeltId, ConveyorBeltComponent);
+    const curveBelt = world.require(curveBeltId, ConveyorBeltComponent);
+
+    expect(straightBelt.nextEntityId).toBe(curveBeltId);
+    expect(curveBelt.previousEntityId).toBe(straightBeltId);
+    expect(curveBelt.isLeaf).toBe(true);
+    expect(world.has(curveBeltId, TransportBeltLeaf)).toBe(true);
+  });
+
+  it("connects a curve into a compatible straight belt", () => {
+    const world = new UserWorld(new World("scene"));
+    const curveBeltId = spawnTransportBelt(world, { x: 20, y: 0, variant: "angled-left-up" });
+    const straightBeltId = spawnTransportBelt(world, { x: 20, y: -20, variant: "vertical-up" });
+
+    const curveBelt = world.require(curveBeltId, ConveyorBeltComponent);
+    const straightBelt = world.require(straightBeltId, ConveyorBeltComponent);
+
+    expect(curveBelt.nextEntityId).toBe(straightBeltId);
+    expect(straightBelt.previousEntityId).toBe(curveBeltId);
+    expect(straightBelt.isLeaf).toBe(true);
+    expect(world.has(straightBeltId, TransportBeltLeaf)).toBe(true);
+  });
+
+  it("preserves a single designated leaf anchor when a new belt closes a loop", () => {
+    const world = new UserWorld(new World("scene"));
+    const firstBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "angled-bottom-right" });
+    const secondBeltId = spawnTransportBelt(world, { x: 20, y: 0, variant: "angled-left-bottom" });
+    const thirdBeltId = spawnTransportBelt(world, { x: 20, y: 20, variant: "angled-top-left" });
+    const fourthBeltId = spawnTransportBelt(world, { x: 0, y: 20, variant: "angled-right-up" });
+
+    const firstBelt = world.require(firstBeltId, ConveyorBeltComponent);
+    const secondBelt = world.require(secondBeltId, ConveyorBeltComponent);
+    const thirdBelt = world.require(thirdBeltId, ConveyorBeltComponent);
+    const fourthBelt = world.require(fourthBeltId, ConveyorBeltComponent);
+
+    expect(firstBelt.previousEntityId).toBe(fourthBeltId);
+    expect(firstBelt.nextEntityId).toBe(secondBeltId);
+    expect(secondBelt.previousEntityId).toBe(firstBeltId);
+    expect(secondBelt.nextEntityId).toBe(thirdBeltId);
+    expect(thirdBelt.previousEntityId).toBe(secondBeltId);
+    expect(thirdBelt.nextEntityId).toBe(fourthBeltId);
+    expect(fourthBelt.previousEntityId).toBe(thirdBeltId);
+    expect(fourthBelt.nextEntityId).toBe(firstBeltId);
+    expect(thirdBelt.isLeaf).toBe(true);
+    expect(world.has(thirdBeltId, TransportBeltLeaf)).toBe(true);
+    expect(firstBelt.isLeaf).toBe(false);
+    expect(secondBelt.isLeaf).toBe(false);
+    expect(fourthBelt.isLeaf).toBe(false);
+    expect(world.has(firstBeltId, TransportBeltLeaf)).toBe(false);
+    expect(world.has(secondBeltId, TransportBeltLeaf)).toBe(false);
+    expect(world.has(fourthBeltId, TransportBeltLeaf)).toBe(false);
   });
 
   it("rewires an inserted middle belt into the existing line", () => {
@@ -68,6 +128,18 @@ describe("spawnTransportBelt connectivity", () => {
     expect(horizontalBelt.previousEntityId).toBeNull();
     expect(horizontalBelt.nextEntityId).toBeNull();
   });
+
+  it("does not connect a curve whose entry side does not face the current belt", () => {
+    const world = new UserWorld(new World("scene"));
+    const straightBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "horizontal-right" });
+    const wrongCurveBeltId = spawnTransportBelt(world, { x: 20, y: 0, variant: "angled-right-up" });
+
+    const straightBelt = world.require(straightBeltId, ConveyorBeltComponent);
+    const wrongCurveBelt = world.require(wrongCurveBeltId, ConveyorBeltComponent);
+
+    expect(straightBelt.nextEntityId).toBeNull();
+    expect(wrongCurveBelt.previousEntityId).toBeNull();
+  });
 });
 
 describe("destroyTransportBelt", () => {
@@ -88,6 +160,8 @@ describe("destroyTransportBelt", () => {
 
     expect(firstBelt.nextEntityId).toBeNull();
     expect(tailBelt.previousEntityId).toBeNull();
+    expect(firstBelt.isLeaf).toBe(true);
+    expect(tailBelt.isLeaf).toBe(true);
     expect(world.has(firstBeltId, TransportBeltLeaf)).toBe(true);
     expect(world.has(tailBeltId, TransportBeltLeaf)).toBe(true);
     expect(world.all().includes(middleBeltId)).toBe(false);

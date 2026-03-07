@@ -1,25 +1,27 @@
+import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import { ConveyorUtils } from "@client/entities/transport-belt/utils/general";
-import { Vec2 } from "@engine";
+import { UserWorld, World } from "@engine";
+import { Parent, Transform2D } from "@engine/components";
 import { describe, expect, it } from "vitest";
 
-describe("ConveyorUtils.resolveAnimatedSlotLocalPositionInto", () => {
-  it("uses the configured half-step span between adjacent straight-belt slots", () => {
-    const out = new Vec2();
+describe("ConveyorUtils.addEntity", () => {
+  it("places a carried item onto the requested belt slot and parents it to the conveyor", () => {
+    const world = new UserWorld(new World("scene"));
+    const beltEntityId = world.create();
+    const entityId = world.create();
 
-    ConveyorUtils.resolveAnimatedSlotLocalPositionInto("horizontal-right", "left", 0, 0, out);
-    expect(out.x).toBe(-10);
-    expect(out.y).toBe(-4);
+    world.add(beltEntityId, new ConveyorBeltComponent("horizontal-right"));
 
-    ConveyorUtils.resolveAnimatedSlotLocalPositionInto("horizontal-right", "left", 0, 1, out);
-    expect(out.x).toBe(-5);
-    expect(out.y).toBe(-4);
+    ConveyorUtils.addEntity(world, beltEntityId, entityId, "left", 0, 0.5);
 
-    ConveyorUtils.resolveAnimatedSlotLocalPositionInto("horizontal-right", "left", 1, 0, out);
-    expect(out.x).toBe(-5);
-    expect(out.y).toBe(-4);
+    const belt = world.require(beltEntityId, ConveyorBeltComponent);
+    const parent = world.require(entityId, Parent);
+    const transform = world.require(entityId, Transform2D);
 
-    ConveyorUtils.resolveAnimatedSlotLocalPositionInto("horizontal-right", "left", 1, 1, out);
-    expect(out.x).toBe(0);
-    expect(out.y).toBe(-4);
+    expect(parent.entityId).toBe(beltEntityId);
+    expect(belt.left[0]).toBe(entityId);
+    expect(belt.leftProgress[0]).toBe(0.5);
+    expect(transform.curr.pos.x).toBe(-7.5);
+    expect(transform.curr.pos.y).toBe(-4);
   });
 });

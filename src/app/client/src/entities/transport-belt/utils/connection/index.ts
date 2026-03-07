@@ -1,5 +1,9 @@
-import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
+import { canConveyorStoreEntities, ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import { TransportBeltLeaf } from "@client/components/transport-belt-leaf";
+import {
+    getTransportBeltFlow,
+    TRANSPORT_BELT_SIDE_GRID_OFFSETS,
+} from "@client/entities/transport-belt/consts";
 import { GridSingleton, type GridCoordinate, type GridCoordinates } from "@client/systems/world/build-mode/grid-singleton";
 import type { EntityId, UserWorld } from "@engine";
 import { Transform2D } from "@engine/components";
@@ -8,37 +12,7 @@ import { Transform2D } from "@engine/components";
  *   TYPE DEFINITIONS
  **********************************************************************************************************/
 
-type GridOffset = readonly [x: number, y: number];
-
-type BeltConnectionOffsets = {
-  previousOffset: GridOffset;
-  nextOffset: GridOffset;
-};
-
 type BeltRelation = "previous" | "next";
-
-/**********************************************************************************************************
- *   CONSTANTS
- **********************************************************************************************************/
-
-const STRAIGHT_BELT_CONNECTION_OFFSETS: Readonly<Record<string, BeltConnectionOffsets>> = {
-  "horizontal-right": {
-    previousOffset: [-1, 0],
-    nextOffset: [1, 0],
-  },
-  "horizontal-left": {
-    previousOffset: [1, 0],
-    nextOffset: [-1, 0],
-  },
-  "vertical-up": {
-    previousOffset: [0, 1],
-    nextOffset: [0, -1],
-  },
-  "vertical-down": {
-    previousOffset: [0, -1],
-    nextOffset: [0, 1],
-  },
-};
 
 /**********************************************************************************************************
  *   COMPONENT START
@@ -53,7 +27,7 @@ const STRAIGHT_BELT_CONNECTION_OFFSETS: Readonly<Record<string, BeltConnectionOf
  */
 export class TransportBeltConnectionUtils {
   /**
-   * Connects a newly spawned belt to compatible neighboring straight belts.
+    * Connects a newly spawned belt to compatible neighboring belts.
    *
    * The belt stores `previousEntityId` and `nextEntityId`, and the tail belt in
    * each chain receives a `TransportBeltLeaf` marker used by motion systems.
@@ -89,12 +63,15 @@ export class TransportBeltConnectionUtils {
     belt.previousEntityId = previousEntityId;
     belt.nextEntityId = nextEntityId;
 
+    let shouldKeepPreviousLeafAnchor = false;
+
     if (previousEntityId !== null) {
       const previousBelt = world.get(previousEntityId, ConveyorBeltComponent);
 
       if (previousBelt) {
+        shouldKeepPreviousLeafAnchor = previousBelt.isLeaf && nextEntityId !== null;
         previousBelt.nextEntityId = beltEntityId;
-        this.syncLeafMarker(world, previousEntityId, previousBelt);
+        this.syncLeafMarker(world, previousEntityId, previousBelt, shouldKeepPreviousLeafAnchor);
       }
     }
 
@@ -107,7 +84,7 @@ export class TransportBeltConnectionUtils {
       }
     }
 
-    this.syncLeafMarker(world, beltEntityId, belt);
+    this.syncLeafMarker(world, beltEntityId, belt, nextEntityId === null);
   }
 
   /**
@@ -158,15 +135,15 @@ export class TransportBeltConnectionUtils {
     coordinates: GridCoordinates,
     relation: BeltRelation,
   ): EntityId | null {
-    const offsets = STRAIGHT_BELT_CONNECTION_OFFSETS[variant];
+    const flow = getTransportBeltFlow(variant);
 
-    if (!offsets) {
+    if (!flow) {
       return null;
     }
 
-    const targetOffset = relation === "previous"
-      ? offsets.previousOffset
-      : offsets.nextOffset;
+    const [start, end] = flow;
+    const targetSide = relation === "previous" ? start : end;
+    const targetOffset = TRANSPORT_BELT_SIDE_GRID_OFFSETS[targetSide];
     const targetCoordinates = this.offsetGridCoordinates(coordinates, targetOffset);
     let match: EntityId | null = null;
 
@@ -208,15 +185,15 @@ export class TransportBeltConnectionUtils {
     currentCoordinates: GridCoordinates,
     relation: BeltRelation,
   ): boolean {
-    const candidateOffsets = STRAIGHT_BELT_CONNECTION_OFFSETS[candidateVariant];
+    const candidateFlow = getTransportBeltFlow(candidateVariant);
 
-    if (!candidateOffsets) {
+    if (!candidateFlow) {
       return false;
     }
 
-    const requiredOffset = relation === "previous"
-      ? candidateOffsets.nextOffset
-      : candidateOffsets.previousOffset;
+    const [candidateStart, candidateEnd] = candidateFlow;
+    const requiredSide = relation === "previous" ? candidateEnd : candidateStart;
+    const requiredOffset = TRANSPORT_BELT_SIDE_GRID_OFFSETS[requiredSide];
     const candidateConnectedCoordinates = this.offsetGridCoordinates(candidateCoordinates, requiredOffset);
 
     return GridSingleton.areCoordinatesEqual(candidateConnectedCoordinates, currentCoordinates);
@@ -239,8 +216,9 @@ export class TransportBeltConnectionUtils {
     world: UserWorld,
     beltEntityId: EntityId,
     belt: ConveyorBeltComponent,
+    shouldBeLeaf: boolean = this.isConnectableVariant(belt.variant) && belt.nextEntityId === null,
   ): void {
-    const shouldBeLeaf = this.isConnectableVariant(belt.variant) && belt.nextEntityId === null;
+    belt.isLeaf = shouldBeLeaf;
 
     if (shouldBeLeaf) {
       if (!world.has(beltEntityId, TransportBeltLeaf)) {
@@ -256,12 +234,12 @@ export class TransportBeltConnectionUtils {
   }
 
   private static isConnectableVariant(variant: string): boolean {
-    return variant in STRAIGHT_BELT_CONNECTION_OFFSETS;
+    return canConveyorStoreEntities(variant) && getTransportBeltFlow(variant) !== undefined;
   }
 
   private static offsetGridCoordinates(
     coordinates: GridCoordinates,
-    offset: GridOffset,
+    offset: readonly [x: number, y: number],
   ): GridCoordinates {
     return [
       (Number(coordinates[0]) + offset[0]) as GridCoordinate,
