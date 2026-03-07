@@ -10,55 +10,20 @@ export type ConveyorSlots = [
   EntityId | null,
   EntityId | null,
 ];
+export type ConveyorSlotProgress = [number, number, number, number];
 
 export function canConveyorStoreEntities(variant: string): boolean {
   return !variant.startsWith("start-") && !variant.startsWith("end-");
 }
 
 export class ConveyorBeltComponent {
-  private readonly leftSlots: ConveyorSlots = [null, null, null, null];
-  private readonly rightSlots: ConveyorSlots = [null, null, null, null];
+  public readonly left: ConveyorSlots = [null, null, null, null];
+  public readonly right: ConveyorSlots = [null, null, null, null];
+  public readonly leftProgress: ConveyorSlotProgress = [0, 0, 0, 0];
+  public readonly rightProgress: ConveyorSlotProgress = [0, 0, 0, 0];
 
   constructor(
-    public variant: string,
+    public readonly variant: string,
     public speed = DEFAULT_CONVEYOR_BELT_SPEED,
   ) {}
-
-  public get left(): Readonly<ConveyorSlots> {
-    return this.leftSlots;
-  }
-
-  public get right(): Readonly<ConveyorSlots> {
-    return this.rightSlots;
-  }
-
-  public get storesEntities(): boolean {
-    return canConveyorStoreEntities(this.variant);
-  }
-
-  public getEntity(side: ConveyorSide, index: ConveyorSlotIndex): EntityId | null {
-    return this.getSlots(side)[index];
-  }
-
-  public setEntity(side: ConveyorSide, index: ConveyorSlotIndex, entityId: EntityId): void {
-    if (!this.storesEntities) {
-      throw new Error(`Conveyor ${this.variant} is visual-only and cannot store entities`);
-    }
-
-    const slots = this.getSlots(side);
-
-    if (slots[index] !== null) {
-      throw new Error(`Conveyor ${this.variant} already has an entity at ${side}[${index}]`);
-    }
-
-    slots[index] = entityId;
-  }
-
-  private getSlots(side: ConveyorSide): ConveyorSlots {
-    if (side === "left") {
-      return this.leftSlots;
-    }
-
-    return this.rightSlots;
-  }
 }

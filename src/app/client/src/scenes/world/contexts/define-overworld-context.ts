@@ -1,4 +1,8 @@
-import { canConveyorStoreEntities } from "@client/components/conveyor-belt";
+import {
+  canConveyorStoreEntities,
+  type ConveyorSide,
+  type ConveyorSlotIndex,
+} from "@client/components/conveyor-belt";
 import { OUTSIDE } from "@client/components/render-visibility";
 import { spawnContextEntryRegion } from "@client/entities/context-entry-region";
 import { spawnDemoShaderQuad } from "@client/entities/demo-shader-quad";
@@ -28,7 +32,33 @@ type OverworldContextOptions = {
   houseHalfHeight: number;
 };
 
+type DemoCogPlacement = {
+  side: ConveyorSide;
+  index: ConveyorSlotIndex;
+  progress: number;
+};
+
 const BELT_SPACING = 20;
+const STRAIGHT_BELT_DEMO_COG_LAYOUTS: Readonly<Partial<Record<TransportBeltVariant, readonly DemoCogPlacement[]>>> = {
+  "horizontal-right": [
+    { side: "left", index: 0, progress: 0 },
+  ],
+  "horizontal-left": [
+    { side: "left", index: 0, progress: 0 },
+    { side: "left", index: 1, progress: 0 },
+  ],
+  "vertical-up": [
+    { side: "left", index: 0, progress: 0 },
+    { side: "left", index: 2, progress: 0 },
+    { side: "right", index: 1, progress: 0 },
+  ],
+  "vertical-down": [
+    { side: "left", index: 0, progress: 0 },
+    { side: "left", index: 1, progress: 0 },
+    { side: "left", index: 2, progress: 0 },
+    { side: "right", index: 0, progress: 0 },
+  ],
+};
 
 function spawnBeltRow(
   world: UserWorld,
@@ -217,19 +247,42 @@ export function defineOverworldContext(options: OverworldContextOptions) {
           return;
         }
 
-        const leftA = spawnGear(world, { size: "large" });
-        const leftB = spawnGear(world, { size: "large" });
-        const leftC = spawnGear(world, { size: "large" });
-        const leftD = spawnGear(world, { size: "large" });
-        const rightA = spawnGear(world, { size: "large" });
-        const rightB = spawnGear(world, { size: "large" });
+        const demoLayout = STRAIGHT_BELT_DEMO_COG_LAYOUTS[variant];
 
-        ConveyorUtils.addEntity(world, demoBelt, leftA, "left", 0);
-        ConveyorUtils.addEntity(world, demoBelt, leftB, "left", 1);
-        ConveyorUtils.addEntity(world, demoBelt, leftC, "left", 2);
-        ConveyorUtils.addEntity(world, demoBelt, leftD, "left", 3);
-        ConveyorUtils.addEntity(world, demoBelt, rightA, "right", 0);
-        ConveyorUtils.addEntity(world, demoBelt, rightB, "right", 2);
+        if (!demoLayout) {
+          return;
+        }
+
+        for (const placement of demoLayout) {
+          const gear = spawnGear(world, { size: "large" });
+
+          ConveyorUtils.addEntity(
+            world,
+            demoBelt,
+            gear,
+            placement.side,
+            placement.index,
+            placement.progress,
+          );
+        }
+      }
+
+      function spawnAnimatedTransportDemo(x: number, y: number, variant: TransportBeltVariant) {
+        const demoBelt = spawnTransportBelt(world, {
+          x: x,
+          y: y,
+          variant,
+        });
+
+        if (!canConveyorStoreEntities(variant)) {
+          return;
+        }
+
+        const leftA = spawnGear(world, { size: "large" });
+        const rightA = spawnGear(world, { size: "large" });
+
+        ConveyorUtils.addEntity(world, demoBelt, leftA, "left", 0, 0);
+        ConveyorUtils.addEntity(world, demoBelt, rightA, "right", 1, 0);
       }
 
       const demoGridStartX = -220;
@@ -247,6 +300,8 @@ export function defineOverworldContext(options: OverworldContextOptions) {
           variant,
         );
       }
+
+      spawnAnimatedTransportDemo(-300, 460, "horizontal-right");
 
       const xs = Array.from({ length: 5 }, (_, i) => 500 + i * 100);
       const ys = Array.from({ length: 5 }, (_, i) => 60 + i * 20);

@@ -62,6 +62,13 @@
         "command": "npx tsc -p tsconfig.json --noEmit",
         "cwd": "src/app/client"
       }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun x vitest run",
+        "cwd": "src/app/client"
+      }
     }
   }
 }

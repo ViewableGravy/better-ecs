@@ -76,6 +76,12 @@ This is the single source of truth for agent behavior and coding conventions in 
 - For React/userland adapters, prefer moving state and orchestration downward toward the smallest owning component/module that can safely manage it.
 - When introducing new lifecycle hooks/options, start at the lowest meaningful layer and only promote upward if repeated usage demonstrates global ownership.
 
+## Conveyor work
+
+- Keep conveyor components **data-only**; place slot-transfer and animation logic in neighboring utilities/systems instead of component methods.
+- Keep conveyor systems declarative at the entrypoint and move slot math / mutation details into focused helper modules.
+- For early conveyor item-motion prototypes, prefer CPU-driven straight-belt behavior first; add curves, connection ordering, or shader-based motion only when the task explicitly calls for them.
+
 ## Performance guidance
 
 - Avoid unnecessary allocations in hot paths (main loop / per-frame / inner loops).
