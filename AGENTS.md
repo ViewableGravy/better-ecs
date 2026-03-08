@@ -53,6 +53,7 @@ This is the single source of truth for agent behavior and coding conventions in 
 ## Core coding standards
 
 - Always prefer guard clauses over nested/else statements.
+- Prefer lines around 115 characters when readability stays good; do not wrap shorter lines just to satisfy a narrower limit.
 - Always ensure strict type safety.
   - Never use `any`, `as` casts, or non-null assertions (`!`) unless there is no viable alternative.
   - If unavoidable, include a short comment explaining why in code.

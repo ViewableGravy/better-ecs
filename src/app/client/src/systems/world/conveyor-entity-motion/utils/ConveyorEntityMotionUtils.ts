@@ -1,17 +1,6 @@
-import {
-  ConveyorBeltComponent,
-  type ConveyorSide,
-  type ConveyorSlotIndex,
-} from "@client/components/conveyor-belt";
+import { ConveyorBeltComponent, type ConveyorSide, type ConveyorSlotIndex } from "@client/components/conveyor-belt";
 import { BeltItemRailsUtility } from "@client/entities/transport-belt";
-import {
-  CONVEYOR_SIDES,
-  CONVEYOR_SLOT_COUNT_PER_LANE,
-  CONVEYOR_SLOT_INDICES_ASC,
-  CONVEYOR_SLOT_INDICES_DESC,
-  getSlotAdvanceDurations,
-  SHARED_SLOT_POSITION,
-} from "@client/systems/world/conveyor-entity-motion/constants";
+import { CONVEYOR_SIDES, CONVEYOR_SLOT_COUNT_PER_LANE, CONVEYOR_SLOT_INDICES_ASC, CONVEYOR_SLOT_INDICES_DESC, getSlotAdvanceDurations, SHARED_SLOT_POSITION } from "@client/systems/world/conveyor-entity-motion/constants";
 import type { EntityId, UserWorld } from "@engine";
 import { Parent, Transform2D } from "@engine/components";
 
@@ -37,7 +26,6 @@ export class ConveyorEntityMotionUtils {
         : world.get(nextEntityId, ConveyorBeltComponent) ?? null;
 
       this.advanceConveyor(world, currentConveyor, nextEntityId, nextConveyor, updateDelta);
-      
       nextEntityId = currentEntityId;
 
       if (currentConveyor.previousEntityId === leafEntityId) {
@@ -72,7 +60,7 @@ export class ConveyorEntityMotionUtils {
     conveyor: ConveyorBeltComponent,
     nextConveyorEntityId: EntityId | null,
     nextConveyor: ConveyorBeltComponent | null,
-    updateDelta: number,
+    updateDelta: number
   ): void {
     const [leftAdvanceDuration, rightAdvanceDuration] = getSlotAdvanceDurations(conveyor.variant);
 
@@ -82,7 +70,7 @@ export class ConveyorEntityMotionUtils {
       nextConveyorEntityId,
       nextConveyor,
       "left",
-      updateDelta * CONVEYOR_SLOT_COUNT_PER_LANE / leftAdvanceDuration,
+      updateDelta * CONVEYOR_SLOT_COUNT_PER_LANE / leftAdvanceDuration
     );
 
     this.advanceLane(
@@ -91,7 +79,7 @@ export class ConveyorEntityMotionUtils {
       nextConveyorEntityId,
       nextConveyor,
       "right",
-      updateDelta * CONVEYOR_SLOT_COUNT_PER_LANE / rightAdvanceDuration,
+      updateDelta * CONVEYOR_SLOT_COUNT_PER_LANE / rightAdvanceDuration
     );
   }
 
@@ -107,7 +95,7 @@ export class ConveyorEntityMotionUtils {
     nextConveyorEntityId: EntityId | null,
     nextConveyor: ConveyorBeltComponent | null,
     side: ConveyorSide,
-    progressDelta: number,
+    progressDelta: number
   ): void {
     const slots = this.getSlots(conveyor, side);
     const progress = this.getProgress(conveyor, side);
@@ -147,7 +135,7 @@ export class ConveyorEntityMotionUtils {
           slots,
           progress,
           nextSlots,
-          nextProgress,
+          nextProgress
         );
         continue;
       }
@@ -199,7 +187,7 @@ export class ConveyorEntityMotionUtils {
         side,
         index,
         progress[index],
-        SHARED_SLOT_POSITION,
+        SHARED_SLOT_POSITION
       );
 
       transform.curr.pos.x = SHARED_SLOT_POSITION.x;
@@ -232,14 +220,12 @@ export class ConveyorEntityMotionUtils {
     slots: ConveyorBeltComponent["left"],
     progress: ConveyorBeltComponent["leftProgress"],
     nextSlots: ConveyorBeltComponent["left"] | null,
-    nextProgress: ConveyorBeltComponent["leftProgress"] | null,
+    nextProgress: ConveyorBeltComponent["leftProgress"] | null
   ): void {
-    if (
-      nextConveyorEntityId === null
+    if (nextConveyorEntityId === null
       || nextSlots === null
       || nextProgress === null
-      || nextSlots[0] !== null
-    ) {
+      || nextSlots[0] !== null) {
       progress[3] = 1;
       this.setTailBlocked(conveyor, side, true);
       return;
@@ -272,7 +258,10 @@ export class ConveyorEntityMotionUtils {
     conveyor.rightTailBlocked = blocked;
   }
 
-  private static getSlots(conveyor: ConveyorBeltComponent, side: ConveyorSide): ConveyorBeltComponent["left"] {
+  private static getSlots(
+    conveyor: ConveyorBeltComponent,
+    side: ConveyorSide
+  ): ConveyorBeltComponent["left"] {
     if (side === "left") {
       return conveyor.left;
     }
@@ -280,7 +269,10 @@ export class ConveyorEntityMotionUtils {
     return conveyor.right;
   }
 
-  private static getProgress(conveyor: ConveyorBeltComponent, side: ConveyorSide): ConveyorBeltComponent["leftProgress"] {
+  private static getProgress(
+    conveyor: ConveyorBeltComponent,
+    side: ConveyorSide
+  ): ConveyorBeltComponent["leftProgress"] {
     if (side === "left") {
       return conveyor.leftProgress;
     }
@@ -288,7 +280,10 @@ export class ConveyorEntityMotionUtils {
     return conveyor.rightProgress;
   }
 
-  private static getTraversalNextEntityId(world: UserWorld, leafEntityId: EntityId): EntityId | null {
+  private static getTraversalNextEntityId(
+    world: UserWorld,
+    leafEntityId: EntityId
+  ): EntityId | null {
     const leafConveyor = world.get(leafEntityId, ConveyorBeltComponent);
 
     if (!leafConveyor) {

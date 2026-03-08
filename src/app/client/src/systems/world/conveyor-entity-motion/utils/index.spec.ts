@@ -7,18 +7,18 @@ import { GridSingleton } from "@client/systems/world/build-mode/grid-singleton";
 import { Placement } from "@client/systems/world/build-mode/placement";
 import { TransportBeltAutoShapeManager } from "@client/systems/world/build-mode/transport-belt-auto-shape-manager";
 import {
-  CONVEYOR_SLOT_COUNT_PER_LANE,
-  getCurveLaneSides,
-  getSlotAdvanceDurations,
-  INSIDE_CURVE_SLOT_ADVANCE_DURATION_MS,
-  INSIDE_CURVE_SPEED_MULTIPLIER,
-  SLOT_ADVANCE_DURATION_MS,
+    CONVEYOR_SLOT_COUNT_PER_LANE,
+    getCurveLaneSides,
+    getSlotAdvanceDurations,
+    INSIDE_CURVE_SLOT_ADVANCE_DURATION_MS,
+    INSIDE_CURVE_SPEED_MULTIPLIER,
+    SLOT_ADVANCE_DURATION_MS,
 } from "@client/systems/world/conveyor-entity-motion/constants";
-import { ConveyorEntityMotionUtils } from "@client/systems/world/conveyor-entity-motion/utils";
 import { UserWorld, World } from "@engine";
 import { Parent, Transform2D } from "@engine/components";
 import { resolveWorldTransform2D } from "@engine/ecs/hierarchy";
 import { describe, expect, it } from "vitest";
+import { ConveyorEntityMotionUtils } from "./ConveyorEntityMotionUtils";
 
 const SHARED_WORLD_TRANSFORM = new Transform2D();
 
