@@ -4,6 +4,7 @@ import {
   getTransportBeltFlow,
   TRANSPORT_BELT_SIDE_GRID_OFFSETS,
 } from "@client/entities/transport-belt/consts";
+import type { TransportBeltEntityId } from "@client/entities/transport-belt/types";
 import { GridSingleton, type GridCoordinate, type GridCoordinates } from "@client/systems/world/build-mode/grid-singleton";
 import type { EntityId, UserWorld } from "@engine";
 import { Transform2D } from "@engine/components";
@@ -32,18 +33,14 @@ export class TransportBeltConnectionUtils {
    * The belt stores `previousEntityId` and `nextEntityId`, and the tail belt in
    * each chain receives a `TransportBeltLeaf` marker used by motion systems.
    */
-  public static connectSpawnedBelt(world: UserWorld, beltEntityId: EntityId): void {
+  public static connectSpawnedBelt(world: UserWorld, beltEntityId: TransportBeltEntityId): void {
     const belt = world.get(beltEntityId, ConveyorBeltComponent);
 
-    if (!belt || !this.isConnectableVariant(belt.variant)) {
+    if (!this.isConnectableVariant(belt.variant)) {
       return;
     }
 
     const coordinates = this.resolveBeltGridCoordinates(world, beltEntityId);
-
-    if (!coordinates) {
-      return;
-    }
 
     const previousEntityId = this.findAdjacentBeltEntityId(
       world,
@@ -131,18 +128,14 @@ export class TransportBeltConnectionUtils {
     world.destroy(beltEntityId);
   }
 
-  public static reconnectBelt(world: UserWorld, beltEntityId: EntityId): void {
+  public static reconnectBelt(world: UserWorld, beltEntityId: TransportBeltEntityId): void {
     const belt = world.get(beltEntityId, ConveyorBeltComponent);
 
-    if (!belt || !this.isConnectableVariant(belt.variant)) {
+    if (!this.isConnectableVariant(belt.variant)) {
       return;
     }
 
     const coordinates = this.resolveBeltGridCoordinates(world, beltEntityId);
-
-    if (!coordinates) {
-      return;
-    }
 
     const previousEntityId = this.findAdjacentBeltEntityId(
       world,
@@ -276,13 +269,9 @@ export class TransportBeltConnectionUtils {
 
   private static resolveBeltGridCoordinates(
     world: UserWorld,
-    beltEntityId: EntityId,
-  ): GridCoordinates | null {
+    beltEntityId: TransportBeltEntityId,
+  ): GridCoordinates {
     const transform = world.get(beltEntityId, Transform2D);
-
-    if (!transform) {
-      return null;
-    }
 
     return GridSingleton.worldToGridCoordinates(transform.curr.pos.x, transform.curr.pos.y);
   }

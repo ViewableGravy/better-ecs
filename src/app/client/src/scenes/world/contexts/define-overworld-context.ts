@@ -14,13 +14,14 @@ import {
     ConveyorUtils,
     spawnTransportBelt,
     TRANSPORT_BELT_VARIANTS,
+    type TransportBeltEntityId,
     type TransportBeltVariant,
 } from "@client/entities/transport-belt";
 import { spawnTree } from "@client/entities/tree";
 import { spawnWall } from "@client/entities/wall";
 import { setupContextPlayer } from "@client/scenes/world/contexts/shared";
 import { createHouseLayout } from "@client/scenes/world/utilities/house-layout";
-import type { EntityId, UserWorld } from "@engine";
+import type { UserWorld } from "@engine";
 import { Color } from "@engine/components";
 import { defineContext, type ContextId } from "@libs/spatial-contexts";
 
@@ -39,14 +40,14 @@ type DemoCogPlacement = {
 };
 
 type BeltLoopEntityIds = {
-  topLeft: EntityId;
-  topRight: EntityId;
-  bottomRight: EntityId;
-  bottomLeft: EntityId;
-  topEdges: EntityId[];
-  rightEdges: EntityId[];
-  bottomEdges: EntityId[];
-  leftEdges: EntityId[];
+  topLeft: TransportBeltEntityId;
+  topRight: TransportBeltEntityId;
+  bottomRight: TransportBeltEntityId;
+  bottomLeft: TransportBeltEntityId;
+  topEdges: TransportBeltEntityId[];
+  rightEdges: TransportBeltEntityId[];
+  bottomEdges: TransportBeltEntityId[];
+  leftEdges: TransportBeltEntityId[];
 };
 
 const BELT_SPACING = 20;
@@ -120,10 +121,10 @@ function spawnBeltLoop(
   },
 ): BeltLoopEntityIds {
   const maxOffset = options.sideLength - 1;
-  const topEdges: EntityId[] = [];
-  const rightEdges: EntityId[] = [];
-  const bottomEdges: EntityId[] = [];
-  const leftEdges: EntityId[] = [];
+  const topEdges: TransportBeltEntityId[] = [];
+  const rightEdges: TransportBeltEntityId[] = [];
+  const bottomEdges: TransportBeltEntityId[] = [];
+  const leftEdges: TransportBeltEntityId[] = [];
 
   const topLeft = spawnTransportBelt(world, {
     x: options.x,
@@ -193,7 +194,7 @@ function spawnAnimatedTransportLoop(world: UserWorld, loop: BeltLoopEntityIds): 
     ...loop.leftEdges,
   ];
 
-  const placements: ReadonlyArray<readonly [beltEntityId: EntityId, side: ConveyorSide, index: ConveyorSlotIndex]> = [
+  const placements: ReadonlyArray<readonly [beltEntityId: TransportBeltEntityId, side: ConveyorSide, index: ConveyorSlotIndex]> = [
     [candidateBelts[0], "left", 0],
     [candidateBelts[2], "right", 2],
     [candidateBelts[4], "left", 1],

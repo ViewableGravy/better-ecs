@@ -11,8 +11,9 @@ import {
   type TransportBeltSide,
   type TransportBeltVariant,
 } from "@client/entities/transport-belt/consts";
+import type { TransportBeltEntityId } from "@client/entities/transport-belt/types";
 import { GridSingleton, type GridCoordinate, type GridCoordinates } from "@client/systems/world/build-mode/grid-singleton";
-import type { EntityId, UserWorld } from "@engine";
+import type { UserWorld } from "@engine";
 import { Transform2D } from "@engine/components";
 
 /**********************************************************************************************************
@@ -47,7 +48,7 @@ const OPPOSITE_SIDE: Readonly<Record<TransportBeltSide, TransportBeltSide>> = {
 };
 
 export class TransportBeltAutoShapeManager {
-  public static refreshAffectedBelts(world: UserWorld, placedBeltEntityId: EntityId): void {
+  public static refreshAffectedBelts(world: UserWorld, placedBeltEntityId: TransportBeltEntityId): void {
     const affectedBeltEntityIds = this.resolveAffectedBeltEntityIds(world, placedBeltEntityId);
 
     this.refreshBeltEntityIds(world, affectedBeltEntityIds);
@@ -59,7 +60,10 @@ export class TransportBeltAutoShapeManager {
     this.refreshBeltEntityIds(world, affectedBeltEntityIds);
   }
 
-  private static refreshBeltEntityIds(world: UserWorld, affectedBeltEntityIds: EntityId[]): void {
+  private static refreshBeltEntityIds(
+    world: UserWorld,
+    affectedBeltEntityIds: TransportBeltEntityId[],
+  ): void {
     if (affectedBeltEntityIds.length === 0) {
       return;
     }
@@ -79,10 +83,10 @@ export class TransportBeltAutoShapeManager {
     }
   }
 
-  public static resolveVariant(world: UserWorld, beltEntityId: EntityId): TransportBeltVariant | null {
+  public static resolveVariant(world: UserWorld, beltEntityId: TransportBeltEntityId): TransportBeltVariant | null {
     const belt = world.get(beltEntityId, ConveyorBeltComponent);
 
-    if (!belt || !canConveyorStoreEntities(belt.variant)) {
+    if (!canConveyorStoreEntities(belt.variant)) {
       return null;
     }
 
@@ -95,10 +99,6 @@ export class TransportBeltAutoShapeManager {
     const [, endSide] = flow;
     const coordinates = this.resolveBeltCoordinates(world, beltEntityId);
 
-    if (!coordinates) {
-      return null;
-    }
-
     const uniqueIncomingSide = this.resolveUniqueIncomingSide(world, coordinates, endSide);
 
     if (uniqueIncomingSide === null) {
@@ -108,12 +108,11 @@ export class TransportBeltAutoShapeManager {
     return getTransportBeltVariantByFlow(uniqueIncomingSide, endSide) ?? STRAIGHT_VARIANT_BY_END_SIDE[endSide];
   }
 
-  private static resolveAffectedBeltEntityIds(world: UserWorld, placedBeltEntityId: EntityId): EntityId[] {
+  private static resolveAffectedBeltEntityIds(
+    world: UserWorld,
+    placedBeltEntityId: TransportBeltEntityId,
+  ): TransportBeltEntityId[] {
     const placedCoordinates = this.resolveBeltCoordinates(world, placedBeltEntityId);
-
-    if (!placedCoordinates) {
-      return [placedBeltEntityId];
-    }
 
     return this.resolveBeltEntityIdsAroundCoordinates(world, placedCoordinates, placedBeltEntityId);
   }
@@ -121,9 +120,9 @@ export class TransportBeltAutoShapeManager {
   private static resolveBeltEntityIdsAroundCoordinates(
     world: UserWorld,
     coordinates: GridCoordinates,
-    centerBeltEntityId?: EntityId,
-  ): EntityId[] {
-    const affected = new Set<EntityId>();
+    centerBeltEntityId?: TransportBeltEntityId,
+  ): TransportBeltEntityId[] {
+    const affected = new Set<TransportBeltEntityId>();
 
     if (centerBeltEntityId !== undefined) {
       affected.add(centerBeltEntityId);
@@ -192,10 +191,6 @@ export class TransportBeltAutoShapeManager {
 
     const neighborBelt = world.get(neighborEntityId, ConveyorBeltComponent);
 
-    if (!neighborBelt) {
-      return false;
-    }
-
     const neighborFlow = getTransportBeltFlow(neighborBelt.variant);
 
     if (!neighborFlow) {
@@ -210,13 +205,13 @@ export class TransportBeltAutoShapeManager {
   private static findBeltEntityAtCoordinates(
     world: UserWorld,
     coordinates: GridCoordinates,
-  ): EntityId | null {
+  ): TransportBeltEntityId | null {
     for (const beltEntityId of world.query(ConveyorBeltComponent, Transform2D)) {
       if (world.has(beltEntityId, GhostPreviewComponent)) {
         continue;
       }
 
-      const transform = world.require(beltEntityId, Transform2D);
+      const transform = world.get(beltEntityId, Transform2D);
       const beltCoordinates = GridSingleton.worldToGridCoordinates(transform.curr.pos.x, transform.curr.pos.y);
 
       if (!GridSingleton.areCoordinatesEqual(beltCoordinates, coordinates)) {
@@ -231,13 +226,9 @@ export class TransportBeltAutoShapeManager {
 
   private static resolveBeltCoordinates(
     world: UserWorld,
-    beltEntityId: EntityId,
-  ): GridCoordinates | null {
+    beltEntityId: TransportBeltEntityId,
+  ): GridCoordinates {
     const transform = world.get(beltEntityId, Transform2D);
-
-    if (!transform) {
-      return null;
-    }
 
     return GridSingleton.worldToGridCoordinates(transform.curr.pos.x, transform.curr.pos.y);
   }

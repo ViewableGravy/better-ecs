@@ -12,35 +12,35 @@ import type { TransportBeltVariant } from "@client/entities/transport-belt";
  *   TYPE DEFINITIONS
  **********************************************************************************************************/
 
-type GhostSpawner = () => EntityId;
+type GhostSpawner<TEntityId extends EntityId = EntityId> = () => TEntityId;
 
 type GhostVariant = TransportBeltVariant | null;
 
-export type GhostPreset<TPayload = void> = {
+export type GhostPreset<TPayload = void, TEntityId extends EntityId = EntityId> = {
   kind: GhostKind;
-  spawn: (world: UserWorld, x: number, y: number, payload?: TPayload) => EntityId;
-  sync?: (world: UserWorld, ghostEntityId: EntityId, payload?: TPayload) => void;
+  spawn: (world: UserWorld, x: number, y: number, payload?: TPayload) => TEntityId;
+  sync?: (world: UserWorld, ghostEntityId: TEntityId, payload?: TPayload) => void;
 };
 
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
 
-export function spawnGhost(
+export function spawnGhost<TEntityId extends EntityId>(
   world: UserWorld,
-  spawn: GhostSpawner,
+  spawn: GhostSpawner<TEntityId>,
   kind: GhostKind = "box",
   variant: GhostVariant = null,
-): EntityId {
+): TEntityId {
   return applyGhostEffect(world, spawn(), kind, variant);
 }
 
-export function applyGhostEffect(
+export function applyGhostEffect<TEntityId extends EntityId>(
   world: UserWorld,
-  ghostEntityId: EntityId,
+  ghostEntityId: TEntityId,
   kind: GhostKind = "box",
   variant: GhostVariant = null,
-): EntityId {
+): TEntityId {
   world.add(ghostEntityId, CollisionProfiles.ghost());
   world.add(
     ghostEntityId,

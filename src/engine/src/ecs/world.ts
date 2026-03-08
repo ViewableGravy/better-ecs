@@ -1,6 +1,11 @@
 // packages/engine/src/ecs/world.ts
 import { Parent } from "@engine/components";
-import type { EntityId } from "@engine/ecs/entity";
+import type {
+  EntityComponentLookupResult,
+  EntityId,
+  InvariantQueryResult,
+  QueryResult,
+} from "@engine/ecs/entity";
 import { createEntityId, getEntityIndex, invalidateEntity } from "@engine/ecs/entity";
 import { ComponentStore } from "@engine/ecs/storage";
 import type { Class } from "type-fest";
@@ -22,7 +27,10 @@ export interface IUserWorld {
 
   add<T>(entityId: EntityId, componentType: Class<T>, component: T): void;
   add<T>(entityId: EntityId, component: T): void;
-  get<T>(entityId: EntityId, componentType: Class<T>): T | undefined;
+  get<T, TEntityComponents>(
+    entityId: EntityId<TEntityComponents>,
+    componentType: Class<T>,
+  ): EntityComponentLookupResult<TEntityComponents, T>;
   require<T>(entityId: EntityId, componentType: Class<T>): T;
 
   all(): EntityId[];
@@ -32,7 +40,9 @@ export interface IUserWorld {
 
   move(entityId: EntityId, world: UserWorld): void;
 
-  query(...componentTypes: Function[]): EntityId[];
+  query<const TComponentTypes extends readonly Class<unknown>[]>(
+    ...componentTypes: TComponentTypes
+  ): QueryResult<TComponentTypes>;
 
   forEach<TA>(
     componentTypeA: Class<TA>,
@@ -82,7 +92,7 @@ export class UserWorld implements IUserWorld {
     if (typeof arg === "number") {
       this.world.destroyEntity(arg);
     } else {
-      const entities = this.world.query(arg, ...componentTypes);
+      const entities = this.world.query(arg as Class<unknown>, ...(componentTypes as Class<unknown>[]));
       for (const entityId of entities) {
         this.world.destroyEntity(entityId);
       }
@@ -95,6 +105,10 @@ export class UserWorld implements IUserWorld {
     this.world.addComponent(entityId, componentTypeOrComponent as any, component as any);
   }
 
+  get<T, TEntityComponents>(
+    entityId: EntityId<TEntityComponents>,
+    componentType: Class<T>,
+  ): EntityComponentLookupResult<TEntityComponents, T>;
   get<T>(entityId: EntityId, componentType: Class<T>): T | undefined {
     return this.world.getComponent<T>(entityId, componentType);
   }
@@ -134,7 +148,9 @@ export class UserWorld implements IUserWorld {
     this.world.moveEntityTo(entityId, world.world);
   }
 
-  query(...componentTypes: Function[]): EntityId[] {
+  query<const TComponentTypes extends readonly Class<unknown>[]>(
+    ...componentTypes: TComponentTypes
+  ): QueryResult<TComponentTypes> {
     return this.world.query(...componentTypes);
   }
 
@@ -205,14 +221,17 @@ export class UserWorld implements IUserWorld {
     this.world.forEach3(componentTypeA, componentTypeB, componentTypeC, callback);
   }
 
-  invariantQuery(...componentTypes: Function[]): [EntityId, ...EntityId[]] {
+  invariantQuery<const TComponentTypes extends readonly Class<unknown>[]>(
+    ...componentTypes: TComponentTypes
+  ): InvariantQueryResult<TComponentTypes> {
     const results = this.world.query(...componentTypes);
     if (results.length === 0) {
       throw new Error(
         `Invariant query for components [${componentTypes.map((t) => t.name).join(", ")}] returned no results`,
       );
     }
-    return results as [EntityId, ...EntityId[]];
+    // Query metadata is compile-time only, so the runtime array can be reused as-is.
+    return results as InvariantQueryResult<TComponentTypes>;
   }
 }
 
@@ -435,10 +454,13 @@ export class World {
    * - Intersecting from the smallest store minimizes entities we need to test.
    * - Membership checks run by entity index (sparse-set key) to avoid extra map lookups.
    */
-  query(...componentTypes: Function[]): EntityId[] {
+  query<const TComponentTypes extends readonly Class<unknown>[]>(
+    ...componentTypes: TComponentTypes
+  ): QueryResult<TComponentTypes> {
     // No filter means "all entities".
     if (componentTypes.length === 0) {
-      return this.getEntities();
+      // Query metadata is compile-time only, so the runtime array can be reused as-is.
+      return this.getEntities() as QueryResult<TComponentTypes>;
     }
 
     // Resolve stores once and track the smallest store for base iteration.
@@ -449,7 +471,9 @@ export class World {
     for (const componentType of componentTypes) {
       const store = this.componentStores.get(componentType);
 
-      if (!store) return []; // No entities have all required components
+      if (!store) {
+        return [] as QueryResult<TComponentTypes>; // No entities have all required components
+      }
 
       stores.push(store);
       const storeCount = store.count();
@@ -461,11 +485,14 @@ export class World {
       }
     }
 
-    if (!smallestStore) return [];
+    if (!smallestStore) {
+      return [] as QueryResult<TComponentTypes>;
+    }
 
     // Fast path: single-component query is just the dense entity list for that store.
     if (stores.length === 1) {
-      return [...smallestStore.entityIds()];
+      // Query metadata is compile-time only, so the runtime array can be reused as-is.
+      return [...smallestStore.entityIds()] as QueryResult<TComponentTypes>;
     }
 
     // Build the remaining stores once so the inner loop only performs sparse membership checks.
@@ -497,7 +524,8 @@ export class World {
       }
     }
 
-    return result;
+    // Query metadata is compile-time only, so the runtime array can be reused as-is.
+    return result as QueryResult<TComponentTypes>;
   }
 
   forEach1<TA>(componentTypeA: Class<TA>, callback: ForEach1Callback<TA>): void {

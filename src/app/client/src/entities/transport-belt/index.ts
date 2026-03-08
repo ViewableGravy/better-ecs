@@ -2,6 +2,10 @@ import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import { OUTSIDE, RenderVisibility } from "@client/components/render-visibility";
 import { RENDER_LAYERS } from "@client/consts";
 import type { TransportBeltVariant } from "@client/entities/transport-belt/consts";
+import {
+  asTransportBeltEntityId,
+  type TransportBeltEntityId,
+} from "@client/entities/transport-belt/types";
 import { TransportBeltConnectionUtils } from "@client/entities/transport-belt/utils/connection";
 import { CollisionProfiles } from "@client/scenes/world/physics/collision-profiles";
 import { TRANSPORT_BELT_COLLIDER_SIZE } from "@client/systems/world/build-mode/const";
@@ -56,10 +60,10 @@ function createTransportBeltSprite(
   return sprite;
 }
 
-export function spawnTransportBelt(world: UserWorld, options: SpawnTransportBeltOptions): EntityId {
+export function spawnTransportBelt(world: UserWorld, options: SpawnTransportBeltOptions): TransportBeltEntityId {
   const variant = options.variant ?? "horizontal-right";
 
-  const belt = world.create();
+  const belt = asTransportBeltEntityId(world.create());
   const sprite = createTransportBeltSprite(variant, options.y);
 
   world.add(belt, new Transform2D(options.x, options.y, 0));
@@ -89,20 +93,16 @@ export function destroyTransportBelt(world: UserWorld, beltEntityId: EntityId): 
 
 export function updateTransportBeltVariant(
   world: UserWorld,
-  beltEntityId: EntityId,
+  beltEntityId: TransportBeltEntityId,
   variant: TransportBeltVariant,
 ): void {
   const belt = world.get(beltEntityId, ConveyorBeltComponent);
 
-  if (!belt || belt.variant === variant) {
+  if (belt.variant === variant) {
     return;
   }
 
   const transform = world.get(beltEntityId, Transform2D);
-
-  if (!transform) {
-    return;
-  }
 
   const currentSprite = world.get(beltEntityId, AnimatedSprite);
 
@@ -115,6 +115,7 @@ export function updateTransportBeltVariant(
 
 export { TRANSPORT_BELT_VARIANTS } from "@client/entities/transport-belt/consts";
 export type { TransportBeltVariant } from "@client/entities/transport-belt/consts";
+export type { TransportBeltEntityId } from "@client/entities/transport-belt/types";
 export { TransportBeltConnectionUtils } from "@client/entities/transport-belt/utils/connection";
 export { ConveyorUtils } from "@client/entities/transport-belt/utils/general";
 export { BeltItemRailsUtility } from "@client/entities/transport-belt/utils/rails";

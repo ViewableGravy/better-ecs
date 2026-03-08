@@ -5,6 +5,7 @@ import {
   type ConveyorSlotIndex,
 } from "@client/components/conveyor-belt";
 import { CONVEYOR_SLOT_POSITIONS, getTransportBeltFlow } from "@client/entities/transport-belt/consts";
+import type { TransportBeltEntityId } from "@client/entities/transport-belt/types";
 import { BeltItemRailsUtility } from "@client/entities/transport-belt/utils/rails";
 import { Vec2, type EntityId, type UserWorld } from "@engine";
 import { Parent, Transform2D } from "@engine/components";
@@ -18,13 +19,13 @@ export class ConveyorUtils {
    */
   public static addEntity(
     world: UserWorld,
-    conveyorEntityId: EntityId,
+    conveyorEntityId: TransportBeltEntityId,
     entity: EntityId,
     side: ConveyorSide,
     index: ConveyorSlotIndex,
     progress: number = 0.5,
   ): void {
-    const conveyor = world.require(conveyorEntityId, ConveyorBeltComponent);
+    const conveyor = world.get(conveyorEntityId, ConveyorBeltComponent);
     const slots = this.resolveSlots(conveyor, side);
     const slotProgress = this.resolveSlotProgress(conveyor, side);
 

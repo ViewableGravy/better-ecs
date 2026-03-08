@@ -134,8 +134,8 @@ export class TransportBeltPlacementRotationManager {
         continue;
       }
 
-      const belt = world.require(beltEntityId, ConveyorBeltComponent);
-      const transform = world.require(beltEntityId, Transform2D);
+      const belt = world.get(beltEntityId, ConveyorBeltComponent);
+      const transform = world.get(beltEntityId, Transform2D);
       const beltCoordinates = GridSingleton.worldToGridCoordinates(transform.curr.pos.x, transform.curr.pos.y);
       const offsetX = Number(beltCoordinates[0]) - Number(coordinates[0]);
       const offsetY = Number(beltCoordinates[1]) - Number(coordinates[1]);

@@ -8,14 +8,14 @@ import { Transform2D } from "@engine/components";
  **********************************************************************************************************/
 
 export class GhostPreviewManager {
-  public static sync<TPayload>(
+  public static sync<TPayload, TGhostEntityId extends EntityId>(
     world: UserWorld,
-    ghostEntityId: EntityId | null,
+    ghostEntityId: TGhostEntityId | null,
     x: number,
     y: number,
-    preset: GhostPreset<TPayload>,
+    preset: GhostPreset<TPayload, TGhostEntityId>,
     payload?: TPayload,
-  ): EntityId {
+  ): TGhostEntityId {
     if (!this.matchesGhostKind(world, ghostEntityId, preset.kind)) {
       this.destroyGhost(world, ghostEntityId);
       return preset.spawn(world, x, y, payload);

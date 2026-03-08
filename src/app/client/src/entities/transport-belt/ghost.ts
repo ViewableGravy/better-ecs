@@ -1,12 +1,13 @@
 import { GhostPreviewComponent, applyGhostEffect, type GhostPreset } from "@client/entities/ghost";
 import {
-  spawnTransportBelt,
-  updateTransportBeltVariant,
-  type TransportBeltVariant,
+    spawnTransportBelt,
+    updateTransportBeltVariant,
+    type TransportBeltEntityId,
+    type TransportBeltVariant,
 } from "@client/entities/transport-belt";
 import {
-  TRANSPORT_BELT_OFFSET_X,
-  TRANSPORT_BELT_OFFSET_Y,
+    TRANSPORT_BELT_OFFSET_X,
+    TRANSPORT_BELT_OFFSET_Y,
 } from "@client/systems/world/build-mode/const";
 
 /**********************************************************************************************************
@@ -15,7 +16,7 @@ import {
 
 const DEFAULT_TRANSPORT_BELT_GHOST_VARIANT: TransportBeltVariant = "horizontal-right";
 
-export const TransportBeltGhost: GhostPreset<TransportBeltVariant> = {
+export const TransportBeltGhost: GhostPreset<TransportBeltVariant, TransportBeltEntityId> = {
   kind: "transport-belt",
   spawn(world, x, y, variant) {
     const resolvedVariant = variant ?? DEFAULT_TRANSPORT_BELT_GHOST_VARIANT;
