@@ -1,14 +1,14 @@
 import { canConveyorStoreEntities, ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import {
-    TransportBeltConnectionUtils,
-    updateTransportBeltVariant,
+  TransportBeltConnectionUtils,
+  updateTransportBeltVariant,
 } from "@client/entities/transport-belt";
 import {
-    getTransportBeltFlow,
-    getTransportBeltVariantByFlow,
-    TRANSPORT_BELT_SIDE_GRID_OFFSETS,
-    type TransportBeltSide,
-    type TransportBeltVariant,
+  getTransportBeltFlow,
+  getTransportBeltVariantByFlow,
+  TRANSPORT_BELT_SIDE_GRID_OFFSETS,
+  type TransportBeltSide,
+  type TransportBeltVariant,
 } from "@client/entities/transport-belt/consts";
 import { GridSingleton, type GridCoordinate, type GridCoordinates } from "@client/systems/world/build-mode/grid-singleton";
 import type { EntityId, UserWorld } from "@engine";
@@ -48,6 +48,20 @@ const OPPOSITE_SIDE: Readonly<Record<TransportBeltSide, TransportBeltSide>> = {
 export class TransportBeltAutoShapeManager {
   public static refreshAffectedBelts(world: UserWorld, placedBeltEntityId: EntityId): void {
     const affectedBeltEntityIds = this.resolveAffectedBeltEntityIds(world, placedBeltEntityId);
+
+    this.refreshBeltEntityIds(world, affectedBeltEntityIds);
+  }
+
+  public static refreshBeltsNearCoordinates(world: UserWorld, coordinates: GridCoordinates): void {
+    const affectedBeltEntityIds = this.resolveBeltEntityIdsAroundCoordinates(world, coordinates);
+
+    this.refreshBeltEntityIds(world, affectedBeltEntityIds);
+  }
+
+  private static refreshBeltEntityIds(world: UserWorld, affectedBeltEntityIds: EntityId[]): void {
+    if (affectedBeltEntityIds.length === 0) {
+      return;
+    }
 
     for (const beltEntityId of affectedBeltEntityIds) {
       const resolvedVariant = this.resolveVariant(world, beltEntityId);
@@ -100,10 +114,28 @@ export class TransportBeltAutoShapeManager {
       return [placedBeltEntityId];
     }
 
-    const affected = new Set<EntityId>([placedBeltEntityId]);
+    return this.resolveBeltEntityIdsAroundCoordinates(world, placedCoordinates, placedBeltEntityId);
+  }
+
+  private static resolveBeltEntityIdsAroundCoordinates(
+    world: UserWorld,
+    coordinates: GridCoordinates,
+    centerBeltEntityId?: EntityId,
+  ): EntityId[] {
+    const affected = new Set<EntityId>();
+
+    if (centerBeltEntityId !== undefined) {
+      affected.add(centerBeltEntityId);
+    }
+
+    const centerBeltEntityIdAtCoordinates = this.findBeltEntityAtCoordinates(world, coordinates);
+
+    if (centerBeltEntityIdAtCoordinates !== null) {
+      affected.add(centerBeltEntityIdAtCoordinates);
+    }
 
     for (const side of ["top", "right", "bottom", "left"] as const) {
-      const neighborCoordinates = this.offsetCoordinates(placedCoordinates, TRANSPORT_BELT_SIDE_GRID_OFFSETS[side]);
+      const neighborCoordinates = this.offsetCoordinates(coordinates, TRANSPORT_BELT_SIDE_GRID_OFFSETS[side]);
       const neighborEntityId = this.findBeltEntityAtCoordinates(world, neighborCoordinates);
 
       if (neighborEntityId === null) {

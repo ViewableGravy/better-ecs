@@ -11,6 +11,7 @@ import {
   GridSingleton,
   type GridCoordinates,
 } from "@client/systems/world/build-mode/grid-singleton";
+import { TransportBeltAutoShapeManager } from "@client/systems/world/build-mode/transport-belt-auto-shape-manager";
 import { Vec2, type MousePoint, type UserWorld } from "@engine";
 import { Transform2D } from "@engine/components";
 import {
@@ -63,7 +64,17 @@ export class Placement {
 
     if (hit) {
       if (world.has(hit.entityId, ConveyorBeltComponent)) {
+        const transform = world.get(hit.entityId, Transform2D);
+        const beltCoordinates = transform
+          ? GridSingleton.worldToGridCoordinates(transform.curr.pos.x, transform.curr.pos.y)
+          : null;
+
         destroyTransportBelt(world, hit.entityId);
+
+        if (beltCoordinates) {
+          TransportBeltAutoShapeManager.refreshBeltsNearCoordinates(world, beltCoordinates);
+        }
+
         return;
       }
 
