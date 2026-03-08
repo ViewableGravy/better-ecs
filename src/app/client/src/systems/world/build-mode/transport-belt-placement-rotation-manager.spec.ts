@@ -40,6 +40,14 @@ function createMatrix(
 }
 
 describe("TransportBeltPlacementRotationManager", () => {
+  /**
+   * No neighbor points into the preview tile, so the placement cycle should be
+   * the default straight-only order.
+   *
+   *   . . .
+   *   . ? .
+   *   . . .
+   */
   it("uses the default straight rotation cycle when no neighbors contribute", () => {
     expect(TransportBeltPlacementRotationManager.resolveRotationCycleFromMatrix(createMatrix())).toEqual([
       "vertical-up",
@@ -49,6 +57,14 @@ describe("TransportBeltPlacementRotationManager", () => {
     ]);
   });
 
+  /**
+   * A west neighbor points right into the preview tile, so the preview cycle
+   * should become a left-entry cycle.
+   *
+   *   . . .
+   *   → ? .
+   *   . . .
+   */
   it("uses a left-entry cycle when a west neighbor points into the tile", () => {
     const matrix = createMatrix(
       [null, null, null],
@@ -64,6 +80,14 @@ describe("TransportBeltPlacementRotationManager", () => {
     ]);
   });
 
+  /**
+   * A south neighbor points upward into the preview tile, so the preview cycle
+   * should become a bottom-entry cycle.
+   *
+   *   . . .
+   *   . ? .
+   *   . ↑ .
+   */
   it("uses a bottom-entry cycle when a south neighbor points into the tile", () => {
     const matrix = createMatrix(
       [null, null, null],
@@ -79,6 +103,14 @@ describe("TransportBeltPlacementRotationManager", () => {
     ]);
   });
 
+  /**
+   * A neighbor can be adjacent without contributing. Here the west belt points
+   * away, so the preview stays on the default straight cycle.
+   *
+   *   . . .
+   *   ← ? .
+   *   . . .
+   */
   it("ignores adjacent belts that do not point into the tile", () => {
     const matrix = createMatrix(
       [null, null, null],
@@ -94,6 +126,14 @@ describe("TransportBeltPlacementRotationManager", () => {
     ]);
   });
 
+  /**
+   * Multiple belts can point into the tile, and the placement logic should use
+   * the configured precedence order (south before west here).
+   *
+   *   . ↓ .
+   *   → ? .
+   *   . ↑ .
+   */
   it("prefers the configured south-then-west precedence when multiple neighbors contribute", () => {
     const matrix = createMatrix(
       [null, "vertical-down", null],
@@ -109,6 +149,15 @@ describe("TransportBeltPlacementRotationManager", () => {
     ]);
   });
 
+  /**
+   * World-backed preview resolution should preserve the requested end side even
+   * when a contributing west belt changes the entry shape.
+   *
+   *   → ?
+   *
+   * Desired end
+   *   ? →
+   */
   it("preserves the desired end direction when resolving a world-backed preview variant", () => {
     const world = new UserWorld(new World("scene"));
     const westBeltId = world.create();
@@ -125,6 +174,12 @@ describe("TransportBeltPlacementRotationManager", () => {
     ).toBe("horizontal-right");
   });
 
+  /**
+   * The entry side can change while the requested exit side stays fixed, so the
+   * rotation cycle should only alter the entry shape.
+   *
+   *   → ? →
+   */
   it("changes only the entry shape when the desired end direction stays the same", () => {
     const matrix = createMatrix(
       [null, null, null],

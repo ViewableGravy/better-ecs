@@ -1,15 +1,15 @@
 import { canConveyorStoreEntities, ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import { GhostPreviewComponent } from "@client/entities/ghost";
 import {
-  TransportBeltConnectionUtils,
-  updateTransportBeltVariant,
+    TransportBeltConnectionUtils,
+    updateTransportBeltVariant,
 } from "@client/entities/transport-belt";
 import {
-  getTransportBeltFlow,
-  getTransportBeltVariantByFlow,
-  TRANSPORT_BELT_SIDE_GRID_OFFSETS,
-  type TransportBeltSide,
-  type TransportBeltVariant,
+    getTransportBeltFlow,
+    getTransportBeltVariantByFlow,
+    TRANSPORT_BELT_SIDE_GRID_OFFSETS,
+    type TransportBeltSide,
+    type TransportBeltVariant,
 } from "@client/entities/transport-belt/consts";
 import type { TransportBeltEntityId } from "@client/entities/transport-belt/types";
 import { GridSingleton, type GridCoordinate, type GridCoordinates } from "@client/systems/world/build-mode/grid-singleton";
@@ -96,8 +96,12 @@ export class TransportBeltAutoShapeManager {
       return null;
     }
 
-    const [, endSide] = flow;
+    const [startSide, endSide] = flow;
     const coordinates = this.resolveBeltCoordinates(world, beltEntityId);
+
+    if (this.isIncomingFromSide(world, coordinates, startSide)) {
+      return belt.variant as TransportBeltVariant;
+    }
 
     const uniqueIncomingSide = this.resolveUniqueIncomingSide(world, coordinates, endSide);
 

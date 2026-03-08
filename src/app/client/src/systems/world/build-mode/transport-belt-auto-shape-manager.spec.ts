@@ -6,6 +6,18 @@ import { UserWorld, World } from "@engine";
 import { describe, expect, it } from "vitest";
 
 describe("TransportBeltAutoShapeManager", () => {
+  /**
+   * One feeder uniquely enters the middle belt from the right, so the middle
+   * belt should bend to accept it.
+   *
+   * Before
+   *   ← ┘
+   *     │ ← placed
+   *
+   * After
+   *   ← ┘
+   *     └←
+   */
   it("bends a belt when exactly one side neighbor uniquely feeds its start", () => {
     const world = new UserWorld(new World("scene"));
 
@@ -19,6 +31,16 @@ describe("TransportBeltAutoShapeManager", () => {
     expect(world.require(middleBeltId, ConveyorBeltComponent).variant).toBe("angled-right-bottom");
   });
 
+  /**
+   * Two side feeders compete for the same middle belt, so the existing
+   * straight direction should win.
+   *
+   *   ← ┘
+   * ← │ ←
+   *
+   * Result
+   *   middle stays vertical
+   */
   it("keeps the original straight direction when two side inputs compete", () => {
     const world = new UserWorld(new World("scene"));
 
@@ -33,6 +55,14 @@ describe("TransportBeltAutoShapeManager", () => {
     expect(world.require(middleBeltId, ConveyorBeltComponent).variant).toBe("vertical-down");
   });
 
+  /**
+   * The belt already has a valid incoming tail from above, so a new side belt
+   * must not bend it away from that straight chain.
+   *
+   *   │
+   *   │ ← placed
+   *   │
+   */
   it("prefers staying straight when the original tail already has an incoming belt", () => {
     const world = new UserWorld(new World("scene"));
 
@@ -46,6 +76,16 @@ describe("TransportBeltAutoShapeManager", () => {
     expect(world.require(middleBeltId, ConveyorBeltComponent).variant).toBe("vertical-down");
   });
 
+  /**
+   * A side feeder temporarily bends the target belt, then removing that feeder
+   * should restore the straight vertical shape.
+   *
+   * Before remove
+   *   → ┌
+   *
+   * After remove
+   *     │
+   */
   it("reverts a bent belt back to straight when the side feeder is removed", () => {
     const world = new UserWorld(new World("scene"));
 
@@ -63,5 +103,27 @@ describe("TransportBeltAutoShapeManager", () => {
     );
 
     expect(world.require(bentBeltId, ConveyorBeltComponent).variant).toBe("vertical-up");
+  });
+
+  /**
+   * The middle belt already has a valid bend from below, so adding a competing
+   * backside belt on the left must not reshape it.
+   *
+   *   └→
+   * → ┘
+   *
+   * Result
+   *   middle keeps the existing bend
+   */
+  it("preserves an existing valid bend when a competing backside belt is added", () => {
+    const world = new UserWorld(new World("scene"));
+
+    spawnTransportBelt(world, { x: 10, y: 30, variant: "angled-right-up" });
+    const bentBeltId = spawnTransportBelt(world, { x: 10, y: 10, variant: "angled-bottom-right" });
+    const placedBeltId = spawnTransportBelt(world, { x: -10, y: 10, variant: "horizontal-right" });
+
+    TransportBeltAutoShapeManager.refreshAffectedBelts(world, placedBeltId);
+
+    expect(world.require(bentBeltId, ConveyorBeltComponent).variant).toBe("angled-bottom-right");
   });
 });

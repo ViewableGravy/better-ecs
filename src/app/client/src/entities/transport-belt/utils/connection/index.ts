@@ -1,5 +1,6 @@
 import { canConveyorStoreEntities, ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import { TransportBeltLeaf } from "@client/components/transport-belt-leaf";
+import { GhostPreviewComponent } from "@client/entities/ghost";
 import {
   getTransportBeltFlow,
   TRANSPORT_BELT_SIDE_GRID_OFFSETS,
@@ -60,18 +61,11 @@ export class TransportBeltConnectionUtils {
     belt.previousEntityId = previousEntityId;
     belt.nextEntityId = nextEntityId;
 
-    const shouldKeepPreviousLeafAnchor = this.shouldKeepPreviousLeafAnchor(
-      world,
-      previousEntityId,
-      nextEntityId,
-    );
-
     if (previousEntityId !== null) {
       const previousBelt = world.get(previousEntityId, ConveyorBeltComponent);
 
       if (previousBelt) {
         previousBelt.nextEntityId = beltEntityId;
-        this.syncLeafMarker(world, previousEntityId, previousBelt, shouldKeepPreviousLeafAnchor);
       }
     }
 
@@ -80,11 +74,10 @@ export class TransportBeltConnectionUtils {
 
       if (nextBelt) {
         nextBelt.previousEntityId = beltEntityId;
-        this.syncLeafMarker(world, nextEntityId, nextBelt);
       }
     }
 
-    this.syncLeafMarker(world, beltEntityId, belt, nextEntityId === null);
+    this.refreshLeafAnchors(world, [beltEntityId, previousEntityId, nextEntityId]);
   }
 
   /**
@@ -126,6 +119,8 @@ export class TransportBeltConnectionUtils {
     belt.nextEntityId = null;
 
     world.destroy(beltEntityId);
+
+    this.refreshLeafAnchors(world, [previousEntityId, nextEntityId]);
   }
 
   public static reconnectBelt(world: UserWorld, beltEntityId: TransportBeltEntityId): void {
@@ -180,7 +175,6 @@ export class TransportBeltConnectionUtils {
 
       if (previousBelt) {
         previousBelt.nextEntityId = beltEntityId;
-        this.syncLeafMarker(world, previousEntityId, previousBelt, false);
       }
     }
 
@@ -189,11 +183,16 @@ export class TransportBeltConnectionUtils {
 
       if (nextBelt) {
         nextBelt.previousEntityId = beltEntityId;
-        this.syncLeafMarker(world, nextEntityId, nextBelt);
       }
     }
 
-    this.syncLeafMarker(world, beltEntityId, belt);
+    this.refreshLeafAnchors(world, [
+      beltEntityId,
+      oldPreviousEntityId,
+      oldNextEntityId,
+      previousEntityId,
+      nextEntityId,
+    ]);
   }
 
   private static findAdjacentBeltEntityId(
@@ -220,6 +219,10 @@ export class TransportBeltConnectionUtils {
       Transform2D,
       (candidateEntityId, candidateBelt, candidateTransform) => {
         if (match !== null || candidateEntityId === beltEntityId) {
+          return;
+        }
+
+        if (world.has(candidateEntityId, GhostPreviewComponent)) {
           return;
         }
 
@@ -301,49 +304,124 @@ export class TransportBeltConnectionUtils {
     return canConveyorStoreEntities(variant) && getTransportBeltFlow(variant) !== undefined;
   }
 
-  private static shouldKeepPreviousLeafAnchor(
+  private static refreshLeafAnchors(
     world: UserWorld,
-    previousEntityId: EntityId | null,
-    nextEntityId: EntityId | null,
-  ): boolean {
-    if (previousEntityId === null || nextEntityId === null) {
-      return false;
-    }
+    seedEntityIds: readonly (EntityId | null)[],
+  ): void {
+    const visitedEntityIds = new Set<EntityId>();
 
-    const previousBelt = world.get(previousEntityId, ConveyorBeltComponent);
-
-    if (!previousBelt || !previousBelt.isLeaf) {
-      return false;
-    }
-
-    return this.doesNextChainReachEntity(world, nextEntityId, previousEntityId);
-  }
-
-  private static doesNextChainReachEntity(
-    world: UserWorld,
-    startEntityId: EntityId,
-    targetEntityId: EntityId,
-  ): boolean {
-    let currentEntityId: EntityId | null = startEntityId;
-
-    while (currentEntityId !== null) {
-      if (currentEntityId === targetEntityId) {
-        return true;
+    for (const seedEntityId of seedEntityIds) {
+      if (seedEntityId === null || visitedEntityIds.has(seedEntityId)) {
+        continue;
       }
 
-      const currentBelt: ConveyorBeltComponent | undefined = world.get(
-        currentEntityId,
-        ConveyorBeltComponent,
+      const componentEntityIds = this.collectConnectedComponentEntityIds(
+        world,
+        seedEntityId,
+        visitedEntityIds,
       );
 
-      if (!currentBelt) {
-        return false;
+      if (componentEntityIds.length === 0) {
+        continue;
       }
 
-      currentEntityId = currentBelt.nextEntityId;
+      this.assignLeafAnchorForComponent(world, componentEntityIds);
+    }
+  }
+
+  private static collectConnectedComponentEntityIds(
+    world: UserWorld,
+    startEntityId: EntityId,
+    visitedEntityIds: Set<EntityId>,
+  ): EntityId[] {
+    const pendingEntityIds = [startEntityId];
+    const componentEntityIds: EntityId[] = [];
+
+    while (pendingEntityIds.length > 0) {
+      const currentEntityId = pendingEntityIds.pop();
+
+      if (currentEntityId === undefined || visitedEntityIds.has(currentEntityId)) {
+        continue;
+      }
+
+      const currentBelt = world.get(currentEntityId, ConveyorBeltComponent);
+
+      if (!currentBelt) {
+        continue;
+      }
+
+      visitedEntityIds.add(currentEntityId);
+      componentEntityIds.push(currentEntityId);
+
+      if (currentBelt.previousEntityId !== null) {
+        pendingEntityIds.push(currentBelt.previousEntityId);
+      }
+
+      if (currentBelt.nextEntityId !== null) {
+        pendingEntityIds.push(currentBelt.nextEntityId);
+      }
     }
 
-    return false;
+    return componentEntityIds;
+  }
+
+  private static assignLeafAnchorForComponent(
+    world: UserWorld,
+    componentEntityIds: readonly EntityId[],
+  ): void {
+    const openTailEntityId = this.resolveOpenTailEntityId(world, componentEntityIds);
+    const preservedLoopAnchorEntityId = openTailEntityId === null
+      ? this.resolveExistingLoopAnchorEntityId(world, componentEntityIds)
+      : null;
+    const anchorEntityId = openTailEntityId
+      ?? preservedLoopAnchorEntityId
+      ?? componentEntityIds[0]
+      ?? null;
+
+    for (const entityId of componentEntityIds) {
+      const belt = world.get(entityId, ConveyorBeltComponent);
+
+      if (!belt) {
+        continue;
+      }
+
+      this.syncLeafMarker(world, entityId, belt, entityId === anchorEntityId);
+    }
+  }
+
+  private static resolveOpenTailEntityId(
+    world: UserWorld,
+    componentEntityIds: readonly EntityId[],
+  ): EntityId | null {
+    for (const entityId of componentEntityIds) {
+      const belt = world.get(entityId, ConveyorBeltComponent);
+
+      if (!belt) {
+        continue;
+      }
+
+      if (belt.nextEntityId === null) {
+        return entityId;
+      }
+    }
+
+    return null;
+  }
+
+  private static resolveExistingLoopAnchorEntityId(world: UserWorld, componentEntityIds: readonly EntityId[]): EntityId | null {
+    for (const entityId of componentEntityIds) {
+      const belt = world.get(entityId, ConveyorBeltComponent);
+
+      if (!belt) {
+        continue;
+      }
+
+      if (belt.isLeaf) {
+        return entityId;
+      }
+    }
+
+    return null;
   }
 
   private static offsetGridCoordinates(

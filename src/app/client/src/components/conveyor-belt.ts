@@ -25,6 +25,10 @@ export class ConveyorBeltComponent {
   public readonly leftProgress: ConveyorSlotProgress = [0, 0, 0, 0];
   public readonly rightProgress: ConveyorSlotProgress = [0, 0, 0, 0];
 
+  // Tracks whether a tail-slot item is currently hard-stopped at the belt seam.
+  public leftTailBlocked = false;
+  public rightTailBlocked = false;
+
   // Doubly Linked List style pointers
   public previousEntityId: EntityId | null = null;
   public nextEntityId: EntityId | null = null;

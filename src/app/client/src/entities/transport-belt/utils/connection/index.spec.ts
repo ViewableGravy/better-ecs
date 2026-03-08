@@ -1,6 +1,11 @@
 import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import { TransportBeltLeaf } from "@client/components/transport-belt-leaf";
+import { GhostPreviewComponent } from "@client/entities/ghost";
 import { destroyTransportBelt, spawnTransportBelt } from "@client/entities/transport-belt";
+import { TransportBeltGhost } from "@client/entities/transport-belt/ghost";
+import { TransportBeltConnectionUtils } from "@client/entities/transport-belt/utils/connection";
+import { GridSingleton } from "@client/systems/world/build-mode/grid-singleton";
+import { TransportBeltAutoShapeManager } from "@client/systems/world/build-mode/transport-belt-auto-shape-manager";
 import { EntityId, UserWorld, World } from "@engine";
 import { Parent, Transform2D } from "@engine/components";
 import { describe, expect, it } from "vitest";
@@ -87,6 +92,24 @@ describe("spawnTransportBelt connectivity", () => {
     expect(countLeafBelts(world, [firstBeltId, secondBeltId, thirdBeltId, fourthBeltId])).toBe(1);
   });
 
+  it("preserves the designated loop leaf anchor when that anchor is reconnected", () => {
+    const world = new UserWorld(new World("scene"));
+    const firstBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "angled-bottom-right" });
+    const secondBeltId = spawnTransportBelt(world, { x: 20, y: 0, variant: "angled-left-bottom" });
+    const thirdBeltId = spawnTransportBelt(world, { x: 20, y: 20, variant: "angled-top-left" });
+    const fourthBeltId = spawnTransportBelt(world, { x: 0, y: 20, variant: "angled-right-up" });
+
+    TransportBeltConnectionUtils.reconnectBelt(world, thirdBeltId);
+
+    const thirdBelt = world.require(thirdBeltId, ConveyorBeltComponent);
+
+    expect(thirdBelt.previousEntityId).toBe(secondBeltId);
+    expect(thirdBelt.nextEntityId).toBe(fourthBeltId);
+    expect(thirdBelt.isLeaf).toBe(true);
+    expect(world.has(thirdBeltId, TransportBeltLeaf)).toBe(true);
+    expect(countLeafBelts(world, [firstBeltId, secondBeltId, thirdBeltId, fourthBeltId])).toBe(1);
+  });
+
   it("rewires an inserted middle belt into the existing line", () => {
     const world = new UserWorld(new World("scene"));
     const firstBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "horizontal-right" });
@@ -151,6 +174,52 @@ describe("spawnTransportBelt connectivity", () => {
     expect(straightBelt.nextEntityId).toBeNull();
     expect(wrongCurveBelt.previousEntityId).toBeNull();
   });
+
+  it("does not connect or reshape a side belt when the existing line stays straight", () => {
+    const world = new UserWorld(new World("scene"));
+    const topBeltId = spawnTransportBelt(world, { x: 20, y: -20, variant: "vertical-down" });
+    const middleBeltId = spawnTransportBelt(world, { x: 20, y: 0, variant: "vertical-down" });
+    const bottomBeltId = spawnTransportBelt(world, { x: 20, y: 20, variant: "vertical-down" });
+    const sideBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "horizontal-right" });
+
+    TransportBeltAutoShapeManager.refreshAffectedBelts(world, sideBeltId);
+
+    const topBelt = world.require(topBeltId, ConveyorBeltComponent);
+    const middleBelt = world.require(middleBeltId, ConveyorBeltComponent);
+    const bottomBelt = world.require(bottomBeltId, ConveyorBeltComponent);
+    const sideBelt = world.require(sideBeltId, ConveyorBeltComponent);
+
+    expect(topBelt.variant).toBe("vertical-down");
+    expect(middleBelt.variant).toBe("vertical-down");
+    expect(bottomBelt.variant).toBe("vertical-down");
+    expect(topBelt.nextEntityId).toBe(middleBeltId);
+    expect(middleBelt.previousEntityId).toBe(topBeltId);
+    expect(middleBelt.nextEntityId).toBe(bottomBeltId);
+    expect(bottomBelt.previousEntityId).toBe(middleBeltId);
+    expect(sideBelt.previousEntityId).toBeNull();
+    expect(sideBelt.nextEntityId).toBeNull();
+    expect(sideBelt.isLeaf).toBe(true);
+    expect(world.has(sideBeltId, TransportBeltLeaf)).toBe(true);
+    expect(countLeafBelts(world, [topBeltId, middleBeltId, bottomBeltId, sideBeltId])).toBe(2);
+  });
+
+  it("ignores a ghost belt when reconnecting a real belt line", () => {
+    const world = new UserWorld(new World("scene"));
+    const firstBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "horizontal-right" });
+    const secondBeltId = spawnTransportBelt(world, { x: 20, y: 0, variant: "horizontal-right" });
+
+    TransportBeltGhost.spawn(world, 20, -20, "horizontal-right");
+    TransportBeltConnectionUtils.reconnectBelt(world, secondBeltId);
+
+    const firstBelt = world.require(firstBeltId, ConveyorBeltComponent);
+    const secondBelt = world.require(secondBeltId, ConveyorBeltComponent);
+
+    expect(firstBelt.nextEntityId).toBe(secondBeltId);
+    expect(secondBelt.previousEntityId).toBe(firstBeltId);
+    expect(secondBelt.nextEntityId).toBeNull();
+    expect(secondBelt.isLeaf).toBe(true);
+    expect(world.has(secondBeltId, TransportBeltLeaf)).toBe(true);
+  });
 });
 
 describe("destroyTransportBelt", () => {
@@ -177,5 +246,48 @@ describe("destroyTransportBelt", () => {
     expect(world.has(tailBeltId, TransportBeltLeaf)).toBe(true);
     expect(world.all().includes(middleBeltId)).toBe(false);
     expect(world.all().includes(carriedItemId)).toBe(false);
+  });
+
+  it("clears the old loop anchor when breaking a closed loop", () => {
+    const world = new UserWorld(new World("scene"));
+    const firstBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "angled-bottom-right" });
+    const secondBeltId = spawnTransportBelt(world, { x: 20, y: 0, variant: "angled-left-bottom" });
+    const thirdBeltId = spawnTransportBelt(world, { x: 20, y: 20, variant: "angled-top-left" });
+    const fourthBeltId = spawnTransportBelt(world, { x: 0, y: 20, variant: "angled-right-up" });
+
+    destroyTransportBelt(world, firstBeltId);
+
+    const secondBelt = world.require(secondBeltId, ConveyorBeltComponent);
+    const thirdBelt = world.require(thirdBeltId, ConveyorBeltComponent);
+    const fourthBelt = world.require(fourthBeltId, ConveyorBeltComponent);
+
+    expect(secondBelt.previousEntityId).toBeNull();
+    expect(thirdBelt.isLeaf).toBe(false);
+    expect(world.has(thirdBeltId, TransportBeltLeaf)).toBe(false);
+    expect(fourthBelt.nextEntityId).toBeNull();
+    expect(fourthBelt.isLeaf).toBe(true);
+    expect(world.has(fourthBeltId, TransportBeltLeaf)).toBe(true);
+    expect(countLeafBelts(world, [secondBeltId, thirdBeltId, fourthBeltId])).toBe(1);
+  });
+
+  it("does not let a ghost preview steal the new leaf after breaking a loop", () => {
+    const world = new UserWorld(new World("scene"));
+    spawnTransportBelt(world, { x: 0, y: 0, variant: "angled-bottom-right" });
+    const secondBeltId = spawnTransportBelt(world, { x: 20, y: 0, variant: "angled-left-bottom" });
+    spawnTransportBelt(world, { x: 20, y: 20, variant: "angled-top-left" });
+    spawnTransportBelt(world, { x: 0, y: 20, variant: "angled-right-up" });
+
+    TransportBeltGhost.spawn(world, 20, 0, "vertical-down");
+
+    destroyTransportBelt(world, secondBeltId);
+    TransportBeltAutoShapeManager.refreshBeltsNearCoordinates(
+      world,
+      GridSingleton.worldToGridCoordinates(20, 0),
+    );
+
+    const leafBeltIds = [...world.query(TransportBeltLeaf, ConveyorBeltComponent)];
+
+    expect(leafBeltIds).toHaveLength(1);
+    expect(world.has(leafBeltIds[0], GhostPreviewComponent)).toBe(false);
   });
 });
