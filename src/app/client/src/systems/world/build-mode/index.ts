@@ -1,8 +1,11 @@
 import type { RenderVisibilityRole } from "@client/components/render-visibility";
 import { HOUSE_INTERIOR, OUTSIDE } from "@client/components/render-visibility";
 import { spawnBox } from "@client/entities/box";
+import { BoxGhost } from "@client/entities/box/ghost";
+import { GhostPreviewComponent } from "@client/entities/ghost";
 import { spawnTransportBelt } from "@client/entities/transport-belt";
-import { GhostPreview, Placeable } from "@client/systems/world/build-mode/components";
+import { TransportBeltGhost } from "@client/entities/transport-belt/ghost";
+import { Placeable } from "@client/systems/world/build-mode/components";
 import {
   buildModeStateDefault,
   buildModeStateSchema,
@@ -10,6 +13,7 @@ import {
   TRANSPORT_BELT_OFFSET_Y,
 } from "@client/systems/world/build-mode/const";
 import { BuildModeDomEvents, HUD } from "@client/systems/world/build-mode/dom";
+import { GhostPreviewManager } from "@client/systems/world/build-mode/ghost-preview-manager";
 import { GhostPreviewScopeUtils } from "@client/systems/world/build-mode/ghost-preview-scope";
 import { GridSingleton, type GridCoordinates } from "@client/systems/world/build-mode/grid-singleton";
 import * as Keybinds from '@client/systems/world/build-mode/input';
@@ -68,23 +72,25 @@ export const System = createSystem("main:build-mode")({
     GhostPreviewScopeUtils.pruneGhosts(rootWorld, focusedWorld, sceneWorlds);
 
     if (data.selectedItem === null || placementTarget.blocked) {
-      focusedWorld.destroy(GhostPreview);
+      focusedWorld.destroy(GhostPreviewComponent);
       data.ghostEntityId = null;
     } else {
       if (data.selectedItem === "transport-belt" && selectedTransportBeltVariant !== null) {
-        data.ghostEntityId = GhostPreview.syncTransportBelt(
+        data.ghostEntityId = GhostPreviewManager.sync(
           focusedWorld,
           data.ghostEntityId,
           snappedX,
           snappedY,
+          TransportBeltGhost,
           selectedTransportBeltVariant,
         );
       } else {
-        data.ghostEntityId = GhostPreview.sync(
+        data.ghostEntityId = GhostPreviewManager.sync(
           focusedWorld,
           data.ghostEntityId,
           snappedX,
           snappedY,
+          BoxGhost,
         );
       }
     }

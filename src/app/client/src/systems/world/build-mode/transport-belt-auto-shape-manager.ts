@@ -1,4 +1,5 @@
 import { canConveyorStoreEntities, ConveyorBeltComponent } from "@client/components/conveyor-belt";
+import { GhostPreviewComponent } from "@client/entities/ghost";
 import {
   TransportBeltConnectionUtils,
   updateTransportBeltVariant,
@@ -211,6 +212,10 @@ export class TransportBeltAutoShapeManager {
     coordinates: GridCoordinates,
   ): EntityId | null {
     for (const beltEntityId of world.query(ConveyorBeltComponent, Transform2D)) {
+      if (world.has(beltEntityId, GhostPreviewComponent)) {
+        continue;
+      }
+
       const transform = world.require(beltEntityId, Transform2D);
       const beltCoordinates = GridSingleton.worldToGridCoordinates(transform.curr.pos.x, transform.curr.pos.y);
 

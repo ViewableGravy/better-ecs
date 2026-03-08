@@ -1,8 +1,9 @@
 import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
+import { GhostPreviewComponent } from "@client/entities/ghost";
 import {
-    getTransportBeltFlow,
-    type TransportBeltSide,
-    type TransportBeltVariant,
+  getTransportBeltFlow,
+  type TransportBeltSide,
+  type TransportBeltVariant,
 } from "@client/entities/transport-belt/consts";
 import { GridSingleton, type GridCoordinates } from "@client/systems/world/build-mode/grid-singleton";
 import type { UserWorld } from "@engine";
@@ -129,6 +130,10 @@ export class TransportBeltPlacementRotationManager {
     const variantsByOffset = new Map<string, TransportBeltVariant>();
 
     for (const beltEntityId of world.query(ConveyorBeltComponent, Transform2D)) {
+      if (world.has(beltEntityId, GhostPreviewComponent)) {
+        continue;
+      }
+
       const belt = world.require(beltEntityId, ConveyorBeltComponent);
       const transform = world.require(beltEntityId, Transform2D);
       const beltCoordinates = GridSingleton.worldToGridCoordinates(transform.curr.pos.x, transform.curr.pos.y);

@@ -1,4 +1,4 @@
-import { GhostPreview } from "@client/systems/world/build-mode/components";
+import { GhostPreviewComponent } from "@client/entities/ghost";
 import type { UserWorld } from "@engine";
 
 /**********************************************************************************************************
@@ -13,12 +13,12 @@ export class GhostPreviewScopeUtils {
   ): void {
     for (const sceneWorld of sceneWorlds) {
       if (sceneWorld !== focusedWorld) {
-        sceneWorld.destroy(GhostPreview);
+        sceneWorld.destroy(GhostPreviewComponent);
       }
     }
 
     if (rootWorld !== focusedWorld) {
-      rootWorld.destroy(GhostPreview);
+      rootWorld.destroy(GhostPreviewComponent);
     }
   }
 }

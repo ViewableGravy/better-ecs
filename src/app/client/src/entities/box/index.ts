@@ -4,7 +4,7 @@ import { GridFootprint } from "@client/systems/world/build-mode/components/grid-
 import { GridPosition } from "@client/systems/world/build-mode/components/grid-position";
 import { Placeable } from "@client/systems/world/build-mode/components/placeable";
 import { GridSingleton } from "@client/systems/world/build-mode/grid-singleton";
-import { Vec2, type UserWorld } from "@engine";
+import { Vec2, type EntityId, type UserWorld } from "@engine";
 import { Color, Debug, Shape, Transform2D } from "@engine/components";
 import { RectangleCollider } from "@libs/physics";
 
@@ -22,7 +22,7 @@ type SpawnBoxOptions = {
   renderVisibilityRole: RenderVisibilityRole;
 };
 
-export function spawnBox(world: UserWorld, opts: SpawnBoxOptions): number {
+export function spawnBox(world: UserWorld, opts: SpawnBoxOptions): EntityId {
   const placed = world.create();
   world.add(placed, new Transform2D(opts.snappedX + HALF_BOX_SIZE, opts.snappedY + HALF_BOX_SIZE));
   world.add(

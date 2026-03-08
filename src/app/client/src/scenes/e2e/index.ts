@@ -1,7 +1,8 @@
+import { GhostPreviewComponent } from "@client/entities/ghost";
 import { ensurePlayer } from "@client/entities/player";
 import { setupContextPlayer } from "@client/scenes/world/contexts/shared";
 import { System as BuildModeSystem } from "@client/systems/world/build-mode";
-import { GhostPreview, Placeable } from "@client/systems/world/build-mode/components";
+import { Placeable } from "@client/systems/world/build-mode/components";
 import { DebugOverlaySystem } from "@client/systems/world/debug-overlay";
 import type { UserWorld } from "@engine";
 import { Transform2D } from "@engine/components";
@@ -62,7 +63,7 @@ export const Scene = createContextScene("E2EScene")({
         }
       },
       ghostPosition() {
-        const [ghostEntityId] = rootWorld.query(GhostPreview, Transform2D);
+        const [ghostEntityId] = rootWorld.query(GhostPreviewComponent, Transform2D);
 
         if (ghostEntityId === undefined) {
           return null;

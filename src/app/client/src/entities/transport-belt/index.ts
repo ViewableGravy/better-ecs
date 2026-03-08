@@ -6,7 +6,7 @@ import { TransportBeltConnectionUtils } from "@client/entities/transport-belt/ut
 import { CollisionProfiles } from "@client/scenes/world/physics/collision-profiles";
 import { TRANSPORT_BELT_COLLIDER_SIZE } from "@client/systems/world/build-mode/const";
 import { Vec2, type EntityId, type UserWorld } from "@engine";
-import { AnimatedSprite, Debug, Transform2D } from "@engine/components";
+import { AnimatedSprite, Color, Debug, Transform2D } from "@engine/components";
 import { RectangleCollider } from "@libs/physics";
 const TRANSPORT_BELT_FRAMES = [
   1, 2, 3, 4, 5, 6, 7, 8,
@@ -24,6 +24,7 @@ type SpawnTransportBeltOptions = {
   y: number;
   variant?: TransportBeltVariant;
   speed?: number;
+  connectToNeighbors?: boolean;
 };
 
 function createTransportBeltSprite(
@@ -36,6 +37,14 @@ function createTransportBeltSprite(
     assets: TRANSPORT_BELT_FRAMES.map((frame) => `transport-belt:${variant}_${frame}` as const),
     width: TRANSPORT_BELT_FRAME_SIZE * scale,
     height: TRANSPORT_BELT_FRAME_SIZE * scale,
+    tint: previousSprite
+      ? new Color(
+        previousSprite.tint.r,
+        previousSprite.tint.g,
+        previousSprite.tint.b,
+        previousSprite.tint.a,
+      )
+      : undefined,
     useGlobalOffset: true,
   });
 
@@ -67,7 +76,9 @@ export function spawnTransportBelt(world: UserWorld, options: SpawnTransportBelt
   world.add(belt, new RenderVisibility(OUTSIDE, 1));
   world.add(belt, new Debug("transport-belt"));
 
-  TransportBeltConnectionUtils.connectSpawnedBelt(world, belt);
+  if (options.connectToNeighbors ?? true) {
+    TransportBeltConnectionUtils.connectSpawnedBelt(world, belt);
+  }
 
   return belt;
 }
