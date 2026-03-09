@@ -2,12 +2,12 @@ import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import { ConveyorUtils } from "@client/entities/transport-belt/ConveyorUtils";
 import type { TransportBeltFlow, TransportBeltSide } from "@client/entities/transport-belt/consts";
 import {
-    getOppositeTransportBeltSide,
-    getTransportBeltFlowVector,
-    getTransportBeltSideVector,
-    getTransportBeltVariantDescriptor,
-    isStraightTransportBeltFlow,
-    TransportBeltGridQuery,
+  getOppositeTransportBeltSide,
+  getTransportBeltFlowVector,
+  getTransportBeltSideVector,
+  getTransportBeltVariantDescriptor,
+  isStraightTransportBeltFlow,
+  TransportBeltGridQuery,
 } from "@client/entities/transport-belt/core";
 import type { EntityId, UserWorld } from "@engine";
 import type { ConveyorSideLoadTransfer } from "./types";
@@ -84,19 +84,13 @@ export class ConveyorSideLoadUtils {
     return isStraightTransportBeltFlow(descriptor.flow);
   }
 
-  private static isSideApproach(
-    flow: TransportBeltFlow,
-    approachedSide: TransportBeltSide,
-  ): boolean {
+  private static isSideApproach(flow: TransportBeltFlow, approachedSide: TransportBeltSide): boolean {
     const [start, end] = flow;
 
     return approachedSide !== start && approachedSide !== end;
   }
 
-  private static resolveTargetLane(
-    flow: TransportBeltFlow,
-    approachedSide: TransportBeltSide,
-  ) {
+  private static resolveTargetLane(flow: TransportBeltFlow, approachedSide: TransportBeltSide) {
     const targetVector = getTransportBeltFlowVector(flow);
     const approachVector = getTransportBeltSideVector(approachedSide);
     const cross = targetVector[0] * approachVector[1] - targetVector[1] * approachVector[0];
