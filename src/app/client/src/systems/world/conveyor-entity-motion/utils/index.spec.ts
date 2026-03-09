@@ -7,25 +7,29 @@ import { GridSingleton } from "@client/systems/world/build-mode/grid-singleton";
 import { Placement } from "@client/systems/world/build-mode/placement";
 import { TransportBeltAutoShapeManager } from "@client/systems/world/build-mode/transport-belt-auto-shape-manager";
 import {
-  CONVEYOR_SLOT_COUNT_PER_LANE,
-  getCurveLaneSides,
-  getSlotAdvanceDurations,
-  INSIDE_CURVE_SLOT_ADVANCE_DURATION_MS,
-  INSIDE_CURVE_SPEED_MULTIPLIER,
-  SLOT_ADVANCE_DURATION_MS,
+    CONVEYOR_SLOT_COUNT_PER_LANE,
+    getCurveLaneSides,
+    getSlotAdvanceDurations,
+    INSIDE_CURVE_SLOT_ADVANCE_DURATION_MS,
+    INSIDE_CURVE_SPEED_MULTIPLIER,
+    SLOT_ADVANCE_DURATION_MS,
 } from "@client/systems/world/conveyor-entity-motion/constants";
 import { UserWorld, World, type EntityId } from "@engine";
 import { Parent, Transform2D } from "@engine/components";
 import { resolveWorldTransform2D } from "@engine/ecs/hierarchy";
 import { describe, expect, it } from "vitest";
 import {
-  ConveyorBeltChainIterator,
-  ConveyorEntityMotionUtils as RuntimeConveyorEntityMotionUtils,
+    ConveyorBeltChainIterator,
+    ConveyorSideLoadUtils,
+    ConveyorEntityMotionUtils as RuntimeConveyorEntityMotionUtils,
 } from ".";
+import type { ConveyorSideLoadTransfer } from "./types";
 
 const SHARED_WORLD_TRANSFORM = new Transform2D();
 const SHARED_BELT_CHAIN_ITERATOR = new ConveyorBeltChainIterator();
 const SHARED_CONVEYOR_ENTITY_MOTION_UTILS = new RuntimeConveyorEntityMotionUtils();
+const SHARED_DEFERRED_SIDE_LOADS: ConveyorSideLoadTransfer[] = [];
+const SHARED_CONVEYORS_TO_SYNC = new Set<EntityId>();
 
 const ConveyorEntityMotionUtils = {
   advanceBeltLineFromLeaf(world: UserWorld, leafEntityId: EntityId, updateDelta: number): void {
@@ -42,6 +46,47 @@ const ConveyorEntityMotionUtils = {
 
     for (const conveyorEntityId of SHARED_BELT_CHAIN_ITERATOR.iterate()) {
       SHARED_CONVEYOR_ENTITY_MOTION_UTILS.syncConveyorEntityTransforms(conveyorEntityId);
+    }
+  },
+  advanceWorld(world: UserWorld, updateDelta: number): void {
+    if (updateDelta <= 0) {
+      return;
+    }
+
+    SHARED_DEFERRED_SIDE_LOADS.length = 0;
+    SHARED_CONVEYORS_TO_SYNC.clear();
+
+    world.forEach2(TransportBeltLeaf, ConveyorBeltComponent, (conveyorEntityId, _, conveyor) => {
+      if (!ConveyorUtils.supportsItemAnimation(conveyor.variant)) {
+        return;
+      }
+
+      ConveyorEntityMotionUtils.advanceBeltLineFromLeaf(world, conveyorEntityId, updateDelta);
+
+      const sideLoadTransfer = ConveyorSideLoadUtils.resolveDeferredTransfer(world, conveyorEntityId);
+
+      if (sideLoadTransfer !== null) {
+        SHARED_DEFERRED_SIDE_LOADS.push(sideLoadTransfer);
+      }
+    });
+
+    for (const sideLoadTransfer of SHARED_DEFERRED_SIDE_LOADS) {
+      if (!RuntimeConveyorEntityMotionUtils.transferSideLoad(world, sideLoadTransfer)) {
+        continue;
+      }
+
+      SHARED_CONVEYORS_TO_SYNC.add(sideLoadTransfer.sourceEntityId);
+      SHARED_CONVEYORS_TO_SYNC.add(sideLoadTransfer.targetEntityId);
+    }
+
+    for (const conveyorEntityId of SHARED_CONVEYORS_TO_SYNC) {
+      const conveyor = world.get(conveyorEntityId, ConveyorBeltComponent);
+
+      if (!conveyor) {
+        continue;
+      }
+
+      RuntimeConveyorEntityMotionUtils.syncConveyorTransforms(world, conveyor);
     }
   },
   advanceConveyor: RuntimeConveyorEntityMotionUtils.advanceConveyor.bind(RuntimeConveyorEntityMotionUtils),
@@ -953,6 +998,97 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
 
       expect(loopLeafBeltIds.length, removedBelt).toBeGreaterThan(0);
     }
+  });
+});
+
+describe("ConveyorWorldMotionUtils.advanceWorld", () => {
+  it("side-loads both source lanes into the faced target lane after normal belt motion and syncs transforms", () => {
+    const world = new UserWorld(new World("scene"));
+    spawnTransportBelt(world, { x: 0, y: -20, variant: "vertical-down" });
+    const middleBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "vertical-down" });
+    spawnTransportBelt(world, { x: 0, y: 20, variant: "vertical-down" });
+    const sideBeltId = spawnTransportBelt(world, { x: -20, y: 0, variant: "horizontal-right" });
+    const leftSideItemId = world.create();
+    const rightSideItemId = world.create();
+
+    ConveyorUtils.addEntity(world, sideBeltId, leftSideItemId, "left", 3, 1);
+    ConveyorUtils.addEntity(world, sideBeltId, rightSideItemId, "right", 3, 1);
+
+    ConveyorEntityMotionUtils.advanceWorld(world, SLOT_ADVANCE_DURATION_MS / CONVEYOR_SLOT_COUNT_PER_LANE);
+
+    const middleBelt = world.require(middleBeltId, ConveyorBeltComponent);
+    const sideBelt = world.require(sideBeltId, ConveyorBeltComponent);
+
+    expect(middleBelt.right).toEqual([null, leftSideItemId, rightSideItemId, null]);
+    expect(middleBelt.rightProgress).toEqual([0, 0, 0, 0]);
+    expect(sideBelt.left).toEqual([null, null, null, null]);
+    expect(sideBelt.right).toEqual([null, null, null, null]);
+    expect(world.require(leftSideItemId, Parent).entityId).toBe(middleBeltId);
+    expect(world.require(rightSideItemId, Parent).entityId).toBe(middleBeltId);
+
+    expect(resolveWorldTransform2D(world, leftSideItemId, SHARED_WORLD_TRANSFORM)).toBe(true);
+    expect(SHARED_WORLD_TRANSFORM.curr.pos.x).toBe(-4);
+    expect(SHARED_WORLD_TRANSFORM.curr.pos.y).toBe(-5);
+    expect(resolveWorldTransform2D(world, rightSideItemId, SHARED_WORLD_TRANSFORM)).toBe(true);
+    expect(SHARED_WORLD_TRANSFORM.curr.pos.x).toBe(-4);
+    expect(SHARED_WORLD_TRANSFORM.curr.pos.y).toBe(0);
+  });
+
+  it("waits until the target belt has already advanced before inserting side-loaded items", () => {
+    const world = new UserWorld(new World("scene"));
+    const topBeltId = spawnTransportBelt(world, { x: 0, y: -20, variant: "vertical-down" });
+    const middleBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "vertical-down" });
+    spawnTransportBelt(world, { x: 0, y: 20, variant: "vertical-down" });
+    const sideBeltId = spawnTransportBelt(world, { x: -20, y: 0, variant: "horizontal-right" });
+    const existingTargetItemId = world.create();
+    const transferredItemId = world.create();
+    const blockedItemId = world.create();
+
+    ConveyorUtils.addEntity(world, middleBeltId, existingTargetItemId, "right", 1, 1);
+    ConveyorUtils.addEntity(world, sideBeltId, transferredItemId, "left", 3, 1);
+    ConveyorUtils.addEntity(world, sideBeltId, blockedItemId, "right", 3, 1);
+
+    ConveyorEntityMotionUtils.advanceWorld(world, SLOT_ADVANCE_DURATION_MS / CONVEYOR_SLOT_COUNT_PER_LANE);
+
+    const topBelt = world.require(topBeltId, ConveyorBeltComponent);
+    const middleBelt = world.require(middleBeltId, ConveyorBeltComponent);
+    const sideBelt = world.require(sideBeltId, ConveyorBeltComponent);
+
+    expect(topBelt.right[0]).toBeNull();
+    expect(middleBelt.right).toEqual([null, transferredItemId, existingTargetItemId, null]);
+    expect(sideBelt.left).toEqual([null, null, null, null]);
+    expect(sideBelt.right[3]).toBe(blockedItemId);
+    expect(world.require(transferredItemId, Parent).entityId).toBe(middleBeltId);
+    expect(world.require(blockedItemId, Parent).entityId).toBe(sideBeltId);
+
+    expect(resolveWorldTransform2D(world, transferredItemId, SHARED_WORLD_TRANSFORM)).toBe(true);
+    expect(SHARED_WORLD_TRANSFORM.curr.pos.x).toBe(-4);
+    expect(SHARED_WORLD_TRANSFORM.curr.pos.y).toBe(-5);
+    expect(resolveWorldTransform2D(world, blockedItemId, SHARED_WORLD_TRANSFORM)).toBe(true);
+    expect(SHARED_WORLD_TRANSFORM.curr.pos.x).toBe(-10);
+    expect(SHARED_WORLD_TRANSFORM.curr.pos.y).toBe(4);
+  });
+
+  it("places an east side-loader onto the target belt's left lane when the target flows downward", () => {
+    const world = new UserWorld(new World("scene"));
+    spawnTransportBelt(world, { x: 0, y: -20, variant: "vertical-down" });
+    const middleBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "vertical-down" });
+    spawnTransportBelt(world, { x: 0, y: 20, variant: "vertical-down" });
+    const sideBeltId = spawnTransportBelt(world, { x: 20, y: 0, variant: "horizontal-left" });
+    const sideItemId = world.create();
+
+    ConveyorUtils.addEntity(world, sideBeltId, sideItemId, "left", 3, 1);
+
+    ConveyorEntityMotionUtils.advanceWorld(world, SLOT_ADVANCE_DURATION_MS / CONVEYOR_SLOT_COUNT_PER_LANE);
+
+    const middleBelt = world.require(middleBeltId, ConveyorBeltComponent);
+
+    expect(middleBelt.left).toEqual([null, sideItemId, null, null]);
+    expect(middleBelt.right).toEqual([null, null, null, null]);
+    expect(world.require(sideItemId, Parent).entityId).toBe(middleBeltId);
+    expect(resolveWorldTransform2D(world, sideItemId, SHARED_WORLD_TRANSFORM)).toBe(true);
+    expect(SHARED_WORLD_TRANSFORM.curr.pos.x).toBe(4);
+    expect(SHARED_WORLD_TRANSFORM.curr.pos.y).toBe(-5);
   });
 });
 

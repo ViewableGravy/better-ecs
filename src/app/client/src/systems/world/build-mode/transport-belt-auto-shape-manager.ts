@@ -98,6 +98,11 @@ export class TransportBeltAutoShapeManager {
 
     const [startSide, endSide] = flow;
     const coordinates = this.resolveBeltCoordinates(world, beltEntityId);
+    const straightThroughVariant = this.resolveStraightThroughVariant(world, endSide, coordinates);
+
+    if (straightThroughVariant !== null) {
+      return straightThroughVariant;
+    }
 
     if (this.isIncomingFromSide(world, coordinates, startSide)) {
       return belt.variant as TransportBeltVariant;
@@ -110,6 +115,53 @@ export class TransportBeltAutoShapeManager {
     }
 
     return getTransportBeltVariantByFlow(uniqueIncomingSide, endSide) ?? STRAIGHT_VARIANT_BY_END_SIDE[endSide];
+  }
+
+  private static resolveStraightThroughVariant(
+    world: UserWorld,
+    endSide: TransportBeltSide,
+    coordinates: GridCoordinates,
+  ): TransportBeltVariant | null {
+    const defaultTailSide = OPPOSITE_SIDE[endSide];
+
+    if (this.isStraightIncomingFromSide(world, coordinates, defaultTailSide)
+      && this.isStraightOutgoingToSide(world, coordinates, endSide)) {
+      return STRAIGHT_VARIANT_BY_END_SIDE[endSide];
+    }
+
+    return null;
+  }
+
+  private static isStraightIncomingFromSide(
+    world: UserWorld,
+    coordinates: GridCoordinates,
+    side: TransportBeltSide,
+  ): boolean {
+    const neighborFlow = this.resolveNeighborFlow(world, coordinates, side);
+
+    if (!neighborFlow || !this.isStraightFlow(neighborFlow)) {
+      return false;
+    }
+
+    const [, neighborEndSide] = neighborFlow;
+
+    return neighborEndSide === OPPOSITE_SIDE[side];
+  }
+
+  private static isStraightOutgoingToSide(
+    world: UserWorld,
+    coordinates: GridCoordinates,
+    side: TransportBeltSide,
+  ): boolean {
+    const neighborFlow = this.resolveNeighborFlow(world, coordinates, side);
+
+    if (!neighborFlow || !this.isStraightFlow(neighborFlow)) {
+      return false;
+    }
+
+    const [neighborStartSide] = neighborFlow;
+
+    return neighborStartSide === OPPOSITE_SIDE[side];
   }
 
   private static resolveAffectedBeltEntityIds(
@@ -204,6 +256,52 @@ export class TransportBeltAutoShapeManager {
     const [, neighborEndSide] = neighborFlow;
 
     return neighborEndSide === OPPOSITE_SIDE[side];
+  }
+
+  private static isOutgoingToSide(
+    world: UserWorld,
+    coordinates: GridCoordinates,
+    side: TransportBeltSide,
+  ): boolean {
+    const neighborFlow = this.resolveNeighborFlow(world, coordinates, side);
+
+    if (!neighborFlow) {
+      return false;
+    }
+
+    const [neighborStartSide] = neighborFlow;
+
+    return neighborStartSide === OPPOSITE_SIDE[side];
+  }
+
+  private static resolveNeighborFlow(
+    world: UserWorld,
+    coordinates: GridCoordinates,
+    side: TransportBeltSide,
+  ) {
+    const neighborCoordinates = this.offsetCoordinates(coordinates, TRANSPORT_BELT_SIDE_GRID_OFFSETS[side]);
+    const neighborEntityId = this.findBeltEntityAtCoordinates(world, neighborCoordinates);
+
+    if (neighborEntityId === null) {
+      return null;
+    }
+
+    const neighborBelt = world.get(neighborEntityId, ConveyorBeltComponent);
+
+    return getTransportBeltFlow(neighborBelt.variant) ?? null;
+  }
+
+  private static isStraightFlow(flow: readonly [TransportBeltSide, TransportBeltSide]): boolean {
+    const [startSide, endSide] = flow;
+    const isHorizontal = (startSide === "left" || startSide === "right")
+      && (endSide === "left" || endSide === "right");
+
+    if (isHorizontal) {
+      return true;
+    }
+
+    return (startSide === "top" || startSide === "bottom")
+      && (endSide === "top" || endSide === "bottom");
   }
 
   private static findBeltEntityAtCoordinates(

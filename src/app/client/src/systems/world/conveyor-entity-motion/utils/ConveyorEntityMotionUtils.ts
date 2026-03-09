@@ -10,6 +10,13 @@ import {
 } from "@client/systems/world/conveyor-entity-motion/constants";
 import type { EntityId, UserWorld } from "@engine";
 import { Parent, Transform2D } from "@engine/components";
+import type { ConveyorSideLoadTransfer } from "./types";
+
+/**********************************************************************************************************
+ *   TYPE DEFINITIONS
+ **********************************************************************************************************/
+
+type SideLoadDestinationSlotIndex = 1 | 2;
 
 /**********************************************************************************************************
  *   COMPONENT START
@@ -102,6 +109,36 @@ export class ConveyorEntityMotionUtils {
     for (const side of CONVEYOR_SIDES) {
       this.syncLaneTransforms(world, conveyor, side);
     }
+  }
+
+  public static transferSideLoad(world: UserWorld, transfer: ConveyorSideLoadTransfer): boolean {
+    const sourceConveyor = world.get(transfer.sourceEntityId, ConveyorBeltComponent);
+    const targetConveyor = world.get(transfer.targetEntityId, ConveyorBeltComponent);
+
+    if (!sourceConveyor || !targetConveyor) {
+      return false;
+    }
+
+    const didTransferLeftLane = this.transferSideLoadLane(
+      world,
+      sourceConveyor,
+      "left",
+      transfer.targetEntityId,
+      targetConveyor,
+      transfer.targetLane,
+      1,
+    );
+    const didTransferRightLane = this.transferSideLoadLane(
+      world,
+      sourceConveyor,
+      "right",
+      transfer.targetEntityId,
+      targetConveyor,
+      transfer.targetLane,
+      2,
+    );
+
+    return didTransferLeftLane || didTransferRightLane;
   }
 
   private static advanceLane(
@@ -254,6 +291,42 @@ export class ConveyorEntityMotionUtils {
     progress[3] = 0;
     this.setTailBlocked(conveyor, side, false);
     world.add(entityId, new Parent(nextConveyorEntityId));
+  }
+
+  private static transferSideLoadLane(
+    world: UserWorld,
+    sourceConveyor: ConveyorBeltComponent,
+    sourceLane: ConveyorSide,
+    targetConveyorEntityId: EntityId,
+    targetConveyor: ConveyorBeltComponent,
+    targetLane: ConveyorSide,
+    destinationIndex: SideLoadDestinationSlotIndex,
+  ): boolean {
+    const sourceSlots = this.getSlots(sourceConveyor, sourceLane);
+    const sourceProgress = this.getProgress(sourceConveyor, sourceLane);
+    const sourceEntityId = sourceSlots[3];
+
+    if (sourceEntityId === null || sourceProgress[3] < 1) {
+      return false;
+    }
+
+    const targetSlots = this.getSlots(targetConveyor, targetLane);
+    const targetProgress = this.getProgress(targetConveyor, targetLane);
+
+    if (targetSlots[destinationIndex] !== null) {
+      sourceProgress[3] = 1;
+      this.setTailBlocked(sourceConveyor, sourceLane, true);
+      return false;
+    }
+
+    targetSlots[destinationIndex] = sourceEntityId;
+    targetProgress[destinationIndex] = 0;
+    sourceSlots[3] = null;
+    sourceProgress[3] = 0;
+    this.setTailBlocked(sourceConveyor, sourceLane, false);
+    world.add(sourceEntityId, new Parent(targetConveyorEntityId));
+
+    return true;
   }
 
   private static isTailBlocked(conveyor: ConveyorBeltComponent, side: ConveyorSide): boolean {
