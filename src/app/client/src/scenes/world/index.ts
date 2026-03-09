@@ -11,6 +11,7 @@ import { System as Movement } from "@client/systems/core/movement";
 import { System as PhysicsWorldSync } from "@client/systems/core/physics-world-sync";
 import { System as TempAutoSavePlayerPosition } from "@client/systems/core/temp-auto-save";
 import { System as BuildModeSystem } from "@client/systems/world/build-mode";
+import { System as ConveyorEntityMotion } from "@client/systems/world/conveyor-entity-motion";
 import { System as ConveyorMovement } from "@client/systems/world/conveyor-movement";
 import { DebugOverlaySystem } from "@client/systems/world/debug-overlay";
 import { HouseContextSystem } from "@client/systems/world/house-transition";
@@ -34,6 +35,7 @@ export const Scene = createContextScene("MainScene")({
     TempAutoSavePlayerPosition,
     Movement,
     PhysicsWorldSync,
+    ConveyorEntityMotion,
     ConveyorMovement,
     Collision,
     CameraFollow,

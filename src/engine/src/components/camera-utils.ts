@@ -1,10 +1,10 @@
+import { Camera } from "@engine/components/camera";
+import { Transform2D } from "@engine/components/transform";
 import { Engine, fromContext } from "@engine/context";
 import type { EngineInputHost, EntityId, UserWorld } from "@engine/index";
 import type { CameraView } from "@engine/internal/utils";
 import { resolveActiveCameraViewFromEngine as resolveActiveCameraViewFromEngineInternal } from "@engine/internal/utils";
 import type { Renderer } from "@engine/render";
-import { Camera } from "@engine/components/camera";
-import { Transform2D } from "@engine/components/transform";
 
 export type { CameraView } from "@engine/internal/utils";
 
@@ -38,7 +38,7 @@ export function resolveCameraSelection(
     const camera = world.get(id, Camera);
     const transform = world.get(id, Transform2D);
 
-    if (!camera || !camera.enabled || !transform) {
+    if (!camera.enabled) {
       continue;
     }
 

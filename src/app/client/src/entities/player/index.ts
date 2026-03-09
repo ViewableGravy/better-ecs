@@ -24,7 +24,7 @@ export function ensurePlayer(world: UserWorld) {
   return player;
 }
 
-export function spawnPlayer(world: UserWorld): EntityId {
+export function spawnPlayer(world: UserWorld): EntityId<PlayerComponent> {
   const player = world.create();
 
   // Create a sprite component referencing the asset by key
@@ -75,5 +75,6 @@ export function spawnPlayer(world: UserWorld): EntityId {
     ),
   );
 
-  return player;
+  // Player tagging is compile-time only; runtime entity ids remain plain numbers.
+  return player as EntityId<PlayerComponent>;
 }

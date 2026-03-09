@@ -1,3 +1,6 @@
+import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
+import { destroyTransportBelt } from "@client/entities/transport-belt";
+import { TransportBeltAutoShapeManager } from "@client/entities/transport-belt/placement/TransportBeltAutoShapeManager";
 import { PhysicsWorldManager } from "@client/scenes/world/physics/physics-world-manager";
 import type { BuildItemType } from "@client/systems/world/build-mode/const";
 import {
@@ -60,6 +63,21 @@ export class Placement {
     });
 
     if (hit) {
+      if (world.has(hit.entityId, ConveyorBeltComponent)) {
+        const transform = world.get(hit.entityId, Transform2D);
+        const beltCoordinates = transform
+          ? GridSingleton.worldToGridCoordinates(transform.curr.pos.x, transform.curr.pos.y)
+          : null;
+
+        destroyTransportBelt(world, hit.entityId);
+
+        if (beltCoordinates) {
+          TransportBeltAutoShapeManager.refreshBeltsNearCoordinates(world, beltCoordinates);
+        }
+
+        return;
+      }
+
       world.destroy(hit.entityId);
     }
   }
@@ -73,7 +91,7 @@ export class Placement {
       return Placement.canSpawnBox(world, gridCoordinates);
     }
 
-    if (selectedItem === "transport-belt-horizontal-right") {
+    if (selectedItem === "transport-belt") {
       return Placement.canSpawnTransportBelt(world, gridCoordinates);
     }
 
@@ -108,7 +126,7 @@ export class Placement {
         continue;
       }
 
-      world.destroy(overlap.entityId);
+      destroyTransportBelt(world, overlap.entityId);
     }
   }
 

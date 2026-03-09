@@ -53,6 +53,7 @@ This is the single source of truth for agent behavior and coding conventions in 
 ## Core coding standards
 
 - Always prefer guard clauses over nested/else statements.
+- Prefer lines around 115 characters when readability stays good; do not wrap shorter lines just to satisfy a narrower limit.
 - Always ensure strict type safety.
   - Never use `any`, `as` casts, or non-null assertions (`!`) unless there is no viable alternative.
   - If unavoidable, include a short comment explaining why in code.
@@ -67,6 +68,12 @@ This is the single source of truth for agent behavior and coding conventions in 
 - Prefer concrete named types over indirect `typeof`/`ReturnType<typeof ...>` extraction when a stable, importable type already exists.
   - Example: prefer `Engine` over `ReturnType<typeof makeEngine>[0]`.
   - Use `typeof`/`ReturnType` only when a concrete type is not reasonably importable (for example complex inferred unions/intersections).
+
+## Comment preservation
+
+- Do not remove existing code comments unless they are explicitly wrong or stale.
+- If a comment seems unnecessary but is not clearly wrong, ask before removing it.
+- Add comments for public-facing functions and where clarification would help someone with less context understand the code.
 
 ## Architecture principles
 
@@ -89,6 +96,13 @@ This is the single source of truth for agent behavior and coding conventions in 
 - Use `bun` for installs, scripts, and tests (unless package-local vitest workflow is required).
 - Use `nx` for task orchestration and package bootstrapping.
 - Do not write files outside this repository.
+- Always prefer to ask the user any clarifying questions before blatantly doing what is asked. 
+  - Use the AskQuestions MCP tool for asking questions
+  - If edge cases are found, bring these up and ask clarifying questions
+  - Do not "assume" implicit requirements if they are not at least 80% guaranteed
+  - If one requirement conflicts with another, or an answer conflicts with an existing requirement, seek confirmation
+- Always verify correctness of task with user
+  - Once the task feels like it is done, and you would claim finished, ask the user using the AskQuestions tool to verify that everything looks as intended or if further iteration towards the goal is required.
 
 ## No legacy code policy
 
@@ -113,6 +127,10 @@ This section is intentionally explicit to reduce drift.
   - Example: `world.get(entityId, Component)` returns `T | undefined`.
 - Use `get*` when reading an already-owned value with no meaningful derivation.
   - Example: retrieving active scene context from `engine.scene` should use `getSceneContext`, not `resolveSceneContext`.
+- `find*` means search for an existing value by traversing/querying/iterating until the match is identified.
+  - Use `find*` when the primary behavior is a search algorithm over existing state.
+  - Good fit: walking a belt chain to find its leaf, scanning neighbors to find a matching entity, searching collections/maps/graphs for a specific existing node.
+  - `find*` should generally describe “locate something that already exists,” not “derive a transformed result.”
 - `require*` means must exist (non-nullable) and throws on absence.
   - Example: `world.require(entityId, Component)`.
 - Use `invariant*` when operation semantics need explicit assertion context and `require` is ambiguous.
@@ -124,11 +142,36 @@ This section is intentionally explicit to reduce drift.
 
 ### `resolve` vs out-parameter naming
 
-- Use `resolve*` for computing/deriving a value or decision from current state.
+- Use `resolve*` for deriving a value or decision from current state.
   - Good fit today: `resolvePlacementWorld`, `resolveCameraView`, collision `resolve*` functions.
+- Do not use `resolve*` when the primary behavior is searching for an already-existing object/node/value.
+  - If the function mostly iterates/traverses/queries to locate something, prefer `find*`.
+  - Example: a function that walks a belt chain to locate its leaf should prefer `findLeafBelt`, not `resolveLeafBelt`.
+- Use `compute*` for derivation that is primarily computation based
+  - Good fit today: `computeBeltRailPosition`
 - Do not use `resolve*` for simple owner reads/getters.
   - If no derivation occurs, use `get*` (or `require*` for non-nullable access).
+- Do not use `compute*` for search/traversal either.
+  - `compute*` should be reserved for calculated/derived outputs, not for locating existing state.
 - Avoid plain `resolve*` for APIs whose primary contract is “write into provided object”.
+
+### Practical verb split
+
+- `get*` → direct retrieval through a known path
+  - Example: `getSceneContext()`
+- `find*` → search existing state to locate something
+  - Example: `findLeafBeltEntityId()`
+- `resolve*` → derive/select/decide a value from current state
+  - Example: `resolvePlacementWorld()`
+- `compute*` → calculate a value from inputs/state
+  - Example: `computeBeltRailPosition()`
+
+Rule of thumb:
+
+- If you would describe the implementation as “look through / walk / scan / search until found,” use `find*`.
+- If you would describe it as “figure out / decide / map current state into the right output,” use `resolve*`.
+- If you would describe it as “calculate,” use `compute*`.
+- If you would describe it as “read,” use `get*`.
 
 ### Utility layering (context vs engine vs bound)
 
