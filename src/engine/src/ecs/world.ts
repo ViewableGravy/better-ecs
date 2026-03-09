@@ -108,7 +108,10 @@ export class UserWorld implements IUserWorld {
   }
 
   /**
-   * Gets a component from an entity, throwing an error if it doesn't exist.
+   * Gets a component from an entity, throwing an error if it doesn't exist. This should only be used if we have
+   * not already asserted that the component exists at a type level using something like world.query or world.has, otherwise
+   * we can use get as this will have the necessary type information to perform a type level assertion without the unnecessary
+   * runtime overhead.
    * 
    * @throws {Error} If the component does not exist on the entity
    */
@@ -133,7 +136,7 @@ export class UserWorld implements IUserWorld {
     return this.world.getComponentTypes(entityId);
   }
 
-  has(entityId: EntityId, componentType: Class<any>): boolean {
+  has<T>(entityId: EntityId, componentType: Class<T>): entityId is EntityId<T> {
     return this.world.hasComponent(entityId, componentType);
   }
 

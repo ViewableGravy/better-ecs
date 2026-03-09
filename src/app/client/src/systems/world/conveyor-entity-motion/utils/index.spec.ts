@@ -7,20 +7,46 @@ import { GridSingleton } from "@client/systems/world/build-mode/grid-singleton";
 import { Placement } from "@client/systems/world/build-mode/placement";
 import { TransportBeltAutoShapeManager } from "@client/systems/world/build-mode/transport-belt-auto-shape-manager";
 import {
-    CONVEYOR_SLOT_COUNT_PER_LANE,
-    getCurveLaneSides,
-    getSlotAdvanceDurations,
-    INSIDE_CURVE_SLOT_ADVANCE_DURATION_MS,
-    INSIDE_CURVE_SPEED_MULTIPLIER,
-    SLOT_ADVANCE_DURATION_MS,
+  CONVEYOR_SLOT_COUNT_PER_LANE,
+  getCurveLaneSides,
+  getSlotAdvanceDurations,
+  INSIDE_CURVE_SLOT_ADVANCE_DURATION_MS,
+  INSIDE_CURVE_SPEED_MULTIPLIER,
+  SLOT_ADVANCE_DURATION_MS,
 } from "@client/systems/world/conveyor-entity-motion/constants";
-import { UserWorld, World } from "@engine";
+import { UserWorld, World, type EntityId } from "@engine";
 import { Parent, Transform2D } from "@engine/components";
 import { resolveWorldTransform2D } from "@engine/ecs/hierarchy";
 import { describe, expect, it } from "vitest";
-import { ConveyorEntityMotionUtils } from "./ConveyorEntityMotionUtils";
+import {
+  ConveyorBeltChainIterator,
+  ConveyorEntityMotionUtils as RuntimeConveyorEntityMotionUtils,
+} from ".";
 
 const SHARED_WORLD_TRANSFORM = new Transform2D();
+const SHARED_BELT_CHAIN_ITERATOR = new ConveyorBeltChainIterator();
+const SHARED_CONVEYOR_ENTITY_MOTION_UTILS = new RuntimeConveyorEntityMotionUtils();
+
+const ConveyorEntityMotionUtils = {
+  advanceBeltLineFromLeaf(world: UserWorld, leafEntityId: EntityId, updateDelta: number): void {
+    SHARED_BELT_CHAIN_ITERATOR.setLeaf(world, leafEntityId);
+    SHARED_CONVEYOR_ENTITY_MOTION_UTILS.set(
+      world,
+      updateDelta,
+      SHARED_BELT_CHAIN_ITERATOR.getInitialNextEntityId(),
+    );
+
+    for (const conveyorEntityId of SHARED_BELT_CHAIN_ITERATOR.iterate()) {
+      SHARED_CONVEYOR_ENTITY_MOTION_UTILS.advanceConveyorEntity(conveyorEntityId);
+    }
+
+    for (const conveyorEntityId of SHARED_BELT_CHAIN_ITERATOR.iterate()) {
+      SHARED_CONVEYOR_ENTITY_MOTION_UTILS.syncConveyorEntityTransforms(conveyorEntityId);
+    }
+  },
+  advanceConveyor: RuntimeConveyorEntityMotionUtils.advanceConveyor.bind(RuntimeConveyorEntityMotionUtils),
+  syncConveyorTransforms: RuntimeConveyorEntityMotionUtils.syncConveyorTransforms.bind(RuntimeConveyorEntityMotionUtils),
+};
 
 describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
   /**

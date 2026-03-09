@@ -3,7 +3,10 @@ import { TransportBeltLeaf } from "@client/components/transport-belt-leaf";
 import { ConveyorUtils } from "@client/entities/transport-belt";
 import { createSystem } from "@engine";
 import { Delta, fromContext, World } from "@engine/context";
-import { ConveyorEntityMotionUtils } from "./utils/ConveyorEntityMotionUtils";
+import { ConveyorBeltChainIterator, ConveyorEntityMotionUtils } from "./utils";
+
+const beltIterator = new ConveyorBeltChainIterator();
+const motionUtils = new ConveyorEntityMotionUtils();
 
 export const System = createSystem("main:conveyor-entity-motion")({
   system() {
@@ -19,11 +22,16 @@ export const System = createSystem("main:conveyor-entity-motion")({
         return;
       }
 
-      ConveyorEntityMotionUtils.advanceBeltLineFromLeaf(
-        world, 
-        conveyorEntityId, 
-        updateDelta
-      );
+      beltIterator.setLeaf(world, conveyorEntityId);
+      motionUtils.set(world, updateDelta, beltIterator.getInitialNextEntityId());
+
+      for (const beltEntityId of beltIterator.iterate()) {
+        motionUtils.advanceConveyorEntity(beltEntityId);
+      }
+
+      for (const beltEntityId of beltIterator.iterate()) {
+        motionUtils.syncConveyorEntityTransforms(beltEntityId);
+      }
     });
   },
 });

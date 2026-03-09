@@ -1,6 +1,13 @@
 import { ConveyorBeltComponent, type ConveyorSide, type ConveyorSlotIndex } from "@client/components/conveyor-belt";
 import { BeltItemRailsUtility } from "@client/entities/transport-belt";
-import { CONVEYOR_SIDES, CONVEYOR_SLOT_COUNT_PER_LANE, CONVEYOR_SLOT_INDICES_ASC, CONVEYOR_SLOT_INDICES_DESC, getSlotAdvanceDurations, SHARED_SLOT_POSITION } from "@client/systems/world/conveyor-entity-motion/constants";
+import {
+  CONVEYOR_SIDES,
+  CONVEYOR_SLOT_COUNT_PER_LANE,
+  CONVEYOR_SLOT_INDICES_ASC,
+  CONVEYOR_SLOT_INDICES_DESC,
+  getSlotAdvanceDurations,
+  SHARED_SLOT_POSITION,
+} from "@client/systems/world/conveyor-entity-motion/constants";
 import type { EntityId, UserWorld } from "@engine";
 import { Parent, Transform2D } from "@engine/components";
 
@@ -9,50 +16,58 @@ import { Parent, Transform2D } from "@engine/components";
  **********************************************************************************************************/
 
 export class ConveyorEntityMotionUtils {
-  public static advanceBeltLineFromLeaf(world: UserWorld, leafEntityId: EntityId<ConveyorBeltComponent>, updateDelta: number): void {
-    let nextEntityId = this.getTraversalNextEntityId(world, leafEntityId);
-    let currentEntityId: EntityId | null = leafEntityId;
-    let shouldStopOnLeafEntityId = false;
+  private world: UserWorld | null = null;
+  private updateDelta = 0;
+  private nextConveyorEntityId: EntityId | null = null;
 
-    while (currentEntityId !== null) {
-      const currentConveyor: ConveyorBeltComponent | undefined = world.get(currentEntityId, ConveyorBeltComponent);
+  public set(
+    world: UserWorld,
+    updateDelta: number,
+    initialNextConveyorEntityId: EntityId | null,
+  ): void {
+    this.world = world;
+    this.updateDelta = updateDelta;
+    this.nextConveyorEntityId = initialNextConveyorEntityId;
+  }
 
-      if (!currentConveyor) {
-        break;
-      }
-
-      const nextConveyor = nextEntityId === null
-        ? null
-        : world.get(nextEntityId, ConveyorBeltComponent) ?? null;
-
-      this.advanceConveyor(world, currentConveyor, nextEntityId, nextConveyor, updateDelta);
-      nextEntityId = currentEntityId;
-
-      if (currentConveyor.previousEntityId === leafEntityId) {
-        shouldStopOnLeafEntityId = true;
-      }
-
-      currentEntityId = shouldStopOnLeafEntityId ? null : currentConveyor.previousEntityId;
+  public advanceConveyorEntity(conveyorEntityId: EntityId): void {
+    if (this.world === null) {
+      return;
     }
 
-    currentEntityId = leafEntityId;
-    shouldStopOnLeafEntityId = false;
+    const conveyor = this.world.get(conveyorEntityId, ConveyorBeltComponent);
 
-    while (currentEntityId !== null) {
-      const currentConveyor: ConveyorBeltComponent | undefined = world.get(currentEntityId, ConveyorBeltComponent);
-
-      if (!currentConveyor) {
-        break;
-      }
-
-      this.syncConveyorTransforms(world, currentConveyor);
-
-      if (currentConveyor.previousEntityId === leafEntityId) {
-        shouldStopOnLeafEntityId = true;
-      }
-
-      currentEntityId = shouldStopOnLeafEntityId ? null : currentConveyor.previousEntityId;
+    if (!conveyor) {
+      return;
     }
+
+    const nextConveyor = this.nextConveyorEntityId === null
+      ? null
+      : this.world.get(this.nextConveyorEntityId, ConveyorBeltComponent) ?? null;
+
+    ConveyorEntityMotionUtils.advanceConveyor(
+      this.world,
+      conveyor,
+      this.nextConveyorEntityId,
+      nextConveyor,
+      this.updateDelta,
+    );
+
+    this.nextConveyorEntityId = conveyorEntityId;
+  }
+
+  public syncConveyorEntityTransforms(conveyorEntityId: EntityId): void {
+    if (this.world === null) {
+      return;
+    }
+
+    const conveyor = this.world.get(conveyorEntityId, ConveyorBeltComponent);
+
+    if (!conveyor) {
+      return;
+    }
+
+    ConveyorEntityMotionUtils.syncConveyorTransforms(this.world, conveyor);
   }
 
   public static advanceConveyor(
@@ -60,7 +75,7 @@ export class ConveyorEntityMotionUtils {
     conveyor: ConveyorBeltComponent,
     nextConveyorEntityId: EntityId | null,
     nextConveyor: ConveyorBeltComponent | null,
-    updateDelta: number
+    updateDelta: number,
   ): void {
     const [leftAdvanceDuration, rightAdvanceDuration] = getSlotAdvanceDurations(conveyor.variant);
 
@@ -70,7 +85,7 @@ export class ConveyorEntityMotionUtils {
       nextConveyorEntityId,
       nextConveyor,
       "left",
-      updateDelta * CONVEYOR_SLOT_COUNT_PER_LANE / leftAdvanceDuration
+      updateDelta * CONVEYOR_SLOT_COUNT_PER_LANE / leftAdvanceDuration,
     );
 
     this.advanceLane(
@@ -79,7 +94,7 @@ export class ConveyorEntityMotionUtils {
       nextConveyorEntityId,
       nextConveyor,
       "right",
-      updateDelta * CONVEYOR_SLOT_COUNT_PER_LANE / rightAdvanceDuration
+      updateDelta * CONVEYOR_SLOT_COUNT_PER_LANE / rightAdvanceDuration,
     );
   }
 
@@ -95,7 +110,7 @@ export class ConveyorEntityMotionUtils {
     nextConveyorEntityId: EntityId | null,
     nextConveyor: ConveyorBeltComponent | null,
     side: ConveyorSide,
-    progressDelta: number
+    progressDelta: number,
   ): void {
     const slots = this.getSlots(conveyor, side);
     const progress = this.getProgress(conveyor, side);
@@ -275,15 +290,5 @@ export class ConveyorEntityMotionUtils {
     }
 
     return conveyor.rightProgress;
-  }
-
-  private static getTraversalNextEntityId(world: UserWorld, leafEntityId: EntityId<ConveyorBeltComponent>): EntityId | null {
-    const leafConveyor = world.get(leafEntityId, ConveyorBeltComponent);
-
-    if (leafConveyor.previousEntityId === null) {
-      return null;
-    }
-
-    return leafConveyor.nextEntityId;
   }
 }
