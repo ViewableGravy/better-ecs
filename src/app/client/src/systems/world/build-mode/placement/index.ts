@@ -1,20 +1,20 @@
 import type { RenderVisibilityRole } from "@client/components/render-visibility";
 import type { EntityId, MousePoint, UserWorld } from "@engine";
 
+import { GhostPreviewManager } from "@client/entities/ghost";
 import {
-    buildModeStateDefault,
-    type BuildItemType,
-    type BuildModeState,
+  buildModeStateDefault,
+  type BuildItemType,
+  type BuildModeState,
 } from "@client/systems/world/build-mode/const";
-import { GhostPreviewManager } from "@client/systems/world/build-mode/ghost-preview-manager";
 import {
-    GridSingleton,
-    type GridCoordinates,
+  GridSingleton,
+  type GridCoordinates,
 } from "@client/systems/world/build-mode/grid-singleton";
 import { boxPlacementDefinition } from "@client/systems/world/build-mode/placement/box";
 import {
-    type PlacementContext,
-    type PlacementDefinition,
+  type PlacementContext,
+  type PlacementDefinition,
 } from "@client/systems/world/build-mode/placement/createPlacementDefinition";
 import { landClaimPlacementDefinition } from "@client/systems/world/build-mode/placement/land-claim";
 import { PlacementQueries } from "@client/systems/world/build-mode/placement/queries";

@@ -1,5 +1,5 @@
 import { OUTSIDE } from "@client/components/render-visibility";
-import { applyGhostEffect, type GhostPreset } from "@client/entities/ghost";
+import { GhostUtils, type GhostPreset } from "@client/entities/ghost";
 import { spawnLandClaim } from "@client/entities/land-claim";
 import {
   LAND_CLAIM_OWNER_NAME,
@@ -19,6 +19,6 @@ export const LandClaimGhost: GhostPreset = {
       renderVisibilityRole: OUTSIDE,
     });
 
-    return applyGhostEffect(world, landClaimEntityId, this.kind);
+    return GhostUtils.applyEffect(world, landClaimEntityId, this.kind);
   },
 };

@@ -1,12 +1,11 @@
 import type { RenderVisibilityRole } from "@client/components/render-visibility";
 import { HOUSE_INTERIOR, OUTSIDE } from "@client/components/render-visibility";
-import { GhostPreviewComponent } from "@client/entities/ghost";
+import { GhostPreviewComponent, GhostPreviewScopeUtils } from "@client/entities/ghost";
 import {
   buildModeStateDefault,
   buildModeStateSchema,
 } from "@client/systems/world/build-mode/const";
 import { BuildModeDomEvents, HUD } from "@client/systems/world/build-mode/dom";
-import { GhostPreviewScopeUtils } from "@client/systems/world/build-mode/ghost-preview-scope";
 import { GridSingleton } from "@client/systems/world/build-mode/grid-singleton";
 import * as Keybinds from '@client/systems/world/build-mode/input';
 import { Placement } from "@client/systems/world/build-mode/placement";

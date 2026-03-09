@@ -1,4 +1,4 @@
-import { GhostPreviewComponent, applyGhostEffect, type GhostPreset } from "@client/entities/ghost";
+import { GhostPreviewComponent, GhostUtils, type GhostPreset } from "@client/entities/ghost";
 import {
   spawnTransportBelt,
   updateTransportBeltVariant,
@@ -27,7 +27,7 @@ export const TransportBeltGhost: GhostPreset<TransportBeltVariant> = {
       connectToNeighbors: false,
     });
 
-    return applyGhostEffect(world, beltEntityId, this.kind, resolvedVariant);
+    return GhostUtils.applyEffect(world, beltEntityId, this.kind, resolvedVariant);
   },
   sync(world, ghostEntityId, variant) {
     const resolvedVariant = variant ?? DEFAULT_TRANSPORT_BELT_GHOST_VARIANT;

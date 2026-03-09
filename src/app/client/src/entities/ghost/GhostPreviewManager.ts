@@ -1,11 +1,10 @@
-import {
-  GhostPreviewComponent,
-  syncGhostPlacementState,
-  type GhostPreset,
-} from "@client/entities/ghost";
 import { HALF_BOX_SIZE } from "@client/systems/world/build-mode/const";
 import type { EntityId, UserWorld } from "@engine";
 import { Transform2D } from "@engine/components";
+
+import { GhostPreviewComponent } from "@client/entities/ghost/component";
+import type { GhostPreset } from "@client/entities/ghost/spawner";
+import { GhostUtils } from "@client/entities/ghost/utils";
 
 /**********************************************************************************************************
  *   COMPONENT START
@@ -24,14 +23,14 @@ export class GhostPreviewManager {
     if (!this.matchesGhostKind(world, ghostEntityId, preset.kind)) {
       this.destroyGhost(world, ghostEntityId);
       const nextGhostEntityId = preset.spawn(world, x, y, payload);
-      syncGhostPlacementState(world, nextGhostEntityId, isPlaceable);
+      GhostUtils.syncPlacementState(world, nextGhostEntityId, isPlaceable);
 
       return nextGhostEntityId;
     }
 
     this.syncPosition(world, ghostEntityId, x, y);
     preset.sync?.(world, ghostEntityId, payload);
-    syncGhostPlacementState(world, ghostEntityId, isPlaceable);
+    GhostUtils.syncPlacementState(world, ghostEntityId, isPlaceable);
 
     return ghostEntityId;
   }

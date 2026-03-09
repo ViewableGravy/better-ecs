@@ -1,6 +1,6 @@
 import { OUTSIDE } from "@client/components/render-visibility";
 import { spawnBox } from "@client/entities/box";
-import { applyGhostEffect, type GhostPreset } from "@client/entities/ghost";
+import { GhostUtils, type GhostPreset } from "@client/entities/ghost";
 
 /**********************************************************************************************************
  *   COMPONENT START
@@ -15,6 +15,6 @@ export const BoxGhost: GhostPreset = {
       renderVisibilityRole: OUTSIDE,
     });
 
-    return applyGhostEffect(world, boxEntityId, this.kind);
+    return GhostUtils.applyEffect(world, boxEntityId, this.kind);
   },
 };

@@ -1,4 +1,4 @@
-import { GhostPreviewComponent } from "@client/entities/ghost";
+import { GhostPreviewComponent } from "@client/entities/ghost/component";
 import type { UserWorld } from "@engine";
 
 /**********************************************************************************************************
