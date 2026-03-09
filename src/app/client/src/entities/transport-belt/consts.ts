@@ -1,4 +1,4 @@
-export { CONVEYOR_SLOT_POSITIONS } from "@client/entities/transport-belt/slot-lookup";
+export { CONVEYOR_SLOT_POSITIONS } from "@client/entities/transport-belt/core/slots";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS

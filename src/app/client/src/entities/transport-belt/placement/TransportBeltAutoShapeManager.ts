@@ -1,20 +1,18 @@
 import { canConveyorStoreEntities, ConveyorBeltComponent } from "@client/components/conveyor-belt";
-import { GhostPreviewComponent } from "@client/entities/ghost";
 import {
     TransportBeltConnectionUtils,
     updateTransportBeltVariant,
 } from "@client/entities/transport-belt";
+import { getTransportBeltVariantByFlow, type TransportBeltSide, type TransportBeltVariant } from "@client/entities/transport-belt/consts";
 import {
-    getTransportBeltFlow,
-    getTransportBeltVariantByFlow,
-    TRANSPORT_BELT_SIDE_GRID_OFFSETS,
-    type TransportBeltSide,
-    type TransportBeltVariant,
-} from "@client/entities/transport-belt/consts";
+    getOppositeTransportBeltSide,
+    getTransportBeltVariantDescriptor,
+    isStraightTransportBeltFlow,
+    TransportBeltGridQuery,
+} from "@client/entities/transport-belt/core";
 import type { TransportBeltEntityId } from "@client/entities/transport-belt/types";
-import { GridSingleton, type GridCoordinate, type GridCoordinates } from "@client/systems/world/build-mode/grid-singleton";
+import type { GridCoordinates } from "@client/systems/world/build-mode/grid-singleton";
 import type { UserWorld } from "@engine";
-import { Transform2D } from "@engine/components";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -38,13 +36,6 @@ const PERPENDICULAR_INCOMING_SIDES_BY_END_SIDE: Readonly<Record<TransportBeltSid
   right: ["top", "bottom"],
   bottom: ["left", "right"],
   left: ["top", "bottom"],
-};
-
-const OPPOSITE_SIDE: Readonly<Record<TransportBeltSide, TransportBeltSide>> = {
-  top: "bottom",
-  right: "left",
-  bottom: "top",
-  left: "right",
 };
 
 export class TransportBeltAutoShapeManager {
@@ -90,14 +81,14 @@ export class TransportBeltAutoShapeManager {
       return null;
     }
 
-    const flow = getTransportBeltFlow(belt.variant);
+    const descriptor = getTransportBeltVariantDescriptor(belt.variant);
 
-    if (!flow) {
+    if (!descriptor) {
       return null;
     }
 
-    const [startSide, endSide] = flow;
-    const coordinates = this.resolveBeltCoordinates(world, beltEntityId);
+    const [startSide, endSide] = descriptor.flow;
+    const coordinates = TransportBeltGridQuery.resolveBeltCoordinates(world, beltEntityId);
     const straightThroughVariant = this.resolveStraightThroughVariant(world, endSide, coordinates);
 
     if (straightThroughVariant !== null) {
@@ -122,7 +113,7 @@ export class TransportBeltAutoShapeManager {
     endSide: TransportBeltSide,
     coordinates: GridCoordinates,
   ): TransportBeltVariant | null {
-    const defaultTailSide = OPPOSITE_SIDE[endSide];
+    const defaultTailSide = getOppositeTransportBeltSide(endSide);
 
     if (this.isStraightIncomingFromSide(world, coordinates, defaultTailSide)
       && this.isStraightOutgoingToSide(world, coordinates, endSide)) {
@@ -137,15 +128,15 @@ export class TransportBeltAutoShapeManager {
     coordinates: GridCoordinates,
     side: TransportBeltSide,
   ): boolean {
-    const neighborFlow = this.resolveNeighborFlow(world, coordinates, side);
+    const neighborDescriptor = this.resolveNeighborDescriptor(world, coordinates, side);
 
-    if (!neighborFlow || !this.isStraightFlow(neighborFlow)) {
+    if (!neighborDescriptor || !isStraightTransportBeltFlow(neighborDescriptor.flow)) {
       return false;
     }
 
-    const [, neighborEndSide] = neighborFlow;
+    const [, neighborEndSide] = neighborDescriptor.flow;
 
-    return neighborEndSide === OPPOSITE_SIDE[side];
+    return neighborEndSide === getOppositeTransportBeltSide(side);
   }
 
   private static isStraightOutgoingToSide(
@@ -153,22 +144,22 @@ export class TransportBeltAutoShapeManager {
     coordinates: GridCoordinates,
     side: TransportBeltSide,
   ): boolean {
-    const neighborFlow = this.resolveNeighborFlow(world, coordinates, side);
+    const neighborDescriptor = this.resolveNeighborDescriptor(world, coordinates, side);
 
-    if (!neighborFlow || !this.isStraightFlow(neighborFlow)) {
+    if (!neighborDescriptor || !isStraightTransportBeltFlow(neighborDescriptor.flow)) {
       return false;
     }
 
-    const [neighborStartSide] = neighborFlow;
+    const [neighborStartSide] = neighborDescriptor.flow;
 
-    return neighborStartSide === OPPOSITE_SIDE[side];
+    return neighborStartSide === getOppositeTransportBeltSide(side);
   }
 
   private static resolveAffectedBeltEntityIds(
     world: UserWorld,
     placedBeltEntityId: TransportBeltEntityId,
   ): TransportBeltEntityId[] {
-    const placedCoordinates = this.resolveBeltCoordinates(world, placedBeltEntityId);
+    const placedCoordinates = TransportBeltGridQuery.resolveBeltCoordinates(world, placedBeltEntityId);
 
     return this.resolveBeltEntityIdsAroundCoordinates(world, placedCoordinates, placedBeltEntityId);
   }
@@ -184,21 +175,20 @@ export class TransportBeltAutoShapeManager {
       affected.add(centerBeltEntityId);
     }
 
-    const centerBeltEntityIdAtCoordinates = this.findBeltEntityAtCoordinates(world, coordinates);
+    const centerBeltEntityIdAtCoordinates = TransportBeltGridQuery.findBeltEntityAtCoordinates(world, coordinates);
 
     if (centerBeltEntityIdAtCoordinates !== null) {
-      affected.add(centerBeltEntityIdAtCoordinates);
+      affected.add(centerBeltEntityIdAtCoordinates as TransportBeltEntityId);
     }
 
     for (const side of ["top", "right", "bottom", "left"] as const) {
-      const neighborCoordinates = this.offsetCoordinates(coordinates, TRANSPORT_BELT_SIDE_GRID_OFFSETS[side]);
-      const neighborEntityId = this.findBeltEntityAtCoordinates(world, neighborCoordinates);
+      const neighborEntityId = TransportBeltGridQuery.resolveNeighborEntityId(world, coordinates, side);
 
       if (neighborEntityId === null) {
         continue;
       }
 
-      affected.add(neighborEntityId);
+      affected.add(neighborEntityId as TransportBeltEntityId);
     }
 
     return [...affected];
@@ -209,7 +199,7 @@ export class TransportBeltAutoShapeManager {
     coordinates: GridCoordinates,
     endSide: TransportBeltSide,
   ): TransportBeltSide | null {
-    const defaultTailSide = OPPOSITE_SIDE[endSide];
+    const defaultTailSide = getOppositeTransportBeltSide(endSide);
 
     if (this.isIncomingFromSide(world, coordinates, defaultTailSide)) {
       return null;
@@ -238,110 +228,30 @@ export class TransportBeltAutoShapeManager {
     coordinates: GridCoordinates,
     side: TransportBeltSide,
   ): boolean {
-    const neighborCoordinates = this.offsetCoordinates(coordinates, TRANSPORT_BELT_SIDE_GRID_OFFSETS[side]);
-    const neighborEntityId = this.findBeltEntityAtCoordinates(world, neighborCoordinates);
+    const neighborDescriptor = this.resolveNeighborDescriptor(world, coordinates, side);
 
-    if (neighborEntityId === null) {
+    if (!neighborDescriptor) {
       return false;
     }
 
-    const neighborBelt = world.get(neighborEntityId, ConveyorBeltComponent);
+    const [, neighborEndSide] = neighborDescriptor.flow;
 
-    const neighborFlow = getTransportBeltFlow(neighborBelt.variant);
-
-    if (!neighborFlow) {
-      return false;
-    }
-
-    const [, neighborEndSide] = neighborFlow;
-
-    return neighborEndSide === OPPOSITE_SIDE[side];
+    return neighborEndSide === getOppositeTransportBeltSide(side);
   }
 
-  private static isOutgoingToSide(
-    world: UserWorld,
-    coordinates: GridCoordinates,
-    side: TransportBeltSide,
-  ): boolean {
-    const neighborFlow = this.resolveNeighborFlow(world, coordinates, side);
-
-    if (!neighborFlow) {
-      return false;
-    }
-
-    const [neighborStartSide] = neighborFlow;
-
-    return neighborStartSide === OPPOSITE_SIDE[side];
-  }
-
-  private static resolveNeighborFlow(
+  private static resolveNeighborDescriptor(
     world: UserWorld,
     coordinates: GridCoordinates,
     side: TransportBeltSide,
   ) {
-    const neighborCoordinates = this.offsetCoordinates(coordinates, TRANSPORT_BELT_SIDE_GRID_OFFSETS[side]);
-    const neighborEntityId = this.findBeltEntityAtCoordinates(world, neighborCoordinates);
+    const neighborEntityId = TransportBeltGridQuery.resolveNeighborEntityId(world, coordinates, side);
 
     if (neighborEntityId === null) {
       return null;
     }
 
-    const neighborBelt = world.get(neighborEntityId, ConveyorBeltComponent);
+    const neighborBelt = world.require(neighborEntityId, ConveyorBeltComponent);
 
-    return getTransportBeltFlow(neighborBelt.variant) ?? null;
-  }
-
-  private static isStraightFlow(flow: readonly [TransportBeltSide, TransportBeltSide]): boolean {
-    const [startSide, endSide] = flow;
-    const isHorizontal = (startSide === "left" || startSide === "right")
-      && (endSide === "left" || endSide === "right");
-
-    if (isHorizontal) {
-      return true;
-    }
-
-    return (startSide === "top" || startSide === "bottom")
-      && (endSide === "top" || endSide === "bottom");
-  }
-
-  private static findBeltEntityAtCoordinates(
-    world: UserWorld,
-    coordinates: GridCoordinates,
-  ): TransportBeltEntityId | null {
-    for (const beltEntityId of world.query(ConveyorBeltComponent, Transform2D)) {
-      if (world.has(beltEntityId, GhostPreviewComponent)) {
-        continue;
-      }
-
-      const transform = world.get(beltEntityId, Transform2D);
-      const beltCoordinates = GridSingleton.worldToGridCoordinates(transform.curr.pos.x, transform.curr.pos.y);
-
-      if (!GridSingleton.areCoordinatesEqual(beltCoordinates, coordinates)) {
-        continue;
-      }
-
-      return beltEntityId;
-    }
-
-    return null;
-  }
-
-  private static resolveBeltCoordinates(
-    world: UserWorld,
-    beltEntityId: TransportBeltEntityId,
-  ): GridCoordinates {
-    const transform = world.get(beltEntityId, Transform2D);
-
-    return GridSingleton.worldToGridCoordinates(transform.curr.pos.x, transform.curr.pos.y);
-  }
-
-  private static offsetCoordinates(
-    coordinates: GridCoordinates,
-    offset: readonly [x: number, y: number],
-  ): GridCoordinates {
-    return [
-      (Number(coordinates[0]) + offset[0]) as GridCoordinate,
-      (Number(coordinates[1]) + offset[1]) as GridCoordinate,
-    ];
+    return getTransportBeltVariantDescriptor(neighborBelt.variant) ?? null;
   }
 }

@@ -1,6 +1,6 @@
 import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import { spawnTransportBelt } from "@client/entities/transport-belt";
-import { ConveyorUtils } from "@client/entities/transport-belt/utils/general";
+import { ConveyorUtils } from "@client/entities/transport-belt/ConveyorUtils";
 import { UserWorld, World } from "@engine";
 import { Parent, Transform2D } from "@engine/components";
 import { describe, expect, it } from "vitest";

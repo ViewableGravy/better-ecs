@@ -16,7 +16,7 @@ type GhostSpawner<TEntityId extends EntityId = EntityId> = () => TEntityId;
 
 type GhostVariant = TransportBeltVariant | null;
 
-export type GhostPreset<TPayload = void, TEntityId extends EntityId = EntityId> = {
+export type GhostPreset<TPayload = void, TEntityId extends EntityId<any> = EntityId<any>> = {
   kind: GhostKind;
   spawn: (world: UserWorld, x: number, y: number, payload?: TPayload) => TEntityId;
   sync?: (world: UserWorld, ghostEntityId: TEntityId, payload?: TPayload) => void;

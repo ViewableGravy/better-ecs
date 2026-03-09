@@ -1,4 +1,17 @@
-export const CONVEYOR_SLOT_POSITIONS: Readonly<Record<string, readonly [number, number]>> = {
+import type { ConveyorSide, ConveyorSlotIndex } from "@client/components/conveyor-belt";
+import invariant from "tiny-invariant";
+
+/**********************************************************************************************************
+ *   TYPE DEFINITIONS
+ **********************************************************************************************************/
+
+export type ConveyorSlotPosition = readonly [x: number, y: number];
+
+/**********************************************************************************************************
+ *   CONSTANTS
+ **********************************************************************************************************/
+
+export const CONVEYOR_SLOT_POSITIONS: Readonly<Record<string, ConveyorSlotPosition>> = {
   "horizontal-right:left:0": [-7.5, -4],
   "horizontal-right:left:1": [-2.5, -4],
   "horizontal-right:left:2": [2.5, -4],
@@ -160,3 +173,19 @@ export const CONVEYOR_SLOT_POSITIONS: Readonly<Record<string, readonly [number, 
   "end-right:right:2": [2.5, 4],
   "end-right:right:3": [7.5, 4],
 };
+
+/**********************************************************************************************************
+ *   COMPONENT START
+ **********************************************************************************************************/
+
+export function resolveConveyorSlotLocalPosition(
+  variant: string,
+  side: ConveyorSide,
+  index: ConveyorSlotIndex,
+): ConveyorSlotPosition {
+  const mappedPosition = CONVEYOR_SLOT_POSITIONS[`${variant}:${side}:${index}`];
+
+  invariant(mappedPosition, `No slot position found for variant ${variant}, side ${side}, index ${index}`);
+
+  return mappedPosition;
+}

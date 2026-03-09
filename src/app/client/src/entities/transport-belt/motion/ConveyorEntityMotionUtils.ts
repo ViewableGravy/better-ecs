@@ -1,16 +1,22 @@
 import { ConveyorBeltComponent, type ConveyorSide, type ConveyorSlotIndex } from "@client/components/conveyor-belt";
-import { BeltItemRailsUtility } from "@client/entities/transport-belt";
 import {
-  CONVEYOR_SIDES,
-  CONVEYOR_SLOT_COUNT_PER_LANE,
-  CONVEYOR_SLOT_INDICES_ASC,
-  CONVEYOR_SLOT_INDICES_DESC,
-  getSlotAdvanceDurations,
-  SHARED_SLOT_POSITION,
-} from "@client/systems/world/conveyor-entity-motion/constants";
+    getConveyorLaneProgress,
+    getConveyorLaneSlots,
+    isConveyorLaneTailBlocked,
+    setConveyorLaneTailBlocked,
+} from "@client/entities/transport-belt/core";
+import { BeltItemRailsUtility } from "@client/entities/transport-belt/motion/BeltItemRailsUtility";
+import {
+    CONVEYOR_SIDES,
+    CONVEYOR_SLOT_COUNT_PER_LANE,
+    CONVEYOR_SLOT_INDICES_ASC,
+    CONVEYOR_SLOT_INDICES_DESC,
+    getSlotAdvanceDurations,
+    SHARED_SLOT_POSITION,
+} from "@client/entities/transport-belt/motion/constants";
+import type { ConveyorSideLoadTransfer } from "@client/entities/transport-belt/motion/types";
 import type { EntityId, UserWorld } from "@engine";
 import { Parent, Transform2D } from "@engine/components";
-import type { ConveyorSideLoadTransfer } from "./types";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -149,10 +155,10 @@ export class ConveyorEntityMotionUtils {
     side: ConveyorSide,
     progressDelta: number,
   ): void {
-    const slots = this.getSlots(conveyor, side);
-    const progress = this.getProgress(conveyor, side);
-    const nextSlots = nextConveyor ? this.getSlots(nextConveyor, side) : null;
-    const nextProgress = nextConveyor ? this.getProgress(nextConveyor, side) : null;
+    const slots = getConveyorLaneSlots(conveyor, side);
+    const progress = getConveyorLaneProgress(conveyor, side);
+    const nextSlots = nextConveyor ? getConveyorLaneSlots(nextConveyor, side) : null;
+    const nextProgress = nextConveyor ? getConveyorLaneProgress(nextConveyor, side) : null;
 
     for (const index of CONVEYOR_SLOT_INDICES_DESC) {
       const entityId = slots[index];
@@ -161,7 +167,7 @@ export class ConveyorEntityMotionUtils {
         progress[index] = 0;
 
         if (index === 3) {
-          this.setTailBlocked(conveyor, side, false);
+          setConveyorLaneTailBlocked(conveyor, side, false);
         }
 
         continue;
@@ -171,7 +177,7 @@ export class ConveyorEntityMotionUtils {
 
       if (progress[index] < 1) {
         if (index === 3) {
-          this.setTailBlocked(conveyor, side, false);
+          setConveyorLaneTailBlocked(conveyor, side, false);
         }
 
         continue;
@@ -187,7 +193,7 @@ export class ConveyorEntityMotionUtils {
           slots,
           progress,
           nextSlots,
-          nextProgress
+          nextProgress,
         );
         continue;
       }
@@ -208,7 +214,7 @@ export class ConveyorEntityMotionUtils {
       progress[destinationIndex] = progress[index] - 1;
 
       if (destinationIndex === 3) {
-        this.setTailBlocked(conveyor, side, false);
+        setConveyorLaneTailBlocked(conveyor, side, false);
       }
 
       slots[index] = null;
@@ -217,8 +223,8 @@ export class ConveyorEntityMotionUtils {
   }
 
   private static syncLaneTransforms(world: UserWorld, conveyor: ConveyorBeltComponent, side: ConveyorSide): void {
-    const slots = this.getSlots(conveyor, side);
-    const progress = this.getProgress(conveyor, side);
+    const slots = getConveyorLaneSlots(conveyor, side);
+    const progress = getConveyorLaneProgress(conveyor, side);
 
     for (const index of CONVEYOR_SLOT_INDICES_ASC) {
       const entityId = slots[index];
@@ -239,7 +245,7 @@ export class ConveyorEntityMotionUtils {
         side,
         index,
         progress[index],
-        SHARED_SLOT_POSITION
+        SHARED_SLOT_POSITION,
       );
 
       transform.curr.pos.x = SHARED_SLOT_POSITION.x;
@@ -272,24 +278,24 @@ export class ConveyorEntityMotionUtils {
     slots: ConveyorBeltComponent["left"],
     progress: ConveyorBeltComponent["leftProgress"],
     nextSlots: ConveyorBeltComponent["left"] | null,
-    nextProgress: ConveyorBeltComponent["leftProgress"] | null
+    nextProgress: ConveyorBeltComponent["leftProgress"] | null,
   ): void {
     if (nextConveyorEntityId === null
       || nextSlots === null
       || nextProgress === null
       || nextSlots[0] !== null) {
       progress[3] = 1;
-      this.setTailBlocked(conveyor, side, true);
+      setConveyorLaneTailBlocked(conveyor, side, true);
       return;
     }
 
-    const shouldResetTransferredProgress = this.isTailBlocked(conveyor, side);
+    const shouldResetTransferredProgress = isConveyorLaneTailBlocked(conveyor, side);
 
     nextSlots[0] = entityId;
     nextProgress[0] = shouldResetTransferredProgress ? 0 : progress[3] - 1;
     slots[3] = null;
     progress[3] = 0;
-    this.setTailBlocked(conveyor, side, false);
+    setConveyorLaneTailBlocked(conveyor, side, false);
     world.add(entityId, new Parent(nextConveyorEntityId));
   }
 
@@ -302,20 +308,20 @@ export class ConveyorEntityMotionUtils {
     targetLane: ConveyorSide,
     destinationIndex: SideLoadDestinationSlotIndex,
   ): boolean {
-    const sourceSlots = this.getSlots(sourceConveyor, sourceLane);
-    const sourceProgress = this.getProgress(sourceConveyor, sourceLane);
+    const sourceSlots = getConveyorLaneSlots(sourceConveyor, sourceLane);
+    const sourceProgress = getConveyorLaneProgress(sourceConveyor, sourceLane);
     const sourceEntityId = sourceSlots[3];
 
     if (sourceEntityId === null || sourceProgress[3] < 1) {
       return false;
     }
 
-    const targetSlots = this.getSlots(targetConveyor, targetLane);
-    const targetProgress = this.getProgress(targetConveyor, targetLane);
+    const targetSlots = getConveyorLaneSlots(targetConveyor, targetLane);
+    const targetProgress = getConveyorLaneProgress(targetConveyor, targetLane);
 
     if (targetSlots[destinationIndex] !== null) {
       sourceProgress[3] = 1;
-      this.setTailBlocked(sourceConveyor, sourceLane, true);
+      setConveyorLaneTailBlocked(sourceConveyor, sourceLane, true);
       return false;
     }
 
@@ -323,45 +329,9 @@ export class ConveyorEntityMotionUtils {
     targetProgress[destinationIndex] = 0;
     sourceSlots[3] = null;
     sourceProgress[3] = 0;
-    this.setTailBlocked(sourceConveyor, sourceLane, false);
+    setConveyorLaneTailBlocked(sourceConveyor, sourceLane, false);
     world.add(sourceEntityId, new Parent(targetConveyorEntityId));
 
     return true;
-  }
-
-  private static isTailBlocked(conveyor: ConveyorBeltComponent, side: ConveyorSide): boolean {
-    if (side === "left") {
-      return conveyor.leftTailBlocked;
-    }
-
-    return conveyor.rightTailBlocked;
-  }
-
-  private static setTailBlocked(conveyor: ConveyorBeltComponent, side: ConveyorSide, blocked: boolean): void {
-    if (side === "left") {
-      conveyor.leftTailBlocked = blocked;
-      return;
-    }
-
-    conveyor.rightTailBlocked = blocked;
-  }
-
-  private static getSlots(
-    conveyor: ConveyorBeltComponent,
-    side: ConveyorSide
-  ): ConveyorBeltComponent["left"] {
-    if (side === "left") {
-      return conveyor.left;
-    }
-
-    return conveyor.right;
-  }
-
-  private static getProgress(conveyor: ConveyorBeltComponent, side: ConveyorSide): ConveyorBeltComponent["leftProgress"] {
-    if (side === "left") {
-      return conveyor.leftProgress;
-    }
-
-    return conveyor.rightProgress;
   }
 }

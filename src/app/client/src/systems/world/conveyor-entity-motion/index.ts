@@ -1,11 +1,13 @@
 import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import { TransportBeltLeaf } from "@client/components/transport-belt-leaf";
 import { ConveyorUtils } from "@client/entities/transport-belt";
+import { ConveyorEntityMotionUtils } from "@client/entities/transport-belt/motion/ConveyorEntityMotionUtils";
+import { ConveyorSideLoadUtils } from "@client/entities/transport-belt/motion/ConveyorSideLoadUtils";
+import type { ConveyorSideLoadTransfer } from "@client/entities/transport-belt/motion/types";
+import { ConveyorBeltChainIterator } from "@client/entities/transport-belt/topology/ConveyorBeltChainIterator";
 import type { EntityId } from "@engine";
 import { createSystem } from "@engine";
 import { Delta, fromContext, World } from "@engine/context";
-import { ConveyorBeltChainIterator, ConveyorEntityMotionUtils, ConveyorSideLoadUtils } from "./utils";
-import type { ConveyorSideLoadTransfer } from "./utils/types";
 
 const beltIterator = new ConveyorBeltChainIterator();
 const motionUtils = new ConveyorEntityMotionUtils();

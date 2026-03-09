@@ -1,7 +1,7 @@
 import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
+import { ConveyorBeltChainIterator } from "@client/entities/transport-belt/topology/ConveyorBeltChainIterator";
 import { UserWorld, World } from "@engine";
 import { describe, expect, it } from "vitest";
-import { ConveyorBeltChainIterator } from "./ConveyorBeltChainIterator";
 
 describe("ConveyorBeltChainIterator", () => {
   it("iterates an open chain from the leaf back toward the head and can be reset", () => {

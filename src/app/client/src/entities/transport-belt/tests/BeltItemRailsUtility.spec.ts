@@ -1,4 +1,4 @@
-import { BeltItemRailsUtility } from "@client/entities/transport-belt/utils/rails";
+import { BeltItemRailsUtility } from "@client/entities/transport-belt/motion/BeltItemRailsUtility";
 import { Vec2 } from "@engine";
 import { describe, expect, it } from "vitest";
 

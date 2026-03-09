@@ -1,9 +1,9 @@
 import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import { PlayerComponent } from "@client/components/player";
 import { PlayerFeetComponent } from "@client/components/player-feet";
+import { ConveyorMovementUtils } from "@client/entities/transport-belt/motion/ConveyorMovementUtils";
 import { PhysicsWorldManager } from "@client/scenes/world/physics/physics-world-manager";
 import { BELT_QUERY_FILTER, SHARED_BELT_WORLD_TRANSFORM, SHARED_FEET_WORLD_TRANSFORM, SHARED_MOTION } from "@client/systems/world/conveyor-movement/constants";
-import { ConveyorMovementUtils } from "@client/systems/world/conveyor-movement/utils";
 import { createSystem, resolveWorldTransform2D, Vec2, type EntityId } from "@engine";
 import { Transform2D } from "@engine/components";
 import { Delta, fromContext, World } from "@engine/context";

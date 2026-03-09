@@ -1,14 +1,12 @@
 import { canConveyorStoreEntities, ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import { TransportBeltLeaf } from "@client/components/transport-belt-leaf";
-import { GhostPreviewComponent } from "@client/entities/ghost";
 import {
-  getTransportBeltFlow,
-  TRANSPORT_BELT_SIDE_GRID_OFFSETS,
-} from "@client/entities/transport-belt/consts";
+    getTransportBeltVariantDescriptor,
+    TransportBeltGridQuery,
+} from "@client/entities/transport-belt/core";
 import type { TransportBeltEntityId } from "@client/entities/transport-belt/types";
-import { GridSingleton, type GridCoordinate, type GridCoordinates } from "@client/systems/world/build-mode/grid-singleton";
+import type { GridCoordinates } from "@client/systems/world/build-mode/grid-singleton";
 import type { EntityId, UserWorld } from "@engine";
-import { Transform2D } from "@engine/components";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -29,7 +27,7 @@ type BeltRelation = "previous" | "next";
  */
 export class TransportBeltConnectionUtils {
   /**
-    * Connects a newly spawned belt to compatible neighboring belts.
+   * Connects a newly spawned belt to compatible neighboring belts.
    *
    * The belt stores `previousEntityId` and `nextEntityId`, and the tail belt in
    * each chain receives a `TransportBeltLeaf` marker used by motion systems.
@@ -41,7 +39,7 @@ export class TransportBeltConnectionUtils {
       return;
     }
 
-    const coordinates = this.resolveBeltGridCoordinates(world, beltEntityId);
+    const coordinates = TransportBeltGridQuery.resolveBeltCoordinates(world, beltEntityId);
 
     const previousEntityId = this.findAdjacentBeltEntityId(
       world,
@@ -130,7 +128,7 @@ export class TransportBeltConnectionUtils {
       return;
     }
 
-    const coordinates = this.resolveBeltGridCoordinates(world, beltEntityId);
+    const coordinates = TransportBeltGridQuery.resolveBeltCoordinates(world, beltEntityId);
 
     const previousEntityId = this.findAdjacentBeltEntityId(
       world,
@@ -202,81 +200,57 @@ export class TransportBeltConnectionUtils {
     coordinates: GridCoordinates,
     relation: BeltRelation,
   ): EntityId | null {
-    const flow = getTransportBeltFlow(variant);
+    const descriptor = getTransportBeltVariantDescriptor(variant);
 
-    if (!flow) {
+    if (!descriptor) {
       return null;
     }
 
-    const [start, end] = flow;
+    const [start, end] = descriptor.flow;
     const targetSide = relation === "previous" ? start : end;
-    const targetOffset = TRANSPORT_BELT_SIDE_GRID_OFFSETS[targetSide];
-    const targetCoordinates = this.offsetGridCoordinates(coordinates, targetOffset);
-    let match: EntityId | null = null;
+    const targetCoordinates = TransportBeltGridQuery.resolveNeighborCoordinates(coordinates, targetSide);
 
-    world.forEach2(
-      ConveyorBeltComponent,
-      Transform2D,
-      (candidateEntityId, candidateBelt, candidateTransform) => {
-        if (match !== null || candidateEntityId === beltEntityId) {
-          return;
-        }
-
-        if (world.has(candidateEntityId, GhostPreviewComponent)) {
-          return;
-        }
-
+    return TransportBeltGridQuery.findBeltEntityAtCoordinates(world, targetCoordinates, {
+      excludeEntityId: beltEntityId,
+      predicate: (candidateEntityId, candidateBelt) => {
         if (!this.isConnectableVariant(candidateBelt.variant)) {
-          return;
+          return false;
         }
 
-        const candidateCoordinates = GridSingleton.worldToGridCoordinates(
-          candidateTransform.curr.pos.x,
-          candidateTransform.curr.pos.y,
+        return this.isFacingCurrentCoordinates(
+          world,
+          candidateEntityId,
+          candidateBelt.variant,
+          coordinates,
+          relation,
         );
-
-        if (!GridSingleton.areCoordinatesEqual(targetCoordinates, candidateCoordinates)) {
-          return;
-        }
-
-        if (!this.isFacingCurrentCoordinates(candidateBelt.variant, candidateCoordinates, coordinates, relation)) {
-          return;
-        }
-
-        match = candidateEntityId;
       },
-    );
-
-    return match;
+    });
   }
 
   private static isFacingCurrentCoordinates(
+    world: UserWorld,
+    candidateEntityId: EntityId,
     candidateVariant: string,
-    candidateCoordinates: GridCoordinates,
     currentCoordinates: GridCoordinates,
     relation: BeltRelation,
   ): boolean {
-    const candidateFlow = getTransportBeltFlow(candidateVariant);
+    const descriptor = getTransportBeltVariantDescriptor(candidateVariant);
 
-    if (!candidateFlow) {
+    if (!descriptor) {
       return false;
     }
 
-    const [candidateStart, candidateEnd] = candidateFlow;
+    const [candidateStart, candidateEnd] = descriptor.flow;
     const requiredSide = relation === "previous" ? candidateEnd : candidateStart;
-    const requiredOffset = TRANSPORT_BELT_SIDE_GRID_OFFSETS[requiredSide];
-    const candidateConnectedCoordinates = this.offsetGridCoordinates(candidateCoordinates, requiredOffset);
+    const candidateCoordinates = TransportBeltGridQuery.resolveBeltCoordinates(world, candidateEntityId);
+    const candidateConnectedCoordinates = TransportBeltGridQuery.resolveNeighborCoordinates(
+      candidateCoordinates,
+      requiredSide,
+    );
 
-    return GridSingleton.areCoordinatesEqual(candidateConnectedCoordinates, currentCoordinates);
-  }
-
-  private static resolveBeltGridCoordinates(
-    world: UserWorld,
-    beltEntityId: TransportBeltEntityId,
-  ): GridCoordinates {
-    const transform = world.get(beltEntityId, Transform2D);
-
-    return GridSingleton.worldToGridCoordinates(transform.curr.pos.x, transform.curr.pos.y);
+    return candidateConnectedCoordinates[0] === currentCoordinates[0]
+      && candidateConnectedCoordinates[1] === currentCoordinates[1];
   }
 
   private static syncLeafMarker(
@@ -301,7 +275,7 @@ export class TransportBeltConnectionUtils {
   }
 
   private static isConnectableVariant(variant: string): boolean {
-    return canConveyorStoreEntities(variant) && getTransportBeltFlow(variant) !== undefined;
+    return canConveyorStoreEntities(variant) && getTransportBeltVariantDescriptor(variant) !== undefined;
   }
 
   private static refreshLeafAnchors(
@@ -422,15 +396,5 @@ export class TransportBeltConnectionUtils {
     }
 
     return null;
-  }
-
-  private static offsetGridCoordinates(
-    coordinates: GridCoordinates,
-    offset: readonly [x: number, y: number],
-  ): GridCoordinates {
-    return [
-      (Number(coordinates[0]) + offset[0]) as GridCoordinate,
-      (Number(coordinates[1]) + offset[1]) as GridCoordinate,
-    ];
   }
 }

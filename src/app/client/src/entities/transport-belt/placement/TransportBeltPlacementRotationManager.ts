@@ -1,21 +1,16 @@
-import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
-import { GhostPreviewComponent } from "@client/entities/ghost";
+import type { TransportBeltSide, TransportBeltVariant } from "@client/entities/transport-belt/consts";
 import {
-  getTransportBeltFlow,
-  type TransportBeltSide,
-  type TransportBeltVariant,
-} from "@client/entities/transport-belt/consts";
-import { GridSingleton, type GridCoordinates } from "@client/systems/world/build-mode/grid-singleton";
+    getTransportBeltVariantDescriptor,
+    TransportBeltGridQuery,
+    type TransportBeltNeighborMatrix,
+} from "@client/entities/transport-belt/core";
+import type { GridCoordinates } from "@client/systems/world/build-mode/grid-singleton";
 import type { UserWorld } from "@engine";
-import { Transform2D } from "@engine/components";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
  **********************************************************************************************************/
 
-type MatrixCell = TransportBeltVariant | null;
-type MatrixRow = readonly [MatrixCell, MatrixCell, MatrixCell];
-type BeltNeighborMatrix = readonly [MatrixRow, MatrixRow, MatrixRow];
 type RotationCycle = readonly [TransportBeltVariant, TransportBeltVariant, TransportBeltVariant, TransportBeltVariant];
 type ContributingSide = TransportBeltSide;
 type RotationSource = ContributingSide | "default";
@@ -91,7 +86,7 @@ export class TransportBeltPlacementRotationManager {
     coordinates: GridCoordinates,
     desiredEndSide: TransportBeltSide,
   ): TransportBeltVariant {
-    const source = this.resolveRotationSource(this.buildNeighborMatrix(world, coordinates));
+    const source = this.resolveRotationSource(TransportBeltGridQuery.buildNeighborMatrix(world, coordinates));
 
     return ROTATION_VARIANT_BY_END_SIDE_BY_SOURCE[source][desiredEndSide];
   }
@@ -100,12 +95,12 @@ export class TransportBeltPlacementRotationManager {
     world: UserWorld,
     coordinates: GridCoordinates,
   ): RotationCycle {
-    const matrix = this.buildNeighborMatrix(world, coordinates);
+    const matrix = TransportBeltGridQuery.buildNeighborMatrix(world, coordinates);
 
     return this.resolveRotationCycleFromMatrix(matrix);
   }
 
-  public static resolveRotationCycleFromMatrix(matrix: BeltNeighborMatrix): RotationCycle {
+  public static resolveRotationCycleFromMatrix(matrix: TransportBeltNeighborMatrix): RotationCycle {
     const source = this.resolveRotationSource(matrix);
 
     if (source === "default") {
@@ -123,50 +118,7 @@ export class TransportBeltPlacementRotationManager {
     ];
   }
 
-  private static buildNeighborMatrix(
-    world: UserWorld,
-    coordinates: GridCoordinates,
-  ): BeltNeighborMatrix {
-    const variantsByOffset = new Map<string, TransportBeltVariant>();
-
-    for (const beltEntityId of world.query(ConveyorBeltComponent, Transform2D)) {
-      if (world.has(beltEntityId, GhostPreviewComponent)) {
-        continue;
-      }
-
-      const belt = world.get(beltEntityId, ConveyorBeltComponent);
-      const transform = world.get(beltEntityId, Transform2D);
-      const beltCoordinates = GridSingleton.worldToGridCoordinates(transform.curr.pos.x, transform.curr.pos.y);
-      const offsetX = Number(beltCoordinates[0]) - Number(coordinates[0]);
-      const offsetY = Number(beltCoordinates[1]) - Number(coordinates[1]);
-
-      if (Math.abs(offsetX) > 1 || Math.abs(offsetY) > 1) {
-        continue;
-      }
-
-      variantsByOffset.set(`${offsetX},${offsetY}`, belt.variant as TransportBeltVariant);
-    }
-
-    return [
-      [
-        variantsByOffset.get("-1,-1") ?? null,
-        variantsByOffset.get("0,-1") ?? null,
-        variantsByOffset.get("1,-1") ?? null,
-      ],
-      [
-        variantsByOffset.get("-1,0") ?? null,
-        variantsByOffset.get("0,0") ?? null,
-        variantsByOffset.get("1,0") ?? null,
-      ],
-      [
-        variantsByOffset.get("-1,1") ?? null,
-        variantsByOffset.get("0,1") ?? null,
-        variantsByOffset.get("1,1") ?? null,
-      ],
-    ];
-  }
-
-  private static resolveRotationSource(matrix: BeltNeighborMatrix): RotationSource {
+  private static resolveRotationSource(matrix: TransportBeltNeighborMatrix): RotationSource {
     const contributingSide = this.resolveContributingSide(matrix);
 
     if (contributingSide === null) {
@@ -176,7 +128,7 @@ export class TransportBeltPlacementRotationManager {
     return contributingSide;
   }
 
-  private static resolveContributingSide(matrix: BeltNeighborMatrix): ContributingSide | null {
+  private static resolveContributingSide(matrix: TransportBeltNeighborMatrix): ContributingSide | null {
     for (const rule of CARDINAL_CONTRIBUTOR_PRECEDENCE) {
       const variant = matrix[rule.row][rule.column];
 
@@ -184,13 +136,13 @@ export class TransportBeltPlacementRotationManager {
         continue;
       }
 
-      const flow = getTransportBeltFlow(variant);
+      const descriptor = getTransportBeltVariantDescriptor(variant);
 
-      if (!flow) {
+      if (!descriptor) {
         continue;
       }
 
-      const [, endSide] = flow;
+      const [, endSide] = descriptor.flow;
 
       if (endSide !== rule.requiredEndSide) {
         continue;

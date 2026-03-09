@@ -8,7 +8,7 @@ import { Transform2D } from "@engine/components";
  **********************************************************************************************************/
 
 export class GhostPreviewManager {
-  public static sync<TPayload, TGhostEntityId extends EntityId>(
+  public static sync<TPayload, TGhostEntityId extends EntityId<any>>(
     world: UserWorld,
     ghostEntityId: TGhostEntityId | null,
     x: number,

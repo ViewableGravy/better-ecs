@@ -1,5 +1,6 @@
 import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import { destroyTransportBelt } from "@client/entities/transport-belt";
+import { TransportBeltAutoShapeManager } from "@client/entities/transport-belt/placement/TransportBeltAutoShapeManager";
 import { PhysicsWorldManager } from "@client/scenes/world/physics/physics-world-manager";
 import type { BuildItemType } from "@client/systems/world/build-mode/const";
 import {
@@ -11,7 +12,6 @@ import {
   GridSingleton,
   type GridCoordinates,
 } from "@client/systems/world/build-mode/grid-singleton";
-import { TransportBeltAutoShapeManager } from "@client/systems/world/build-mode/transport-belt-auto-shape-manager";
 import { Vec2, type MousePoint, type UserWorld } from "@engine";
 import { Transform2D } from "@engine/components";
 import {

@@ -1,14 +1,9 @@
-import type {
-    ConveyorSide,
-    ConveyorSlotIndex,
-} from "@client/components/conveyor-belt";
+import type { ConveyorSide, ConveyorSlotIndex } from "@client/components/conveyor-belt";
+import { TRANSPORT_BELT_HALF_SIZE, type TransportBeltFlow, type TransportBeltSide } from "@client/entities/transport-belt/consts";
 import {
-    CONVEYOR_SLOT_POSITIONS,
-    TRANSPORT_BELT_HALF_SIZE,
-    getTransportBeltFlow,
-    type TransportBeltFlow,
-    type TransportBeltSide,
-} from "@client/entities/transport-belt/consts";
+    getTransportBeltVariantDescriptor,
+    resolveConveyorSlotLocalPosition,
+} from "@client/entities/transport-belt/core";
 import { Vec2 } from "@engine";
 import invariant from "tiny-invariant";
 
@@ -30,9 +25,6 @@ export class BeltItemRailsUtility {
     progress: number,
     out: Vec2,
   ): void {
-    // Each belt currently exposes 4 slots per lane, so `(index + progress) / 4`
-    // converts the current slot-plus-interpolation state into a normalized
-    // 0..1 rail percentage across the full belt path.
     const railProgress = (index + progress) / 4;
 
     this.resolvePositionOnRailInto(variant, side, railProgress, out);
@@ -44,18 +36,18 @@ export class BeltItemRailsUtility {
     railProgress: number,
     out: Vec2,
   ): void {
-    const flow = getTransportBeltFlow(variant);
+    const descriptor = getTransportBeltVariantDescriptor(variant);
 
-    invariant(flow, `No transport belt flow found for variant ${variant}`);
+    invariant(descriptor, `No transport belt flow found for variant ${variant}`);
 
     const clampedRailProgress = Math.min(1, Math.max(0, railProgress));
 
-    if (this.isStraightFlow(flow)) {
-      this.resolveStraightRailPositionInto(variant, side, flow, clampedRailProgress, out);
+    if (descriptor.isStraight) {
+      this.resolveStraightRailPositionInto(variant, side, descriptor.flow, clampedRailProgress, out);
       return;
     }
 
-    this.resolveCurveRailPositionInto(variant, side, flow, clampedRailProgress, out);
+    this.resolveCurveRailPositionInto(variant, side, descriptor.flow, clampedRailProgress, out);
   }
 
   private static resolveStraightRailPositionInto(
@@ -66,7 +58,7 @@ export class BeltItemRailsUtility {
     out: Vec2,
   ): void {
     const [start, end] = flow;
-    const [slotX, slotY] = this.resolveSlotLocalPosition(variant, side, 0);
+    const [slotX, slotY] = resolveConveyorSlotLocalPosition(variant, side, 0);
 
     if (start === "left" || start === "right") {
       const startX = this.resolveStraightEdgeCoordinate(start);
@@ -91,7 +83,7 @@ export class BeltItemRailsUtility {
   ): void {
     const [start, end] = flow;
     const [centerX, centerY] = this.resolveCurveCenter(flow);
-    const [slotX, slotY] = this.resolveSlotLocalPosition(variant, side, 0);
+    const [slotX, slotY] = resolveConveyorSlotLocalPosition(variant, side, 0);
 
     const radius = Math.hypot(slotX - centerX, slotY - centerY);
 
@@ -168,30 +160,5 @@ export class BeltItemRailsUtility {
     }
 
     return TRANSPORT_BELT_HALF_SIZE;
-  }
-
-  private static isStraightFlow(flow: TransportBeltFlow): boolean {
-    const [start, end] = flow;
-    const isHorizontal = (start === "left" || start === "right")
-      && (end === "left" || end === "right");
-
-    if (isHorizontal) {
-      return true;
-    }
-
-    return (start === "top" || start === "bottom")
-      && (end === "top" || end === "bottom");
-  }
-
-  private static resolveSlotLocalPosition(
-    variant: string,
-    side: ConveyorSide,
-    index: ConveyorSlotIndex,
-  ): RailPoint {
-    const mappedPosition = CONVEYOR_SLOT_POSITIONS[`${variant}:${side}:${index}`];
-
-    invariant(mappedPosition, `No slot position found for variant ${variant}, side ${side}, index ${index}`);
-
-    return mappedPosition;
   }
 }

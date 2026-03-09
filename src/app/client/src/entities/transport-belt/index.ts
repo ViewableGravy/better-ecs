@@ -2,11 +2,11 @@ import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import { OUTSIDE, RenderVisibility } from "@client/components/render-visibility";
 import { RENDER_LAYERS } from "@client/consts";
 import type { TransportBeltVariant } from "@client/entities/transport-belt/consts";
+import { TransportBeltConnectionUtils } from "@client/entities/transport-belt/topology/TransportBeltConnectionUtils";
 import {
   asTransportBeltEntityId,
   type TransportBeltEntityId,
 } from "@client/entities/transport-belt/types";
-import { TransportBeltConnectionUtils } from "@client/entities/transport-belt/utils/connection";
 import { CollisionProfiles } from "@client/scenes/world/physics/collision-profiles";
 import { TRANSPORT_BELT_COLLIDER_SIZE } from "@client/systems/world/build-mode/const";
 import { Vec2, type EntityId, type UserWorld } from "@engine";
@@ -115,8 +115,43 @@ export function updateTransportBeltVariant(
 
 export { TRANSPORT_BELT_VARIANTS } from "@client/entities/transport-belt/consts";
 export type { TransportBeltVariant } from "@client/entities/transport-belt/consts";
+export { ConveyorUtils } from "@client/entities/transport-belt/ConveyorUtils";
+export {
+  getConveyorLaneProgress,
+  getConveyorLaneSlots,
+  getOppositeTransportBeltSide,
+  getTransportBeltFlowVector,
+  getTransportBeltInwardNormal,
+  getTransportBeltOutwardNormal,
+  getTransportBeltSideVector,
+  getTransportBeltVariantDescriptor,
+  isConveyorLaneTailBlocked,
+  isHorizontalTransportBeltFlow,
+  isStraightTransportBeltFlow,
+  isVerticalTransportBeltFlow,
+  resolveConveyorSlotLocalPosition,
+  setConveyorLaneTailBlocked,
+  TransportBeltGridQuery
+} from "@client/entities/transport-belt/core";
+export { BeltItemRailsUtility } from "@client/entities/transport-belt/motion/BeltItemRailsUtility";
+export {
+  CONVEYOR_SIDES,
+  CONVEYOR_SLOT_COUNT_PER_LANE,
+  CONVEYOR_SLOT_INDICES_ASC,
+  CONVEYOR_SLOT_INDICES_DESC,
+  getCurveLaneSides,
+  getSlotAdvanceDurations,
+  INSIDE_CURVE_SLOT_ADVANCE_DURATION_MS,
+  INSIDE_CURVE_SPEED_MULTIPLIER,
+  SHARED_SLOT_POSITION,
+  SLOT_ADVANCE_DURATION_MS
+} from "@client/entities/transport-belt/motion/constants";
+export { ConveyorEntityMotionUtils } from "@client/entities/transport-belt/motion/ConveyorEntityMotionUtils";
+export { ConveyorGeometryUtils } from "@client/entities/transport-belt/motion/ConveyorGeometryUtils";
+export { ConveyorMovementUtils } from "@client/entities/transport-belt/motion/ConveyorMovementUtils";
+export { ConveyorSideLoadUtils } from "@client/entities/transport-belt/motion/ConveyorSideLoadUtils";
+export type { ConveyorSideLoadTransfer } from "@client/entities/transport-belt/motion/types";
+export { ConveyorBeltChainIterator } from "@client/entities/transport-belt/topology/ConveyorBeltChainIterator";
+export { TransportBeltConnectionUtils } from "@client/entities/transport-belt/topology/TransportBeltConnectionUtils";
 export type { TransportBeltEntityId } from "@client/entities/transport-belt/types";
-export { TransportBeltConnectionUtils } from "@client/entities/transport-belt/utils/connection";
-export { ConveyorUtils } from "@client/entities/transport-belt/utils/general";
-export { BeltItemRailsUtility } from "@client/entities/transport-belt/utils/rails";
 

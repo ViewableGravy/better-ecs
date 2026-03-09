@@ -5,6 +5,8 @@ import { BoxGhost } from "@client/entities/box/ghost";
 import { GhostPreviewComponent } from "@client/entities/ghost";
 import { spawnTransportBelt } from "@client/entities/transport-belt";
 import { TransportBeltGhost } from "@client/entities/transport-belt/ghost";
+import { TransportBeltAutoShapeManager } from "@client/entities/transport-belt/placement/TransportBeltAutoShapeManager";
+import { TransportBeltPlacementRotationManager } from "@client/entities/transport-belt/placement/TransportBeltPlacementRotationManager";
 import { Placeable } from "@client/systems/world/build-mode/components";
 import {
   buildModeStateDefault,
@@ -19,8 +21,6 @@ import { GridSingleton, type GridCoordinates } from "@client/systems/world/build
 import * as Keybinds from '@client/systems/world/build-mode/input';
 import { Placement } from "@client/systems/world/build-mode/placement";
 import { resolvePlacementWorld, type PlacementWorldResolution } from "@client/systems/world/build-mode/placement-target";
-import { TransportBeltAutoShapeManager } from "@client/systems/world/build-mode/transport-belt-auto-shape-manager";
-import { TransportBeltPlacementRotationManager } from "@client/systems/world/build-mode/transport-belt-placement-rotation-manager";
 import { createSystem, type RegisteredEngine, type RegisteredSystems } from "@engine";
 import { System as ContextSystem, Engine, fromContext, FromEngine, Mouse } from "@engine/context";
 import { ActiveCameraView } from "@engine/context-utils";
@@ -81,7 +81,7 @@ export const System = createSystem("main:build-mode")({
           data.ghostEntityId,
           snappedX,
           snappedY,
-          TransportBeltGhost,
+          TransportBeltGhost as any,
           selectedTransportBeltVariant,
         );
       } else {

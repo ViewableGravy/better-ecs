@@ -1,29 +1,22 @@
 import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import { TransportBeltLeaf } from "@client/components/transport-belt-leaf";
-import { ConveyorUtils, destroyTransportBelt, spawnTransportBelt } from "@client/entities/transport-belt";
+import {
+    CONVEYOR_SLOT_COUNT_PER_LANE,
+    ConveyorBeltChainIterator, ConveyorSideLoadUtils, ConveyorUtils, destroyTransportBelt, getCurveLaneSides,
+    getSlotAdvanceDurations,
+    INSIDE_CURVE_SLOT_ADVANCE_DURATION_MS,
+    INSIDE_CURVE_SPEED_MULTIPLIER, ConveyorEntityMotionUtils as RuntimeConveyorEntityMotionUtils, SLOT_ADVANCE_DURATION_MS, spawnTransportBelt
+} from "@client/entities/transport-belt";
 import { TransportBeltGhost } from "@client/entities/transport-belt/ghost";
+import type { ConveyorSideLoadTransfer } from "@client/entities/transport-belt/motion/types";
+import { TransportBeltAutoShapeManager } from "@client/entities/transport-belt/placement/TransportBeltAutoShapeManager";
 import { PhysicsWorldManager } from "@client/scenes/world/physics/physics-world-manager";
 import { GridSingleton } from "@client/systems/world/build-mode/grid-singleton";
 import { Placement } from "@client/systems/world/build-mode/placement";
-import { TransportBeltAutoShapeManager } from "@client/systems/world/build-mode/transport-belt-auto-shape-manager";
-import {
-    CONVEYOR_SLOT_COUNT_PER_LANE,
-    getCurveLaneSides,
-    getSlotAdvanceDurations,
-    INSIDE_CURVE_SLOT_ADVANCE_DURATION_MS,
-    INSIDE_CURVE_SPEED_MULTIPLIER,
-    SLOT_ADVANCE_DURATION_MS,
-} from "@client/systems/world/conveyor-entity-motion/constants";
 import { UserWorld, World, type EntityId } from "@engine";
 import { Parent, Transform2D } from "@engine/components";
 import { resolveWorldTransform2D } from "@engine/ecs/hierarchy";
 import { describe, expect, it } from "vitest";
-import {
-    ConveyorBeltChainIterator,
-    ConveyorSideLoadUtils,
-    ConveyorEntityMotionUtils as RuntimeConveyorEntityMotionUtils,
-} from ".";
-import type { ConveyorSideLoadTransfer } from "./types";
 
 const SHARED_WORLD_TRANSFORM = new Transform2D();
 const SHARED_BELT_CHAIN_ITERATOR = new ConveyorBeltChainIterator();
@@ -94,15 +87,6 @@ const ConveyorEntityMotionUtils = {
 };
 
 describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
-  /**
-   * Later slots should advance first so they open space for earlier slots.
-   *
-   * Before
-   *   [0][1][ ][ ] →
-   *
-   * After one step
-   *   [ ][0][1][ ] →
-   */
   it("advances later slots first so earlier slots can move into newly freed space", () => {
     const world = new UserWorld(new World("scene"));
     const conveyorEntityId = world.create();
@@ -134,18 +118,6 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     expect(slot1Transform.curr.pos.y).toBe(-4);
   });
 
-  /**
-   * Sparse items should keep flowing forward without empty slots causing a
-   * stall on either lane.
-   *
-   * Before
-   *   L: [0][ ][2][ ] ↑
-   *   R: [ ][1][ ][ ] ↑
-   *
-   * After one step
-   *   L: [ ][0][ ][2] ↑
-   *   R: [ ][ ][1][ ] ↑
-   */
   it("moves three cogs with mixed spacing without stalling open slots", () => {
     const world = new UserWorld(new World("scene"));
     const conveyorEntityId = world.create();
@@ -175,18 +147,6 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     expect(conveyor.rightProgress).toEqual([0, 0, 0, 0]);
   });
 
-  /**
-   * A crowded left lane and a separate right-lane item should all advance
-   * independently without cross-lane blocking.
-   *
-   * Before
-   *   L: [0][1][2][ ] ↓
-   *   R: [3][ ][ ][ ] ↓
-   *
-   * After one step
-   *   L: [ ][0][1][2] ↓
-   *   R: [ ][3][ ][ ] ↓
-   */
   it("moves four cogs across both lanes without cross-lane deadlock", () => {
     const world = new UserWorld(new World("scene"));
     const conveyorEntityId = world.create();
@@ -220,13 +180,6 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     expect(conveyor.rightProgress).toEqual([0, 0, 0, 0]);
   });
 
-  /**
-   * If there is no downstream belt, the front item should stay pinned in the
-   * tail slot instead of leaving the belt.
-   *
-   *   [ ][ ][ ][X] →
-   *              no next belt
-   */
   it("keeps the tail slot occupied when there is no downstream conveyor", () => {
     const world = new UserWorld(new World("scene"));
     const conveyorEntityId = world.create();
@@ -251,19 +204,6 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     expect(transform.curr.pos.y).toBe(4);
   });
 
-  /**
-   * An item stalled at the tail should not dump its accumulated overflow into a
-   * newly connected next belt.
-   *
-   * Step 1
-   *   [ ][ ][ ][X] →  (blocked, no next belt)
-   *
-   * Step 2
-   *   [ ][ ][ ][X] → [ ][ ][ ][ ]
-   *
-   * Result
-   *   item enters the new belt at slot 0 with fresh progress
-   */
   it("does not carry stalled tail progress into a newly connected conveyor", () => {
     const world = new UserWorld(new World("scene"));
     const headBeltId = world.create();
@@ -314,12 +254,6 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     expect(transform.curr.pos.y).toBe(-4);
   });
 
-  /**
-   * A ghost preview at the end of the line must not behave like a real belt.
-   * The front item should remain on the real tail belt.
-   *
-   *   [ ][ ][ ][X] → (ghost preview)
-   */
   it("does not transfer an end-of-line item into a ghost belt preview", () => {
     const world = new UserWorld(new World("scene"));
     const headBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "horizontal-right" });
@@ -345,14 +279,6 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     expect(world.require(entityId, Parent).entityId).toBe(headBeltId);
   });
 
-  /**
-   * Straight-belt timing should still equal one slot hop per quarter of the
-   * full belt traversal duration.
-   *
-   *   [X][ ][ ][ ] →
-   *   after one slot duration
-   *   [ ][X][ ][ ] →
-   */
   it("keeps straight belts on the same timing as the previous full-belt duration", () => {
     const world = new UserWorld(new World("scene"));
     const conveyorEntityId = world.create();
@@ -376,15 +302,6 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     expect(conveyor.leftProgress).toEqual([0, 0, 0, 0]);
   });
 
-  /**
-   * A front item should transfer from one straight belt into the next connected
-   * straight belt when the leaf-driven traversal advances the chain.
-   *
-   *   [ ][ ][ ][X] → → [ ][ ][ ][ ]
-   *
-   * After
-   *   [ ][ ][ ][ ] → → [X][ ][ ][ ]
-   */
   it("moves items into the next connected conveyor when traversing from the leaf", () => {
     const world = new UserWorld(new World("scene"));
     const headBeltId = world.create();
@@ -424,13 +341,6 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     expect(SHARED_WORLD_TRANSFORM.curr.pos.y).toBe(-4);
   });
 
-  /**
-   * A front item on a curve should transfer into the first slot of the next
-   * connected straight belt.
-   *
-   *   curve [ ][ ][ ][X] ↱
-   *                     ↑ [ ][ ][ ][ ]
-   */
   it("moves items from a curve into the next connected straight conveyor", () => {
     const world = new UserWorld(new World("scene"));
     const curveBeltId = world.create();
@@ -464,16 +374,6 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     expect(SHARED_WORLD_TRANSFORM.curr.pos.y).toBe(-10);
   });
 
-  /**
-   * Closed loops still need a single designated anchor so traversal runs once
-   * around the loop instead of iterating forever.
-   *
-   *   ┌→
-   *   ↑ ↓
-   *   ←┘
-   *
-   * Anchor receives the transferred item.
-   */
   it("advances a closed loop from its designated leaf anchor without revisiting it forever", () => {
     const world = new UserWorld(new World("scene"));
     const anchorBeltId = world.create();
@@ -518,12 +418,6 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     expect(world.require(entityId, Parent).entityId).toBe(anchorBeltId);
   });
 
-  /**
-   * The designated loop anchor should also be able to hand items forward into
-   * its downstream belt.
-   *
-   *   anchor ─X→ next
-   */
   it("lets the designated loop anchor transfer into its downstream belt", () => {
     const world = new UserWorld(new World("scene"));
     const anchorBeltId = world.create();
@@ -568,14 +462,6 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     expect(world.require(entityId, Parent).entityId).toBe(secondBeltId);
   });
 
-  /**
-   * An unrelated adjacent belt should keep its own leaf while the loop keeps
-   * moving through its original leaf.
-   *
-   *   side →   ┌→
-   *            ↑ ↓
-   *            ←┘
-   */
   it("keeps loop items moving when adding an adjacent non-connecting belt", () => {
     const world = new UserWorld(new World("scene"));
     spawnTransportBelt(world, { x: 0, y: 0, variant: "angled-bottom-right" });
@@ -621,20 +507,6 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     expect(world.require(adjacentBeltId, ConveyorBeltComponent).nextEntityId).toBeNull();
   });
 
-  /**
-   * Breaking a loop should turn it into an open chain with a new leaf, and
-   * items should keep moving toward that leaf.
-   *
-   * Before
-   *   ┌→
-   *   ↑ ↓
-   *   ←┘
-   *
-   * After remove
-   *   X→
-   *   ↑
-   *   ←┘
-   */
   it("keeps items moving after breaking a loop", () => {
     const world = new UserWorld(new World("scene"));
     const firstBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "angled-bottom-right" });
@@ -666,14 +538,6 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     expect(world.has(secondBeltId, ConveyorBeltComponent)).toBe(true);
   });
 
-  /**
-   * User repro: adding an unrelated side belt, then deleting the belt opposite
-   * that side belt, should still leave a traversable main segment.
-   *
-   *   side →   ┌──┐
-   *            │  X
-   *            └──┘
-   */
   it("keeps the user's loop layout moving after adding an unrelated side belt and deleting from the loop", () => {
     const world = new UserWorld(new World("scene"));
     const centerBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "vertical-up" });
@@ -722,14 +586,6 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     expect(world.has(bottomLeftBeltId, ConveyorBeltComponent)).toBe(true);
   });
 
-  /**
-   * User repro with several items already on the small loop. Removing the
-   * opposite belt must not freeze the remaining carried items.
-   *
-   *   side →   ┌─o┐
-   *            o  X
-   *            └o─┘
-   */
   it("keeps multiple carried items advancing in the user's screenshot layout after the opposite belt is deleted", () => {
     const world = new UserWorld(new World("scene"));
     const centerBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "vertical-up" });
@@ -776,17 +632,6 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     expect(world.require(sideBeltId, ConveyorBeltComponent).nextEntityId).toBeNull();
   });
 
-  /**
-   * Larger user repro: items are already circulating on a bigger rectangle,
-   * then a side belt is previewed/placed and the opposite middle belt is
-   * removed. The chain should still advance afterward.
-   *
-   *   side →   ┌────┐
-   *            │ o  │
-   *            │    X
-   *            │ o  │
-   *            └─o──┘
-   */
   it("keeps already-moving items advancing in the larger loop after adding a side belt and deleting the opposite middle belt", () => {
     const world = new UserWorld(new World("scene"));
     const beltIds = {
@@ -863,16 +708,6 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     expect(world.require(sideBeltId, ConveyorBeltComponent).nextEntityId).toBeNull();
   });
 
-  /**
-   * Same larger-loop repro, but exercised through the real placement delete
-   * path used by the UI.
-   *
-   *   side →   ┌────┐
-   *            │ o  │
-   *            │    X  (deleted via placement)
-   *            │    │
-   *            └─o──┘
-   */
   it("keeps already-moving items advancing when the opposite belt is deleted through placement", () => {
     const world = new UserWorld(new World("scene"));
     const beltIds = {
@@ -943,15 +778,6 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     expect(world.has(beltIds.rightMid, ConveyorBeltComponent)).toBe(false);
   });
 
-  /**
-   * No matter which belt is removed from the small loop, the remaining real
-   * loop segment should keep at least one traversal leaf.
-   *
-   *   remove any one of
-   *   ┌→
-   *   ↑ ↓
-   *   ←┘
-   */
   it("keeps a traversal leaf on the user's loop layout regardless of which loop belt is deleted", () => {
     const removalVariants = [
       "center",
@@ -1093,32 +919,15 @@ describe("ConveyorWorldMotionUtils.advanceWorld", () => {
 });
 
 describe("conveyor motion timing constants", () => {
-  /**
-   * Straight belts have no inside or outside curve lane.
-   *
-   *   ───
-   */
   it("returns null lane roles for non-curved belts", () => {
     expect(getCurveLaneSides("horizontal-right")).toEqual([null, null]);
   });
 
-  /**
-   * Curves designate one lane as the inside lane and the other as outside.
-   *
-   *   ↱
-   *   inside hugs the corner
-   */
   it("marks the correct inside lane for curved belts", () => {
     expect(getCurveLaneSides("angled-right-up")).toEqual(["right", "left"]);
     expect(getCurveLaneSides("angled-left-up")).toEqual(["left", "right"]);
   });
 
-  /**
-   * Only the inside lane of a curve should receive the faster slot duration.
-   *
-   *   outside lane  = normal speed
-   *   inside lane   = faster speed
-   */
   it("uses a faster advance duration only for the inside curved lane", () => {
     expect(getSlotAdvanceDurations("horizontal-right")).toEqual([
       SLOT_ADVANCE_DURATION_MS,
@@ -1134,10 +943,6 @@ describe("conveyor motion timing constants", () => {
     ]);
   });
 
-  /**
-   * The configured inside-lane duration should match the declared speed
-   * multiplier exactly.
-   */
   it("keeps the inside curved duration aligned with the configured speed multiplier", () => {
     expect(INSIDE_CURVE_SLOT_ADVANCE_DURATION_MS).toBe(
       SLOT_ADVANCE_DURATION_MS / INSIDE_CURVE_SPEED_MULTIPLIER,

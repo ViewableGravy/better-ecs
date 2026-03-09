@@ -1,12 +1,16 @@
 import {
-  canConveyorStoreEntities,
-  ConveyorBeltComponent,
-  type ConveyorSide,
-  type ConveyorSlotIndex,
+    canConveyorStoreEntities,
+    ConveyorBeltComponent,
+    type ConveyorSide,
+    type ConveyorSlotIndex,
 } from "@client/components/conveyor-belt";
-import { CONVEYOR_SLOT_POSITIONS, getTransportBeltFlow } from "@client/entities/transport-belt/consts";
+import {
+    getConveyorLaneProgress,
+    getConveyorLaneSlots,
+    getTransportBeltVariantDescriptor,
+} from "@client/entities/transport-belt/core";
+import { BeltItemRailsUtility } from "@client/entities/transport-belt/motion/BeltItemRailsUtility";
 import type { TransportBeltEntityId } from "@client/entities/transport-belt/types";
-import { BeltItemRailsUtility } from "@client/entities/transport-belt/utils/rails";
 import { Vec2, type EntityId, type UserWorld } from "@engine";
 import { Parent, Transform2D } from "@engine/components";
 import invariant from "tiny-invariant";
@@ -26,8 +30,8 @@ export class ConveyorUtils {
     progress: number = 0.5,
   ): void {
     const conveyor = world.get(conveyorEntityId, ConveyorBeltComponent);
-    const slots = this.resolveSlots(conveyor, side);
-    const slotProgress = this.resolveSlotProgress(conveyor, side);
+    const slots = getConveyorLaneSlots(conveyor, side);
+    const slotProgress = getConveyorLaneProgress(conveyor, side);
 
     invariant(
       canConveyorStoreEntities(conveyor.variant),
@@ -61,37 +65,6 @@ export class ConveyorUtils {
       return false;
     }
 
-    return getTransportBeltFlow(variant) !== undefined;
-  }
-
-  /**
-   * Resolves the static center position of a slot on the local belt transform.
-   */
-  public static resolveSlotLocalPosition(
-    variant: string,
-    side: ConveyorSide,
-    index: ConveyorSlotIndex,
-  ): readonly [number, number] {
-    const mappedPosition = CONVEYOR_SLOT_POSITIONS[`${variant}:${side}:${index}`];
-
-    invariant(mappedPosition, `No slot position found for variant ${variant}, side ${side}, index ${index}`);
-
-    return mappedPosition;
-  }
-
-  private static resolveSlots(conveyor: ConveyorBeltComponent, side: ConveyorSide): ConveyorBeltComponent["left"] {
-    if (side === "left") {
-      return conveyor.left;
-    }
-
-    return conveyor.right;
-  }
-
-  private static resolveSlotProgress(conveyor: ConveyorBeltComponent, side: ConveyorSide): ConveyorBeltComponent["leftProgress"] {
-    if (side === "left") {
-      return conveyor.leftProgress;
-    }
-
-    return conveyor.rightProgress;
+    return getTransportBeltVariantDescriptor(variant) !== undefined;
   }
 }
