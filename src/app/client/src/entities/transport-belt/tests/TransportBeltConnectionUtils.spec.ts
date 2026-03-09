@@ -4,17 +4,70 @@ import { GhostPreviewComponent } from "@client/entities/ghost";
 import { destroyTransportBelt, spawnTransportBelt } from "@client/entities/transport-belt";
 import { TransportBeltGhost } from "@client/entities/transport-belt/ghost";
 import { TransportBeltAutoShapeManager } from "@client/entities/transport-belt/placement/TransportBeltAutoShapeManager";
+import { TransportBeltTerminalDecoration } from "@client/entities/transport-belt/placement/TransportBeltTerminalDecoration";
 import { TransportBeltConnectionUtils } from "@client/entities/transport-belt/topology/TransportBeltConnectionUtils";
 import { GridSingleton } from "@client/systems/world/build-mode/grid-singleton";
 import { EntityId, UserWorld, World } from "@engine";
-import { Parent, Transform2D } from "@engine/components";
+import { AnimatedSprite, Parent, Transform2D } from "@engine/components";
 import { describe, expect, it } from "vitest";
 
 function countLeafBelts(world: UserWorld, beltEntityIds: readonly EntityId[]): number {
   return beltEntityIds.filter((beltEntityId) => world.has(beltEntityId, TransportBeltLeaf)).length;
 }
 
+function findTerminalDecorationEntityId(
+  world: UserWorld,
+  ownerEntityId: EntityId,
+  role: "start" | "end",
+): EntityId | null {
+  for (const decorationEntityId of world.query(TransportBeltTerminalDecoration)) {
+    const decoration = world.get(decorationEntityId, TransportBeltTerminalDecoration);
+
+    if (!decoration) {
+      continue;
+    }
+
+    if (decoration.ownerEntityId === ownerEntityId && decoration.role === role) {
+      return decorationEntityId;
+    }
+  }
+
+  return null;
+}
+
+function expectTerminalDecoration(
+  world: UserWorld,
+  ownerEntityId: EntityId,
+  role: "start" | "end",
+  expectedLocalX: number,
+  expectedLocalY: number,
+  expectedFramePrefix: string,
+): void {
+  const decorationEntityId = findTerminalDecorationEntityId(world, ownerEntityId, role);
+
+  expect(decorationEntityId).not.toBeNull();
+
+  if (decorationEntityId === null) {
+    throw new Error("Expected terminal decoration to exist");
+  }
+
+  const decorationTransform = world.require(decorationEntityId, Transform2D);
+  const decorationSprite = world.require(decorationEntityId, AnimatedSprite);
+
+  expect(decorationTransform.curr.pos.x).toBe(expectedLocalX);
+  expect(decorationTransform.curr.pos.y).toBe(expectedLocalY);
+  expect(decorationSprite.frames[0]).toBe(expectedFramePrefix);
+}
+
 describe("spawnTransportBelt connectivity", () => {
+  it("renders start and end terminal pieces for an isolated belt", () => {
+    const world = new UserWorld(new World("scene"));
+    const beltEntityId = spawnTransportBelt(world, { x: 0, y: 0, variant: "horizontal-right" });
+
+    expectTerminalDecoration(world, beltEntityId, "start", -20, 0, "transport-belt:start-left_1");
+    expectTerminalDecoration(world, beltEntityId, "end", 20, 0, "transport-belt:end-right_1");
+  });
+
   it("connects adjacent straight belts and marks the tail as a leaf", () => {
     const world = new UserWorld(new World("scene"));
     const firstBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "horizontal-right" });
@@ -31,6 +84,10 @@ describe("spawnTransportBelt connectivity", () => {
     expect(secondBelt.isLeaf).toBe(true);
     expect(world.has(firstBeltId, TransportBeltLeaf)).toBe(false);
     expect(world.has(secondBeltId, TransportBeltLeaf)).toBe(true);
+    expect(findTerminalDecorationEntityId(world, firstBeltId, "end")).toBeNull();
+    expect(findTerminalDecorationEntityId(world, secondBeltId, "start")).toBeNull();
+    expectTerminalDecoration(world, firstBeltId, "start", -20, 0, "transport-belt:start-left_1");
+    expectTerminalDecoration(world, secondBeltId, "end", 20, 0, "transport-belt:end-right_1");
   });
 
   it("connects a straight belt into a compatible curve", () => {
@@ -223,6 +280,19 @@ describe("spawnTransportBelt connectivity", () => {
 });
 
 describe("destroyTransportBelt", () => {
+  it("restores terminal pieces when a connecting belt is removed", () => {
+    const world = new UserWorld(new World("scene"));
+    const firstBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "horizontal-right" });
+    const secondBeltId = spawnTransportBelt(world, { x: 20, y: 0, variant: "horizontal-right" });
+
+    destroyTransportBelt(world, secondBeltId);
+
+    expectTerminalDecoration(world, firstBeltId, "start", -20, 0, "transport-belt:start-left_1");
+    expectTerminalDecoration(world, firstBeltId, "end", 20, 0, "transport-belt:end-right_1");
+    expect(findTerminalDecorationEntityId(world, secondBeltId, "start")).toBeNull();
+    expect(findTerminalDecorationEntityId(world, secondBeltId, "end")).toBeNull();
+  });
+
   it("breaks the line at the removed belt and destroys child items with it", () => {
     const world = new UserWorld(new World("scene"));
     const firstBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "horizontal-right" });
