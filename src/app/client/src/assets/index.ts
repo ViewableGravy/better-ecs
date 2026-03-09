@@ -1,6 +1,7 @@
 import { transportBeltSheet } from "@client/assets/conveyor";
 import { ironGearSheet } from "@client/assets/iron-gear";
 import { ironOreSheet } from "@client/assets/iron-ore";
+import { landClaimViewableGravyNameplateTexturePath } from "@client/assets/land-claim";
 import PlayerSprite from "@client/assets/sprites/player.png";
 import { createAssetLoader, createLoadShaderSource, createLoadTexture } from "@engine/asset";
 
@@ -12,6 +13,7 @@ export const Loader = createAssetLoader({
   "iron-gear": ironGearSheet,
   "iron-ore": ironOreSheet,
   "transport-belt": transportBeltSheet,
+  "land-claim:viewable-gravy-nameplate": createLoadTexture(landClaimViewableGravyNameplateTexturePath),
   "editor:demo-quad-shader": createLoadShaderSource(
     demoShaderVertexPath, 
     demoShaderFragmentPath

@@ -1,23 +1,13 @@
 import type { RenderVisibilityRole } from "@client/components/render-visibility";
 import { HOUSE_INTERIOR, OUTSIDE } from "@client/components/render-visibility";
-import { spawnBox } from "@client/entities/box";
-import { BoxGhost } from "@client/entities/box/ghost";
 import { GhostPreviewComponent } from "@client/entities/ghost";
-import { spawnTransportBelt } from "@client/entities/transport-belt";
-import { TransportBeltGhost } from "@client/entities/transport-belt/ghost";
-import { TransportBeltAutoShapeManager } from "@client/entities/transport-belt/placement/TransportBeltAutoShapeManager";
-import { TransportBeltPlacementRotationManager } from "@client/entities/transport-belt/placement/TransportBeltPlacementRotationManager";
-import { Placeable } from "@client/systems/world/build-mode/components";
 import {
   buildModeStateDefault,
   buildModeStateSchema,
-  TRANSPORT_BELT_OFFSET_X,
-  TRANSPORT_BELT_OFFSET_Y,
 } from "@client/systems/world/build-mode/const";
 import { BuildModeDomEvents, HUD } from "@client/systems/world/build-mode/dom";
-import { GhostPreviewManager } from "@client/systems/world/build-mode/ghost-preview-manager";
 import { GhostPreviewScopeUtils } from "@client/systems/world/build-mode/ghost-preview-scope";
-import { GridSingleton, type GridCoordinates } from "@client/systems/world/build-mode/grid-singleton";
+import { GridSingleton } from "@client/systems/world/build-mode/grid-singleton";
 import * as Keybinds from '@client/systems/world/build-mode/input';
 import { Placement } from "@client/systems/world/build-mode/placement";
 import { resolvePlacementWorld, type PlacementWorldResolution } from "@client/systems/world/build-mode/placement-target";
@@ -57,42 +47,20 @@ export const System = createSystem("main:build-mode")({
     const worldPointer = mouse.world(camera);
 
     const gridCoordinates = GridSingleton.worldToGridCoordinates(worldPointer.x, worldPointer.y);
-    const [snappedX, snappedY] = GridSingleton.gridCoordinatesToWorldOrigin(gridCoordinates);
 
     const placementTarget = resolvePlacementWorld(engine, worldPointer);
     const placementWorld = placementTarget.world;
-    const selectedTransportBeltVariant = data.selectedItem === "transport-belt" && placementWorld
-      ? TransportBeltPlacementRotationManager.resolveVariant(
-        placementWorld,
-        gridCoordinates,
-        data.placementEndSide,
-      )
-      : null;
+    const resolvedPlacement = placementTarget.blocked || placementWorld === undefined
+      ? null
+      : Placement.resolveSelection(placementWorld, gridCoordinates, data);
 
     GhostPreviewScopeUtils.pruneGhosts(rootWorld, focusedWorld, sceneWorlds);
 
-    if (data.selectedItem === null || placementTarget.blocked) {
+    if (data.selectedItem === null || resolvedPlacement === null) {
       focusedWorld.destroy(GhostPreviewComponent);
       data.ghostEntityId = null;
     } else {
-      if (data.selectedItem === "transport-belt" && selectedTransportBeltVariant !== null) {
-        data.ghostEntityId = GhostPreviewManager.sync(
-          focusedWorld,
-          data.ghostEntityId,
-          snappedX,
-          snappedY,
-          TransportBeltGhost as any,
-          selectedTransportBeltVariant,
-        );
-      } else {
-        data.ghostEntityId = GhostPreviewManager.sync(
-          focusedWorld,
-          data.ghostEntityId,
-          snappedX,
-          snappedY,
-          BoxGhost,
-        );
-      }
+      data.ghostEntityId = resolvedPlacement.syncGhost(focusedWorld, data.ghostEntityId);
     }
 
     const shouldDelete = data.pendingDelete;
@@ -104,40 +72,14 @@ export const System = createSystem("main:build-mode")({
       Placement.deleteAt(placementWorld, worldPointer);
     }
 
-    if (placementTarget.world) {
-      if (shouldSpawnPlacement(shouldPlace, placementTarget, data, gridCoordinates)) {
+    if (placementTarget.world && resolvedPlacement) {
+      if (shouldSpawnPlacement(shouldPlace, placementTarget, data, resolvedPlacement)) {
         const renderVisibilityRole = resolvePlacementRenderVisibilityRole(
           engine,
           placementTarget.contextId,
         );
 
-        if (data.selectedItem === "box") {
-          spawnBox(placementTarget.world, {
-            snappedX,
-            snappedY,
-            renderVisibilityRole,
-          });
-        }
-
-        if (data.selectedItem === "transport-belt" && selectedTransportBeltVariant !== null) {
-          const beltX = snappedX + TRANSPORT_BELT_OFFSET_X;
-          const beltY = snappedY + TRANSPORT_BELT_OFFSET_Y;
-
-          Placement.replaceTransportBeltAt(placementTarget.world, beltX, beltY);
-
-          const beltEntityId = spawnTransportBelt(placementTarget.world, {
-            x: beltX,
-            y: beltY,
-            variant: selectedTransportBeltVariant,
-          });
-
-          TransportBeltAutoShapeManager.refreshAffectedBelts(placementTarget.world, beltEntityId);
-
-          placementTarget.world.add(
-            beltEntityId,
-            new Placeable("transport-belt"),
-          );
-        }
+        resolvedPlacement.spawn(renderVisibilityRole);
       }
     }
   },
@@ -147,7 +89,7 @@ function shouldSpawnPlacement(
   shouldPlace: boolean,
   placementTarget: PlacementWorldResolution,
   data: RegisteredSystems["main:build-mode"]["data"],
-  gridCoordinates: GridCoordinates,
+  resolvedPlacement: { canPlace: boolean },
 ): boolean {
   // Early exit if the place action wasn't triggered to avoid unnecessary checks
   if (!shouldPlace) {
@@ -170,7 +112,7 @@ function shouldSpawnPlacement(
   }
 
   // Selected item collision policy must allow placement (4)
-  if (!Placement.canPlaceItem(placementTarget.world, gridCoordinates, data.selectedItem)) {
+  if (!resolvedPlacement.canPlace) {
     return false;
   }
 

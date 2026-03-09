@@ -20,7 +20,7 @@ import { System as PortalSystem } from "@client/systems/world/portal";
 import { System as Collision } from "@client/systems/world/scene-collision";
 import { fromContext, FromEngine } from "@engine/context";
 import {
-  createContextScene
+    createContextScene
 } from "@libs/spatial-contexts";
 
 export const Scene = createContextScene("MainScene")({
@@ -79,5 +79,6 @@ export const Scene = createContextScene("MainScene")({
     await assets.load("player-sprite");
     await assets.loadSheet("iron-gear");
     await assets.loadSheet("transport-belt");
+    await assets.load("land-claim:viewable-gravy-nameplate");
   },
 });

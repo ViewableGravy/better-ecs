@@ -20,6 +20,11 @@ export const HOTBAR_SLOT_CONVEYOR_HORIZONTAL_RIGHT: KeyBind = {
   modifiers: {},
 };
 
+export const HOTBAR_SLOT_LAND_CLAIM: KeyBind = {
+  code: "Digit3",
+  modifiers: {},
+};
+
 export const HOTBAR_SLOT_EMPTY: KeyBind = {
   code: "Digit2",
   modifiers: {},
@@ -42,6 +47,10 @@ export const GRID_TOGGLE_META: KeyBind = {
 
 export const GHOST_FILL = new Color(1, 0.1, 0.7, 0.25);
 export const GHOST_STROKE = new Color(1, 0.35, 0.85, 0.95);
+export const VALID_GHOST_TINT = new Color(1, 1, 1, 0.6);
+export const INVALID_GHOST_FILL = new Color(1, 0.18, 0.18, 0.28);
+export const INVALID_GHOST_STROKE = new Color(1, 0.45, 0.45, 0.98);
+export const INVALID_GHOST_TINT = new Color(1, 0.45, 0.45, 0.76);
 export const PLACED_FILL = new Color(1, 0.2, 0.8, 1);
 export const PLACED_STROKE = new Color(1, 1, 1, 1);
 
@@ -52,7 +61,7 @@ export const TRANSPORT_BELT_ROTATION_END_SIDES: readonly TransportBeltSide[] = [
 /**********************************************************************************************************
 *   STATE
 **********************************************************************************************************/
-export type BuildItemType = "box" | "transport-belt";
+export type BuildItemType = "box" | "transport-belt" | "land-claim";
 
 export type BuildModeState = {
   selectedItem: BuildItemType | null;
@@ -73,7 +82,7 @@ export const buildModeStateDefault: BuildModeState = {
 };
 
 export const buildModeStateSchema = z.object({
-  selectedItem: z.enum(["box", "transport-belt"]).nullable(),
+  selectedItem: z.enum(["box", "transport-belt", "land-claim"]).nullable(),
   gridVisible: z.boolean(),
   pendingPlace: z.boolean(),
   pendingDelete: z.boolean(),
