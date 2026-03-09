@@ -6,6 +6,12 @@ export type QueryComponentType = Class<unknown>;
 type QueryComponentInstance<TComponentType extends QueryComponentType> =
   TComponentType extends Class<infer TComponent> ? TComponent : never;
 
+type UnionToIntersection<TUnion> = (
+  TUnion extends unknown ? (value: TUnion) => void : never
+) extends (value: infer TIntersection) => void
+  ? TIntersection
+  : never;
+
 type IsUnknown<T> = unknown extends T
   ? [keyof T] extends [never]
     ? true
@@ -13,14 +19,15 @@ type IsUnknown<T> = unknown extends T
   : false;
 
 /**
- * Query metadata is represented as a union of queried component instances.
- * Component lookups use `Extract<>` so `world.get(entityId, A)` still narrows
- * correctly for ids returned from `world.query(A, B)`.
+ * Query metadata is represented as an intersection of queried component instances.
+ * This keeps ids from multi-component queries assignable to narrower entity-id
+ * views like `EntityId<A>` while `world.get(entityId, A)` still narrows via
+ * `Extract<>`.
  */
 export type QueryComponentMetadata<TComponentTypes extends readonly QueryComponentType[]> =
   TComponentTypes extends readonly []
     ? unknown
-    : QueryComponentInstance<TComponentTypes[number]>;
+    : UnionToIntersection<QueryComponentInstance<TComponentTypes[number]>>;
 
 export type EntityIdHasComponent<TEntityComponents, TComponent> =
   IsUnknown<TEntityComponents> extends true

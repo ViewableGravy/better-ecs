@@ -27,7 +27,9 @@ type SingleQueryEntityId = (typeof singleQuery)[number];
 type MultiQueryEntityId = (typeof multiQuery)[number];
 
 expectTypeOf<SingleQueryEntityId>().toEqualTypeOf<EntityId<ComponentA>>();
-expectTypeOf<MultiQueryEntityId>().toEqualTypeOf<EntityId<ComponentA | ComponentB>>();
+expectTypeOf<MultiQueryEntityId>().toEqualTypeOf<EntityId<ComponentA & ComponentB>>();
+expectTypeOf<MultiQueryEntityId>().toExtend<EntityId<ComponentA>>();
+expectTypeOf<MultiQueryEntityId>().toExtend<EntityId<ComponentB>>();
 
 const createdEntityComponentA: ComponentA | undefined = world.get(entityId, ComponentA);
 void createdEntityComponentA;

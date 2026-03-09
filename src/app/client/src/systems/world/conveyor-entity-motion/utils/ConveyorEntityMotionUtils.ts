@@ -9,7 +9,7 @@ import { Parent, Transform2D } from "@engine/components";
  **********************************************************************************************************/
 
 export class ConveyorEntityMotionUtils {
-  public static advanceBeltLineFromLeaf(world: UserWorld, leafEntityId: EntityId, updateDelta: number): void {
+  public static advanceBeltLineFromLeaf(world: UserWorld, leafEntityId: EntityId<ConveyorBeltComponent>, updateDelta: number): void {
     let nextEntityId = this.getTraversalNextEntityId(world, leafEntityId);
     let currentEntityId: EntityId | null = leafEntityId;
     let shouldStopOnLeafEntityId = false;
@@ -269,10 +269,7 @@ export class ConveyorEntityMotionUtils {
     return conveyor.right;
   }
 
-  private static getProgress(
-    conveyor: ConveyorBeltComponent,
-    side: ConveyorSide
-  ): ConveyorBeltComponent["leftProgress"] {
+  private static getProgress(conveyor: ConveyorBeltComponent, side: ConveyorSide): ConveyorBeltComponent["leftProgress"] {
     if (side === "left") {
       return conveyor.leftProgress;
     }
@@ -280,15 +277,8 @@ export class ConveyorEntityMotionUtils {
     return conveyor.rightProgress;
   }
 
-  private static getTraversalNextEntityId(
-    world: UserWorld,
-    leafEntityId: EntityId
-  ): EntityId | null {
+  private static getTraversalNextEntityId(world: UserWorld, leafEntityId: EntityId<ConveyorBeltComponent>): EntityId | null {
     const leafConveyor = world.get(leafEntityId, ConveyorBeltComponent);
-
-    if (!leafConveyor) {
-      return null;
-    }
 
     if (leafConveyor.previousEntityId === null) {
       return null;

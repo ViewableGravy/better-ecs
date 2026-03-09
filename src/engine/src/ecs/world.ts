@@ -10,10 +10,10 @@ import { createEntityId, getEntityIndex, invalidateEntity } from "@engine/ecs/en
 import { ComponentStore } from "@engine/ecs/storage";
 import type { Class } from "type-fest";
 
-type ForEach1Callback<TA> = (entityId: EntityId, componentA: TA) => void;
-type ForEach2Callback<TA, TB> = (entityId: EntityId, componentA: TA, componentB: TB) => void;
+type ForEach1Callback<TA> = (entityId: EntityId<TA>, componentA: TA) => void;
+type ForEach2Callback<TA, TB> = (entityId: EntityId<TA & TB>, componentA: TA, componentB: TB) => void;
 type ForEach3Callback<TA, TB, TC> = (
-  entityId: EntityId,
+  entityId: EntityId<TA & TB & TC>,
   componentA: TA,
   componentB: TB,
   componentC: TC,
@@ -27,16 +27,13 @@ export interface IUserWorld {
 
   add<T>(entityId: EntityId, componentType: Class<T>, component: T): void;
   add<T>(entityId: EntityId, component: T): void;
-  get<T, TEntityComponents>(
-    entityId: EntityId<TEntityComponents>,
-    componentType: Class<T>,
-  ): EntityComponentLookupResult<TEntityComponents, T>;
+  get<T, TEntityComponents>(entityId: EntityId<TEntityComponents>, componentType: Class<T>): EntityComponentLookupResult<TEntityComponents, T>;
   require<T>(entityId: EntityId, componentType: Class<T>): T;
 
   all(): EntityId[];
   getComponentTypes(entityId: EntityId): Function[];
-  has(entityId: EntityId, componentType: Class<any>): boolean;
-  remove(entityId: EntityId, componentType: Class<any>): void;
+  has<T>(entityId: EntityId<T>, componentType: Class<T>): boolean;
+  remove<T>(entityId: EntityId<T>, componentType: Class<T>): void;
 
   move(entityId: EntityId, world: UserWorld): void;
 
@@ -105,11 +102,8 @@ export class UserWorld implements IUserWorld {
     this.world.addComponent(entityId, componentTypeOrComponent as any, component as any);
   }
 
-  get<T, TEntityComponents>(
-    entityId: EntityId<TEntityComponents>,
-    componentType: Class<T>,
-  ): EntityComponentLookupResult<TEntityComponents, T>;
-  get<T>(entityId: EntityId, componentType: Class<T>): T | undefined {
+  get<T, TEntityComponents>(entityId: EntityId<TEntityComponents>, componentType: Class<T>): EntityComponentLookupResult<TEntityComponents, T>;
+  get<T>(entityId: EntityId<T>, componentType: Class<T>): T | undefined {
     return this.world.getComponent<T>(entityId, componentType);
   }
 
@@ -119,7 +113,10 @@ export class UserWorld implements IUserWorld {
    * @throws {Error} If the component does not exist on the entity
    */
   require<T>(entityId: EntityId, componentType: Class<T>): T {
-    const component = this.world.getComponent<T>(entityId, componentType);
+    // Cast entityId as we have not asserted prior to this point that the entity has the component, the the generic
+    // does not match yet. This function effectively does that if we have not already used `has`.
+    // If we have used `has` then we can use `get` instead
+    const component = this.world.getComponent<T>(entityId as EntityId<T>, componentType);
     if (component === undefined) {
       throw new Error(
         `Component ${componentType.name} does not exist on entity ${entityId}`,
@@ -336,9 +333,9 @@ export class World {
   /**
    * Adds or replaces a component on an entity
    */
-  addComponent<T>(entityId: EntityId, componentType: Function, component: T): void;
-  addComponent<T>(entityId: EntityId, component: T): void;
-  addComponent<T>(entityId: EntityId, componentTypeOrComponent: Function | T, component?: T): void {
+  addComponent<T>(entityId: EntityId<T>, componentType: Function, component: T): void;
+  addComponent<T>(entityId: EntityId<T>, component: T): void;
+  addComponent<T>(entityId: EntityId<T>, componentTypeOrComponent: Function | T, component?: T): void {
     if (!this.entities.has(entityId)) {
       throw new Error(`Entity ${entityId} does not exist`);
     }
@@ -361,7 +358,7 @@ export class World {
   /**
    * Gets a component from an entity
    */
-  getComponent<T>(entityId: EntityId, componentType: Function): T | undefined {
+  getComponent<T>(entityId: EntityId<T>, componentType: Function): T | undefined {
     const store = this.componentStores.get(componentType);
     if (!store) return undefined;
     return (store as ComponentStore<T>).get(entityId);
@@ -370,7 +367,7 @@ export class World {
   /**
    * Checks if an entity has a component
    */
-  hasComponent(entityId: EntityId, componentType: Function): boolean {
+  hasComponent<T>(entityId: EntityId<T>, componentType: Function): boolean {
     const store = this.componentStores.get(componentType);
     if (!store) return false;
     return store.has(entityId);
@@ -379,7 +376,7 @@ export class World {
   /**
    * Removes a component from an entity
    */
-  removeComponent(entityId: EntityId, componentType: Function): void {
+  removeComponent<T>(entityId: EntityId<T>, componentType: Function): void {
     const store = this.componentStores.get(componentType);
     if (store) {
       store.remove(entityId);
@@ -579,7 +576,9 @@ export class World {
           continue;
         }
 
-        callback(entityId, componentA, componentB);
+        // The sparse-set membership check above proves this entity has both components.
+        const intersectedEntityId = entityId as EntityId<TA & TB>;
+        callback(intersectedEntityId, componentA, componentB);
       }
 
       return;
@@ -600,7 +599,9 @@ export class World {
         continue;
       }
 
-      callback(entityId, componentA, componentB);
+      // The sparse-set membership check above proves this entity has both components.
+      const intersectedEntityId = entityId as EntityId<TA & TB>;
+      callback(intersectedEntityId, componentA, componentB);
     }
   }
 
@@ -618,7 +619,7 @@ export class World {
       return;
     }
 
-    let smallestStore: ComponentStore<unknown> = storeA;
+    let smallestStore: ComponentStore<TA | TB | TC> = storeA;
     let smallestKey: "A" | "B" | "C" = "A";
 
     if (storeB.count() < smallestStore.count()) {
@@ -665,7 +666,9 @@ export class World {
         continue;
       }
 
-      callback(entityId, componentA, componentB, componentC);
+      // The sparse-set membership checks above prove this entity has all requested components.
+      const intersectedEntityId = entityId as EntityId<TA & TB & TC>;
+      callback(intersectedEntityId, componentA, componentB, componentC);
     }
   }
 

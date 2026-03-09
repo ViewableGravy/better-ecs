@@ -8,13 +8,13 @@ import { getEntityIndex } from "@engine/ecs/entity";
  */
 export class ComponentStore<T> {
   private denseComponents: T[] = [];
-  private denseEntities: EntityId[] = [];
+  private denseEntities: EntityId<T>[] = [];
   private sparse: Map<number, number> = new Map(); // entityIndex -> denseIndex
 
   /**
    * Adds or replaces a component for an entity
    */
-  add(entityId: EntityId, component: T): void {
+  add(entityId: EntityId<T>, component: T): void {
     const index = getEntityIndex(entityId);
 
     if (this.sparse.has(index)) {
@@ -38,7 +38,7 @@ export class ComponentStore<T> {
   /**
    * Gets a component for an entity, or undefined if not present
    */
-  get(entityId: EntityId): T | undefined {
+  get(entityId: EntityId<T>): T | undefined {
     const index = getEntityIndex(entityId);
     const denseIndex = this.sparse.get(index);
 
@@ -49,7 +49,7 @@ export class ComponentStore<T> {
   /**
    * Checks if an entity has this component
    */
-  has(entityId: EntityId): boolean {
+  has(entityId: EntityId<T>): boolean {
     const index = getEntityIndex(entityId);
     return this.sparse.has(index);
   }
@@ -76,14 +76,14 @@ export class ComponentStore<T> {
   /**
    * Dense entity list (cache-friendly) matching component order.
    */
-  entityIds(): readonly EntityId[] {
-    return this.denseEntities;
+  entityIds(): readonly EntityId<T>[] {
+    return this.denseEntities as readonly EntityId<T>[];
   }
 
   /**
    * Removes a component from an entity
    */
-  remove(entityId: EntityId): void {
+  remove(entityId: EntityId<T>): void {
     const index = getEntityIndex(entityId);
     const denseIndex = this.sparse.get(index);
 
@@ -116,7 +116,7 @@ export class ComponentStore<T> {
     this.sparse.delete(index);
   }
 
-  *[Symbol.iterator](): IterableIterator<[EntityId, T]> {
+  *[Symbol.iterator](): IterableIterator<[EntityId<T>, T]> {
     for (let i = 0; i < this.denseComponents.length; i += 1) {
       const component = this.denseComponents[i];
       const entityId = this.denseEntities[i];

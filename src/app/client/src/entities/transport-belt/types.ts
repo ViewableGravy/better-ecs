@@ -6,7 +6,7 @@ import { Transform2D } from "@engine/components";
  *   TYPE DEFINITIONS
  **********************************************************************************************************/
 
-export type TransportBeltEntityId = EntityId<ConveyorBeltComponent | Transform2D>;
+export type TransportBeltEntityId = EntityId<ConveyorBeltComponent & Transform2D>;
 
 /**********************************************************************************************************
  *   COMPONENT START
