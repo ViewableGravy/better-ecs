@@ -5,7 +5,7 @@ import type {
   BuildModeState,
 } from "@client/systems/world/build-mode/const";
 import type { GridCoordinates } from "@client/systems/world/build-mode/grid-singleton";
-import type { EntityId, UserWorld } from "@engine";
+import type { UserWorld } from "@engine";
 import {
   COLLISION_LAYERS,
   inLayer,
@@ -53,9 +53,9 @@ export type PlacementStrategy<TPayload> = {
   canReplace?: PlacementReplacePredicate<TPayload>;
 };
 
-export type PlacementDefinitionSharedOptions<TPayload, TGhostEntityId extends EntityId> = {
+export type PlacementDefinitionSharedOptions<TPayload> = {
   item: string;
-  ghost: GhostPreset<TPayload, TGhostEntityId>;
+  ghost: GhostPreset<TPayload>;
   dragPlacementMode?: PlacementDragMode;
   rotationMode?: PlacementRotationMode;
   resolvePayload?: PlacementPayloadResolver<TPayload>;
@@ -63,10 +63,7 @@ export type PlacementDefinitionSharedOptions<TPayload, TGhostEntityId extends En
   placementStrategy?: PlacementStrategy<TPayload>;
 };
 
-type CreatePlacementDefinitionOptions<TPayload, TGhostEntityId extends EntityId> = PlacementDefinitionSharedOptions<
-  TPayload,
-  TGhostEntityId
-> & {
+type CreatePlacementDefinitionOptions<TPayload> = PlacementDefinitionSharedOptions<TPayload> & {
   canPlace?: PlacementCanPlace<TPayload>;
   spawn: PlacementSpawn<TPayload>;
 };
@@ -90,9 +87,9 @@ export type PlacementSpawnContext = PlacementContext & {
   renderVisibilityRole: RenderVisibilityRole;
 };
 
-export type PlacementDefinition<TPayload = void, TGhostEntityId extends EntityId = EntityId> = {
+export type PlacementDefinition<TPayload = void> = {
   item: string;
-  ghost: GhostPreset<TPayload, TGhostEntityId>;
+  ghost: GhostPreset<TPayload>;
   dragPlacementMode: PlacementDragMode;
   rotationMode: PlacementRotationMode;
   resolvePayload?: PlacementPayloadResolver<TPayload>;
@@ -116,9 +113,9 @@ type ResolvedPlacementStrategy<TPayload> = {
  *   COMPONENT START
  **********************************************************************************************************/
 
-export function createPlacementDefinition<TPayload = void, TGhostEntityId extends EntityId = EntityId>(
-  definition: CreatePlacementDefinitionOptions<TPayload, TGhostEntityId>,
-): PlacementDefinition<TPayload, TGhostEntityId> {
+export function createPlacementDefinition<TPayload = void>(
+  definition: CreatePlacementDefinitionOptions<TPayload>,
+): PlacementDefinition<TPayload> {
   const placementStrategy = resolvePlacementStrategy(definition);
   const canPlace = createPlacementCanPlace(definition, placementStrategy);
 
@@ -131,8 +128,8 @@ export function createPlacementDefinition<TPayload = void, TGhostEntityId extend
   };
 }
 
-export function createPlacementCanPlace<TPayload, TGhostEntityId extends EntityId = EntityId>(
-  definition: Pick<CreatePlacementDefinitionOptions<TPayload, TGhostEntityId>, "item" | "footprint" | "placementStrategy" | "canPlace">,
+export function createPlacementCanPlace<TPayload>(
+  definition: Pick<CreatePlacementDefinitionOptions<TPayload>, "item" | "footprint" | "placementStrategy" | "canPlace">,
   resolvedStrategy: ResolvedPlacementStrategy<TPayload> = resolvePlacementStrategy({
     item: definition.item,
     footprint: definition.footprint,
@@ -146,9 +143,9 @@ export function createPlacementCanPlace<TPayload, TGhostEntityId extends EntityI
   return (context, payload) => canPlaceFromStrategy(resolvedStrategy, context, payload);
 }
 
-function resolvePlacementStrategy<TPayload, TGhostEntityId extends EntityId>(
+function resolvePlacementStrategy<TPayload>(
   definition: Pick<
-    PlacementDefinitionSharedOptions<TPayload, TGhostEntityId>,
+    PlacementDefinitionSharedOptions<TPayload>,
     "item" | "footprint" | "placementStrategy"
   >,
 ): ResolvedPlacementStrategy<TPayload> {

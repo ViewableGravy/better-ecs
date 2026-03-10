@@ -10,17 +10,17 @@ import type { GhostKind } from "@client/entities/ghost/component";
 type GhostSpawner<TEntityId extends EntityId = EntityId> = () => TEntityId;
 type GhostPreviewVariant = string | null;
 
-type CreateEntityGhostPresetOptions<TPayload, TEntityId extends EntityId> = {
+type CreateEntityGhostPresetOptions<TPayload> = {
   kind: GhostKind;
-  spawn: (world: UserWorld, x: number, y: number, payload?: TPayload) => TEntityId;
-  sync?: (world: UserWorld, ghostEntityId: TEntityId, payload?: TPayload) => void;
+  spawn: (world: UserWorld, x: number, y: number, payload?: TPayload) => EntityId;
+  sync?: (world: UserWorld, ghostEntityId: EntityId, payload?: TPayload) => void;
   resolvePreviewVariant?: (payload?: TPayload) => GhostPreviewVariant;
 };
 
-export type GhostPreset<TPayload = void, TEntityId extends EntityId = EntityId> = {
+export type GhostPreset<TPayload = void> = {
   kind: GhostKind;
-  spawn: (world: UserWorld, x: number, y: number, payload?: TPayload) => TEntityId;
-  sync?: (world: UserWorld, ghostEntityId: TEntityId, payload?: TPayload) => void;
+  spawn: (world: UserWorld, x: number, y: number, payload?: TPayload) => EntityId;
+  sync?: (world: UserWorld, ghostEntityId: EntityId, payload?: TPayload) => void;
 };
 
 /**********************************************************************************************************
@@ -36,9 +36,9 @@ export function spawnGhost<TEntityId extends EntityId>(
   return GhostUtils.applyEffect(world, spawn(), kind, previewVariant);
 }
 
-export function createEntityGhostPreset<TPayload = void, TEntityId extends EntityId = EntityId>(
-  options: CreateEntityGhostPresetOptions<TPayload, TEntityId>,
-): GhostPreset<TPayload, TEntityId> {
+export function createEntityGhostPreset<TPayload = void>(
+  options: CreateEntityGhostPresetOptions<TPayload>,
+): GhostPreset<TPayload> {
   return {
     kind: options.kind,
     spawn(world, x, y, payload) {

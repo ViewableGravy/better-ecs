@@ -11,6 +11,7 @@ import {
 } from "@client/systems/world/build-mode/const";
 import { GridSingleton } from "@client/systems/world/build-mode/grid-singleton";
 import type { PlacementContext } from "@client/systems/world/build-mode/placement/createPlacementDefinition";
+import { createGhostPreviewAdapter } from "@client/systems/world/build-mode/placement/preview";
 import { createBuildItemSpec } from "@client/systems/world/build-mode/placement/spec";
 import { UserWorld, World } from "@engine";
 import { describe, expect, it } from "vitest";
@@ -51,7 +52,7 @@ describe("createBuildItemSpec", () => {
 
     const definition = createBuildItemSpec({
       item: "box",
-      ghost: BoxGhost,
+      preview: createGhostPreviewAdapter(BoxGhost),
       placement: {
         footprint: {
           width: 2,

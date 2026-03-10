@@ -8,7 +8,7 @@ Progress status (2026-03-10)
 - [x] Normalize placement commit behavior behind the shared lifecycle contract.
 - [x] Make resolved placement intent plus preview/commit world routing explicit in the runtime flow.
 - [ ] Replace the remaining ad hoc occupancy queries with a fuller declarative rule pipeline.
-- [ ] Split preview adapters from the legacy ghost implementation boundary.
+- [x] Split preview adapters from the runtime placement contract while keeping the legacy ghost path behind an adapter boundary.
 - [ ] Rework drag/planner behavior around shared batched placement intents.
 - [ ] Remove or shrink the remaining low-level legacy placement factory/helpers once all replacements exist.
 

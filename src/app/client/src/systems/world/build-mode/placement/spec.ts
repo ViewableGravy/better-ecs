@@ -1,6 +1,3 @@
-import type { GhostPreset } from "@client/entities/ghost";
-import type { EntityId } from "@engine";
-
 import {
   createPlacementCanPlace,
   type PlacementCanPlace,
@@ -12,6 +9,7 @@ import {
   type PlacementStrategy,
 } from "@client/systems/world/build-mode/placement/createPlacementDefinition";
 import type { PlacementFootprint } from "@client/systems/world/build-mode/placement/footprint";
+import type { PlacementPreviewAdapter } from "@client/systems/world/build-mode/placement/preview";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -27,17 +25,18 @@ type BuildItemLifecycle<TPayload> = {
   commit: PlacementSpawn<TPayload>;
 };
 
-type CreateBuildItemSpecOptions<TPayload, TGhostEntityId extends EntityId> = Pick<
-  PlacementDefinitionSharedOptions<TPayload, TGhostEntityId>,
-  "item" | "ghost" | "dragPlacementMode" | "rotationMode" | "resolvePayload"
+type CreateBuildItemSpecOptions<TPayload> = Pick<
+  PlacementDefinitionSharedOptions<TPayload>,
+  "item" | "dragPlacementMode" | "rotationMode" | "resolvePayload"
 > & {
+  preview: PlacementPreviewAdapter<TPayload>;
   placement?: BuildItemPlacementOptions<TPayload>;
   lifecycle: BuildItemLifecycle<TPayload>;
 };
 
-export type BuildItemSpec<TPayload = void, TGhostEntityId extends EntityId = EntityId> = {
+export type BuildItemSpec<TPayload = void> = {
   item: string;
-  ghost: GhostPreset<TPayload, TGhostEntityId>;
+  preview: PlacementPreviewAdapter<TPayload>;
   dragPlacementMode: PlacementDragMode;
   rotationMode: PlacementRotationMode;
   resolvePayload?: (context: PlacementContext) => TPayload | null | undefined;
@@ -50,14 +49,14 @@ export type BuildItemSpec<TPayload = void, TGhostEntityId extends EntityId = Ent
  *   COMPONENT START
  **********************************************************************************************************/
 
-export function createBuildItemSpec<TPayload = void, TGhostEntityId extends EntityId = EntityId>(
-  options: CreateBuildItemSpecOptions<TPayload, TGhostEntityId>,
-): BuildItemSpec<TPayload, TGhostEntityId> {
+export function createBuildItemSpec<TPayload = void>(
+  options: CreateBuildItemSpecOptions<TPayload>,
+): BuildItemSpec<TPayload> {
   const placement = options.placement ?? {};
 
   return {
     item: options.item,
-    ghost: options.ghost,
+    preview: options.preview,
     dragPlacementMode: options.dragPlacementMode ?? "single",
     rotationMode: options.rotationMode ?? "none",
     resolvePayload: options.resolvePayload,

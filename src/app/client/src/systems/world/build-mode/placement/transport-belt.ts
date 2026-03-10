@@ -10,6 +10,7 @@ import {
   TRANSPORT_BELT_OFFSET_Y,
 } from "@client/systems/world/build-mode/metrics";
 import { createPlacementSpawner } from "@client/systems/world/build-mode/placement/createPlacementSpawner";
+import { createGhostPreviewAdapter } from "@client/systems/world/build-mode/placement/preview";
 import { PlacementQueries } from "@client/systems/world/build-mode/placement/queries";
 import { createBuildItemSpec } from "@client/systems/world/build-mode/placement/spec";
 import { COLLISION_LAYERS } from "@libs/physics";
@@ -20,7 +21,7 @@ import { COLLISION_LAYERS } from "@libs/physics";
 
 export const transportBeltPlacementDefinition = createBuildItemSpec<TransportBeltVariant>({
   item: "transport-belt",
-  ghost: TransportBeltGhost,
+  preview: createGhostPreviewAdapter(TransportBeltGhost),
   dragPlacementMode: "line",
   placement: {
     strategy: {

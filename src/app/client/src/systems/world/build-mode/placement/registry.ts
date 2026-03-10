@@ -1,7 +1,6 @@
 import type { RenderVisibilityRole } from "@client/components/render-visibility";
 import type { EntityId, UserWorld } from "@engine";
 
-import { GhostPreviewManager } from "@client/entities/ghost";
 import {
   getBuildItemDefinition,
   type BuildItemType,
@@ -53,7 +52,7 @@ export function getPlacementDefinition(itemType: BuildItemType) {
 
 function createRegisteredPlacementDefinition<TPayload>(
   itemType: BuildItemType,
-  definition: BuildItemSpec<TPayload, EntityId>,
+  definition: BuildItemSpec<TPayload>,
 ): RegisteredPlacementDefinition {
   return {
     canPlace(context) {
@@ -84,14 +83,13 @@ function createRegisteredPlacementDefinition<TPayload>(
         preview: {
           world: context.previewWorld,
           sync(ghostEntityId) {
-            return GhostPreviewManager.sync(
-              context.previewWorld,
+            return definition.preview.sync(
+              {
+                context,
+                canPlace,
+              },
               ghostEntityId,
-              context.snappedX,
-              context.snappedY,
-              definition.ghost,
               payload,
-              canPlace,
             );
           },
         },
