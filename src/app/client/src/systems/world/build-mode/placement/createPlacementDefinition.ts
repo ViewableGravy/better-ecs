@@ -4,6 +4,7 @@ import { LandClaimQuery } from "@client/entities/land-claim";
 import type {
   BuildModeState,
 } from "@client/systems/world/build-mode/const";
+import { Placeable } from "@client/systems/world/build-mode/components/placeable";
 import type { GridCoordinates } from "@client/systems/world/build-mode/grid-singleton";
 import type { UserWorld } from "@engine";
 import {
@@ -44,11 +45,19 @@ type PlacementOccupancyResolver<TPayload> = (
   payload?: TPayload,
 ) => boolean;
 
+type PlacementOccupantCompatibilityGroupResolver = (
+  world: UserWorld,
+  occupant: PhysicsBody,
+) => string | null;
+
 export type PlacementStrategy<TPayload> = {
   requiresBuildableArea?: boolean;
   query?: PlacementOccupancyQuery;
+  queries?: PlacementOccupancyQuery[];
   layers?: bigint;
   strategy?: PlacementOccupancyMode | PlacementOccupancyResolver<TPayload>;
+  compatibilityGroup?: string;
+  resolveOccupantCompatibilityGroup?: PlacementOccupantCompatibilityGroupResolver;
   replaceableLayers?: bigint;
   canReplace?: PlacementReplacePredicate<TPayload>;
 };
@@ -102,9 +111,11 @@ export type PlacementDefinition<TPayload = void> = {
 type ResolvedPlacementStrategy<TPayload> = {
   footprint: PlacementFootprint;
   requiresBuildableArea: boolean;
-  query: PlacementOccupancyQuery;
+  queries: PlacementOccupancyQuery[];
   layers: bigint;
   strategy: PlacementOccupancyMode | PlacementOccupancyResolver<TPayload>;
+  compatibilityGroup?: string;
+  resolveOccupantCompatibilityGroup?: PlacementOccupantCompatibilityGroupResolver;
   replaceableLayers?: bigint;
   canReplace?: PlacementReplacePredicate<TPayload>;
 };
@@ -152,12 +163,28 @@ function resolvePlacementStrategy<TPayload>(
   return {
     footprint: definition.footprint ?? PlacementFootprintUtils.unit,
     requiresBuildableArea: definition.placementStrategy?.requiresBuildableArea ?? definition.item !== "land-claim",
-    query: definition.placementStrategy?.query ?? "overlap",
+    queries: resolvePlacementQueries(definition.placementStrategy),
     layers: definition.placementStrategy?.layers ?? (COLLISION_LAYERS.SOLID | COLLISION_LAYERS.CONVEYOR),
     strategy: definition.placementStrategy?.strategy ?? "block",
+    compatibilityGroup: definition.placementStrategy?.compatibilityGroup,
+    resolveOccupantCompatibilityGroup: definition.placementStrategy?.resolveOccupantCompatibilityGroup,
     replaceableLayers: definition.placementStrategy?.replaceableLayers,
     canReplace: definition.placementStrategy?.canReplace,
   };
+}
+
+function resolvePlacementQueries<TPayload>(
+  strategy: PlacementStrategy<TPayload> | undefined,
+): PlacementOccupancyQuery[] {
+  if (strategy?.queries && strategy.queries.length > 0) {
+    return [...new Set(strategy.queries)];
+  }
+
+  if (strategy?.query) {
+    return [strategy.query];
+  }
+
+  return ["grid", "overlap"];
 }
 
 function canPlaceFromStrategy<TPayload>(
@@ -180,17 +207,28 @@ function canPlaceFromStrategy<TPayload>(
       return true;
     }
 
-    if (!strategy.canReplace) {
-      const replaceableLayers = strategy.replaceableLayers;
-
-      if (replaceableLayers === undefined || replaceableLayers === 0n) {
-        return false;
-      }
-
-      return occupants.every((occupant) => inLayer(occupant.participation.layers, replaceableLayers));
+    if (strategy.canReplace) {
+      return occupants.every((occupant) => strategy.canReplace?.(occupant, context, payload) === true);
     }
 
-    return occupants.every((occupant) => strategy.canReplace?.(occupant, context, payload) === true);
+    if (strategy.compatibilityGroup) {
+      const compatibilityGroup = strategy.compatibilityGroup;
+
+      return occupants.every((occupant) => belongsToCompatibilityGroup(
+        context.world,
+        occupant,
+        compatibilityGroup,
+        strategy.resolveOccupantCompatibilityGroup,
+      ));
+    }
+
+    const replaceableLayers = strategy.replaceableLayers;
+
+    if (replaceableLayers === undefined || replaceableLayers === 0n) {
+      return false;
+    }
+
+    return occupants.every((occupant) => inLayer(occupant.participation.layers, replaceableLayers));
   }
 
   return occupants.length === 0;
@@ -222,17 +260,55 @@ function queryPlacementOccupantsAtCoordinates<TPayload>(
   world: UserWorld,
   gridCoordinates: GridCoordinates,
 ): PhysicsBody[] {
-  if (strategy.query === "grid") {
-    return PlacementQueries.queryPlacementOccupantsByGrid(world, gridCoordinates, strategy.layers);
+  const occupantsByEntityId = new Map<number, PhysicsBody>();
+
+  for (const query of strategy.queries) {
+    const occupants = queryPlacementOccupantsByQuery(query, world, gridCoordinates, strategy.layers);
+
+    for (const occupant of occupants) {
+      occupantsByEntityId.set(occupant.entityId, occupant);
+    }
   }
 
-  const overlap = PlacementQueries.queryFirstPlacementOverlap(world, gridCoordinates, strategy.layers);
+  return [...occupantsByEntityId.values()];
+}
+
+function queryPlacementOccupantsByQuery(
+  query: PlacementOccupancyQuery,
+  world: UserWorld,
+  gridCoordinates: GridCoordinates,
+  layers: bigint,
+): PhysicsBody[] {
+  if (query === "grid") {
+    return PlacementQueries.queryPlacementOccupantsByGrid(world, gridCoordinates, layers);
+  }
+
+  const overlap = PlacementQueries.queryFirstPlacementOverlap(world, gridCoordinates, layers);
 
   if (overlap === undefined) {
     return [];
   }
 
   return [overlap];
+}
+
+function belongsToCompatibilityGroup(
+  world: UserWorld,
+  occupant: PhysicsBody,
+  compatibilityGroup: string,
+  resolveOccupantCompatibilityGroup?: PlacementOccupantCompatibilityGroupResolver,
+): boolean {
+  if (resolveOccupantCompatibilityGroup) {
+    return resolveOccupantCompatibilityGroup(world, occupant) === compatibilityGroup;
+  }
+
+  const placeable = world.get(occupant.entityId, Placeable);
+
+  if (!placeable) {
+    return false;
+  }
+
+  return placeable.itemType === compatibilityGroup;
 }
 
 function canBuildAcrossFootprint<TPayload>(

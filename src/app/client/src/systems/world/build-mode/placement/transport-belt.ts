@@ -1,3 +1,4 @@
+import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import {
   spawnTransportBelt,
   type TransportBeltVariant,
@@ -25,8 +26,12 @@ export const transportBeltPlacementDefinition = createBuildItemSpec<TransportBel
   dragPlacementMode: "line",
   placement: {
     strategy: {
-      query: "grid",
+      queries: ["grid", "overlap"],
       strategy: "replace",
+      compatibilityGroup: "transport-belt",
+      resolveOccupantCompatibilityGroup(world, occupant) {
+        return world.has(occupant.entityId, ConveyorBeltComponent) ? "transport-belt" : null;
+      },
       replaceableLayers: COLLISION_LAYERS.CONVEYOR,
     },
   },
