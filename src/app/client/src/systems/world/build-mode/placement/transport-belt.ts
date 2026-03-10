@@ -9,23 +9,25 @@ import {
   TRANSPORT_BELT_OFFSET_X,
   TRANSPORT_BELT_OFFSET_Y,
 } from "@client/systems/world/build-mode/metrics";
-import { createPlacementDefinition } from "@client/systems/world/build-mode/placement/createPlacementDefinition";
 import { createPlacementSpawner } from "@client/systems/world/build-mode/placement/createPlacementSpawner";
 import { PlacementQueries } from "@client/systems/world/build-mode/placement/queries";
+import { createBuildItemSpec } from "@client/systems/world/build-mode/placement/spec";
 import { COLLISION_LAYERS } from "@libs/physics";
 
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
 
-export const transportBeltPlacementDefinition = createPlacementDefinition<TransportBeltVariant>({
+export const transportBeltPlacementDefinition = createBuildItemSpec<TransportBeltVariant>({
   item: "transport-belt",
   ghost: TransportBeltGhost,
   dragPlacementMode: "line",
-  placementStrategy: {
-    query: "grid",
-    strategy: "replace",
-    replaceableLayers: COLLISION_LAYERS.CONVEYOR,
+  placement: {
+    strategy: {
+      query: "grid",
+      strategy: "replace",
+      replaceableLayers: COLLISION_LAYERS.CONVEYOR,
+    },
   },
   rotationMode: "placement-end-side",
   resolvePayload({ world, gridCoordinates, buildModeState }) {
@@ -35,31 +37,33 @@ export const transportBeltPlacementDefinition = createPlacementDefinition<Transp
       buildModeState.placementEndSide,
     );
   },
-  spawn: createPlacementSpawner({
-    item: "transport-belt",
-    markPlaceable: true,
-    resolveSpawnPoint({ snappedX, snappedY }) {
-      return {
-        placementX: snappedX + TRANSPORT_BELT_OFFSET_X,
-        placementY: snappedY + TRANSPORT_BELT_OFFSET_Y,
-      };
-    },
-    replace({ world, placementX, placementY }) {
-      PlacementQueries.replaceTransportBeltAt(world, placementX, placementY);
-    },
-    spawn({ world, placementX, placementY }, variant) {
-      return spawnTransportBelt(world, {
-        x: placementX,
-        y: placementY,
-        variant,
-      });
-    },
-    afterSpawn({ world }, beltEntityId) {
-      if (beltEntityId === undefined || Array.isArray(beltEntityId)) {
-        return;
-      }
+  lifecycle: {
+    commit: createPlacementSpawner({
+      item: "transport-belt",
+      markPlaceable: true,
+      resolveSpawnPoint({ snappedX, snappedY }) {
+        return {
+          placementX: snappedX + TRANSPORT_BELT_OFFSET_X,
+          placementY: snappedY + TRANSPORT_BELT_OFFSET_Y,
+        };
+      },
+      replace({ world, placementX, placementY }) {
+        PlacementQueries.replaceTransportBeltAt(world, placementX, placementY);
+      },
+      spawn({ world, placementX, placementY }, variant) {
+        return spawnTransportBelt(world, {
+          x: placementX,
+          y: placementY,
+          variant,
+        });
+      },
+      afterSpawn({ world }, beltEntityId) {
+        if (beltEntityId === undefined || Array.isArray(beltEntityId)) {
+          return;
+        }
 
-      TransportBeltAutoShapeManager.refreshAffectedBelts(world, beltEntityId);
-    },
-  }),
+        TransportBeltAutoShapeManager.refreshAffectedBelts(world, beltEntityId);
+      },
+    }),
+  },
 });
