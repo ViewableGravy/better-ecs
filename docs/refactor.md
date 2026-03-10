@@ -12,6 +12,14 @@ Progress status (2026-03-10)
 - [ ] Rework drag/planner behavior around shared batched placement intents.
 - [ ] Remove or shrink the remaining low-level legacy placement factory/helpers once all replacements exist.
 
+Next session notes (2026-03-10)
+
+- Highest priority next: rework drag placement so line placement resolves filled batches/gap filling instead of only candidate-by-candidate single tiles.
+- Continue the rule-pipeline refactor by moving toward validator-style occupancy/buildability stages and per-cell evaluation across the full footprint.
+- If compatibility groups become a repeating pattern beyond conveyors, add a default metadata-driven compatibility-group path so item specs do not need ad hoc `resolveOccupantCompatibilityGroup(...)` checks. If conveyors remain the only special case, keeping the explicit resolver is acceptable.
+- Revisit the preview layer again once the runtime contracts settle, with preview-only rendering still the long-term target instead of ghostifying real entities.
+- After the above, remove or heavily shrink the remaining legacy `createPlacementDefinition(...)` path and its helper-only responsibilities.
+
 Steps
 
 Document the current placement responsibility split so the refactor has a clear before/after boundary.
