@@ -1,15 +1,15 @@
 import { LandClaimQuery } from "@client/entities/land-claim";
 import {
-    spawnTransportBelt,
-    type TransportBeltVariant,
+  spawnTransportBelt,
+  type TransportBeltVariant,
 } from "@client/entities/transport-belt";
 import { TransportBeltGhost } from "@client/entities/transport-belt/ghost";
 import { TransportBeltAutoShapeManager } from "@client/entities/transport-belt/placement/TransportBeltAutoShapeManager";
 import { TransportBeltPlacementRotationManager } from "@client/entities/transport-belt/placement/TransportBeltPlacementRotationManager";
 import { Placeable } from "@client/systems/world/build-mode/components";
 import {
-    TRANSPORT_BELT_OFFSET_X,
-    TRANSPORT_BELT_OFFSET_Y,
+  TRANSPORT_BELT_OFFSET_X,
+  TRANSPORT_BELT_OFFSET_Y,
 } from "@client/systems/world/build-mode/const";
 import { createPlacementDefinition } from "@client/systems/world/build-mode/placement/createPlacementDefinition";
 import { PlacementQueries } from "@client/systems/world/build-mode/placement/queries";
@@ -59,6 +59,7 @@ export const transportBeltPlacementDefinition = createPlacementDefinition<Transp
     });
 
     TransportBeltAutoShapeManager.refreshAffectedBelts(world, beltEntityId);
+    
     world.add(beltEntityId, new Placeable("transport-belt"));
   },
 });

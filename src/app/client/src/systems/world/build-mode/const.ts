@@ -62,14 +62,20 @@ export const TRANSPORT_BELT_ROTATION_END_SIDES: readonly TransportBeltSide[] = [
 *   STATE
 **********************************************************************************************************/
 export type BuildItemType = "box" | "transport-belt" | "land-claim";
+export type PlacementDragAxis = "horizontal" | "vertical";
 
 export type BuildModeState = {
   selectedItem: BuildItemType | null;
   gridVisible: boolean;
   pendingPlace: boolean;
   pendingDelete: boolean;
+  placePointerActive: boolean;
   placementEndSide: TransportBeltSide;
   ghostEntityId: EntityId | null;
+  dragPlacementAxis: PlacementDragAxis | null;
+  dragPlacementAnchorGridX: number | null;
+  dragPlacementAnchorGridY: number | null;
+  dragPlacedGridKeys: string[];
 };
 
 export const buildModeStateDefault: BuildModeState = {
@@ -77,8 +83,13 @@ export const buildModeStateDefault: BuildModeState = {
   gridVisible: false,
   pendingPlace: false,
   pendingDelete: false,
+  placePointerActive: false,
   placementEndSide: "top",
   ghostEntityId: null,
+  dragPlacementAxis: null,
+  dragPlacementAnchorGridX: null,
+  dragPlacementAnchorGridY: null,
+  dragPlacedGridKeys: [],
 };
 
 export const buildModeStateSchema = z.object({
@@ -86,8 +97,13 @@ export const buildModeStateSchema = z.object({
   gridVisible: z.boolean(),
   pendingPlace: z.boolean(),
   pendingDelete: z.boolean(),
+  placePointerActive: z.boolean(),
   placementEndSide: z.enum(["top", "right", "bottom", "left"]),
   ghostEntityId: z
     .custom<EntityId>((value) => typeof value === "number" && Number.isInteger(value))
     .nullable(),
+  dragPlacementAxis: z.enum(["horizontal", "vertical"]).nullable(),
+  dragPlacementAnchorGridX: z.number().int().nullable(),
+  dragPlacementAnchorGridY: z.number().int().nullable(),
+  dragPlacedGridKeys: z.array(z.string()),
 });

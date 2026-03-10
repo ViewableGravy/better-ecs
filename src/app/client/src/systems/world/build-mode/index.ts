@@ -6,11 +6,20 @@ import {
   buildModeStateSchema,
 } from "@client/systems/world/build-mode/const";
 import { BuildModeDomEvents, HUD } from "@client/systems/world/build-mode/dom";
-import { GridSingleton } from "@client/systems/world/build-mode/grid-singleton";
+import { BuildModeDragPlacement } from "@client/systems/world/build-mode/drag-placement";
+import {
+  GridSingleton,
+  type GridCoordinates,
+} from "@client/systems/world/build-mode/grid-singleton";
 import * as Keybinds from '@client/systems/world/build-mode/input';
 import { Placement } from "@client/systems/world/build-mode/placement";
-import { resolvePlacementWorld, type PlacementWorldResolution } from "@client/systems/world/build-mode/placement-target";
-import { createSystem, type RegisteredEngine, type RegisteredSystems } from "@engine";
+import { resolvePlacementWorld } from "@client/systems/world/build-mode/placement-target";
+import {
+  createSystem,
+  type RegisteredEngine,
+  type RegisteredSystems,
+  type UserWorld,
+} from "@engine";
 import { System as ContextSystem, Engine, fromContext, FromEngine, Mouse } from "@engine/context";
 import { ActiveCameraView } from "@engine/context-utils";
 import { SpatialContexts, type ContextId } from "@libs/spatial-contexts";
@@ -40,6 +49,7 @@ export const System = createSystem("main:build-mode")({
     const sceneWorlds = engine.scene.context.worlds;
 
     Keybinds.matchKeybinds();
+    BuildModeDragPlacement.syncSession(data);
     HUD.update();
 
     const camera = fromContext(ActiveCameraView(focusedWorld));
@@ -63,7 +73,7 @@ export const System = createSystem("main:build-mode")({
     }
 
     const shouldDelete = data.pendingDelete;
-    const shouldPlace = data.pendingPlace;
+    const shouldPlaceSingle = data.pendingPlace;
     data.pendingDelete = false;
     data.pendingPlace = false;
 
@@ -71,49 +81,45 @@ export const System = createSystem("main:build-mode")({
       Placement.deleteAt(placementWorld, worldPointer);
     }
 
-    if (placementTarget.world && resolvedPlacement) {
-      if (shouldSpawnPlacement(shouldPlace, placementTarget, data, resolvedPlacement)) {
-        const renderVisibilityRole = resolvePlacementRenderVisibilityRole(
-          engine,
-          placementTarget.contextId,
-        );
+    if (!placementTarget.world || placementTarget.blocked) {
+      return;
+    }
 
-        resolvedPlacement.spawn(renderVisibilityRole);
+    const renderVisibilityRole = resolvePlacementRenderVisibilityRole(
+      engine,
+      placementTarget.contextId,
+    );
+
+    if (data.selectedItem !== "transport-belt") {
+      if (shouldPlaceSingle) {
+        spawnPlacementAtGridCoordinates(placementTarget.world, gridCoordinates, data, renderVisibilityRole);
+      }
+
+      return;
+    }
+
+    for (const candidateCoordinates of BuildModeDragPlacement.resolvePlacementCandidates(data, gridCoordinates)) {
+      if (!spawnPlacementAtGridCoordinates(placementTarget.world, candidateCoordinates, data, renderVisibilityRole)) {
+        break;
       }
     }
   },
 });
 
-function shouldSpawnPlacement(
-  shouldPlace: boolean,
-  placementTarget: PlacementWorldResolution,
+function spawnPlacementAtGridCoordinates(
+  placementWorld: UserWorld,
+  gridCoordinates: GridCoordinates,
   data: RegisteredSystems["main:build-mode"]["data"],
-  resolvedPlacement: { canPlace: boolean },
+  renderVisibilityRole: RenderVisibilityRole,
 ): boolean {
-  // Early exit if the place action wasn't triggered to avoid unnecessary checks
-  if (!shouldPlace) {
+  const resolvedPlacement = Placement.resolveSelection(placementWorld, gridCoordinates, data);
+
+  if (resolvedPlacement === null || !resolvedPlacement.canPlace) {
     return false;
   }
 
-  // User must have selected an item to place from the hotbar (1)
-  if (data.selectedItem === null) {
-    return false;
-  }
-
-  // Placement must not be blocked (e.g. by UI or invalid world) (2)
-  if (placementTarget.blocked) {
-    return false;
-  }
-
-  // There must be a valid world to place into (3)
-  if (!placementTarget.world) {
-    return false;
-  }
-
-  // Selected item collision policy must allow placement (4)
-  if (!resolvedPlacement.canPlace) {
-    return false;
-  }
+  resolvedPlacement.spawn(renderVisibilityRole);
+  BuildModeDragPlacement.recordPlacement(data, gridCoordinates);
 
   return true;
 }
