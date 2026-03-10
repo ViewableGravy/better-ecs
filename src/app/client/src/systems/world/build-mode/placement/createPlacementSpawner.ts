@@ -13,11 +13,19 @@ import type {
 
 type PlacementSpawnResult = EntityId | EntityId[] | void;
 
+type PlacementSpawnPoint = {
+  placementX: number;
+  placementY: number;
+};
+
+type PlacementResolvedSpawnContext = PlacementSpawnContext & PlacementSpawnPoint;
+
 type CreatePlacementSpawnerOptions<TPayload, TResult extends PlacementSpawnResult = PlacementSpawnResult> = {
   item: BuildItemType;
-  replace?: (context: PlacementSpawnContext, payload?: TPayload) => void;
-  spawn: (context: PlacementSpawnContext, payload?: TPayload) => TResult;
-  afterSpawn?: (context: PlacementSpawnContext, result: TResult, payload?: TPayload) => void;
+  resolveSpawnPoint?: (context: PlacementSpawnContext, payload?: TPayload) => PlacementSpawnPoint;
+  replace?: (context: PlacementResolvedSpawnContext, payload?: TPayload) => void;
+  spawn: (context: PlacementResolvedSpawnContext, payload?: TPayload) => TResult;
+  afterSpawn?: (context: PlacementResolvedSpawnContext, result: TResult, payload?: TPayload) => void;
   markPlaceable?: boolean;
 };
 
@@ -29,15 +37,33 @@ export function createPlacementSpawner<TPayload, TResult extends PlacementSpawnR
   options: CreatePlacementSpawnerOptions<TPayload, TResult>,
 ): PlacementSpawn<TPayload> {
   return (context, payload) => {
-    options.replace?.(context, payload);
+    const resolvedContext = resolveSpawnContext(options, context, payload);
 
-    const result = options.spawn(context, payload);
+    options.replace?.(resolvedContext, payload);
+
+    const result = options.spawn(resolvedContext, payload);
 
     if (options.markPlaceable) {
       markPlaceableEntities(context, options.item, result);
     }
 
-    options.afterSpawn?.(context, result, payload);
+    options.afterSpawn?.(resolvedContext, result, payload);
+  };
+}
+
+function resolveSpawnContext<TPayload, TResult extends PlacementSpawnResult>(
+  options: CreatePlacementSpawnerOptions<TPayload, TResult>,
+  context: PlacementSpawnContext,
+  payload?: TPayload,
+): PlacementResolvedSpawnContext {
+  const placementPoint = options.resolveSpawnPoint?.(context, payload) ?? {
+    placementX: context.snappedX,
+    placementY: context.snappedY,
+  };
+
+  return {
+    ...context,
+    ...placementPoint,
   };
 }
 

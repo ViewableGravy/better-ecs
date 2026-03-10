@@ -36,19 +36,19 @@ export const transportBeltPlacementDefinition = createPlacementDefinition<Transp
   spawn: createPlacementSpawner({
     item: "transport-belt",
     markPlaceable: true,
-    replace({ world, snappedX, snappedY }) {
-      const beltX = snappedX + TRANSPORT_BELT_OFFSET_X;
-      const beltY = snappedY + TRANSPORT_BELT_OFFSET_Y;
-
-      PlacementQueries.replaceTransportBeltAt(world, beltX, beltY);
+    resolveSpawnPoint({ snappedX, snappedY }) {
+      return {
+        placementX: snappedX + TRANSPORT_BELT_OFFSET_X,
+        placementY: snappedY + TRANSPORT_BELT_OFFSET_Y,
+      };
     },
-    spawn({ world, snappedX, snappedY }, variant) {
-      const beltX = snappedX + TRANSPORT_BELT_OFFSET_X;
-      const beltY = snappedY + TRANSPORT_BELT_OFFSET_Y;
-
+    replace({ world, placementX, placementY }) {
+      PlacementQueries.replaceTransportBeltAt(world, placementX, placementY);
+    },
+    spawn({ world, placementX, placementY }, variant) {
       return spawnTransportBelt(world, {
-        x: beltX,
-        y: beltY,
+        x: placementX,
+        y: placementY,
         variant,
       });
     },
