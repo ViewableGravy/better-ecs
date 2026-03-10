@@ -13,6 +13,10 @@ import {
   type PhysicsBody,
 } from "@libs/physics";
 
+import {
+  PlacementFootprintUtils,
+  type PlacementFootprint,
+} from "@client/systems/world/build-mode/placement/footprint";
 import { PlacementQueries } from "@client/systems/world/build-mode/placement/queries";
 
 /**********************************************************************************************************
@@ -51,6 +55,7 @@ type CreatePlacementDefinitionOptions<TPayload, TGhostEntityId extends EntityId>
   item: BuildItemType;
   ghost: GhostPreset<TPayload, TGhostEntityId>;
   resolvePayload?: PlacementPayloadResolver<TPayload>;
+  footprint?: PlacementFootprint;
   placementStrategy?: PlacementStrategy<TPayload>;
   canPlace?: PlacementCanPlace<TPayload>;
   spawn: PlacementSpawn<TPayload>;
@@ -72,12 +77,14 @@ export type PlacementDefinition<TPayload = void, TGhostEntityId extends EntityId
   item: BuildItemType;
   ghost: GhostPreset<TPayload, TGhostEntityId>;
   resolvePayload?: PlacementPayloadResolver<TPayload>;
+  footprint?: PlacementFootprint;
   placementStrategy?: PlacementStrategy<TPayload>;
   canPlace: PlacementCanPlace<TPayload>;
   spawn: PlacementSpawn<TPayload>;
 };
 
 type ResolvedPlacementStrategy<TPayload> = {
+  footprint: PlacementFootprint;
   requiresBuildableArea: boolean;
   query: PlacementOccupancyQuery;
   layers: bigint;
@@ -108,6 +115,7 @@ function resolvePlacementStrategy<TPayload, TGhostEntityId extends EntityId>(
   definition: CreatePlacementDefinitionOptions<TPayload, TGhostEntityId>,
 ): ResolvedPlacementStrategy<TPayload> {
   return {
+    footprint: definition.footprint ?? PlacementFootprintUtils.unit,
     requiresBuildableArea: definition.placementStrategy?.requiresBuildableArea ?? definition.item !== "land-claim",
     query: definition.placementStrategy?.query ?? "overlap",
     layers: definition.placementStrategy?.layers ?? (COLLISION_LAYERS.SOLID | COLLISION_LAYERS.CONVEYOR),
@@ -122,7 +130,7 @@ function canPlaceFromStrategy<TPayload>(
   context: PlacementContext,
   payload?: TPayload,
 ): boolean {
-  if (strategy.requiresBuildableArea && !LandClaimQuery.isWithinBuildableArea(context.world, context.gridCoordinates)) {
+  if (strategy.requiresBuildableArea && !canBuildAcrossFootprint(strategy, context)) {
     return false;
   }
 
@@ -157,15 +165,49 @@ function queryPlacementOccupants<TPayload>(
   strategy: ResolvedPlacementStrategy<TPayload>,
   context: PlacementContext,
 ): PhysicsBody[] {
-  if (strategy.query === "grid") {
-    return PlacementQueries.queryPlacementOccupantsByGrid(context.world, context.gridCoordinates, strategy.layers);
+  const footprintCoordinates = PlacementFootprintUtils.resolveFootprintCoordinates(
+    context.gridCoordinates,
+    strategy.footprint,
+  );
+  const occupantsByEntityId = new Map<number, PhysicsBody>();
+
+  for (const gridCoordinates of footprintCoordinates) {
+    const occupants = queryPlacementOccupantsAtCoordinates(strategy, context.world, gridCoordinates);
+
+    for (const occupant of occupants) {
+      occupantsByEntityId.set(occupant.entityId, occupant);
+    }
   }
 
-  const overlap = PlacementQueries.queryFirstPlacementOverlap(context.world, context.gridCoordinates, strategy.layers);
+  return [...occupantsByEntityId.values()];
+}
+
+function queryPlacementOccupantsAtCoordinates<TPayload>(
+  strategy: ResolvedPlacementStrategy<TPayload>,
+  world: UserWorld,
+  gridCoordinates: GridCoordinates,
+): PhysicsBody[] {
+  if (strategy.query === "grid") {
+    return PlacementQueries.queryPlacementOccupantsByGrid(world, gridCoordinates, strategy.layers);
+  }
+
+  const overlap = PlacementQueries.queryFirstPlacementOverlap(world, gridCoordinates, strategy.layers);
 
   if (overlap === undefined) {
     return [];
   }
 
   return [overlap];
+}
+
+function canBuildAcrossFootprint<TPayload>(
+  strategy: ResolvedPlacementStrategy<TPayload>,
+  context: PlacementContext,
+): boolean {
+  const footprintCoordinates = PlacementFootprintUtils.resolveFootprintCoordinates(
+    context.gridCoordinates,
+    strategy.footprint,
+  );
+
+  return footprintCoordinates.every((gridCoordinates) => LandClaimQuery.isWithinBuildableArea(context.world, gridCoordinates));
 }
