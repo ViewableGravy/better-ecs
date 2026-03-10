@@ -11,7 +11,7 @@ import {
   GridSingleton,
   type GridCoordinates,
 } from "@client/systems/world/build-mode/grid-singleton";
-import { Vec2, type MousePoint, type UserWorld } from "@engine";
+import { Vec2, type EntityId, type MousePoint, type UserWorld } from "@engine";
 import { Transform2D } from "@engine/components";
 import {
   CircleCollider,
@@ -80,14 +80,34 @@ export class PlacementQueries {
 
   public static replaceTransportBeltAt(world: UserWorld, x: number, y: number): void {
     const targetCoordinates = GridSingleton.worldToGridCoordinates(x, y);
-    const overlaps = PlacementQueries.queryPlacementOccupantsByGrid(world, targetCoordinates);
+
+    PlacementQueries.destroyPlacementOccupantsByGrid(world, targetCoordinates, {
+      shouldDestroy(occupant) {
+        return inLayer(occupant.participation.layers, COLLISION_LAYERS.CONVEYOR);
+      },
+      destroy(worldToMutate, entityId) {
+        destroyTransportBelt(worldToMutate, entityId);
+      },
+    });
+  }
+
+  public static destroyPlacementOccupantsByGrid(
+    world: UserWorld,
+    gridCoordinates: GridCoordinates,
+    options: {
+      mask?: CollisionLayerMask;
+      shouldDestroy?: (occupant: PhysicsBody) => boolean;
+      destroy: (world: UserWorld, entityId: EntityId) => void;
+    },
+  ): void {
+    const overlaps = PlacementQueries.queryPlacementOccupantsByGrid(world, gridCoordinates, options.mask);
 
     for (const overlap of overlaps) {
-      if (!inLayer(overlap.participation.layers, COLLISION_LAYERS.CONVEYOR)) {
+      if (options.shouldDestroy && !options.shouldDestroy(overlap)) {
         continue;
       }
 
-      destroyTransportBelt(world, overlap.entityId);
+      options.destroy(world, overlap.entityId);
     }
   }
 

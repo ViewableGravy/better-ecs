@@ -9,6 +9,7 @@ import type { GridCoordinates } from "@client/systems/world/build-mode/grid-sing
 import type { EntityId, UserWorld } from "@engine";
 import {
   COLLISION_LAYERS,
+  inLayer,
   type PhysicsBody,
 } from "@libs/physics";
 
@@ -42,6 +43,7 @@ export type PlacementStrategy<TPayload> = {
   query?: PlacementOccupancyQuery;
   layers?: bigint;
   strategy?: PlacementOccupancyMode | PlacementOccupancyResolver<TPayload>;
+  replaceableLayers?: bigint;
   canReplace?: PlacementReplacePredicate<TPayload>;
 };
 
@@ -80,6 +82,7 @@ type ResolvedPlacementStrategy<TPayload> = {
   query: PlacementOccupancyQuery;
   layers: bigint;
   strategy: PlacementOccupancyMode | PlacementOccupancyResolver<TPayload>;
+  replaceableLayers?: bigint;
   canReplace?: PlacementReplacePredicate<TPayload>;
 };
 
@@ -109,6 +112,7 @@ function resolvePlacementStrategy<TPayload, TGhostEntityId extends EntityId>(
     query: definition.placementStrategy?.query ?? "overlap",
     layers: definition.placementStrategy?.layers ?? (COLLISION_LAYERS.SOLID | COLLISION_LAYERS.CONVEYOR),
     strategy: definition.placementStrategy?.strategy ?? "block",
+    replaceableLayers: definition.placementStrategy?.replaceableLayers,
     canReplace: definition.placementStrategy?.canReplace,
   };
 }
@@ -134,7 +138,13 @@ function canPlaceFromStrategy<TPayload>(
     }
 
     if (!strategy.canReplace) {
-      return false;
+      const replaceableLayers = strategy.replaceableLayers;
+
+      if (replaceableLayers === undefined || replaceableLayers === 0n) {
+        return false;
+      }
+
+      return occupants.every((occupant) => inLayer(occupant.participation.layers, replaceableLayers));
     }
 
     return occupants.every((occupant) => strategy.canReplace?.(occupant, context, payload) === true);

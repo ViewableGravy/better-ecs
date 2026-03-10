@@ -12,7 +12,7 @@ import {
 import { createPlacementDefinition } from "@client/systems/world/build-mode/placement/createPlacementDefinition";
 import { createPlacementSpawner } from "@client/systems/world/build-mode/placement/createPlacementSpawner";
 import { PlacementQueries } from "@client/systems/world/build-mode/placement/queries";
-import { COLLISION_LAYERS, inLayer } from "@libs/physics";
+import { COLLISION_LAYERS } from "@libs/physics";
 
 /**********************************************************************************************************
  *   COMPONENT START
@@ -24,9 +24,7 @@ export const transportBeltPlacementDefinition = createPlacementDefinition<Transp
   placementStrategy: {
     query: "grid",
     strategy: "replace",
-    canReplace(overlap) {
-      return inLayer(overlap.participation.layers, COLLISION_LAYERS.CONVEYOR);
-    },
+    replaceableLayers: COLLISION_LAYERS.CONVEYOR,
   },
   resolvePayload({ world, gridCoordinates, buildModeState }) {
     return TransportBeltPlacementRotationManager.resolveVariant(
