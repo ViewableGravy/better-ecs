@@ -1,4 +1,4 @@
-import { GhostPreviewComponent, GhostUtils, type GhostPreset } from "@client/entities/ghost";
+import { GhostPreviewComponent, createEntityGhostPreset } from "@client/entities/ghost";
 import {
   spawnTransportBelt,
   updateTransportBeltVariant,
@@ -16,18 +16,20 @@ import {
 
 const DEFAULT_TRANSPORT_BELT_GHOST_VARIANT: TransportBeltVariant = "horizontal-right";
 
-export const TransportBeltGhost: GhostPreset<TransportBeltVariant> = {
+export const TransportBeltGhost = createEntityGhostPreset<TransportBeltVariant>({
   kind: "transport-belt",
   spawn(world, x, y, variant) {
     const resolvedVariant = variant ?? DEFAULT_TRANSPORT_BELT_GHOST_VARIANT;
-    const beltEntityId = spawnTransportBelt(world, {
+
+    return spawnTransportBelt(world, {
       x: x + TRANSPORT_BELT_OFFSET_X,
       y: y + TRANSPORT_BELT_OFFSET_Y,
       variant: resolvedVariant,
       connectToNeighbors: false,
     });
-
-    return GhostUtils.applyEffect(world, beltEntityId, this.kind, resolvedVariant);
+  },
+  resolvePreviewVariant(variant) {
+    return variant ?? DEFAULT_TRANSPORT_BELT_GHOST_VARIANT;
   },
   sync(world, ghostEntityId, variant) {
     const resolvedVariant = variant ?? DEFAULT_TRANSPORT_BELT_GHOST_VARIANT;
@@ -36,6 +38,6 @@ export const TransportBeltGhost: GhostPreset<TransportBeltVariant> = {
     updateTransportBeltVariant(world, beltEntityId, resolvedVariant);
 
     const ghostPreview = world.require(beltEntityId, GhostPreviewComponent);
-    ghostPreview.transportBeltVariant = resolvedVariant;
+    ghostPreview.previewVariant = resolvedVariant;
   },
-};
+});

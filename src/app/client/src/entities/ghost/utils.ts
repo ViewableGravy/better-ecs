@@ -1,25 +1,18 @@
 import { RenderVisibility } from "@client/components/render-visibility";
 import { RENDER_LAYERS } from "@client/consts";
 import { GhostPreviewComponent, type GhostKind } from "@client/entities/ghost/component";
-import type { TransportBeltVariant } from "@client/entities/transport-belt";
 import { CollisionProfiles } from "@client/scenes/world/physics/collision-profiles";
 import { Placeable } from "@client/systems/world/build-mode/components";
 import {
-    GHOST_FILL,
-    GHOST_STROKE,
-    INVALID_GHOST_FILL,
-    INVALID_GHOST_STROKE,
-    INVALID_GHOST_TINT,
-    VALID_GHOST_TINT,
+  GHOST_FILL,
+  GHOST_STROKE,
+  INVALID_GHOST_FILL,
+  INVALID_GHOST_STROKE,
+  INVALID_GHOST_TINT,
+  VALID_GHOST_TINT,
 } from "@client/systems/world/build-mode/const";
 import type { EntityId, UserWorld } from "@engine";
 import { AnimatedSprite, Color, Parent, Shape, Sprite, Transform2D } from "@engine/components";
-
-/**********************************************************************************************************
- *   TYPE DEFINITIONS
- **********************************************************************************************************/
-
-type GhostVariant = TransportBeltVariant | null;
 
 /**********************************************************************************************************
  *   COMPONENT START
@@ -30,12 +23,12 @@ export class GhostUtils {
     world: UserWorld,
     ghostEntityId: TEntityId,
     kind: GhostKind = "box",
-    variant: GhostVariant = null,
+    previewVariant: string | null = null,
   ): TEntityId {
     world.add(ghostEntityId, CollisionProfiles.ghost());
     world.add(
       ghostEntityId,
-      new GhostPreviewComponent(kind, variant),
+      new GhostPreviewComponent(kind, previewVariant),
     );
 
     this.stripPlacedOnlyComponents(world, ghostEntityId);

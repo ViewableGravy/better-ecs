@@ -1,4 +1,3 @@
-import type { TransportBeltVariant } from "@client/entities/transport-belt";
 import type { EntityId } from "@engine";
 
 /**********************************************************************************************************
@@ -14,7 +13,7 @@ export type GhostKind = string;
 export class GhostPreviewComponent {
   public constructor(
     public readonly kind: GhostKind = "box",
-    public transportBeltVariant: TransportBeltVariant | null = null,
+    public previewVariant: string | null = null,
     public isPlaceable: boolean = true,
     public invalidIndicatorEntityId: EntityId | null = null,
   ) {}
