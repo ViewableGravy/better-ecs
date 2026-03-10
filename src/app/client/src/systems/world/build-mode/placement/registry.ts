@@ -10,6 +10,7 @@ import type {
     PlacementContext,
     PlacementDefinition,
 } from "@client/systems/world/build-mode/placement/createPlacementDefinition";
+import type { BuildItemSpec } from "@client/systems/world/build-mode/placement/spec";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -43,7 +44,7 @@ export function getPlacementDefinition(itemType: BuildItemType) {
 
 function createRegisteredPlacementDefinition<TPayload>(
   itemType: BuildItemType,
-  definition: PlacementDefinition<TPayload, EntityId>,
+  definition: PlacementDefinition<TPayload, EntityId> | BuildItemSpec<TPayload, EntityId>,
 ): RegisteredPlacementDefinition {
   return {
     canPlace(context) {
@@ -68,6 +69,12 @@ function createRegisteredPlacementDefinition<TPayload>(
         item: itemType,
         canPlace,
         spawn(renderVisibilityRole) {
+          if (isBuildItemSpec<TPayload>(definition)) {
+            definition.lifecycle.commit({ ...context, renderVisibilityRole }, payload);
+
+            return;
+          }
+
           definition.spawn({ ...context, renderVisibilityRole }, payload);
         },
         syncGhost(world, ghostEntityId) {
@@ -84,4 +91,10 @@ function createRegisteredPlacementDefinition<TPayload>(
       };
     },
   };
+}
+
+function isBuildItemSpec<TPayload>(
+  definition: PlacementDefinition<TPayload, EntityId> | BuildItemSpec<TPayload, EntityId>,
+): definition is BuildItemSpec<TPayload, EntityId> {
+  return "lifecycle" in definition;
 }

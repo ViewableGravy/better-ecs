@@ -13,6 +13,7 @@ const buildItemDefinitions = {
 } as const;
 
 export type BuildItemType = keyof typeof buildItemDefinitions;
+export type BuildItemDefinition = (typeof buildItemDefinitions)[BuildItemType];
 
 // `Object.keys(...)` widens to `string[]`, so this cast preserves the concrete registry keys as the runtime id list.
 export const BUILD_ITEM_TYPES = Object.keys(buildItemDefinitions) as BuildItemType[];

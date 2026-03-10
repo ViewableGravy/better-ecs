@@ -22,8 +22,8 @@ import { PlacementQueries } from "@client/systems/world/build-mode/placement/que
  *   TYPE DEFINITIONS
  **********************************************************************************************************/
 
-type PlacementPayloadResolver<TPayload> = (context: PlacementContext) => TPayload | null | undefined;
-type PlacementCanPlace<TPayload> = (context: PlacementContext, payload?: TPayload) => boolean;
+export type PlacementPayloadResolver<TPayload> = (context: PlacementContext) => TPayload | null | undefined;
+export type PlacementCanPlace<TPayload> = (context: PlacementContext, payload?: TPayload) => boolean;
 export type PlacementSpawn<TPayload> = (context: PlacementSpawnContext, payload?: TPayload) => void;
 export type PlacementDragMode = "single" | "line";
 export type PlacementRotationMode = "none" | "placement-end-side";
@@ -52,7 +52,7 @@ export type PlacementStrategy<TPayload> = {
   canReplace?: PlacementReplacePredicate<TPayload>;
 };
 
-type CreatePlacementDefinitionOptions<TPayload, TGhostEntityId extends EntityId> = {
+export type PlacementDefinitionSharedOptions<TPayload, TGhostEntityId extends EntityId> = {
   item: string;
   ghost: GhostPreset<TPayload, TGhostEntityId>;
   dragPlacementMode?: PlacementDragMode;
@@ -60,6 +60,12 @@ type CreatePlacementDefinitionOptions<TPayload, TGhostEntityId extends EntityId>
   resolvePayload?: PlacementPayloadResolver<TPayload>;
   footprint?: PlacementFootprint;
   placementStrategy?: PlacementStrategy<TPayload>;
+};
+
+type CreatePlacementDefinitionOptions<TPayload, TGhostEntityId extends EntityId> = PlacementDefinitionSharedOptions<
+  TPayload,
+  TGhostEntityId
+> & {
   canPlace?: PlacementCanPlace<TPayload>;
   spawn: PlacementSpawn<TPayload>;
 };
@@ -106,8 +112,7 @@ export function createPlacementDefinition<TPayload = void, TGhostEntityId extend
   definition: CreatePlacementDefinitionOptions<TPayload, TGhostEntityId>,
 ): PlacementDefinition<TPayload, TGhostEntityId> {
   const placementStrategy = resolvePlacementStrategy(definition);
-  const canPlace: PlacementCanPlace<TPayload> = definition.canPlace
-    ?? ((context, payload) => canPlaceFromStrategy(placementStrategy, context, payload));
+  const canPlace = createPlacementCanPlace(definition, placementStrategy);
 
   return {
     ...definition,
@@ -118,8 +123,26 @@ export function createPlacementDefinition<TPayload = void, TGhostEntityId extend
   };
 }
 
+export function createPlacementCanPlace<TPayload, TGhostEntityId extends EntityId = EntityId>(
+  definition: Pick<CreatePlacementDefinitionOptions<TPayload, TGhostEntityId>, "item" | "footprint" | "placementStrategy" | "canPlace">,
+  resolvedStrategy: ResolvedPlacementStrategy<TPayload> = resolvePlacementStrategy({
+    item: definition.item,
+    footprint: definition.footprint,
+    placementStrategy: definition.placementStrategy,
+  }),
+): PlacementCanPlace<TPayload> {
+  if (definition.canPlace) {
+    return definition.canPlace;
+  }
+
+  return (context, payload) => canPlaceFromStrategy(resolvedStrategy, context, payload);
+}
+
 function resolvePlacementStrategy<TPayload, TGhostEntityId extends EntityId>(
-  definition: CreatePlacementDefinitionOptions<TPayload, TGhostEntityId>,
+  definition: Pick<
+    PlacementDefinitionSharedOptions<TPayload, TGhostEntityId>,
+    "item" | "footprint" | "placementStrategy"
+  >,
 ): ResolvedPlacementStrategy<TPayload> {
   return {
     footprint: definition.footprint ?? PlacementFootprintUtils.unit,
