@@ -18,6 +18,7 @@ import {
   COLLISION_LAYERS,
   inLayer,
   RectangleCollider,
+  type CollisionLayerMask,
   type PhysicsBody,
 } from "@libs/physics";
 
@@ -90,11 +91,15 @@ export class PlacementQueries {
     }
   }
 
-  public static queryPlacementOccupantsByGrid(world: UserWorld, gridCoordinates: GridCoordinates): PhysicsBody[] {
+  public static queryPlacementOccupantsByGrid(
+    world: UserWorld,
+    gridCoordinates: GridCoordinates,
+    mask: CollisionLayerMask = PlacementQueries.placementFilter.mask,
+  ): PhysicsBody[] {
     const physicsWorld = PhysicsWorldManager.requireWorld(world);
     const overlaps: PhysicsBody[] = [];
 
-    for (const body of physicsWorld.layers(PlacementQueries.placementFilter.mask)) {
+    for (const body of physicsWorld.layers(mask)) {
       const overlapCoordinates = GridSingleton.worldToGridCoordinates(
         body.transform.curr.pos.x,
         body.transform.curr.pos.y,
@@ -110,7 +115,11 @@ export class PlacementQueries {
     return overlaps;
   }
 
-  public static queryFirstPlacementOverlap(world: UserWorld, gridCoordinates: GridCoordinates): PhysicsBody | undefined {
+  public static queryFirstPlacementOverlap(
+    world: UserWorld,
+    gridCoordinates: GridCoordinates,
+    mask: CollisionLayerMask = PlacementQueries.placementFilter.mask,
+  ): PhysicsBody | undefined {
     const [tileCenterX, tileCenterY] = GridSingleton.gridCoordinatesToWorldCenter(gridCoordinates);
 
     PlacementQueries.placementTransform.curr.pos.set(tileCenterX, tileCenterY);
@@ -121,7 +130,10 @@ export class PlacementQueries {
     return physicsWorld.queryFirstOverlap({
       collider: PlacementQueries.placementCollider,
       transform: PlacementQueries.placementTransform,
-      filter: PlacementQueries.placementFilter,
+      filter: {
+        ...PlacementQueries.placementFilter,
+        mask,
+      },
     });
   }
 }

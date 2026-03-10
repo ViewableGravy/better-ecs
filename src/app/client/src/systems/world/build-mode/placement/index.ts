@@ -1,7 +1,5 @@
-import type { RenderVisibilityRole } from "@client/components/render-visibility";
-import type { EntityId, MousePoint, UserWorld } from "@engine";
+import type { MousePoint, UserWorld } from "@engine";
 
-import { GhostPreviewManager } from "@client/entities/ghost";
 import {
   buildModeStateDefault,
   type BuildItemType,
@@ -11,25 +9,14 @@ import {
   GridSingleton,
   type GridCoordinates,
 } from "@client/systems/world/build-mode/grid-singleton";
-import { boxPlacementDefinition } from "@client/systems/world/build-mode/placement/box";
 import {
   type PlacementContext,
-  type PlacementDefinition,
 } from "@client/systems/world/build-mode/placement/createPlacementDefinition";
-import { landClaimPlacementDefinition } from "@client/systems/world/build-mode/placement/land-claim";
 import { PlacementQueries } from "@client/systems/world/build-mode/placement/queries";
-import { transportBeltPlacementDefinition } from "@client/systems/world/build-mode/placement/transport-belt";
-
-/**********************************************************************************************************
- *   TYPE DEFINITIONS
- **********************************************************************************************************/
-
-type ResolvedPlacement = {
-  item: BuildItemType;
-  canPlace: boolean;
-  spawn: (renderVisibilityRole: RenderVisibilityRole) => void;
-  syncGhost: (world: UserWorld, ghostEntityId: EntityId | null) => EntityId;
-};
+import {
+  getPlacementDefinition,
+  type RegisteredResolvedPlacement,
+} from "@client/systems/world/build-mode/placement/registry";
 
 /**********************************************************************************************************
  *   COMPONENT START
@@ -51,22 +38,14 @@ export class Placement {
   ): boolean {
     const context = this.createContext(world, gridCoordinates, buildModeState);
 
-    if (selectedItem === "box") {
-      return this.canPlaceFromDefinition(boxPlacementDefinition, context);
-    }
-
-    if (selectedItem === "land-claim") {
-      return this.canPlaceFromDefinition(landClaimPlacementDefinition, context);
-    }
-
-    return this.canPlaceFromDefinition(transportBeltPlacementDefinition, context);
+    return this.canPlaceFromDefinition(getPlacementDefinition(selectedItem), context);
   }
 
   public static resolveSelection(
     world: UserWorld,
     gridCoordinates: GridCoordinates,
     buildModeState: BuildModeState,
-  ): ResolvedPlacement | null {
+  ): RegisteredResolvedPlacement | null {
     const selectedItem = buildModeState.selectedItem;
 
     if (selectedItem === null) {
@@ -75,15 +54,7 @@ export class Placement {
 
     const context = this.createContext(world, gridCoordinates, buildModeState);
 
-    if (selectedItem === "box") {
-      return this.resolveSelectionFromDefinition(boxPlacementDefinition, context);
-    }
-
-    if (selectedItem === "land-claim") {
-      return this.resolveSelectionFromDefinition(landClaimPlacementDefinition, context);
-    }
-
-    return this.resolveSelectionFromDefinition(transportBeltPlacementDefinition, context);
+    return this.resolveSelectionFromDefinition(getPlacementDefinition(selectedItem), context);
   }
 
   private static createContext(
@@ -102,48 +73,17 @@ export class Placement {
     };
   }
 
-  private static canPlaceFromDefinition<TPayload>(
-    definition: PlacementDefinition<TPayload, EntityId>,
+  private static canPlaceFromDefinition(
+    definition: ReturnType<typeof getPlacementDefinition>,
     context: PlacementContext,
   ): boolean {
-    const payload = definition.resolvePayload?.(context);
-
-    if (payload === null) {
-      return false;
-    }
-
-    return definition.canPlace(context, payload);
+    return definition.canPlace(context);
   }
 
-  private static resolveSelectionFromDefinition<TPayload>(
-    definition: PlacementDefinition<TPayload, EntityId>,
+  private static resolveSelectionFromDefinition(
+    definition: ReturnType<typeof getPlacementDefinition>,
     context: PlacementContext,
-  ): ResolvedPlacement | null {
-    const payload = definition.resolvePayload?.(context);
-
-    if (payload === null) {
-      return null;
-    }
-
-    const canPlace = definition.canPlace(context, payload);
-
-    return {
-      item: definition.item,
-      canPlace,
-      spawn(renderVisibilityRole) {
-        definition.spawn({ ...context, renderVisibilityRole }, payload);
-      },
-      syncGhost(world, ghostEntityId) {
-        return GhostPreviewManager.sync(
-          world,
-          ghostEntityId,
-          context.snappedX,
-          context.snappedY,
-          definition.ghost,
-          payload,
-          canPlace,
-        );
-      },
-    };
+  ): RegisteredResolvedPlacement | null {
+    return definition.resolveSelection(context);
   }
 }

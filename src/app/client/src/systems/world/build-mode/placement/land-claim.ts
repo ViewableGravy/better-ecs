@@ -3,7 +3,6 @@ import { LAND_CLAIM_OWNER_NAME } from "@client/entities/land-claim/const";
 import { LandClaimGhost } from "@client/entities/land-claim/ghost";
 
 import { createPlacementDefinition } from "@client/systems/world/build-mode/placement/createPlacementDefinition";
-import { PlacementQueries } from "@client/systems/world/build-mode/placement/queries";
 
 /**********************************************************************************************************
  *   COMPONENT START
@@ -12,8 +11,8 @@ import { PlacementQueries } from "@client/systems/world/build-mode/placement/que
 export const landClaimPlacementDefinition = createPlacementDefinition({
   item: "land-claim",
   ghost: LandClaimGhost,
-  canPlace({ world, gridCoordinates }) {
-    return PlacementQueries.queryFirstPlacementOverlap(world, gridCoordinates) === undefined;
+  placementStrategy: {
+    requiresBuildableArea: false,
   },
   spawn({ world, snappedX, snappedY, renderVisibilityRole }) {
     spawnLandClaim(world, {
