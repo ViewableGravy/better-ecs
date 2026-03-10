@@ -1,6 +1,17 @@
 Plan: Config-Driven Placement Architecture
 DRAFT: Replace the current low-level createPlacementDefinition(...) shape with a higher-level placement registry built around four explicit concerns: placement intent, occupancy/rule evaluation, preview adapters, and commit/spawn lifecycles. The research shows the current system is split across createPlacementDefinition.ts, index.ts, queries.ts, and bespoke item files like transport-belt.ts. The main design goal should be runtime-first, but shaped so it can later map onto the shared placement domain already described in 12-ROADMAP-ENGINE-GAME-PLACEMENT-AND-WORLD-IO.md. Based on your answers, the plan should assume: preview-only ghosts are the target if belt-level behavior can be preserved, occupancy is both grid- and physics-driven, replacement uses explicit compatibility groups, multi-tile placement validates all occupied cells, fast-replace/upgrader extensibility matters, and preview-world vs commit-world should become first-class.
 
+Progress status (2026-03-10)
+
+- [x] Define a new top-level `BuildItemSpec` contract and registry-backed build-item definitions.
+- [x] Migrate `land-claim`, `box`, and `transport-belt` to the new spec shape.
+- [x] Normalize placement commit behavior behind the shared lifecycle contract.
+- [x] Make resolved placement intent plus preview/commit world routing explicit in the runtime flow.
+- [ ] Replace the remaining ad hoc occupancy queries with a fuller declarative rule pipeline.
+- [ ] Split preview adapters from the legacy ghost implementation boundary.
+- [ ] Rework drag/planner behavior around shared batched placement intents.
+- [ ] Remove or shrink the remaining low-level legacy placement factory/helpers once all replacements exist.
+
 Steps
 
 Document the current placement responsibility split so the refactor has a clear before/after boundary.

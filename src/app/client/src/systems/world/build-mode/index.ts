@@ -19,7 +19,6 @@ import {
   createSystem,
   type RegisteredEngine,
   type RegisteredSystems,
-  type UserWorld,
 } from "@engine";
 import { System as ContextSystem, Engine, fromContext, FromEngine, Mouse } from "@engine/context";
 import { ActiveCameraView } from "@engine/context-utils";
@@ -59,18 +58,18 @@ export const System = createSystem("main:build-mode")({
     const gridCoordinates = GridSingleton.worldToGridCoordinates(worldPointer.x, worldPointer.y);
 
     const placementTarget = resolvePlacementWorld(engine, worldPointer);
-    const placementWorld = placementTarget.world;
-    const resolvedPlacement = placementTarget.blocked || placementWorld === undefined
+    const commitWorld = placementTarget.commitWorld;
+    const resolvedPlacement = placementTarget.blocked || commitWorld === undefined
       ? null
-      : Placement.resolveSelection(placementWorld, gridCoordinates, data);
+      : Placement.resolveSelection(placementTarget, gridCoordinates, data);
 
-    GhostPreviewScopeUtils.pruneGhosts(rootWorld, focusedWorld, sceneWorlds);
+    GhostPreviewScopeUtils.pruneGhosts(rootWorld, placementTarget.previewWorld, sceneWorlds);
 
     if (data.selectedItem === null || resolvedPlacement === null) {
-      focusedWorld.destroy(GhostPreviewComponent);
+      placementTarget.previewWorld.destroy(GhostPreviewComponent);
       data.ghostEntityId = null;
     } else {
-      data.ghostEntityId = resolvedPlacement.syncGhost(focusedWorld, data.ghostEntityId);
+      data.ghostEntityId = resolvedPlacement.preview.sync(data.ghostEntityId);
     }
 
     const shouldDelete = data.pendingDelete;
@@ -78,29 +77,29 @@ export const System = createSystem("main:build-mode")({
     data.pendingDelete = false;
     data.pendingPlace = false;
 
-    if (shouldDelete && !placementTarget.blocked && placementWorld) {
-      Placement.deleteAt(placementWorld, worldPointer);
+    if (shouldDelete && !placementTarget.blocked && commitWorld) {
+      Placement.deleteAt(commitWorld, worldPointer);
     }
 
-    if (!placementTarget.world || placementTarget.blocked) {
+    if (!commitWorld || placementTarget.blocked) {
       return;
     }
 
     const renderVisibilityRole = resolvePlacementRenderVisibilityRole(
       engine,
-      placementTarget.contextId,
+      placementTarget.commitContextId,
     );
 
     if (!supportsLineDragPlacement(data.selectedItem)) {
       if (shouldPlaceSingle) {
-        spawnPlacementAtGridCoordinates(placementTarget.world, gridCoordinates, data, renderVisibilityRole);
+        spawnPlacementAtGridCoordinates(placementTarget, gridCoordinates, data, renderVisibilityRole);
       }
 
       return;
     }
 
     for (const candidateCoordinates of BuildModeDragPlacement.resolvePlacementCandidates(data, gridCoordinates)) {
-      if (!spawnPlacementAtGridCoordinates(placementTarget.world, candidateCoordinates, data, renderVisibilityRole)) {
+      if (!spawnPlacementAtGridCoordinates(placementTarget, candidateCoordinates, data, renderVisibilityRole)) {
         break;
       }
     }
@@ -108,18 +107,18 @@ export const System = createSystem("main:build-mode")({
 });
 
 function spawnPlacementAtGridCoordinates(
-  placementWorld: UserWorld,
+  placementTarget: ReturnType<typeof resolvePlacementWorld>,
   gridCoordinates: GridCoordinates,
   data: RegisteredSystems["main:build-mode"]["data"],
   renderVisibilityRole: RenderVisibilityRole,
 ): boolean {
-  const resolvedPlacement = Placement.resolveSelection(placementWorld, gridCoordinates, data);
+  const resolvedPlacement = Placement.resolveSelection(placementTarget, gridCoordinates, data);
 
   if (resolvedPlacement === null || !resolvedPlacement.canPlace) {
     return false;
   }
 
-  resolvedPlacement.spawn(renderVisibilityRole);
+  resolvedPlacement.commit.execute(renderVisibilityRole);
   BuildModeDragPlacement.recordPlacement(data, gridCoordinates);
 
   return true;

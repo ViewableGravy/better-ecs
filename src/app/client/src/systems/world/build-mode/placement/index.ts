@@ -9,6 +9,7 @@ import {
   GridSingleton,
   type GridCoordinates,
 } from "@client/systems/world/build-mode/grid-singleton";
+import type { PlacementTargetResolution } from "@client/systems/world/build-mode/placement-target";
 import {
   type PlacementContext,
 } from "@client/systems/world/build-mode/placement/createPlacementDefinition";
@@ -36,13 +37,13 @@ export class Placement {
       selectedItem,
     },
   ): boolean {
-    const context = this.createContext(world, gridCoordinates, buildModeState);
+    const context = this.createSingleWorldContext(world, gridCoordinates, buildModeState);
 
     return this.canPlaceFromDefinition(getPlacementDefinition(selectedItem), context);
   }
 
   public static resolveSelection(
-    world: UserWorld,
+    target: PlacementTargetResolution,
     gridCoordinates: GridCoordinates,
     buildModeState: BuildModeState,
   ): RegisteredResolvedPlacement | null {
@@ -52,20 +53,53 @@ export class Placement {
       return null;
     }
 
-    const context = this.createContext(world, gridCoordinates, buildModeState);
+    const context = this.createContext(target, gridCoordinates, buildModeState);
 
     return this.resolveSelectionFromDefinition(getPlacementDefinition(selectedItem), context);
   }
 
-  private static createContext(
+  private static createSingleWorldContext(
     world: UserWorld,
     gridCoordinates: GridCoordinates,
     buildModeState: BuildModeState,
   ): PlacementContext {
+    return this.createContext({
+      inputWorld: world,
+      focusedWorld: world,
+      previewWorld: world,
+      previewContextId: undefined,
+      commitContextId: undefined,
+      commitWorld: world,
+      relationship: undefined,
+    }, gridCoordinates, buildModeState);
+  }
+
+  private static createContext(
+    target: Pick<
+      PlacementTargetResolution,
+      | "inputWorld"
+      | "focusedWorld"
+      | "previewWorld"
+      | "previewContextId"
+      | "commitContextId"
+      | "relationship"
+      | "commitWorld"
+    >,
+    gridCoordinates: GridCoordinates,
+    buildModeState: BuildModeState,
+  ): PlacementContext {
     const [snappedX, snappedY] = GridSingleton.gridCoordinatesToWorldOrigin(gridCoordinates);
+    const commitWorld = target.commitWorld ?? target.focusedWorld;
 
     return {
-      world,
+      world: commitWorld,
+      inputWorld: target.inputWorld,
+      focusedWorld: target.focusedWorld,
+      previewWorld: target.previewWorld,
+      commitWorld,
+      previewContextId: target.previewContextId,
+      commitContextId: target.commitContextId,
+      relationship: target.relationship,
       gridCoordinates,
       snappedX,
       snappedY,

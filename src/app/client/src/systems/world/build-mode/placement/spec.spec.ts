@@ -10,6 +10,7 @@ import {
   buildModeStateDefault,
 } from "@client/systems/world/build-mode/const";
 import { GridSingleton } from "@client/systems/world/build-mode/grid-singleton";
+import type { PlacementContext } from "@client/systems/world/build-mode/placement/createPlacementDefinition";
 import { createBuildItemSpec } from "@client/systems/world/build-mode/placement/spec";
 import { UserWorld, World } from "@engine";
 import { describe, expect, it } from "vitest";
@@ -17,6 +18,28 @@ import { describe, expect, it } from "vitest";
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
+
+function createPlacementContext(
+  world: UserWorld,
+  gridCoordinates: ReturnType<typeof GridSingleton.worldToGridCoordinates>,
+  snappedX: number,
+  snappedY: number,
+): PlacementContext {
+  return {
+    world,
+    inputWorld: world,
+    focusedWorld: world,
+    previewWorld: world,
+    commitWorld: world,
+    previewContextId: undefined,
+    commitContextId: undefined,
+    relationship: undefined,
+    gridCoordinates,
+    snappedX,
+    snappedY,
+    buildModeState: buildModeStateDefault,
+  };
+}
 
 describe("createBuildItemSpec", () => {
   it("checks every occupied footprint cell when using the default placement rules", () => {
@@ -56,12 +79,8 @@ describe("createBuildItemSpec", () => {
 
     PhysicsWorldManager.beginFrame([world]);
 
-    expect(definition.canPlace({
-      world,
-      gridCoordinates: anchorCoordinates,
-      snappedX: claimSnappedX,
-      snappedY: claimSnappedY,
-      buildModeState: buildModeStateDefault,
-    })).toBe(false);
+    expect(definition.canPlace(
+      createPlacementContext(world, anchorCoordinates, claimSnappedX, claimSnappedY),
+    )).toBe(false);
   });
 });

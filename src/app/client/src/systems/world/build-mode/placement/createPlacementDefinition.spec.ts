@@ -3,20 +3,45 @@ import { spawnBox } from "@client/entities/box";
 import { BoxGhost } from "@client/entities/box/ghost";
 import { spawnLandClaim } from "@client/entities/land-claim";
 import {
-    LAND_CLAIM_OWNER_NAME,
+  LAND_CLAIM_OWNER_NAME,
 } from "@client/entities/land-claim/const";
 import { PhysicsWorldManager } from "@client/scenes/world/physics/physics-world-manager";
 import {
-    buildModeStateDefault,
+  buildModeStateDefault,
 } from "@client/systems/world/build-mode/const";
 import { GridSingleton } from "@client/systems/world/build-mode/grid-singleton";
-import { createPlacementDefinition } from "@client/systems/world/build-mode/placement/createPlacementDefinition";
+import {
+  createPlacementDefinition,
+  type PlacementContext,
+} from "@client/systems/world/build-mode/placement/createPlacementDefinition";
 import { UserWorld, World } from "@engine";
 import { describe, expect, it } from "vitest";
 
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
+
+function createPlacementContext(
+  world: UserWorld,
+  gridCoordinates: ReturnType<typeof GridSingleton.worldToGridCoordinates>,
+  snappedX: number,
+  snappedY: number,
+): PlacementContext {
+  return {
+    world,
+    inputWorld: world,
+    focusedWorld: world,
+    previewWorld: world,
+    commitWorld: world,
+    previewContextId: undefined,
+    commitContextId: undefined,
+    relationship: undefined,
+    gridCoordinates,
+    snappedX,
+    snappedY,
+    buildModeState: buildModeStateDefault,
+  };
+}
 
 describe("createPlacementDefinition", () => {
   it("checks every occupied footprint cell when using the default placement rules", () => {
@@ -52,12 +77,8 @@ describe("createPlacementDefinition", () => {
 
     PhysicsWorldManager.beginFrame([world]);
 
-    expect(definition.canPlace({
-      world,
-      gridCoordinates: anchorCoordinates,
-      snappedX: claimSnappedX,
-      snappedY: claimSnappedY,
-      buildModeState: buildModeStateDefault,
-    })).toBe(false);
+    expect(definition.canPlace(
+      createPlacementContext(world, anchorCoordinates, claimSnappedX, claimSnappedY),
+    )).toBe(false);
   });
 });

@@ -16,10 +16,20 @@ import type { BuildItemSpec } from "@client/systems/world/build-mode/placement/s
  **********************************************************************************************************/
 
 export type RegisteredResolvedPlacement = {
-  item: BuildItemType;
+  intent: {
+    item: BuildItemType;
+    context: PlacementContext;
+    payload?: unknown;
+  };
   canPlace: boolean;
-  spawn: (renderVisibilityRole: RenderVisibilityRole) => void;
-  syncGhost: (world: UserWorld, ghostEntityId: EntityId | null) => EntityId;
+  preview: {
+    world: UserWorld;
+    sync: (ghostEntityId: EntityId | null) => EntityId;
+  };
+  commit: {
+    world: UserWorld;
+    execute: (renderVisibilityRole: RenderVisibilityRole) => void;
+  };
 };
 
 type RegisteredPlacementDefinition = {
@@ -65,21 +75,31 @@ function createRegisteredPlacementDefinition<TPayload>(
       const canPlace = definition.canPlace(context, payload);
 
       return {
-        item: itemType,
-        canPlace,
-        spawn(renderVisibilityRole) {
-          definition.lifecycle.commit({ ...context, renderVisibilityRole }, payload);
+        intent: {
+          item: itemType,
+          context,
+          payload,
         },
-        syncGhost(world, ghostEntityId) {
-          return GhostPreviewManager.sync(
-            world,
-            ghostEntityId,
-            context.snappedX,
-            context.snappedY,
-            definition.ghost,
-            payload,
-            canPlace,
-          );
+        canPlace,
+        preview: {
+          world: context.previewWorld,
+          sync(ghostEntityId) {
+            return GhostPreviewManager.sync(
+              context.previewWorld,
+              ghostEntityId,
+              context.snappedX,
+              context.snappedY,
+              definition.ghost,
+              payload,
+              canPlace,
+            );
+          },
+        },
+        commit: {
+          world: context.commitWorld,
+          execute(renderVisibilityRole) {
+            definition.lifecycle.commit({ ...context, renderVisibilityRole }, payload);
+          },
         },
       };
     },

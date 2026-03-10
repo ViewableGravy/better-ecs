@@ -17,6 +17,7 @@ import {
   type PlacementFootprint,
 } from "@client/systems/world/build-mode/placement/footprint";
 import { PlacementQueries } from "@client/systems/world/build-mode/placement/queries";
+import type { ContextId, ContextRelationship } from "@libs/spatial-contexts";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -72,6 +73,13 @@ type CreatePlacementDefinitionOptions<TPayload, TGhostEntityId extends EntityId>
 
 export type PlacementContext = {
   world: UserWorld;
+  inputWorld: UserWorld;
+  focusedWorld: UserWorld;
+  previewWorld: UserWorld;
+  commitWorld: UserWorld;
+  previewContextId?: ContextId;
+  commitContextId?: ContextId;
+  relationship?: ContextRelationship;
   gridCoordinates: GridCoordinates;
   snappedX: number;
   snappedY: number;
