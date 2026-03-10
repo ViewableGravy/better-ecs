@@ -1,11 +1,12 @@
+import { usesPlacementEndSideRotation } from "@client/systems/world/build-mode/build-items";
 import {
-    GRID_TOGGLE_CTRL,
-    GRID_TOGGLE_META,
-    HOTBAR_SLOT_CONVEYOR_HORIZONTAL_RIGHT,
-    HOTBAR_SLOT_EMPTY,
-    HOTBAR_SLOT_LAND_CLAIM,
-    ROTATE_BUILD_ITEM,
-    TRANSPORT_BELT_ROTATION_END_SIDES,
+  GRID_TOGGLE_CTRL,
+  GRID_TOGGLE_META,
+  HOTBAR_SLOT_CONVEYOR_HORIZONTAL_RIGHT,
+  HOTBAR_SLOT_EMPTY,
+  HOTBAR_SLOT_LAND_CLAIM,
+  ROTATE_BUILD_ITEM,
+  TRANSPORT_BELT_ROTATION_END_SIDES,
 } from "@client/systems/world/build-mode/const";
 import { fromContext, System } from "@engine/context";
 
@@ -29,7 +30,7 @@ export function matchKeybinds(): void {
     data.selectedItem = null;
   }
 
-  if (data.selectedItem === "transport-belt" && input.matchKeybind(ROTATE_BUILD_ITEM)) {
+  if (usesPlacementEndSideRotation(data.selectedItem) && input.matchKeybind(ROTATE_BUILD_ITEM)) {
     const currentIndex = TRANSPORT_BELT_ROTATION_END_SIDES.indexOf(data.placementEndSide);
     const nextIndex = (currentIndex + 1) % TRANSPORT_BELT_ROTATION_END_SIDES.length;
 

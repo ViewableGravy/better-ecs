@@ -1,4 +1,5 @@
 import type { TransportBeltSide } from "@client/entities/transport-belt/consts";
+import { supportsLineDragPlacement } from "@client/systems/world/build-mode/build-items";
 import type {
   BuildModeState,
   PlacementDragAxis,
@@ -11,7 +12,7 @@ import type { GridCoordinates } from "@client/systems/world/build-mode/grid-sing
 
 export class BuildModeDragPlacement {
   public static syncSession(data: BuildModeState): void {
-    if (data.placePointerActive && data.selectedItem === "transport-belt") {
+    if (data.placePointerActive && supportsLineDragPlacement(data.selectedItem)) {
       return;
     }
 
@@ -22,7 +23,7 @@ export class BuildModeDragPlacement {
     data: BuildModeState,
     hoveredCoordinates: GridCoordinates,
   ): GridCoordinates[] {
-    if (!data.placePointerActive || data.selectedItem !== "transport-belt") {
+    if (!data.placePointerActive || !supportsLineDragPlacement(data.selectedItem)) {
       return [];
     }
 
@@ -38,7 +39,7 @@ export class BuildModeDragPlacement {
   }
 
   public static recordPlacement(data: BuildModeState, gridCoordinates: GridCoordinates): void {
-    if (data.selectedItem !== "transport-belt") {
+    if (!supportsLineDragPlacement(data.selectedItem)) {
       return;
     }
 

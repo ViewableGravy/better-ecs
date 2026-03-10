@@ -8,7 +8,7 @@ import {
   type TransportBeltEntityId,
 } from "@client/entities/transport-belt/types";
 import { CollisionProfiles } from "@client/scenes/world/physics/collision-profiles";
-import { TRANSPORT_BELT_COLLIDER_SIZE } from "@client/systems/world/build-mode/const";
+import { TRANSPORT_BELT_COLLIDER_SIZE } from "@client/systems/world/build-mode/metrics";
 import { Vec2, type EntityId, type UserWorld } from "@engine";
 import { AnimatedSprite, Debug, Transform2D } from "@engine/components";
 import { RectangleCollider } from "@libs/physics";

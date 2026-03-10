@@ -1,8 +1,8 @@
 import type { MousePoint, UserWorld } from "@engine";
 
+import type { BuildItemType } from "@client/systems/world/build-mode/build-items";
 import {
   buildModeStateDefault,
-  type BuildItemType,
   type BuildModeState,
 } from "@client/systems/world/build-mode/const";
 import {

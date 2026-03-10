@@ -8,7 +8,7 @@ import { TransportBeltPlacementRotationManager } from "@client/entities/transpor
 import {
   TRANSPORT_BELT_OFFSET_X,
   TRANSPORT_BELT_OFFSET_Y,
-} from "@client/systems/world/build-mode/const";
+} from "@client/systems/world/build-mode/metrics";
 import { createPlacementDefinition } from "@client/systems/world/build-mode/placement/createPlacementDefinition";
 import { createPlacementSpawner } from "@client/systems/world/build-mode/placement/createPlacementSpawner";
 import { PlacementQueries } from "@client/systems/world/build-mode/placement/queries";
@@ -21,11 +21,13 @@ import { COLLISION_LAYERS } from "@libs/physics";
 export const transportBeltPlacementDefinition = createPlacementDefinition<TransportBeltVariant>({
   item: "transport-belt",
   ghost: TransportBeltGhost,
+  dragPlacementMode: "line",
   placementStrategy: {
     query: "grid",
     strategy: "replace",
     replaceableLayers: COLLISION_LAYERS.CONVEYOR,
   },
+  rotationMode: "placement-end-side",
   resolvePayload({ world, gridCoordinates, buildModeState }) {
     return TransportBeltPlacementRotationManager.resolveVariant(
       world,

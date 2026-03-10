@@ -1,5 +1,8 @@
 import type { TransportBeltSide } from "@client/entities/transport-belt/consts";
-import { GridSingleton } from "@client/systems/world/build-mode/grid-singleton";
+import {
+  BUILD_ITEM_TYPES,
+  type BuildItemType,
+} from "@client/systems/world/build-mode/build-items";
 import type { EntityId, KeyBind } from "@engine";
 import { Color } from "@engine/components";
 import z from "zod";
@@ -7,13 +10,15 @@ import z from "zod";
 /**********************************************************************************************************
 *   CONSTS
 **********************************************************************************************************/
-export const GRID_CELL_SIZE = GridSingleton.cellSize;
-export const BOX_SIZE = GRID_CELL_SIZE;
-export const HALF_BOX_SIZE = GridSingleton.halfCellSize;
-
-export const TRANSPORT_BELT_OFFSET_X = HALF_BOX_SIZE;
-export const TRANSPORT_BELT_OFFSET_Y = HALF_BOX_SIZE;
-export const TRANSPORT_BELT_COLLIDER_SIZE = GRID_CELL_SIZE;
+export {
+  BOX_SIZE,
+  DELETE_POINT_RADIUS,
+  GRID_CELL_SIZE,
+  HALF_BOX_SIZE,
+  TRANSPORT_BELT_COLLIDER_SIZE,
+  TRANSPORT_BELT_OFFSET_X,
+  TRANSPORT_BELT_OFFSET_Y,
+} from "@client/systems/world/build-mode/metrics";
 
 export const HOTBAR_SLOT_CONVEYOR_HORIZONTAL_RIGHT: KeyBind = {
   code: "Digit1",
@@ -54,14 +59,12 @@ export const INVALID_GHOST_TINT = new Color(1, 0.45, 0.45, 0.76);
 export const PLACED_FILL = new Color(1, 0.2, 0.8, 1);
 export const PLACED_STROKE = new Color(1, 1, 1, 1);
 
-export const DELETE_POINT_RADIUS = 0.001;
 export const HOTBAR_INDICATOR_ID = "build-hotbar-indicator";
 export const TRANSPORT_BELT_ROTATION_END_SIDES: readonly TransportBeltSide[] = ["top", "right", "bottom", "left"];
 
 /**********************************************************************************************************
 *   STATE
 **********************************************************************************************************/
-export type BuildItemType = "box" | "transport-belt" | "land-claim";
 export type PlacementDragAxis = "horizontal" | "vertical";
 
 export type BuildModeState = {
@@ -93,7 +96,7 @@ export const buildModeStateDefault: BuildModeState = {
 };
 
 export const buildModeStateSchema = z.object({
-  selectedItem: z.enum(["box", "transport-belt", "land-claim"]).nullable(),
+  selectedItem: z.enum(BUILD_ITEM_TYPES).nullable(),
   gridVisible: z.boolean(),
   pendingPlace: z.boolean(),
   pendingDelete: z.boolean(),

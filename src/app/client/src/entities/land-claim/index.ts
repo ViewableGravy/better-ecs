@@ -7,7 +7,7 @@ import { Placeable } from "@client/systems/world/build-mode/components/placeable
 import {
   BOX_SIZE,
   HALF_BOX_SIZE,
-} from "@client/systems/world/build-mode/const";
+} from "@client/systems/world/build-mode/metrics";
 import { GridSingleton } from "@client/systems/world/build-mode/grid-singleton";
 import { Vec2, type EntityId, type UserWorld } from "@engine";
 import {

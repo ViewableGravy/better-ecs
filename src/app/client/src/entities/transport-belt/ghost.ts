@@ -1,4 +1,5 @@
-import { GhostPreviewComponent, createEntityGhostPreset } from "@client/entities/ghost";
+import { GhostPreviewComponent } from "@client/entities/ghost/component";
+import { createEntityGhostPreset } from "@client/entities/ghost/spawner";
 import {
   spawnTransportBelt,
   updateTransportBeltVariant,
@@ -8,7 +9,7 @@ import { asTransportBeltEntityId } from "@client/entities/transport-belt/types";
 import {
   TRANSPORT_BELT_OFFSET_X,
   TRANSPORT_BELT_OFFSET_Y,
-} from "@client/systems/world/build-mode/const";
+} from "@client/systems/world/build-mode/metrics";
 
 /**********************************************************************************************************
  *   COMPONENT START

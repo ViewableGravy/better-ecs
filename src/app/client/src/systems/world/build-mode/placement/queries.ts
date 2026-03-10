@@ -6,7 +6,7 @@ import {
   BOX_SIZE,
   DELETE_POINT_RADIUS,
   HALF_BOX_SIZE,
-} from "@client/systems/world/build-mode/const";
+} from "@client/systems/world/build-mode/metrics";
 import {
   GridSingleton,
   type GridCoordinates,

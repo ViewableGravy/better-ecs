@@ -2,14 +2,14 @@ import type { RenderVisibilityRole } from "@client/components/render-visibility"
 import type { EntityId, UserWorld } from "@engine";
 
 import { GhostPreviewManager } from "@client/entities/ghost";
-import type { BuildItemType } from "@client/systems/world/build-mode/const";
-import { boxPlacementDefinition } from "@client/systems/world/build-mode/placement/box";
+import {
+  getBuildItemDefinition,
+  type BuildItemType,
+} from "@client/systems/world/build-mode/build-items";
 import type {
     PlacementContext,
     PlacementDefinition,
 } from "@client/systems/world/build-mode/placement/createPlacementDefinition";
-import { landClaimPlacementDefinition } from "@client/systems/world/build-mode/placement/land-claim";
-import { transportBeltPlacementDefinition } from "@client/systems/world/build-mode/placement/transport-belt";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -32,9 +32,9 @@ type RegisteredPlacementDefinition = {
  **********************************************************************************************************/
 
 const placementDefinitionRegistry = {
-  box: createRegisteredPlacementDefinition(boxPlacementDefinition),
-  "land-claim": createRegisteredPlacementDefinition(landClaimPlacementDefinition),
-  "transport-belt": createRegisteredPlacementDefinition(transportBeltPlacementDefinition),
+  box: createRegisteredPlacementDefinition("box", getBuildItemDefinition("box")),
+  "land-claim": createRegisteredPlacementDefinition("land-claim", getBuildItemDefinition("land-claim")),
+  "transport-belt": createRegisteredPlacementDefinition("transport-belt", getBuildItemDefinition("transport-belt")),
 };
 
 export function getPlacementDefinition(itemType: BuildItemType) {
@@ -42,6 +42,7 @@ export function getPlacementDefinition(itemType: BuildItemType) {
 }
 
 function createRegisteredPlacementDefinition<TPayload>(
+  itemType: BuildItemType,
   definition: PlacementDefinition<TPayload, EntityId>,
 ): RegisteredPlacementDefinition {
   return {
@@ -64,7 +65,7 @@ function createRegisteredPlacementDefinition<TPayload>(
       const canPlace = definition.canPlace(context, payload);
 
       return {
-        item: definition.item,
+        item: itemType,
         canPlace,
         spawn(renderVisibilityRole) {
           definition.spawn({ ...context, renderVisibilityRole }, payload);

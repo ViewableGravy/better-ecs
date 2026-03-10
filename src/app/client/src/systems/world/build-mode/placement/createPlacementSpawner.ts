@@ -1,5 +1,4 @@
 import { Placeable } from "@client/systems/world/build-mode/components";
-import type { BuildItemType } from "@client/systems/world/build-mode/const";
 import type { EntityId } from "@engine";
 
 import type {
@@ -21,7 +20,7 @@ type PlacementSpawnPoint = {
 type PlacementResolvedSpawnContext = PlacementSpawnContext & PlacementSpawnPoint;
 
 type CreatePlacementSpawnerOptions<TPayload, TResult extends PlacementSpawnResult = PlacementSpawnResult> = {
-  item: BuildItemType;
+  item: string;
   resolveSpawnPoint?: (context: PlacementSpawnContext, payload?: TPayload) => PlacementSpawnPoint;
   replace?: (context: PlacementResolvedSpawnContext, payload?: TPayload) => void;
   spawn: (context: PlacementResolvedSpawnContext, payload?: TPayload) => TResult;
@@ -69,7 +68,7 @@ function resolveSpawnContext<TPayload, TResult extends PlacementSpawnResult>(
 
 function markPlaceableEntities(
   context: PlacementSpawnContext,
-  item: BuildItemType,
+  item: string,
   result: PlacementSpawnResult,
 ): void {
   for (const entityId of normalizePlacementSpawnResult(result)) {

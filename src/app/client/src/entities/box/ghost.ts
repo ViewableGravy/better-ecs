@@ -1,6 +1,6 @@
 import { OUTSIDE } from "@client/components/render-visibility";
 import { spawnBox } from "@client/entities/box";
-import { createEntityGhostPreset } from "@client/entities/ghost";
+import { createEntityGhostPreset } from "@client/entities/ghost/spawner";
 
 /**********************************************************************************************************
  *   COMPONENT START

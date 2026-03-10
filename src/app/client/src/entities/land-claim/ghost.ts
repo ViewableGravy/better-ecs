@@ -1,5 +1,5 @@
 import { OUTSIDE } from "@client/components/render-visibility";
-import { createEntityGhostPreset } from "@client/entities/ghost";
+import { createEntityGhostPreset } from "@client/entities/ghost/spawner";
 import { spawnLandClaim } from "@client/entities/land-claim";
 import {
   LAND_CLAIM_OWNER_NAME,

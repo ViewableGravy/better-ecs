@@ -1,4 +1,4 @@
-import { HALF_BOX_SIZE } from "@client/systems/world/build-mode/const";
+import { HALF_BOX_SIZE } from "@client/systems/world/build-mode/metrics";
 import type { EntityId, UserWorld } from "@engine";
 import { Transform2D } from "@engine/components";
 

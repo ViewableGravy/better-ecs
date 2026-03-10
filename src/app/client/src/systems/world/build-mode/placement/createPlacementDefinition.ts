@@ -2,7 +2,6 @@ import type { RenderVisibilityRole } from "@client/components/render-visibility"
 import type { GhostPreset } from "@client/entities/ghost";
 import { LandClaimQuery } from "@client/entities/land-claim";
 import type {
-  BuildItemType,
   BuildModeState,
 } from "@client/systems/world/build-mode/const";
 import type { GridCoordinates } from "@client/systems/world/build-mode/grid-singleton";
@@ -26,6 +25,8 @@ import { PlacementQueries } from "@client/systems/world/build-mode/placement/que
 type PlacementPayloadResolver<TPayload> = (context: PlacementContext) => TPayload | null | undefined;
 type PlacementCanPlace<TPayload> = (context: PlacementContext, payload?: TPayload) => boolean;
 export type PlacementSpawn<TPayload> = (context: PlacementSpawnContext, payload?: TPayload) => void;
+export type PlacementDragMode = "single" | "line";
+export type PlacementRotationMode = "none" | "placement-end-side";
 
 export type PlacementOccupancyQuery = "grid" | "overlap";
 export type PlacementOccupancyMode = "block" | "replace";
@@ -52,8 +53,10 @@ export type PlacementStrategy<TPayload> = {
 };
 
 type CreatePlacementDefinitionOptions<TPayload, TGhostEntityId extends EntityId> = {
-  item: BuildItemType;
+  item: string;
   ghost: GhostPreset<TPayload, TGhostEntityId>;
+  dragPlacementMode?: PlacementDragMode;
+  rotationMode?: PlacementRotationMode;
   resolvePayload?: PlacementPayloadResolver<TPayload>;
   footprint?: PlacementFootprint;
   placementStrategy?: PlacementStrategy<TPayload>;
@@ -74,8 +77,10 @@ export type PlacementSpawnContext = PlacementContext & {
 };
 
 export type PlacementDefinition<TPayload = void, TGhostEntityId extends EntityId = EntityId> = {
-  item: BuildItemType;
+  item: string;
   ghost: GhostPreset<TPayload, TGhostEntityId>;
+  dragPlacementMode: PlacementDragMode;
+  rotationMode: PlacementRotationMode;
   resolvePayload?: PlacementPayloadResolver<TPayload>;
   footprint?: PlacementFootprint;
   placementStrategy?: PlacementStrategy<TPayload>;
@@ -106,7 +111,9 @@ export function createPlacementDefinition<TPayload = void, TGhostEntityId extend
 
   return {
     ...definition,
+    dragPlacementMode: definition.dragPlacementMode ?? "single",
     placementStrategy,
+    rotationMode: definition.rotationMode ?? "none",
     canPlace,
   };
 }
