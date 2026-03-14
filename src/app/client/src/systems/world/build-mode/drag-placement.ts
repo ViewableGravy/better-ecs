@@ -1,10 +1,13 @@
 import type { TransportBeltSide } from "@client/entities/transport-belt/consts";
 import { supportsLineDragPlacement } from "@client/systems/world/build-mode/build-items";
 import type {
-  BuildModeState,
-  PlacementDragAxis,
+    BuildModeState,
+    PlacementDragAxis,
 } from "@client/systems/world/build-mode/const";
-import type { GridCoordinates } from "@client/systems/world/build-mode/grid-singleton";
+import {
+    GridSingleton,
+    type GridCoordinates,
+} from "@client/systems/world/build-mode/grid-singleton";
 
 /**********************************************************************************************************
  *   COMPONENT START
@@ -35,7 +38,7 @@ export class BuildModeDragPlacement {
       return [];
     }
 
-    return this.hasVisited(data, hoveredCoordinates) ? [] : [hoveredCoordinates];
+    return this.resolveLinePlacementCandidates(data, hoveredCoordinates);
   }
 
   public static recordPlacement(data: BuildModeState, gridCoordinates: GridCoordinates): void {
@@ -106,6 +109,73 @@ export class BuildModeDragPlacement {
     }
 
     return false;
+  }
+
+  private static resolveLinePlacementCandidates(
+    data: BuildModeState,
+    hoveredCoordinates: GridCoordinates,
+  ): GridCoordinates[] {
+    const [hoveredX, hoveredY] = hoveredCoordinates;
+    const anchorGridX = data.dragPlacementAnchorGridX;
+    const anchorGridY = data.dragPlacementAnchorGridY;
+
+    if (anchorGridX === null || anchorGridY === null) {
+      return [];
+    }
+
+    if (data.dragPlacementAxis === "horizontal") {
+      return this.resolveAxisPlacementCandidates(data, anchorGridX, Number(hoveredX), (gridX) => {
+        return this.createGridCoordinates(gridX, anchorGridY);
+      });
+    }
+
+    if (data.dragPlacementAxis === "vertical") {
+      return this.resolveAxisPlacementCandidates(data, anchorGridY, Number(hoveredY), (gridY) => {
+        return this.createGridCoordinates(anchorGridX, gridY);
+      });
+    }
+
+    return [];
+  }
+
+  private static resolveAxisPlacementCandidates(
+    data: BuildModeState,
+    anchorIndex: number,
+    hoveredIndex: number,
+    createCoordinates: (coordinateIndex: number) => GridCoordinates,
+  ): GridCoordinates[] {
+    const direction = Math.sign(hoveredIndex - anchorIndex);
+
+    if (direction === 0) {
+      const candidate = createCoordinates(anchorIndex);
+
+      return this.hasVisited(data, candidate) ? [] : [candidate];
+    }
+
+    const candidates: GridCoordinates[] = [];
+
+    for (
+      let coordinateIndex = anchorIndex + direction;
+      coordinateIndex !== hoveredIndex + direction;
+      coordinateIndex += direction
+    ) {
+      const candidate = createCoordinates(coordinateIndex);
+
+      if (this.hasVisited(data, candidate)) {
+        continue;
+      }
+
+      candidates.push(candidate);
+    }
+
+    return candidates;
+  }
+
+  private static createGridCoordinates(gridX: number, gridY: number): GridCoordinates {
+    return GridSingleton.worldToGridCoordinates(
+      gridX * GridSingleton.cellSize,
+      gridY * GridSingleton.cellSize,
+    );
   }
 
   private static toGridKey(gridCoordinates: GridCoordinates): string {

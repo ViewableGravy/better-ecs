@@ -1,6 +1,6 @@
 import {
-  buildModeStateDefault,
-  type BuildModeState,
+    buildModeStateDefault,
+    type BuildModeState,
 } from "@client/systems/world/build-mode/const";
 import { BuildModeDragPlacement } from "@client/systems/world/build-mode/drag-placement";
 import { GridSingleton } from "@client/systems/world/build-mode/grid-singleton";
@@ -16,26 +16,58 @@ describe("BuildModeDragPlacement", () => {
       selectedItem: "transport-belt",
       placePointerActive: true,
     });
-    const hoveredCoordinates = GridSingleton.worldToGridCoordinates(0, 0);
+    const hoveredCoordinates = coordinates(0, 0);
 
     expect(BuildModeDragPlacement.resolvePlacementCandidates(state, hoveredCoordinates)).toEqual([hoveredCoordinates]);
   });
 
-  it("continues placement only on the hovered aligned horizontal tile", () => {
+  it("fills the full unplaced horizontal path between the anchor and hover tile", () => {
     const state = createState({
       selectedItem: "transport-belt",
       placePointerActive: true,
       placementEndSide: "right",
     });
 
-    BuildModeDragPlacement.recordPlacement(state, GridSingleton.worldToGridCoordinates(0, 0));
-    BuildModeDragPlacement.recordPlacement(state, GridSingleton.worldToGridCoordinates(20, 0));
+    BuildModeDragPlacement.recordPlacement(state, coordinates(0, 0));
 
-    expect(BuildModeDragPlacement.resolvePlacementCandidates(state, GridSingleton.worldToGridCoordinates(60, 0))).toEqual([
-      GridSingleton.worldToGridCoordinates(60, 0),
+    expect(BuildModeDragPlacement.resolvePlacementCandidates(state, coordinates(60, 0))).toEqual([
+      coordinates(20, 0),
+      coordinates(40, 0),
+      coordinates(60, 0),
     ]);
 
-    expect(BuildModeDragPlacement.resolvePlacementCandidates(state, GridSingleton.worldToGridCoordinates(20, 20))).toEqual([]);
+    expect(BuildModeDragPlacement.resolvePlacementCandidates(state, coordinates(20, 20))).toEqual([]);
+  });
+
+  it("skips already placed tiles while continuing the horizontal drag line", () => {
+    const state = createState({
+      selectedItem: "transport-belt",
+      placePointerActive: true,
+      placementEndSide: "right",
+    });
+
+    BuildModeDragPlacement.recordPlacement(state, coordinates(0, 0));
+    BuildModeDragPlacement.recordPlacement(state, coordinates(20, 0));
+
+    expect(BuildModeDragPlacement.resolvePlacementCandidates(state, coordinates(60, 0))).toEqual([
+      coordinates(40, 0),
+      coordinates(60, 0),
+    ]);
+  });
+
+  it("fills the full unplaced vertical path when dragging back past the anchor", () => {
+    const state = createState({
+      selectedItem: "transport-belt",
+      placePointerActive: true,
+      placementEndSide: "bottom",
+    });
+
+    BuildModeDragPlacement.recordPlacement(state, coordinates(0, 0));
+
+    expect(BuildModeDragPlacement.resolvePlacementCandidates(state, coordinates(0, -40))).toEqual([
+      coordinates(0, -20),
+      coordinates(0, -40),
+    ]);
   });
 
   it("resets the drag session when the pointer is no longer held", () => {
@@ -63,4 +95,8 @@ function createState(overrides: Partial<BuildModeState>): BuildModeState {
     ...overrides,
     dragPlacedGridKeys: overrides.dragPlacedGridKeys ?? [],
   };
+}
+
+function coordinates(x: number, y: number) {
+  return GridSingleton.worldToGridCoordinates(x, y);
 }

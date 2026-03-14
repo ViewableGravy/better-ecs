@@ -1,24 +1,39 @@
 Plan: Config-Driven Placement Architecture
 DRAFT: Replace the current low-level createPlacementDefinition(...) shape with a higher-level placement registry built around four explicit concerns: placement intent, occupancy/rule evaluation, preview adapters, and commit/spawn lifecycles. The research shows the current system is split across createPlacementDefinition.ts, index.ts, queries.ts, and bespoke item files like transport-belt.ts. The main design goal should be runtime-first, but shaped so it can later map onto the shared placement domain already described in 12-ROADMAP-ENGINE-GAME-PLACEMENT-AND-WORLD-IO.md. Based on your answers, the plan should assume: preview-only ghosts are the target if belt-level behavior can be preserved, occupancy is both grid- and physics-driven, replacement uses explicit compatibility groups, multi-tile placement validates all occupied cells, fast-replace/upgrader extensibility matters, and preview-world vs commit-world should become first-class.
 
-Progress status (2026-03-10)
+Progress status (2026-03-14)
 
 - [x] Define a new top-level `BuildItemSpec` contract and registry-backed build-item definitions.
 - [x] Migrate `land-claim`, `box`, and `transport-belt` to the new spec shape.
-- [x] Normalize placement commit behavior behind the shared lifecycle contract.
+- [x] Normalize placement commit behavior behind shared lifecycle helpers (`createPlacementSpawner(...)` plus item-local commit hooks).
 - [x] Make resolved placement intent plus preview/commit world routing explicit in the runtime flow.
-- [ ] Replace the remaining ad hoc occupancy queries with a fuller declarative rule pipeline (basic dual-source occupancy gathering and compatibility-group replacement are now in place).
-- [x] Split preview adapters from the runtime placement contract while keeping the legacy ghost path behind an adapter boundary.
-- [ ] Rework drag/planner behavior around shared batched placement intents.
-- [ ] Remove or shrink the remaining low-level legacy placement factory/helpers once all replacements exist.
+- [x] Split preview adapters from the runtime placement contract while keeping the current ghost path behind an adapter boundary.
+- [x] Cover the new placement flow with tests for land-claim territory checks, conveyor replacement, and explicit preview-vs-commit world behavior.
+- [ ] Replace the remaining ad hoc occupancy/buildability logic with a fuller staged rule pipeline. The current default path still lives inside `createPlacementDefinition.ts` and remains boolean-only.
+- [ ] Rework drag/planner behavior around shared batched placement intents. Line drag now fills contiguous axis batches with gap filling and repeated-cell suppression, but planner-level batching and richer shared intent/result objects are still missing.
+- [ ] Detach the new spec/registry runtime from the legacy `createPlacementDefinition(...)` module. `spec.ts`, `registry.ts`, `preview.ts`, and `createPlacementSpawner.ts` still lean on its shared types and default can-place logic.
+- [ ] Remove or shrink the remaining low-level legacy placement factory/helpers once the staged pipeline replaces their last responsibilities.
 
-Next session notes (2026-03-10)
+Current implementation snapshot (2026-03-14)
 
-- Highest priority next: rework drag placement so line placement resolves filled batches/gap filling instead of only candidate-by-candidate single tiles.
-- Continue the rule-pipeline refactor by moving toward validator-style occupancy/buildability stages and per-cell evaluation across the full footprint.
-- If compatibility groups become a repeating pattern beyond conveyors, add a default metadata-driven compatibility-group path so item specs do not need ad hoc `resolveOccupantCompatibilityGroup(...)` checks. If conveyors remain the only special case, keeping the explicit resolver is acceptable.
-- Revisit the preview layer again once the runtime contracts settle, with preview-only rendering still the long-term target instead of ghostifying real entities.
-- After the above, remove or heavily shrink the remaining legacy `createPlacementDefinition(...)` path and its helper-only responsibilities.
+- Item definitions now live in dedicated spec files (`box.ts`, `land-claim.ts`, `transport-belt.ts`) and are assembled through `createBuildItemSpec(...)`.
+- Runtime placement resolution now produces a single resolved object containing explicit `intent`, `preview`, and `commit` sections, with preview and commit worlds kept separate.
+- `resolvePlacementWorld(...)` already models `inputWorld`, `focusedWorld`, `previewWorld`, `commitWorld`, and context ids, so the runtime/world-routing part of the plan is effectively in place.
+- Transport belts already prove the compatibility-group replacement path, specialized payload resolution, centered spawn offsets, and post-spawn neighbor refresh hooks.
+- Preview concerns are now behind `PlacementPreviewAdapter`, but the default adapter is still ghost-backed via `GhostPreviewManager.sync(...)`.
+- Drag placement now resolves full unplaced axis paths between the recorded anchor and hovered tile, so belt dragging no longer depends on hitting every intermediate cell manually.
+- The main remaining legacy concentration is `createPlacementDefinition.ts`, which still owns buildability defaults, occupancy querying, compatibility checks, and replacement evaluation for the new spec system.
+- `build-items.ts` and `placement/registry.ts` both register the same item set, so registration is cleaner than the old switch-based flow but not yet fully collapsed into a single source of truth.
+
+Next session notes (2026-03-14)
+
+- Highest priority next: extract the default can-place/rule evaluation out of `createPlacementDefinition.ts` into dedicated placement-rule modules so the spec runtime no longer depends on the legacy factory for its core behavior.
+- Build on the new drag batching by replacing raw `GridCoordinates[]` results with a richer batched intent/result object that preview, placement, and future planners can share.
+- Introduce validator-style stages with richer results than a bare boolean: buildability, occupancy collection, compatibility/replacement, and final buildability verdict. Keep grid and overlap gathering, but move them behind explicit stage boundaries.
+- Collapse the duplicated registration layer so placement resolution derives directly from the build-item definition registry instead of maintaining a second hardcoded `placementDefinitionRegistry` map.
+- Revisit the preview layer once the rule pipeline settles. Keep the preview adapter contract, but make the next preview milestone preview-only rendering instead of continued ghostification of gameplay entities.
+- If compatibility groups spread beyond conveyors, promote them to first-class spec metadata instead of per-item `resolveOccupantCompatibilityGroup(...)` callbacks. If conveyors remain the only special case, keep the explicit resolver and avoid premature abstraction.
+- After the above, delete or heavily shrink `createPlacementDefinition(...)` until only migration glue remains, then remove the legacy path entirely.
 
 Steps
 
@@ -40,6 +55,7 @@ commit lifecycle
 remove lifecycle
 drag-placement behavior
 This is the main shift that makes new TransportBeltBuildStrategy(...) unnecessary; the strategy becomes data + targeted hooks.
+This is mostly in place now, but the final cleanup should eliminate the duplicated registration maps between build item definitions and placement resolution.
 Split “placement” into explicit phases, matching common factory-building patterns.
 
 Introduce a runtime flow such as:
@@ -65,6 +81,7 @@ apply a declared strategy: block, replace-compatible, or custom predicate
 The occupancy portion should absorb logic currently split between queryFirstPlacementOverlap(...), queryPlacementOccupantsByGrid(...), and replaceTransportBeltAt(...) in queries.ts.
 Do not keep LandClaimQuery as a special-case inside generic defaults; instead treat buildability as one validator in the pipeline, with current land-claim exceptions represented declaratively.
 Use compatibility groups as the baseline for same-kind replacement and future fast-replace/upgrader flows.
+Current status: dual-source occupancy and compatibility-group replacement exist, but they are still fused into `createPlacementDefinition.ts` and return only a boolean verdict. The next pass should return staged evaluation data so preview, planner, and diagnostics can all consume the same rule results.
 Promote GridFootprint from metadata into a real placement primitive.
 
 The plan should explicitly reuse grid-footprint.ts as the basis for footprint-aware placement.
@@ -120,6 +137,7 @@ line placement
 future rectangular/blueprint placement
 The result of drag resolution should be a batch of placement intents evaluated through the same validator pipeline and preview adapters.
 This keeps the architecture open to fast replace, planners, blueprints, and deferred commit workflows.
+Current status: item capabilities already expose `dragPlacementMode`, but the runtime still resolves drag one tile at a time. The next implementation step should move from `GridCoordinates[]` candidates toward a richer batched intent/result object.
 Make preview-world and commit-world explicit in the placement context.
 
 The plan should replace today’s implicit world routing with a context shape that distinguishes:
@@ -135,8 +153,9 @@ Phase 1: introduce the new registry/contracts alongside existing PlacementDefini
 Phase 2: migrate land claim to the new spec.
 Phase 3: migrate box to validate the default path.
 Phase 4: migrate transport belts and extract belt-specific lifecycle hooks.
-Phase 5: remove the old hardcoded switch and legacy factory.
-Phase 6: revisit ghosts to complete preview-only rendering if the first belt migration used a hybrid adapter.
+Phase 5: extract rule evaluation and shared placement types out of the legacy factory so the new runtime can stand alone.
+Phase 6: collapse duplicated registries and remove the legacy factory/helpers.
+Phase 7: revisit ghosts to complete preview-only rendering if the first belt migration used a hybrid adapter.
 This path minimizes regressions while still converging on a cleaner end state.
 Capture explicit edge cases in the handoff document so the implementing agent treats them as design constraints, not optional extras.
 
