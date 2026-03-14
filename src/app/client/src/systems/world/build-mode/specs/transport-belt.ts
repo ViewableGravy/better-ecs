@@ -1,14 +1,14 @@
 import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import {
-  spawnTransportBelt,
-  type TransportBeltVariant,
+    spawnTransportBelt,
+    type TransportBeltVariant,
 } from "@client/entities/transport-belt";
 import { TransportBeltGhost } from "@client/entities/transport-belt/ghost";
 import { TransportBeltAutoShapeManager } from "@client/entities/transport-belt/placement/TransportBeltAutoShapeManager";
-import { TransportBeltPlacementRotationManager } from "@client/entities/transport-belt/placement/TransportBeltPlacementRotationManager";
+import { TransportBeltRotationVariantManager } from "@client/entities/transport-belt/placement/TransportBeltRotationVariantManager";
 import {
-  TRANSPORT_BELT_OFFSET_X,
-  TRANSPORT_BELT_OFFSET_Y,
+    TRANSPORT_BELT_OFFSET_X,
+    TRANSPORT_BELT_OFFSET_Y,
 } from "@client/systems/world/build-mode/metrics";
 import { createPlacementSpawner } from "@client/systems/world/build-mode/placement/createPlacementSpawner";
 import { createGhostPreviewAdapter } from "@client/systems/world/build-mode/placement/preview";
@@ -37,11 +37,10 @@ export const transportBeltPlacementDefinition = createBuildItemSpec<TransportBel
   },
   rotationMode: "placement-end-side",
   resolvePayload({ world, gridCoordinates, buildModeState }) {
-    return TransportBeltPlacementRotationManager.resolveVariant(
-      world,
-      gridCoordinates,
-      buildModeState.placementEndSide,
-    );
+    return TransportBeltRotationVariantManager.deriveBeltVariant(world, {
+      coordinates: gridCoordinates,
+      endSide: buildModeState.placementEndSide,
+    });
   },
   lifecycle: {
     commit: createPlacementSpawner({
