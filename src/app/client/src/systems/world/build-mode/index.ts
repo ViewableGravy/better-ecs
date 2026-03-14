@@ -1,7 +1,7 @@
 import type { RenderVisibilityRole } from "@client/components/render-visibility";
 import { HOUSE_INTERIOR, OUTSIDE } from "@client/components/render-visibility";
 import { GhostPreviewComponent, GhostPreviewScopeUtils } from "@client/entities/ghost";
-import { supportsLineDragPlacement } from "@client/systems/world/build-mode/build-items";
+import { supportsDragPlacement } from "@client/systems/world/build-mode/build-items";
 import {
     buildModeStateDefault,
     buildModeStateSchema,
@@ -89,7 +89,7 @@ export const System = createSystem("main:build-mode")({
       placementTarget.commitContextId,
     );
 
-    if (!supportsLineDragPlacement(data.selectedItem)) {
+    if (!supportsDragPlacement(data.selectedItem)) {
       if (shouldPlaceSingle && resolvedPlacement?.canPlace) {
         commitResolvedPlacement(resolvedPlacement, data, renderVisibilityRole);
       }

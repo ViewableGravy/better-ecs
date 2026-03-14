@@ -11,7 +11,8 @@ import type { ContextId, ContextRelationship } from "@libs/spatial-contexts";
 export type PlacementPayloadResolver<TPayload> = (context: PlacementContext) => TPayload | null | undefined;
 export type PlacementCanPlace<TPayload> = (context: PlacementContext, payload?: TPayload) => boolean;
 export type PlacementSpawn<TPayload> = (context: PlacementSpawnContext, payload?: TPayload) => void;
-export type PlacementDragMode = "single" | "line";
+export type ActivePlacementDragMode = "line" | "paint";
+export type PlacementDragMode = "single" | ActivePlacementDragMode;
 export type PlacementRotationMode = "none" | "placement-end-side";
 
 export type PlacementContext = {

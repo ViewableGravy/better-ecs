@@ -1,6 +1,7 @@
 import { boxPlacementDefinition } from "@client/systems/world/build-mode/placement/box";
 import { landClaimPlacementDefinition } from "@client/systems/world/build-mode/placement/land-claim";
 import { transportBeltPlacementDefinition } from "@client/systems/world/build-mode/placement/transport-belt";
+import type { ActivePlacementDragMode } from "@client/systems/world/build-mode/placement/types";
 import { wallPlacementDefinition } from "@client/systems/world/build-mode/placement/wall";
 
 /**********************************************************************************************************
@@ -30,12 +31,18 @@ export function getBuildItemDefinition<TItemType extends BuildItemType>(itemType
   return buildItemDefinitions[itemType];
 }
 
-export function supportsLineDragPlacement(itemType: BuildItemType | null): boolean {
+export function getDragPlacementMode(itemType: BuildItemType | null): ActivePlacementDragMode | null {
   if (itemType === null) {
-    return false;
+    return null;
   }
 
-  return getBuildItemDefinition(itemType).dragPlacementMode === "line";
+  const dragPlacementMode = getBuildItemDefinition(itemType).dragPlacementMode;
+
+  return dragPlacementMode === "single" ? null : dragPlacementMode;
+}
+
+export function supportsDragPlacement(itemType: BuildItemType | null): boolean {
+  return getDragPlacementMode(itemType) !== null;
 }
 
 export function usesPlacementEndSideRotation(itemType: BuildItemType | null): boolean {

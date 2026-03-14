@@ -88,6 +88,48 @@ describe("BuildModeDragPlacement", () => {
     });
   });
 
+  it("places walls along the dragged cursor path instead of projecting back to the first tile", () => {
+    const state = createState({
+      selectedItem: "wall",
+      placePointerActive: true,
+    });
+
+    BuildModeDragPlacement.recordPlacement(state, coordinates(0, 0));
+
+    expect(BuildModeDragPlacement.resolvePlacementBatch(state, coordinates(60, 20))).toEqual({
+      mode: "paint",
+      axis: null,
+      anchor: coordinates(0, 0),
+      hovered: coordinates(60, 20),
+      candidates: [
+        coordinates(20, 0),
+        coordinates(40, 20),
+        coordinates(60, 20),
+      ],
+    });
+  });
+
+  it("continues wall drag placement from the last placed tile", () => {
+    const state = createState({
+      selectedItem: "wall",
+      placePointerActive: true,
+    });
+
+    BuildModeDragPlacement.recordPlacement(state, coordinates(0, 0));
+    BuildModeDragPlacement.recordPlacement(state, coordinates(20, 0));
+
+    expect(BuildModeDragPlacement.resolvePlacementBatch(state, coordinates(60, 40))).toEqual({
+      mode: "paint",
+      axis: null,
+      anchor: coordinates(20, 0),
+      hovered: coordinates(60, 40),
+      candidates: [
+        coordinates(40, 20),
+        coordinates(60, 40),
+      ],
+    });
+  });
+
   it("resets the drag session when the pointer is no longer held", () => {
     const state = createState({
       selectedItem: "transport-belt",

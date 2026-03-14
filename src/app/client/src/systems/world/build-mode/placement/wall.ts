@@ -14,6 +14,7 @@ import { createBuildItemSpec } from "@client/systems/world/build-mode/placement/
 export const wallPlacementDefinition = createBuildItemSpec<PlaceableWallVisualVariant>({
   item: "wall",
   preview: createGhostPreviewAdapter(PlaceableWallGhost),
+  dragPlacementMode: "paint",
   resolvePayload({ previewWorld, gridCoordinates }) {
     return PlaceableWallAutoShapeManager.deriveVariantAtCoordinates(previewWorld, gridCoordinates);
   },

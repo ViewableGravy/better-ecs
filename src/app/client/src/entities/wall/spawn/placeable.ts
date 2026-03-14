@@ -36,6 +36,9 @@ type SpawnPreviewPlaceableWallOptions = {
 
 type SpawnPlaceableWallOptions = SpawnPlacedPlaceableWallOptions | SpawnPreviewPlaceableWallOptions;
 
+const PLACEABLE_WALL_COLLIDER_HEIGHT = Math.round(BOX_SIZE * 0.3);
+const PLACEABLE_WALL_COLLIDER_TOP = HALF_BOX_SIZE - PLACEABLE_WALL_COLLIDER_HEIGHT;
+
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
@@ -60,8 +63,8 @@ export function spawnPlaceableWall(world: UserWorld, options: SpawnPlaceableWall
 	world.add(
 		wallEntityId,
 		new RectangleCollider(
-			new Vec2(-HALF_BOX_SIZE, -HALF_BOX_SIZE),
-			new Vec2(BOX_SIZE, BOX_SIZE),
+			new Vec2(-HALF_BOX_SIZE, PLACEABLE_WALL_COLLIDER_TOP),
+			new Vec2(BOX_SIZE, PLACEABLE_WALL_COLLIDER_HEIGHT),
 		),
 	);
 	world.add(wallEntityId, CollisionProfiles.solid());

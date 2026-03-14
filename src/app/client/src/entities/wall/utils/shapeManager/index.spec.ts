@@ -3,8 +3,10 @@ import { destroyPlaceableWall } from "@client/entities/wall/mutation/delete";
 import { spawnPlaceableWall } from "@client/entities/wall/spawn/placeable";
 import { PlaceableWallAutoShapeManager } from "@client/entities/wall/utils/shapeManager";
 import { GridSingleton } from "@client/systems/world/build-mode/grid-singleton";
+import { BOX_SIZE, HALF_BOX_SIZE } from "@client/systems/world/build-mode/metrics";
 import { UserWorld, World, type EntityId } from "@engine";
 import { Sprite } from "@engine/components";
+import { RectangleCollider } from "@libs/physics";
 import { describe, expect, it } from "vitest";
 
 const SINGLE_WALL_ASSET_IDS = ["wall-single:1", "wall-single:2"];
@@ -61,6 +63,17 @@ describe("PlaceableWallAutoShapeManager", () => {
 
 		expect(SINGLE_WALL_ASSET_IDS).toContain(world.require(leftWallEntityId, Sprite).assetId);
 		expect(SINGLE_WALL_ASSET_IDS).toContain(world.require(rightWallEntityId, Sprite).assetId);
+	});
+
+	it("uses a grounded collider covering the bottom 30 percent of the tile", () => {
+		const world = new UserWorld(new World("scene"));
+		const wallEntityId = spawnWallAt(world, 0, 0);
+		const collider = world.require(wallEntityId, RectangleCollider);
+
+		expect(collider.bounds.left).toBe(-HALF_BOX_SIZE);
+		expect(collider.bounds.top).toBe(HALF_BOX_SIZE - Math.round(BOX_SIZE * 0.3));
+		expect(collider.bounds.size.x).toBe(BOX_SIZE);
+		expect(collider.bounds.size.y).toBe(Math.round(BOX_SIZE * 0.3));
 	});
 });
 

@@ -1,5 +1,5 @@
 import type { TransportBeltSide } from "@client/entities/transport-belt/consts";
-import { supportsLineDragPlacement } from "@client/systems/world/build-mode/build-items";
+import { getDragPlacementMode } from "@client/systems/world/build-mode/build-items";
 import type {
     BuildModeState,
     PlacementDragAxis,
@@ -14,7 +14,7 @@ import {
  **********************************************************************************************************/
 
 export type DragPlacementBatch = {
-  mode: "single" | "line";
+  mode: "single" | "line" | "paint";
   axis: PlacementDragAxis | null;
   anchor: GridCoordinates | null;
   hovered: GridCoordinates;
@@ -27,7 +27,7 @@ export type DragPlacementBatch = {
 
 export class BuildModeDragPlacement {
   public static syncSession(data: BuildModeState): void {
-    if (data.placePointerActive && supportsLineDragPlacement(data.selectedItem)) {
+    if (data.placePointerActive && getDragPlacementMode(data.selectedItem) !== null) {
       return;
     }
 
@@ -38,42 +38,74 @@ export class BuildModeDragPlacement {
     data: BuildModeState,
     hoveredCoordinates: GridCoordinates,
   ): DragPlacementBatch {
-    if (!data.placePointerActive || !supportsLineDragPlacement(data.selectedItem)) {
-      return this.createBatch(hoveredCoordinates, [], null);
+    const dragPlacementMode = getDragPlacementMode(data.selectedItem);
+
+    if (!data.placePointerActive || dragPlacementMode === null) {
+      return this.createBatch("single", hoveredCoordinates, [], null);
+    }
+
+    if (dragPlacementMode === "paint") {
+      return this.createBatch(
+        "paint",
+        hoveredCoordinates,
+        this.resolvePaintPlacementCandidates(data, hoveredCoordinates),
+        this.getLastPlacedCoordinates(data),
+      );
     }
 
     if (!this.hasAnchor(data)) {
       return this.createBatch(
+        "line",
         hoveredCoordinates,
         this.hasVisited(data, hoveredCoordinates) ? [] : [hoveredCoordinates],
         null,
       );
     }
 
-    if (!this.isAlignedWithAnchor(data, hoveredCoordinates)) {
-      return this.createBatch(hoveredCoordinates, [], this.getAnchorCoordinates(data));
+    const anchorCoordinates = this.getAnchorCoordinates(data);
+    if (anchorCoordinates === null) {
+      return this.createBatch("line", hoveredCoordinates, [], null);
+    }
+
+    const dragAxis = data.dragPlacementAxis;
+
+    if (!this.isAlignedWithAnchor(anchorCoordinates, hoveredCoordinates, dragAxis)) {
+      return this.createBatch("line", hoveredCoordinates, [], anchorCoordinates, dragAxis);
     }
 
     return this.createBatch(
+      "line",
       hoveredCoordinates,
-      this.resolveLinePlacementCandidates(data, hoveredCoordinates),
-      this.getAnchorCoordinates(data),
+      this.resolveLinePlacementCandidates(data, hoveredCoordinates, dragAxis),
+      anchorCoordinates,
+      dragAxis,
     );
   }
 
   public static recordPlacement(data: BuildModeState, gridCoordinates: GridCoordinates): void {
-    if (!supportsLineDragPlacement(data.selectedItem)) {
+    const dragPlacementMode = getDragPlacementMode(data.selectedItem);
+    if (dragPlacementMode === null) {
+      return;
+    }
+
+    if (dragPlacementMode === "paint") {
+      this.recordVisitedGridKey(data, gridCoordinates);
+
       return;
     }
 
     if (!this.hasAnchor(data)) {
       const [gridX, gridY] = gridCoordinates;
 
-      data.dragPlacementAxis = this.resolveAxis(data.placementEndSide);
       data.dragPlacementAnchorGridX = Number(gridX);
       data.dragPlacementAnchorGridY = Number(gridY);
+      data.dragPlacementAxis = this.resolveAxis(data.placementEndSide);
     }
 
+    this.recordVisitedGridKey(data, gridCoordinates);
+  }
+
+  private static recordVisitedGridKey(data: BuildModeState, gridCoordinates: GridCoordinates): void {
     const key = this.toGridKey(gridCoordinates);
 
     if (data.dragPlacedGridKeys.includes(key)) {
@@ -91,8 +123,7 @@ export class BuildModeDragPlacement {
   }
 
   private static hasAnchor(data: BuildModeState): boolean {
-    return data.dragPlacementAxis !== null
-      && data.dragPlacementAnchorGridX !== null
+    return data.dragPlacementAnchorGridX !== null
       && data.dragPlacementAnchorGridY !== null;
   }
 
@@ -120,22 +151,18 @@ export class BuildModeDragPlacement {
   }
 
   private static isAlignedWithAnchor(
-    data: BuildModeState,
+    anchorCoordinates: GridCoordinates,
     hoveredCoordinates: GridCoordinates,
+    dragAxis: PlacementDragAxis | null,
   ): boolean {
+    const [anchorGridX, anchorGridY] = anchorCoordinates;
     const [hoveredX, hoveredY] = hoveredCoordinates;
-    const anchorGridX = data.dragPlacementAnchorGridX;
-    const anchorGridY = data.dragPlacementAnchorGridY;
 
-    if (anchorGridX === null || anchorGridY === null) {
-      return false;
-    }
-
-    if (data.dragPlacementAxis === "horizontal") {
+    if (dragAxis === "horizontal") {
       return anchorGridY === Number(hoveredY);
     }
 
-    if (data.dragPlacementAxis === "vertical") {
+    if (dragAxis === "vertical") {
       return anchorGridX === Number(hoveredX);
     }
 
@@ -145,6 +172,7 @@ export class BuildModeDragPlacement {
   private static resolveLinePlacementCandidates(
     data: BuildModeState,
     hoveredCoordinates: GridCoordinates,
+    dragAxis: PlacementDragAxis | null,
   ): GridCoordinates[] {
     const [hoveredX, hoveredY] = hoveredCoordinates;
     const anchorGridX = data.dragPlacementAnchorGridX;
@@ -154,13 +182,13 @@ export class BuildModeDragPlacement {
       return [];
     }
 
-    if (data.dragPlacementAxis === "horizontal") {
+    if (dragAxis === "horizontal") {
       return this.resolveAxisPlacementCandidates(data, anchorGridX, Number(hoveredX), (gridX) => {
         return this.createGridCoordinates(gridX, anchorGridY);
       });
     }
 
-    if (data.dragPlacementAxis === "vertical") {
+    if (dragAxis === "vertical") {
       return this.resolveAxisPlacementCandidates(data, anchorGridY, Number(hoveredY), (gridY) => {
         return this.createGridCoordinates(anchorGridX, gridY);
       });
@@ -209,33 +237,92 @@ export class BuildModeDragPlacement {
     );
   }
 
+  private static getLastPlacedCoordinates(data: BuildModeState): GridCoordinates | null {
+    const lastPlacedKey = data.dragPlacedGridKeys[data.dragPlacedGridKeys.length - 1];
+    if (lastPlacedKey === undefined) {
+      return null;
+    }
+
+    const [gridX, gridY] = lastPlacedKey.split(":").map(Number);
+    if (!Number.isInteger(gridX) || !Number.isInteger(gridY)) {
+      return null;
+    }
+
+    return this.createGridCoordinates(gridX, gridY);
+  }
+
   private static createBatch(
+    mode: DragPlacementBatch["mode"],
     hoveredCoordinates: GridCoordinates,
     candidates: GridCoordinates[],
     anchor: GridCoordinates | null,
+    axis: PlacementDragAxis | null = null,
   ): DragPlacementBatch {
     return {
-      mode: "line",
-      axis: anchor === null ? null : this.resolveBatchAxis(anchor, hoveredCoordinates),
+      mode,
+      axis,
       anchor,
       hovered: hoveredCoordinates,
       candidates,
     };
   }
 
-  private static resolveBatchAxis(
-    anchor: GridCoordinates,
+  private static resolvePaintPlacementCandidates(
+    data: BuildModeState,
     hoveredCoordinates: GridCoordinates,
-  ): PlacementDragAxis | null {
-    if (anchor[0] === hoveredCoordinates[0]) {
-      return "vertical";
+  ): GridCoordinates[] {
+    const lastPlacedCoordinates = this.getLastPlacedCoordinates(data);
+    if (lastPlacedCoordinates === null) {
+      return this.hasVisited(data, hoveredCoordinates) ? [] : [hoveredCoordinates];
     }
 
-    if (anchor[1] === hoveredCoordinates[1]) {
-      return "horizontal";
-    }
+    return this.resolveSegmentPlacementCandidates(data, lastPlacedCoordinates, hoveredCoordinates);
+  }
 
-    return null;
+  private static resolveSegmentPlacementCandidates(
+    data: BuildModeState,
+    startCoordinates: GridCoordinates,
+    endCoordinates: GridCoordinates,
+  ): GridCoordinates[] {
+    const startX = Number(startCoordinates[0]);
+    const startY = Number(startCoordinates[1]);
+    const endX = Number(endCoordinates[0]);
+    const endY = Number(endCoordinates[1]);
+
+    const deltaX = Math.abs(endX - startX);
+    const deltaY = Math.abs(endY - startY);
+    const stepX = startX < endX ? 1 : -1;
+    const stepY = startY < endY ? 1 : -1;
+
+    let currentX = startX;
+    let currentY = startY;
+    let error = deltaX - deltaY;
+
+    const candidates: GridCoordinates[] = [];
+
+    while (true) {
+      const candidate = this.createGridCoordinates(currentX, currentY);
+
+      if (!this.hasVisited(data, candidate)) {
+        candidates.push(candidate);
+      }
+
+      if (currentX === endX && currentY === endY) {
+        return candidates;
+      }
+
+      const doubledError = error * 2;
+
+      if (doubledError > -deltaY) {
+        error -= deltaY;
+        currentX += stepX;
+      }
+
+      if (doubledError < deltaX) {
+        error += deltaX;
+        currentY += stepY;
+      }
+    }
   }
 
   private static toGridKey(gridCoordinates: GridCoordinates): string {

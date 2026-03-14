@@ -117,6 +117,12 @@ for (const entityId of world.query(ShaderQuad)) {
 
 Use `world.get(...)` only for optional components that are not guaranteed by the query.
 
+### 4.1 Spawner Ownership
+
+- Entity spawn functions should attach the runtime components they own at creation time.
+- Do not add follow-up `ensure*` helpers whose job is to patch required components that the spawner itself should have created.
+- Use `ensure*` for entity existence only: it may delegate to a spawn function if the entity is missing, but it should not re-specify the spawned component shape on every call.
+
 ### 5. Leverage Core Systems
 
 The engine provides built-in systems often prefixed with `engine:`.

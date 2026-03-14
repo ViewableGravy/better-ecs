@@ -8,7 +8,7 @@ export const BELT_QUERY_FILTER = {
 };
 
 export const SHARED_MOTION = new Vec2(0, 0);
-export const SHARED_FEET_WORLD_TRANSFORM = new Transform2D();
+export const SHARED_PLAYER_WORLD_TRANSFORM = new Transform2D();
 export const SHARED_BELT_WORLD_TRANSFORM = new Transform2D();
 export const DIRECTION_RIGHT = new Vec2(1, 0);
 export const DIRECTION_LEFT = new Vec2(-1, 0);
