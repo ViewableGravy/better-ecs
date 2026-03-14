@@ -58,20 +58,9 @@ const PERPENDICULAR_INCOMING_SIDES_BY_END_SIDE: Readonly<Record<TransportBeltSid
 };
 
 export class TransportBeltRotationVariantManager {
-  public static deriveBeltVariant(
-    world: UserWorld,
-    target: PreviewBeltVariantDerivationTarget,
-  ): TransportBeltVariant;
-
-  public static deriveBeltVariant(
-    world: UserWorld,
-    target: ExistingBeltVariantDerivationTarget,
-  ): TransportBeltVariant | null;
-
-  public static deriveBeltVariant(
-    world: UserWorld,
-    target: TransportBeltVariantDerivationTarget,
-  ): TransportBeltVariant | null {
+  public static deriveBeltVariant(world: UserWorld, target: PreviewBeltVariantDerivationTarget): TransportBeltVariant;
+  public static deriveBeltVariant(world: UserWorld, target: ExistingBeltVariantDerivationTarget): TransportBeltVariant | null;
+  public static deriveBeltVariant(world: UserWorld, target: TransportBeltVariantDerivationTarget): TransportBeltVariant | null {
     const state = this.resolveDerivationState(world, target);
 
     if (state === null) {
@@ -83,10 +72,7 @@ export class TransportBeltRotationVariantManager {
     return this.resolveVariantFromFlow(startSide, state.endSide);
   }
 
-  private static resolveVariantFromFlow(
-    startSide: TransportBeltSide,
-    endSide: TransportBeltSide,
-  ): TransportBeltVariant {
+  private static resolveVariantFromFlow(startSide: TransportBeltSide, endSide: TransportBeltSide): TransportBeltVariant {
     if (startSide === getOppositeTransportBeltSide(endSide)) {
       return STRAIGHT_VARIANT_BY_END_SIDE[endSide];
     }
@@ -94,10 +80,7 @@ export class TransportBeltRotationVariantManager {
     return getTransportBeltVariantByFlow(startSide, endSide) ?? STRAIGHT_VARIANT_BY_END_SIDE[endSide];
   }
 
-  private static resolveDerivationState(
-    world: UserWorld,
-    target: TransportBeltVariantDerivationTarget,
-  ): BeltVariantDerivationState | null {
+  private static resolveDerivationState(world: UserWorld, target: TransportBeltVariantDerivationTarget): BeltVariantDerivationState | null {
     if ("beltEntityId" in target) {
       const belt = world.get(target.beltEntityId, ConveyorBeltComponent);
 
@@ -127,10 +110,7 @@ export class TransportBeltRotationVariantManager {
     };
   }
 
-  private static deriveTailSide(
-    world: UserWorld,
-    state: BeltVariantDerivationState,
-  ): TransportBeltSide {
+  private static deriveTailSide(world: UserWorld, state: BeltVariantDerivationState): TransportBeltSide {
     const defaultTailSide = getOppositeTransportBeltSide(state.endSide);
 
     if (this.shouldStayStraight(world, state, defaultTailSide)) {
@@ -150,11 +130,7 @@ export class TransportBeltRotationVariantManager {
     return defaultTailSide;
   }
 
-  private static shouldStayStraight(
-    world: UserWorld,
-    state: BeltVariantDerivationState,
-    defaultTailSide: TransportBeltSide,
-  ): boolean {
+  private static shouldStayStraight(world: UserWorld, state: BeltVariantDerivationState, defaultTailSide: TransportBeltSide): boolean {
     return this.isIncomingFromSide(world, state.coordinates, defaultTailSide)
       && this.doesHeadConsumeOutput(world, state.coordinates, state.endSide);
   }
