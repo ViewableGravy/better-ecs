@@ -3,16 +3,16 @@ import { spawnBox } from "@client/entities/box";
 import { BoxGhost } from "@client/entities/box/ghost";
 import { spawnLandClaim } from "@client/entities/land-claim";
 import {
-  LAND_CLAIM_OWNER_NAME,
+    LAND_CLAIM_OWNER_NAME,
 } from "@client/entities/land-claim/const";
 import { PhysicsWorldManager } from "@client/scenes/world/physics/physics-world-manager";
 import {
-  buildModeStateDefault,
+    buildModeStateDefault,
 } from "@client/systems/world/build-mode/const";
 import { GridSingleton } from "@client/systems/world/build-mode/grid-singleton";
-import type { PlacementContext } from "@client/systems/world/build-mode/placement/createPlacementDefinition";
 import { createGhostPreviewAdapter } from "@client/systems/world/build-mode/placement/preview";
 import { createBuildItemSpec } from "@client/systems/world/build-mode/placement/spec";
+import type { PlacementContext } from "@client/systems/world/build-mode/placement/types";
 import { UserWorld, World } from "@engine";
 import { describe, expect, it } from "vitest";
 

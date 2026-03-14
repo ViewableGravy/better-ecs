@@ -2,13 +2,16 @@ import type { RenderVisibilityRole } from "@client/components/render-visibility"
 import type { EntityId, UserWorld } from "@engine";
 
 import {
-  getBuildItemDefinition,
-  type BuildItemType,
+    getBuildItemDefinition,
+    type BuildItemType,
 } from "@client/systems/world/build-mode/build-items";
 import type {
-  PlacementContext,
-} from "@client/systems/world/build-mode/placement/createPlacementDefinition";
+    PlacementEvaluation,
+} from "@client/systems/world/build-mode/placement/rules";
 import type { BuildItemSpec } from "@client/systems/world/build-mode/placement/spec";
+import type {
+    PlacementContext,
+} from "@client/systems/world/build-mode/placement/types";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -20,6 +23,7 @@ export type RegisteredResolvedPlacement = {
     context: PlacementContext;
     payload?: unknown;
   };
+  evaluation: PlacementEvaluation<unknown>;
   canPlace: boolean;
   preview: {
     world: UserWorld;
@@ -31,75 +35,73 @@ export type RegisteredResolvedPlacement = {
   };
 };
 
-type RegisteredPlacementDefinition = {
-  canPlace: (context: PlacementContext) => boolean;
-  resolveSelection: (context: PlacementContext) => RegisteredResolvedPlacement | null;
-};
-
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
 
-const placementDefinitionRegistry = {
-  box: createRegisteredPlacementDefinition("box", getBuildItemDefinition("box")),
-  "land-claim": createRegisteredPlacementDefinition("land-claim", getBuildItemDefinition("land-claim")),
-  "transport-belt": createRegisteredPlacementDefinition("transport-belt", getBuildItemDefinition("transport-belt")),
-};
+export function canPlaceRegisteredPlacement(
+  itemType: BuildItemType,
+  context: PlacementContext,
+): boolean {
+  const resolvedPlacement = resolveRegisteredPlacement(itemType, context);
 
-export function getPlacementDefinition(itemType: BuildItemType) {
-  return placementDefinitionRegistry[itemType];
+  return resolvedPlacement?.canPlace ?? false;
 }
 
-function createRegisteredPlacementDefinition<TPayload>(
+export function resolveRegisteredPlacement(
+  itemType: BuildItemType,
+  context: PlacementContext,
+): RegisteredResolvedPlacement | null {
+  switch (itemType) {
+    case "box":
+      return createRegisteredResolvedPlacement(itemType, getBuildItemDefinition(itemType), context);
+    case "land-claim":
+      return createRegisteredResolvedPlacement(itemType, getBuildItemDefinition(itemType), context);
+    case "transport-belt":
+      return createRegisteredResolvedPlacement(itemType, getBuildItemDefinition(itemType), context);
+  }
+}
+
+function createRegisteredResolvedPlacement<TPayload>(
   itemType: BuildItemType,
   definition: BuildItemSpec<TPayload>,
-): RegisteredPlacementDefinition {
+  context: PlacementContext,
+): RegisteredResolvedPlacement | null {
+  const payload = definition.resolvePayload?.(context);
+
+  if (payload === null) {
+    return null;
+  }
+
+  const evaluation = definition.evaluatePlacement(context, payload);
+  const canPlace = evaluation.canPlace;
+
   return {
-    canPlace(context) {
-      const payload = definition.resolvePayload?.(context);
-
-      if (payload === null) {
-        return false;
-      }
-
-      return definition.canPlace(context, payload);
+    intent: {
+      item: itemType,
+      context,
+      payload,
     },
-    resolveSelection(context) {
-      const payload = definition.resolvePayload?.(context);
-
-      if (payload === null) {
-        return null;
-      }
-
-      const canPlace = definition.canPlace(context, payload);
-
-      return {
-        intent: {
-          item: itemType,
-          context,
+    evaluation,
+    canPlace,
+    preview: {
+      world: context.previewWorld,
+      sync(ghostEntityId) {
+        return definition.preview.sync(
+          {
+            context,
+            canPlace,
+          },
+          ghostEntityId,
           payload,
-        },
-        canPlace,
-        preview: {
-          world: context.previewWorld,
-          sync(ghostEntityId) {
-            return definition.preview.sync(
-              {
-                context,
-                canPlace,
-              },
-              ghostEntityId,
-              payload,
-            );
-          },
-        },
-        commit: {
-          world: context.commitWorld,
-          execute(renderVisibilityRole) {
-            definition.lifecycle.commit({ ...context, renderVisibilityRole }, payload);
-          },
-        },
-      };
+        );
+      },
+    },
+    commit: {
+      world: context.commitWorld,
+      execute(renderVisibilityRole) {
+        definition.lifecycle.commit({ ...context, renderVisibilityRole }, payload);
+      },
     },
   };
 }

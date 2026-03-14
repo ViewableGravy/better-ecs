@@ -1,14 +1,13 @@
 import { GhostPreviewComponent } from "@client/entities/ghost/component";
-import { createEntityGhostPreset } from "@client/entities/ghost/spawner";
+import { createGhostPreset } from "@client/entities/ghost/spawner";
 import {
-  spawnTransportBelt,
-  updateTransportBeltVariant,
-  type TransportBeltVariant,
+    spawnTransportBelt,
+    updateTransportBeltVariant,
+    type TransportBeltVariant,
 } from "@client/entities/transport-belt";
-import { asTransportBeltEntityId } from "@client/entities/transport-belt/types";
 import {
-  TRANSPORT_BELT_OFFSET_X,
-  TRANSPORT_BELT_OFFSET_Y,
+    TRANSPORT_BELT_OFFSET_X,
+    TRANSPORT_BELT_OFFSET_Y,
 } from "@client/systems/world/build-mode/metrics";
 
 /**********************************************************************************************************
@@ -17,16 +16,15 @@ import {
 
 const DEFAULT_TRANSPORT_BELT_GHOST_VARIANT: TransportBeltVariant = "horizontal-right";
 
-export const TransportBeltGhost = createEntityGhostPreset<TransportBeltVariant>({
+export const TransportBeltGhost = createGhostPreset<TransportBeltVariant>({
   kind: "transport-belt",
   spawn(world, x, y, variant) {
-    const resolvedVariant = variant ?? DEFAULT_TRANSPORT_BELT_GHOST_VARIANT;
-
     return spawnTransportBelt(world, {
       x: x + TRANSPORT_BELT_OFFSET_X,
       y: y + TRANSPORT_BELT_OFFSET_Y,
-      variant: resolvedVariant,
+      variant: variant ?? DEFAULT_TRANSPORT_BELT_GHOST_VARIANT,
       connectToNeighbors: false,
+      profile: "preview",
     });
   },
   resolvePreviewVariant(variant) {
@@ -34,11 +32,10 @@ export const TransportBeltGhost = createEntityGhostPreset<TransportBeltVariant>(
   },
   sync(world, ghostEntityId, variant) {
     const resolvedVariant = variant ?? DEFAULT_TRANSPORT_BELT_GHOST_VARIANT;
-    const beltEntityId = asTransportBeltEntityId(ghostEntityId);
 
-    updateTransportBeltVariant(world, beltEntityId, resolvedVariant);
+    updateTransportBeltVariant(world, ghostEntityId, resolvedVariant);
 
-    const ghostPreview = world.require(beltEntityId, GhostPreviewComponent);
+    const ghostPreview = world.require(ghostEntityId, GhostPreviewComponent);
     ghostPreview.previewVariant = resolvedVariant;
   },
 });

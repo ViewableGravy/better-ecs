@@ -1,15 +1,19 @@
-import {
-  createPlacementCanPlace,
-  type PlacementCanPlace,
-  type PlacementContext,
-  type PlacementDefinitionSharedOptions,
-  type PlacementDragMode,
-  type PlacementRotationMode,
-  type PlacementSpawn,
-  type PlacementStrategy,
-} from "@client/systems/world/build-mode/placement/createPlacementDefinition";
 import type { PlacementFootprint } from "@client/systems/world/build-mode/placement/footprint";
 import type { PlacementPreviewAdapter } from "@client/systems/world/build-mode/placement/preview";
+import {
+    createPlacementCanPlace,
+    createPlacementEvaluator,
+    type PlacementEvaluator,
+    type PlacementStrategy,
+} from "@client/systems/world/build-mode/placement/rules";
+import type {
+    PlacementCanPlace,
+    PlacementContext,
+    PlacementDragMode,
+    PlacementPayloadResolver,
+    PlacementRotationMode,
+    PlacementSpawn,
+} from "@client/systems/world/build-mode/placement/types";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -25,10 +29,11 @@ type BuildItemLifecycle<TPayload> = {
   commit: PlacementSpawn<TPayload>;
 };
 
-type CreateBuildItemSpecOptions<TPayload> = Pick<
-  PlacementDefinitionSharedOptions<TPayload>,
-  "item" | "dragPlacementMode" | "rotationMode" | "resolvePayload"
-> & {
+type CreateBuildItemSpecOptions<TPayload> = {
+  item: string;
+  dragPlacementMode?: PlacementDragMode;
+  rotationMode?: PlacementRotationMode;
+  resolvePayload?: PlacementPayloadResolver<TPayload>;
   preview: PlacementPreviewAdapter<TPayload>;
   placement?: BuildItemPlacementOptions<TPayload>;
   lifecycle: BuildItemLifecycle<TPayload>;
@@ -41,6 +46,7 @@ export type BuildItemSpec<TPayload = void> = {
   rotationMode: PlacementRotationMode;
   resolvePayload?: (context: PlacementContext) => TPayload | null | undefined;
   placement: BuildItemPlacementOptions<TPayload>;
+  evaluatePlacement: PlacementEvaluator<TPayload>;
   canPlace: PlacementCanPlace<TPayload>;
   lifecycle: BuildItemLifecycle<TPayload>;
 };
@@ -53,6 +59,12 @@ export function createBuildItemSpec<TPayload = void>(
   options: CreateBuildItemSpecOptions<TPayload>,
 ): BuildItemSpec<TPayload> {
   const placement = options.placement ?? {};
+  const evaluatePlacement = createPlacementEvaluator({
+    item: options.item,
+    footprint: placement.footprint,
+    placementStrategy: placement.strategy,
+    canPlace: placement.canPlace,
+  });
 
   return {
     item: options.item,
@@ -61,12 +73,13 @@ export function createBuildItemSpec<TPayload = void>(
     rotationMode: options.rotationMode ?? "none",
     resolvePayload: options.resolvePayload,
     placement,
+    evaluatePlacement,
     canPlace: createPlacementCanPlace({
       item: options.item,
       footprint: placement.footprint,
       placementStrategy: placement.strategy,
       canPlace: placement.canPlace,
-    }),
+    }, evaluatePlacement),
     lifecycle: options.lifecycle,
   };
 }

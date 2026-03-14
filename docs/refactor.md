@@ -9,10 +9,21 @@ Progress status (2026-03-14)
 - [x] Make resolved placement intent plus preview/commit world routing explicit in the runtime flow.
 - [x] Split preview adapters from the runtime placement contract while keeping the current ghost path behind an adapter boundary.
 - [x] Cover the new placement flow with tests for land-claim territory checks, conveyor replacement, and explicit preview-vs-commit world behavior.
-- [ ] Replace the remaining ad hoc occupancy/buildability logic with a fuller staged rule pipeline. The current default path still lives inside `createPlacementDefinition.ts` and remains boolean-only.
-- [ ] Rework drag/planner behavior around shared batched placement intents. Line drag now fills contiguous axis batches with gap filling and repeated-cell suppression, but planner-level batching and richer shared intent/result objects are still missing.
-- [ ] Detach the new spec/registry runtime from the legacy `createPlacementDefinition(...)` module. `spec.ts`, `registry.ts`, `preview.ts`, and `createPlacementSpawner.ts` still lean on its shared types and default can-place logic.
-- [ ] Remove or shrink the remaining low-level legacy placement factory/helpers once the staged pipeline replaces their last responsibilities.
+- [x] Replace the remaining ad hoc occupancy/buildability logic with a staged rule pipeline that returns evaluation details instead of only a boolean.
+- [x] Rework drag/planner behavior around shared batched placement intents for the current line-placement flow.
+- [x] Detach the new spec/registry runtime from the legacy `createPlacementDefinition(...)` module.
+- [x] Remove the remaining low-level legacy placement factory/helpers once the staged pipeline replaces their last responsibilities.
+- [x] Replace transitional gameplay-entity ghost spawning with lightweight preview-only preview entities for the current build items.
+
+Completion notes (2026-03-14)
+
+- Placement shared types now live in standalone runtime modules and no longer depend on `createPlacementDefinition.ts`.
+- Placement rule evaluation now returns staged results (`cells`, `occupants`, `replacementTargets`, buildability/occupancy verdicts) and is reused by the item spec/runtime path.
+- The placement registry no longer duplicates a hardcoded item-definition map; resolution is sourced directly from the build-item registry.
+- Drag placement now resolves batched candidate paths and the runtime resolves/commits those paths through the same placement-selection pipeline.
+- Ghost preview presets for `box`, `land-claim`, and `transport-belt` now spawn lightweight preview-only entities instead of spawning real gameplay entities and stripping them back into ghosts.
+- The legacy `createPlacementDefinition.ts` path has been removed.
+- Verification is complete through targeted Nx checks plus browser validation in the E2E scene.
 
 Current implementation snapshot (2026-03-14)
 
@@ -27,13 +38,8 @@ Current implementation snapshot (2026-03-14)
 
 Next session notes (2026-03-14)
 
-- Highest priority next: extract the default can-place/rule evaluation out of `createPlacementDefinition.ts` into dedicated placement-rule modules so the spec runtime no longer depends on the legacy factory for its core behavior.
-- Build on the new drag batching by replacing raw `GridCoordinates[]` results with a richer batched intent/result object that preview, placement, and future planners can share.
-- Introduce validator-style stages with richer results than a bare boolean: buildability, occupancy collection, compatibility/replacement, and final buildability verdict. Keep grid and overlap gathering, but move them behind explicit stage boundaries.
-- Collapse the duplicated registration layer so placement resolution derives directly from the build-item definition registry instead of maintaining a second hardcoded `placementDefinitionRegistry` map.
-- Revisit the preview layer once the rule pipeline settles. Keep the preview adapter contract, but make the next preview milestone preview-only rendering instead of continued ghostification of gameplay entities.
-- If compatibility groups spread beyond conveyors, promote them to first-class spec metadata instead of per-item `resolveOccupantCompatibilityGroup(...)` callbacks. If conveyors remain the only special case, keep the explicit resolver and avoid premature abstraction.
-- After the above, delete or heavily shrink `createPlacementDefinition(...)` until only migration glue remains, then remove the legacy path entirely.
+- The planned refactor is complete for the current build-item set (`box`, `land-claim`, `transport-belt`).
+- Future work should be feature expansion rather than continuation of the old placement-factory migration.
 
 Steps
 

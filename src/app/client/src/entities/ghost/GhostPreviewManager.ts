@@ -20,9 +20,13 @@ export class GhostPreviewManager {
     payload?: TPayload,
     isPlaceable: boolean = true,
   ): EntityId {
+    const previewVariant = preset.resolvePreviewVariant?.(payload) ?? null;
+
     if (!this.matchesGhostKind(world, ghostEntityId, preset.kind)) {
       this.destroyGhost(world, ghostEntityId);
       const nextGhostEntityId = preset.spawn(world, x, y, payload);
+
+      GhostUtils.applyEffect(world, nextGhostEntityId, preset.kind, previewVariant);
       GhostUtils.syncPlacementState(world, nextGhostEntityId, isPlaceable);
 
       return nextGhostEntityId;
@@ -30,6 +34,7 @@ export class GhostPreviewManager {
 
     this.syncPosition(world, ghostEntityId, x, y);
     preset.sync?.(world, ghostEntityId, payload);
+    this.syncPreviewVariant(world, ghostEntityId, previewVariant);
     GhostUtils.syncPlacementState(world, ghostEntityId, isPlaceable);
 
     return ghostEntityId;
@@ -48,6 +53,16 @@ export class GhostPreviewManager {
     }
 
     world.destroy(ghostEntityId);
+  }
+
+  private static syncPreviewVariant(
+    world: UserWorld,
+    ghostEntityId: EntityId,
+    previewVariant: string | null,
+  ): void {
+    const ghostPreview = world.require(ghostEntityId, GhostPreviewComponent);
+
+    ghostPreview.previewVariant = previewVariant;
   }
 
   private static matchesGhostKind(

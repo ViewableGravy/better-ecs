@@ -3,22 +3,21 @@ import { HOUSE_INTERIOR, OUTSIDE } from "@client/components/render-visibility";
 import { GhostPreviewComponent, GhostPreviewScopeUtils } from "@client/entities/ghost";
 import { supportsLineDragPlacement } from "@client/systems/world/build-mode/build-items";
 import {
-  buildModeStateDefault,
-  buildModeStateSchema,
+    buildModeStateDefault,
+    buildModeStateSchema,
 } from "@client/systems/world/build-mode/const";
 import { BuildModeDomEvents, HUD } from "@client/systems/world/build-mode/dom";
 import { BuildModeDragPlacement } from "@client/systems/world/build-mode/drag-placement";
 import {
-  GridSingleton,
-  type GridCoordinates,
+    GridSingleton,
 } from "@client/systems/world/build-mode/grid-singleton";
 import * as Keybinds from '@client/systems/world/build-mode/input';
 import { Placement } from "@client/systems/world/build-mode/placement";
 import { resolvePlacementWorld } from "@client/systems/world/build-mode/placement-target";
 import {
-  createSystem,
-  type RegisteredEngine,
-  type RegisteredSystems,
+    createSystem,
+    type RegisteredEngine,
+    type RegisteredSystems,
 } from "@engine";
 import { System as ContextSystem, Engine, fromContext, FromEngine, Mouse } from "@engine/context";
 import { ActiveCameraView } from "@engine/context-utils";
@@ -91,37 +90,37 @@ export const System = createSystem("main:build-mode")({
     );
 
     if (!supportsLineDragPlacement(data.selectedItem)) {
-      if (shouldPlaceSingle) {
-        spawnPlacementAtGridCoordinates(placementTarget, gridCoordinates, data, renderVisibilityRole);
+      if (shouldPlaceSingle && resolvedPlacement?.canPlace) {
+        commitResolvedPlacement(resolvedPlacement, data, renderVisibilityRole);
       }
 
       return;
     }
 
-    for (const candidateCoordinates of BuildModeDragPlacement.resolvePlacementCandidates(data, gridCoordinates)) {
-      if (!spawnPlacementAtGridCoordinates(placementTarget, candidateCoordinates, data, renderVisibilityRole)) {
+    const dragPlacementBatch = BuildModeDragPlacement.resolvePlacementBatch(data, gridCoordinates);
+
+    for (const resolvedBatchPlacement of Placement.resolveSelectionBatch(
+      placementTarget,
+      dragPlacementBatch.candidates,
+      data,
+    )) {
+      if (!resolvedBatchPlacement.canPlace) {
         break;
       }
+
+      resolvedBatchPlacement.commit.execute(renderVisibilityRole);
+      BuildModeDragPlacement.recordPlacement(data, resolvedBatchPlacement.intent.context.gridCoordinates);
     }
   },
 });
 
-function spawnPlacementAtGridCoordinates(
-  placementTarget: ReturnType<typeof resolvePlacementWorld>,
-  gridCoordinates: GridCoordinates,
+function commitResolvedPlacement(
+  resolvedPlacement: NonNullable<ReturnType<typeof Placement.resolveSelection>>,
   data: RegisteredSystems["main:build-mode"]["data"],
   renderVisibilityRole: RenderVisibilityRole,
-): boolean {
-  const resolvedPlacement = Placement.resolveSelection(placementTarget, gridCoordinates, data);
-
-  if (resolvedPlacement === null || !resolvedPlacement.canPlace) {
-    return false;
-  }
-
+): void {
   resolvedPlacement.commit.execute(renderVisibilityRole);
-  BuildModeDragPlacement.recordPlacement(data, gridCoordinates);
-
-  return true;
+  BuildModeDragPlacement.recordPlacement(data, resolvedPlacement.intent.context.gridCoordinates);
 }
 
 function resolvePlacementRenderVisibilityRole(

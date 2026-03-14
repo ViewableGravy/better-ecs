@@ -2,9 +2,9 @@ import { Placeable } from "@client/systems/world/build-mode/components";
 import type { EntityId } from "@engine";
 
 import type {
-  PlacementSpawn,
-  PlacementSpawnContext,
-} from "@client/systems/world/build-mode/placement/createPlacementDefinition";
+    PlacementSpawn,
+    PlacementSpawnContext,
+} from "@client/systems/world/build-mode/placement/types";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS

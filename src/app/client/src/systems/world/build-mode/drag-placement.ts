@@ -10,6 +10,18 @@ import {
 } from "@client/systems/world/build-mode/grid-singleton";
 
 /**********************************************************************************************************
+ *   TYPE DEFINITIONS
+ **********************************************************************************************************/
+
+export type DragPlacementBatch = {
+  mode: "single" | "line";
+  axis: PlacementDragAxis | null;
+  anchor: GridCoordinates | null;
+  hovered: GridCoordinates;
+  candidates: GridCoordinates[];
+};
+
+/**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
 
@@ -22,23 +34,31 @@ export class BuildModeDragPlacement {
     this.reset(data);
   }
 
-  public static resolvePlacementCandidates(
+  public static resolvePlacementBatch(
     data: BuildModeState,
     hoveredCoordinates: GridCoordinates,
-  ): GridCoordinates[] {
+  ): DragPlacementBatch {
     if (!data.placePointerActive || !supportsLineDragPlacement(data.selectedItem)) {
-      return [];
+      return this.createBatch(hoveredCoordinates, [], null);
     }
 
     if (!this.hasAnchor(data)) {
-      return this.hasVisited(data, hoveredCoordinates) ? [] : [hoveredCoordinates];
+      return this.createBatch(
+        hoveredCoordinates,
+        this.hasVisited(data, hoveredCoordinates) ? [] : [hoveredCoordinates],
+        null,
+      );
     }
 
     if (!this.isAlignedWithAnchor(data, hoveredCoordinates)) {
-      return [];
+      return this.createBatch(hoveredCoordinates, [], this.getAnchorCoordinates(data));
     }
 
-    return this.resolveLinePlacementCandidates(data, hoveredCoordinates);
+    return this.createBatch(
+      hoveredCoordinates,
+      this.resolveLinePlacementCandidates(data, hoveredCoordinates),
+      this.getAnchorCoordinates(data),
+    );
   }
 
   public static recordPlacement(data: BuildModeState, gridCoordinates: GridCoordinates): void {
@@ -78,6 +98,17 @@ export class BuildModeDragPlacement {
 
   private static hasVisited(data: BuildModeState, gridCoordinates: GridCoordinates): boolean {
     return data.dragPlacedGridKeys.includes(this.toGridKey(gridCoordinates));
+  }
+
+  private static getAnchorCoordinates(data: BuildModeState): GridCoordinates | null {
+    const anchorGridX = data.dragPlacementAnchorGridX;
+    const anchorGridY = data.dragPlacementAnchorGridY;
+
+    if (anchorGridX === null || anchorGridY === null) {
+      return null;
+    }
+
+    return this.createGridCoordinates(anchorGridX, anchorGridY);
   }
 
   private static resolveAxis(endSide: TransportBeltSide): PlacementDragAxis {
@@ -176,6 +207,35 @@ export class BuildModeDragPlacement {
       gridX * GridSingleton.cellSize,
       gridY * GridSingleton.cellSize,
     );
+  }
+
+  private static createBatch(
+    hoveredCoordinates: GridCoordinates,
+    candidates: GridCoordinates[],
+    anchor: GridCoordinates | null,
+  ): DragPlacementBatch {
+    return {
+      mode: "line",
+      axis: anchor === null ? null : this.resolveBatchAxis(anchor, hoveredCoordinates),
+      anchor,
+      hovered: hoveredCoordinates,
+      candidates,
+    };
+  }
+
+  private static resolveBatchAxis(
+    anchor: GridCoordinates,
+    hoveredCoordinates: GridCoordinates,
+  ): PlacementDragAxis | null {
+    if (anchor[0] === hoveredCoordinates[0]) {
+      return "vertical";
+    }
+
+    if (anchor[1] === hoveredCoordinates[1]) {
+      return "horizontal";
+    }
+
+    return null;
   }
 
   private static toGridKey(gridCoordinates: GridCoordinates): string {

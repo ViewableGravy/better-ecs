@@ -2,7 +2,7 @@ import { GhostPreviewManager } from "@client/entities/ghost";
 import type { GhostPreset } from "@client/entities/ghost/spawner";
 import type { EntityId } from "@engine";
 
-import type { PlacementContext } from "@client/systems/world/build-mode/placement/createPlacementDefinition";
+import type { PlacementContext } from "@client/systems/world/build-mode/placement/types";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS

@@ -2,22 +2,23 @@ import type { MousePoint, UserWorld } from "@engine";
 
 import type { BuildItemType } from "@client/systems/world/build-mode/build-items";
 import {
-  buildModeStateDefault,
-  type BuildModeState,
+    buildModeStateDefault,
+    type BuildModeState,
 } from "@client/systems/world/build-mode/const";
 import {
-  GridSingleton,
-  type GridCoordinates,
+    GridSingleton,
+    type GridCoordinates,
 } from "@client/systems/world/build-mode/grid-singleton";
 import type { PlacementTargetResolution } from "@client/systems/world/build-mode/placement-target";
-import {
-  type PlacementContext,
-} from "@client/systems/world/build-mode/placement/createPlacementDefinition";
 import { PlacementQueries } from "@client/systems/world/build-mode/placement/queries";
 import {
-  getPlacementDefinition,
-  type RegisteredResolvedPlacement,
+    canPlaceRegisteredPlacement,
+    resolveRegisteredPlacement,
+    type RegisteredResolvedPlacement,
 } from "@client/systems/world/build-mode/placement/registry";
+import {
+    type PlacementContext,
+} from "@client/systems/world/build-mode/placement/types";
 
 /**********************************************************************************************************
  *   COMPONENT START
@@ -39,7 +40,7 @@ export class Placement {
   ): boolean {
     const context = this.createSingleWorldContext(world, gridCoordinates, buildModeState);
 
-    return this.canPlaceFromDefinition(getPlacementDefinition(selectedItem), context);
+    return canPlaceRegisteredPlacement(selectedItem, context);
   }
 
   public static resolveSelection(
@@ -55,7 +56,34 @@ export class Placement {
 
     const context = this.createContext(target, gridCoordinates, buildModeState);
 
-    return this.resolveSelectionFromDefinition(getPlacementDefinition(selectedItem), context);
+    return resolveRegisteredPlacement(selectedItem, context);
+  }
+
+  public static resolveSelectionBatch(
+    target: PlacementTargetResolution,
+    gridCoordinatesBatch: readonly GridCoordinates[],
+    buildModeState: BuildModeState,
+  ): RegisteredResolvedPlacement[] {
+    const selectedItem = buildModeState.selectedItem;
+
+    if (selectedItem === null || gridCoordinatesBatch.length === 0) {
+      return [];
+    }
+
+    const placements: RegisteredResolvedPlacement[] = [];
+
+    for (const gridCoordinates of gridCoordinatesBatch) {
+      const context = this.createContext(target, gridCoordinates, buildModeState);
+      const resolvedPlacement = resolveRegisteredPlacement(selectedItem, context);
+
+      if (resolvedPlacement === null) {
+        continue;
+      }
+
+      placements.push(resolvedPlacement);
+    }
+
+    return placements;
   }
 
   private static createSingleWorldContext(
@@ -107,17 +135,4 @@ export class Placement {
     };
   }
 
-  private static canPlaceFromDefinition(
-    definition: ReturnType<typeof getPlacementDefinition>,
-    context: PlacementContext,
-  ): boolean {
-    return definition.canPlace(context);
-  }
-
-  private static resolveSelectionFromDefinition(
-    definition: ReturnType<typeof getPlacementDefinition>,
-    context: PlacementContext,
-  ): RegisteredResolvedPlacement | null {
-    return definition.resolveSelection(context);
-  }
 }

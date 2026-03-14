@@ -18,7 +18,13 @@ describe("BuildModeDragPlacement", () => {
     });
     const hoveredCoordinates = coordinates(0, 0);
 
-    expect(BuildModeDragPlacement.resolvePlacementCandidates(state, hoveredCoordinates)).toEqual([hoveredCoordinates]);
+    expect(BuildModeDragPlacement.resolvePlacementBatch(state, hoveredCoordinates)).toEqual({
+      mode: "line",
+      axis: null,
+      anchor: null,
+      hovered: hoveredCoordinates,
+      candidates: [hoveredCoordinates],
+    });
   });
 
   it("fills the full unplaced horizontal path between the anchor and hover tile", () => {
@@ -30,13 +36,19 @@ describe("BuildModeDragPlacement", () => {
 
     BuildModeDragPlacement.recordPlacement(state, coordinates(0, 0));
 
-    expect(BuildModeDragPlacement.resolvePlacementCandidates(state, coordinates(60, 0))).toEqual([
-      coordinates(20, 0),
-      coordinates(40, 0),
-      coordinates(60, 0),
-    ]);
+    expect(BuildModeDragPlacement.resolvePlacementBatch(state, coordinates(60, 0))).toEqual({
+      mode: "line",
+      axis: "horizontal",
+      anchor: coordinates(0, 0),
+      hovered: coordinates(60, 0),
+      candidates: [
+        coordinates(20, 0),
+        coordinates(40, 0),
+        coordinates(60, 0),
+      ],
+    });
 
-    expect(BuildModeDragPlacement.resolvePlacementCandidates(state, coordinates(20, 20))).toEqual([]);
+    expect(BuildModeDragPlacement.resolvePlacementBatch(state, coordinates(20, 20)).candidates).toEqual([]);
   });
 
   it("skips already placed tiles while continuing the horizontal drag line", () => {
@@ -49,7 +61,7 @@ describe("BuildModeDragPlacement", () => {
     BuildModeDragPlacement.recordPlacement(state, coordinates(0, 0));
     BuildModeDragPlacement.recordPlacement(state, coordinates(20, 0));
 
-    expect(BuildModeDragPlacement.resolvePlacementCandidates(state, coordinates(60, 0))).toEqual([
+    expect(BuildModeDragPlacement.resolvePlacementBatch(state, coordinates(60, 0)).candidates).toEqual([
       coordinates(40, 0),
       coordinates(60, 0),
     ]);
@@ -64,10 +76,16 @@ describe("BuildModeDragPlacement", () => {
 
     BuildModeDragPlacement.recordPlacement(state, coordinates(0, 0));
 
-    expect(BuildModeDragPlacement.resolvePlacementCandidates(state, coordinates(0, -40))).toEqual([
-      coordinates(0, -20),
-      coordinates(0, -40),
-    ]);
+    expect(BuildModeDragPlacement.resolvePlacementBatch(state, coordinates(0, -40))).toEqual({
+      mode: "line",
+      axis: "vertical",
+      anchor: coordinates(0, 0),
+      hovered: coordinates(0, -40),
+      candidates: [
+        coordinates(0, -20),
+        coordinates(0, -40),
+      ],
+    });
   });
 
   it("resets the drag session when the pointer is no longer held", () => {
