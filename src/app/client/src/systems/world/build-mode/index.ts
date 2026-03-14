@@ -4,12 +4,11 @@ import {
     buildModeStateDefault,
     type BuildModeState,
 } from "@client/systems/world/build-mode/const";
-import { BuildModeDomEvents, HUD } from "@client/systems/world/build-mode/dom";
 import { BuildModeDragPlacement } from "@client/systems/world/build-mode/drag-placement";
 import {
     GridSingleton,
 } from "@client/systems/world/build-mode/grid-singleton";
-import * as Keybinds from '@client/systems/world/build-mode/input';
+import { InputManager } from '@client/systems/world/build-mode/input';
 import { Placement } from "@client/systems/world/build-mode/placement";
 import { resolvePlacementWorld } from "@client/systems/world/build-mode/placement-target";
 import {
@@ -22,11 +21,13 @@ import {
 import { System as ContextSystem, Engine, fromContext, FromEngine, Mouse } from "@engine/context";
 import { ActiveCameraView } from "@engine/context-utils";
 import { SpatialContexts } from "@libs/spatial-contexts";
+import { BuildModeDomEvents } from "./dom/events";
+import { HUDManager } from "./dom/hud";
 
 export const System = createSystem("main:build-mode")({
   state: buildModeStateDefault as BuildModeState,
   initialize() {
-    const unbindHud = HUD.create();
+    const unbindHud = HUDManager.create();
     const unbindDomEvents = BuildModeDomEvents.create();
 
     return () => {
@@ -35,6 +36,7 @@ export const System = createSystem("main:build-mode")({
     };
   },
   system() {
+    /***** CONTEXT *****/
     const { data } = fromContext(ContextSystem("main:build-mode"));
     const engine = fromContext(Engine);
     const mouse = fromContext(Mouse);
@@ -44,9 +46,15 @@ export const System = createSystem("main:build-mode")({
     const focusedWorld = manager.focusedWorld;
     const sceneWorlds = engine.scene.context.worlds;
 
-    Keybinds.matchKeybinds();
+    // Check for relevant keybinds and update state accordingly.
+    InputManager.match();
+
+    // If the place pointer is active but the selected item doesn't support drag placement, 
+    // reset the place pointer state.
     BuildModeDragPlacement.syncSession(data);
-    HUD.update();
+
+    // Update the HUD with the currently selected item.
+    HUDManager.update();
 
     const camera = fromContext(ActiveCameraView(focusedWorld));
     const worldPointer = mouse.world(camera);

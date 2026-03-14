@@ -2,21 +2,8 @@ import type { TransportBeltSide } from "@client/entities/transport-belt/consts";
 import {
     type BuildItemType,
 } from "@client/systems/world/build-mode/build-items";
-import type { EntityId, KeyBind } from "@engine";
+import type { EntityId } from "@engine";
 import { Color } from "@engine/components";
-
-/**********************************************************************************************************
-*   CONSTS
-**********************************************************************************************************/
-/**********************************************************************************************************
-*   CONSTS
-**********************************************************************************************************/
-/**********************************************************************************************************
-*   CONSTS
-**********************************************************************************************************/
-/**********************************************************************************************************
-*   CONSTS
-**********************************************************************************************************/
 export {
     BOX_SIZE,
     DELETE_POINT_RADIUS,
@@ -26,41 +13,6 @@ export {
     TRANSPORT_BELT_OFFSET_X,
     TRANSPORT_BELT_OFFSET_Y
 } from "@client/systems/world/build-mode/metrics";
-
-export const HOTBAR_SLOT_CONVEYOR_HORIZONTAL_RIGHT: KeyBind = {
-  code: "Digit1",
-  modifiers: {},
-};
-
-export const HOTBAR_SLOT_LAND_CLAIM: KeyBind = {
-  code: "Digit3",
-  modifiers: {},
-};
-
-export const HOTBAR_SLOT_WALL: KeyBind = {
-  code: "Digit4",
-  modifiers: {},
-};
-
-export const HOTBAR_SLOT_EMPTY: KeyBind = {
-  code: "Digit2",
-  modifiers: {},
-};
-
-export const ROTATE_BUILD_ITEM: KeyBind = {
-  code: "KeyR",
-  modifiers: {},
-};
-
-export const GRID_TOGGLE_CTRL: KeyBind = {
-  code: "KeyG",
-  modifiers: { alt: true },
-};
-
-export const GRID_TOGGLE_META: KeyBind = {
-  code: "KeyG",
-  modifiers: { meta: true },
-};
 
 export const GHOST_FILL = new Color(1, 0.1, 0.7, 0.25);
 export const GHOST_STROKE = new Color(1, 0.35, 0.85, 0.95);

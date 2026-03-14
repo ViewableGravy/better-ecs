@@ -1,6 +1,6 @@
+import { HOTBAR_INDICATOR_ID } from "@client/systems/world/build-mode/const";
 import { invariantReturn } from "@client/utilities/invariantReturn";
 import { fromContext, System } from "@engine/context";
-import { HOTBAR_INDICATOR_ID } from "@client/systems/world/build-mode/const";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -10,7 +10,7 @@ type Destroy = () => void;
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
-export class HUD {
+export class HUDManager {
   static #previouslySelectedItem: string | null = null;
   static #node: HTMLDivElement | null = null;
 
@@ -22,39 +22,39 @@ export class HUD {
       };
     }
 
-    HUD.node = document.createElement("div");
-    HUD.node.id = HOTBAR_INDICATOR_ID;
-    HUD.node.style.position = "fixed";
-    HUD.node.style.right = "12px";
-    HUD.node.style.top = "140px";
-    HUD.node.style.zIndex = "1200";
-    HUD.node.style.padding = "6px 10px";
-    HUD.node.style.borderRadius = "6px";
-    HUD.node.style.border = "1px solid #ffffff66";
-    HUD.node.style.fontFamily = "monospace";
-    HUD.node.style.fontSize = "12px";
-    HUD.node.style.color = "#fff";
-    HUD.node.style.background = "#00000066";
-    HUD.node.style.userSelect = "none";
-    HUD.node.style.pointerEvents = "none";
-    HUD.node.style.display = "block";
-    HUD.node.innerText = "Selected: none";
-    document.body.appendChild(HUD.node);
+    HUDManager.node = document.createElement("div");
+    HUDManager.node.id = HOTBAR_INDICATOR_ID;
+    HUDManager.node.style.position = "fixed";
+    HUDManager.node.style.right = "12px";
+    HUDManager.node.style.top = "140px";
+    HUDManager.node.style.zIndex = "1200";
+    HUDManager.node.style.padding = "6px 10px";
+    HUDManager.node.style.borderRadius = "6px";
+    HUDManager.node.style.border = "1px solid #ffffff66";
+    HUDManager.node.style.fontFamily = "monospace";
+    HUDManager.node.style.fontSize = "12px";
+    HUDManager.node.style.color = "#fff";
+    HUDManager.node.style.background = "#00000066";
+    HUDManager.node.style.userSelect = "none";
+    HUDManager.node.style.pointerEvents = "none";
+    HUDManager.node.style.display = "block";
+    HUDManager.node.innerText = "Selected: none";
+    document.body.appendChild(HUDManager.node);
 
-    return () => HUD.remove();
+    return () => HUDManager.remove();
   }
 
   private static remove() {
-    if (HUD.#node) {
-      HUD.#node.remove();
-      HUD.#node = null;
+    if (HUDManager.#node) {
+      HUDManager.#node.remove();
+      HUDManager.#node = null;
     }
   }
 
   public static update() {
     const { data } = fromContext(System("main:build-mode"));
 
-    if (data.selectedItem !== HUD.#previouslySelectedItem) {
+    if (data.selectedItem !== HUDManager.#previouslySelectedItem) {
       this.node.style.background = data.selectedItem ? "#5a125699" : "#00000066";
       this.node.innerText = `Selected: ${data.selectedItem ?? "none"}`;
     }
@@ -63,10 +63,10 @@ export class HUD {
   }
 
   private static get node(): HTMLDivElement {
-    return invariantReturn(HUD.#node, "HUD node does not exist");
+    return invariantReturn(HUDManager.#node, "HUD node does not exist");
   }
 
   private static set node(value: HTMLDivElement | null) {
-    HUD.#node = value;
+    HUDManager.#node = value;
   }
 }

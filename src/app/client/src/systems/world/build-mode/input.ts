@@ -1,48 +1,68 @@
 import { usesPlacementEndSideRotation } from "@client/systems/world/build-mode/build-items";
 import {
-    GRID_TOGGLE_CTRL,
-    GRID_TOGGLE_META,
-    HOTBAR_SLOT_CONVEYOR_HORIZONTAL_RIGHT,
-    HOTBAR_SLOT_EMPTY,
-    HOTBAR_SLOT_LAND_CLAIM,
-    HOTBAR_SLOT_WALL,
-    ROTATE_BUILD_ITEM,
-    TRANSPORT_BELT_ROTATION_END_SIDES,
+    TRANSPORT_BELT_ROTATION_END_SIDES
 } from "@client/systems/world/build-mode/const";
+import { createKeybind } from "@engine";
 import { fromContext, System } from "@engine/context";
 
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
-export function matchKeybinds(): void {
-  const { data } = fromContext(System("main:build-mode"));
-  const input = fromContext(System("engine:input"));
+export class InputManager {
 
-  if (input.matchKeybind(HOTBAR_SLOT_CONVEYOR_HORIZONTAL_RIGHT)) {
-    data.selectedItem = "transport-belt";
-    data.placementEndSide = "top";
-  }
+  private static selectLandClaim = createKeybind("Digit3");
 
-  if (input.matchKeybind(HOTBAR_SLOT_LAND_CLAIM)) {
-    data.selectedItem = "land-claim";
-  }
+  private static selectWall = createKeybind("Digit4");
 
-  if (input.matchKeybind(HOTBAR_SLOT_WALL)) {
-    data.selectedItem = "wall";
-  }
+  private static selectEmpty = createKeybind("Digit2");
 
-  if (input.matchKeybind(HOTBAR_SLOT_EMPTY)) {
-    data.selectedItem = null;
-  }
+  private static selectBelt = createKeybind("Digit1");
 
-  if (usesPlacementEndSideRotation(data.selectedItem) && input.matchKeybind(ROTATE_BUILD_ITEM)) {
-    const currentIndex = TRANSPORT_BELT_ROTATION_END_SIDES.indexOf(data.placementEndSide);
-    const nextIndex = (currentIndex + 1) % TRANSPORT_BELT_ROTATION_END_SIDES.length;
+  private static rotateBuildItem = createKeybind("KeyR");
 
-    data.placementEndSide = TRANSPORT_BELT_ROTATION_END_SIDES[nextIndex];
-  }
+  private static toggleGridAlt = createKeybind({
+    code: "KeyG",
+    modifiers: { alt: true },
+  });
 
-  if (input.matchKeybind(GRID_TOGGLE_CTRL) || input.matchKeybind(GRID_TOGGLE_META)) {
-    data.gridVisible = !data.gridVisible;
+  private static toggleGridMeta = createKeybind({
+    code: "KeyG",
+    modifiers: { meta: true },
+  });
+
+  /**
+   * Checks for relevant keybinds and updates build mode stat accordingly.
+   */
+  public static match(): void {
+    const { data } = fromContext(System("main:build-mode"));
+    const input = fromContext(System("engine:input"));
+
+    if (input.matchKeybind(InputManager.selectBelt)) {
+      data.selectedItem = "transport-belt";
+      data.placementEndSide = "top";
+    }
+
+    if (input.matchKeybind(InputManager.selectLandClaim)) {
+      data.selectedItem = "land-claim";
+    }
+
+    if (input.matchKeybind(InputManager.selectWall)) {
+      data.selectedItem = "wall";
+    }
+
+    if (input.matchKeybind(InputManager.selectEmpty)) {
+      data.selectedItem = null;
+    }
+
+    if (usesPlacementEndSideRotation(data.selectedItem) && input.matchKeybind(InputManager.rotateBuildItem)) {
+      const currentIndex = TRANSPORT_BELT_ROTATION_END_SIDES.indexOf(data.placementEndSide);
+      const nextIndex = (currentIndex + 1) % TRANSPORT_BELT_ROTATION_END_SIDES.length;
+
+      data.placementEndSide = TRANSPORT_BELT_ROTATION_END_SIDES[nextIndex];
+    }
+
+    if (input.matchKeybind(InputManager.toggleGridAlt) || input.matchKeybind(InputManager.toggleGridMeta)) {
+      data.gridVisible = !data.gridVisible;
+    }
   }
 }
