@@ -1,25 +1,27 @@
 import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import { destroyTransportBelt } from "@client/entities/transport-belt";
 import { TransportBeltAutoShapeManager } from "@client/entities/transport-belt/placement/TransportBeltAutoShapeManager";
+import { destroyPlaceableWall, PlaceableWallAutoShapeManager, PlaceableWallComponent } from "@client/entities/wall";
 import { PhysicsWorldManager } from "@client/scenes/world/physics/physics-world-manager";
+import { GridNeighborQuery } from "@client/systems/world/build-mode/grid-neighbor-query";
 import {
-  BOX_SIZE,
-  DELETE_POINT_RADIUS,
-  HALF_BOX_SIZE,
-} from "@client/systems/world/build-mode/metrics";
-import {
-  GridSingleton,
-  type GridCoordinates,
+    GridSingleton,
+    type GridCoordinates,
 } from "@client/systems/world/build-mode/grid-singleton";
+import {
+    BOX_SIZE,
+    DELETE_POINT_RADIUS,
+    HALF_BOX_SIZE,
+} from "@client/systems/world/build-mode/metrics";
 import { Vec2, type EntityId, type MousePoint, type UserWorld } from "@engine";
 import { Transform2D } from "@engine/components";
 import {
-  CircleCollider,
-  COLLISION_LAYERS,
-  inLayer,
-  RectangleCollider,
-  type CollisionLayerMask,
-  type PhysicsBody,
+    CircleCollider,
+    COLLISION_LAYERS,
+    inLayer,
+    RectangleCollider,
+    type CollisionLayerMask,
+    type PhysicsBody,
 } from "@libs/physics";
 
 /**********************************************************************************************************
@@ -60,17 +62,25 @@ export class PlacementQueries {
       return;
     }
 
+
+    /***** TRANSPORT BELTS *****/
     if (world.has(hit.entityId, ConveyorBeltComponent)) {
-      const transform = world.get(hit.entityId, Transform2D);
-      const beltCoordinates = transform
-        ? GridSingleton.worldToGridCoordinates(transform.curr.pos.x, transform.curr.pos.y)
-        : null;
+      const beltCoordinates = GridNeighborQuery.resolveEntityCoordinates(world, hit.entityId);
 
       destroyTransportBelt(world, hit.entityId);
 
-      if (beltCoordinates) {
-        TransportBeltAutoShapeManager.refreshBeltsNearCoordinates(world, beltCoordinates);
-      }
+      TransportBeltAutoShapeManager.refreshBeltsNearCoordinates(world, beltCoordinates);
+
+      return;
+    }
+
+
+    /***** PLACEABLE WALLS *****/
+    if (world.has(hit.entityId, PlaceableWallComponent)) {
+      const wallCoordinates = GridNeighborQuery.resolveEntityCoordinates(world, hit.entityId);
+
+      destroyPlaceableWall(world, hit.entityId);
+      PlaceableWallAutoShapeManager.refreshWallsNearCoordinates(world, wallCoordinates);
 
       return;
     }

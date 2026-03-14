@@ -1,7 +1,7 @@
 import type { TransportBeltSide } from "@client/entities/transport-belt/consts";
 import {
-  BUILD_ITEM_TYPES,
-  type BuildItemType,
+    BUILD_ITEM_TYPES,
+    type BuildItemType,
 } from "@client/systems/world/build-mode/build-items";
 import type { EntityId, KeyBind } from "@engine";
 import { Color } from "@engine/components";
@@ -10,14 +10,23 @@ import z from "zod";
 /**********************************************************************************************************
 *   CONSTS
 **********************************************************************************************************/
+/**********************************************************************************************************
+*   CONSTS
+**********************************************************************************************************/
+/**********************************************************************************************************
+*   CONSTS
+**********************************************************************************************************/
+/**********************************************************************************************************
+*   CONSTS
+**********************************************************************************************************/
 export {
-  BOX_SIZE,
-  DELETE_POINT_RADIUS,
-  GRID_CELL_SIZE,
-  HALF_BOX_SIZE,
-  TRANSPORT_BELT_COLLIDER_SIZE,
-  TRANSPORT_BELT_OFFSET_X,
-  TRANSPORT_BELT_OFFSET_Y,
+    BOX_SIZE,
+    DELETE_POINT_RADIUS,
+    GRID_CELL_SIZE,
+    HALF_BOX_SIZE,
+    TRANSPORT_BELT_COLLIDER_SIZE,
+    TRANSPORT_BELT_OFFSET_X,
+    TRANSPORT_BELT_OFFSET_Y
 } from "@client/systems/world/build-mode/metrics";
 
 export const HOTBAR_SLOT_CONVEYOR_HORIZONTAL_RIGHT: KeyBind = {
@@ -27,6 +36,11 @@ export const HOTBAR_SLOT_CONVEYOR_HORIZONTAL_RIGHT: KeyBind = {
 
 export const HOTBAR_SLOT_LAND_CLAIM: KeyBind = {
   code: "Digit3",
+  modifiers: {},
+};
+
+export const HOTBAR_SLOT_WALL: KeyBind = {
+  code: "Digit4",
   modifiers: {},
 };
 

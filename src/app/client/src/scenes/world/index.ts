@@ -80,6 +80,10 @@ export const Scene = createContextScene("MainScene")({
     await assets.loadSheet("player-moving");
     await assets.loadSheet("iron-gear");
     await assets.loadSheet("transport-belt");
+    await assets.loadSheet("wall-single");
+    await assets.loadSheet("wall-ending-left");
+    await assets.loadSheet("wall-ending-right");
+    await assets.loadSheet("wall-horizontal");
     await assets.load("land-claim:viewable-gravy-nameplate");
   },
 });

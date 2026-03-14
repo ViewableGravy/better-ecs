@@ -24,8 +24,8 @@ const PLAYER_PLAYBACK_RATE_BY_STATE: Record<PlayerAnimationState, number> = {
   moving: 0.5,
 };
 
-const PLAYER_SPRITE_WIDTH = 40;
-const PLAYER_SPRITE_HEIGHT = 40;
+const PLAYER_SPRITE_WIDTH = 35;
+const PLAYER_SPRITE_HEIGHT = 35;
 
 function getPlayerAnimationFrames(
   animationState: PlayerAnimationState,
@@ -48,6 +48,7 @@ export function createPlayerSprite(
     assets: getPlayerAnimationFrames(animationState, direction),
     width: PLAYER_SPRITE_WIDTH,
     height: PLAYER_SPRITE_HEIGHT,
+    anchorY: 0.8,
     tint: previousSprite
       ? new Color(
         previousSprite.tint.r,

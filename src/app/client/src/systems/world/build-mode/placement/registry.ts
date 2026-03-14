@@ -48,16 +48,15 @@ export function canPlaceRegisteredPlacement(
   return resolvedPlacement?.canPlace ?? false;
 }
 
-export function resolveRegisteredPlacement(
-  itemType: BuildItemType,
-  context: PlacementContext,
-): RegisteredResolvedPlacement | null {
+export function resolveRegisteredPlacement(itemType: BuildItemType, context: PlacementContext): RegisteredResolvedPlacement | null {
   switch (itemType) {
     case "box":
       return createRegisteredResolvedPlacement(itemType, getBuildItemDefinition(itemType), context);
     case "land-claim":
       return createRegisteredResolvedPlacement(itemType, getBuildItemDefinition(itemType), context);
     case "transport-belt":
+      return createRegisteredResolvedPlacement(itemType, getBuildItemDefinition(itemType), context);
+    case "wall":
       return createRegisteredResolvedPlacement(itemType, getBuildItemDefinition(itemType), context);
   }
 }

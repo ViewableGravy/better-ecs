@@ -32,14 +32,14 @@ export function spawnPlayer(world: UserWorld): EntityId<PlayerComponent> {
   world.add(player, AnimatedSprite, sprite);
   world.add(player, new Transform2D(0, 0));
   world.add(player, new PlayerComponent("NewPlayer"));
-  world.add(player, new CircleCollider(16));
+  world.add(player, new CircleCollider(8));
   world.add(player, CollisionProfiles.actor());
   world.add(player, new Debug("player"));
 
   // create players feet
   const feet = world.create();
   world.add(feet, new Parent(player));
-  world.add(feet, new Transform2D(0, 15));
+  world.add(feet, new Transform2D(0, 2));
   world.add(feet, new PointCollider());
   world.add(feet, CollisionProfiles.ghost());
   world.add(feet, new PlayerFeetComponent(player));

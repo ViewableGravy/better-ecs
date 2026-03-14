@@ -1,9 +1,11 @@
 import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
-import { GhostPreviewComponent } from "@client/entities/ghost";
-import { TRANSPORT_BELT_SIDE_GRID_OFFSETS, type TransportBeltVariant } from "@client/entities/transport-belt/consts";
-import { GridSingleton, type GridCoordinate, type GridCoordinates } from "@client/systems/world/build-mode/grid-singleton";
+import { type TransportBeltVariant } from "@client/entities/transport-belt/consts";
+import {
+    GridNeighborQuery,
+    type CardinalSide,
+} from "@client/systems/world/build-mode/grid-neighbor-query";
+import { type GridCoordinates } from "@client/systems/world/build-mode/grid-singleton";
 import type { EntityId, UserWorld } from "@engine";
-import { Transform2D } from "@engine/components";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -32,26 +34,21 @@ export class TransportBeltGridQuery {
     world: UserWorld,
     beltEntityId: EntityId,
   ): GridCoordinates {
-    const transform = world.require(beltEntityId, Transform2D);
-
-    return GridSingleton.worldToGridCoordinates(transform.curr.pos.x, transform.curr.pos.y);
+    return GridNeighborQuery.resolveEntityCoordinates(world, beltEntityId);
   }
 
   public static offsetCoordinates(
     coordinates: GridCoordinates,
     offset: readonly [x: number, y: number],
   ): GridCoordinates {
-    return [
-      (Number(coordinates[0]) + offset[0]) as GridCoordinate,
-      (Number(coordinates[1]) + offset[1]) as GridCoordinate,
-    ];
+    return GridNeighborQuery.offsetCoordinates(coordinates, offset);
   }
 
   public static resolveNeighborCoordinates(
     coordinates: GridCoordinates,
-    side: keyof typeof TRANSPORT_BELT_SIDE_GRID_OFFSETS,
+    side: CardinalSide,
   ): GridCoordinates {
-    return this.offsetCoordinates(coordinates, TRANSPORT_BELT_SIDE_GRID_OFFSETS[side]);
+    return GridNeighborQuery.resolveNeighborCoordinates(coordinates, side);
   }
 
   public static findBeltEntityAtCoordinates(
@@ -59,42 +56,27 @@ export class TransportBeltGridQuery {
     coordinates: GridCoordinates,
     options: FindBeltEntityAtCoordinatesOptions = {},
   ): EntityId | null {
-    for (const beltEntityId of world.query(ConveyorBeltComponent, Transform2D)) {
-      if (options.excludeEntityId !== undefined && beltEntityId === options.excludeEntityId) {
-        continue;
-      }
-
-      if (!options.includeGhosts && world.has(beltEntityId, GhostPreviewComponent)) {
-        continue;
-      }
-
-      const belt = world.get(beltEntityId, ConveyorBeltComponent);
-
-      if (options.predicate && !options.predicate(beltEntityId, belt)) {
-        continue;
-      }
-
-      const beltCoordinates = this.resolveBeltCoordinates(world, beltEntityId);
-
-      if (!GridSingleton.areCoordinatesEqual(beltCoordinates, coordinates)) {
-        continue;
-      }
-
-      return beltEntityId;
-    }
-
-    return null;
+    return GridNeighborQuery.findEntityAtCoordinates(
+      world,
+      world.query(ConveyorBeltComponent),
+      (beltEntityId) => world.require(beltEntityId, ConveyorBeltComponent),
+      coordinates,
+      options,
+    );
   }
 
   public static resolveNeighborEntityId(
     world: UserWorld,
     coordinates: GridCoordinates,
-    side: keyof typeof TRANSPORT_BELT_SIDE_GRID_OFFSETS,
+    side: CardinalSide,
     options: FindBeltEntityAtCoordinatesOptions = {},
   ): EntityId | null {
-    return this.findBeltEntityAtCoordinates(
+    return GridNeighborQuery.resolveNeighborEntityId(
       world,
-      this.resolveNeighborCoordinates(coordinates, side),
+      world.query(ConveyorBeltComponent),
+      (beltEntityId) => world.require(beltEntityId, ConveyorBeltComponent),
+      coordinates,
+      side,
       options,
     );
   }
@@ -105,13 +87,9 @@ export class TransportBeltGridQuery {
   ): TransportBeltNeighborMatrix {
     const variantsByOffset = new Map<string, TransportBeltVariant>();
 
-    for (const beltEntityId of world.query(ConveyorBeltComponent, Transform2D)) {
-      if (world.has(beltEntityId, GhostPreviewComponent)) {
-        continue;
-      }
-
+    for (const beltEntityId of world.query(ConveyorBeltComponent)) {
       const belt = world.get(beltEntityId, ConveyorBeltComponent);
-      const beltCoordinates = this.resolveBeltCoordinates(world, beltEntityId);
+      const beltCoordinates = GridNeighborQuery.resolveEntityCoordinates(world, beltEntityId);
       const offsetX = Number(beltCoordinates[0]) - Number(coordinates[0]);
       const offsetY = Number(beltCoordinates[1]) - Number(coordinates[1]);
 

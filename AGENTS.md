@@ -140,20 +140,20 @@ This section is intentionally explicit to reduce drift.
   - If ids are expected to be valid by contract, assert once (`invariant(...)` or `require*`) and continue with non-nullable flow.
   - Exception: destructive/idempotent methods (for example `destroy`) may return booleans instead of throwing when absence is expected.
 
-### `resolve` vs out-parameter naming
+### `derive` vs out-parameter naming
 
-- Use `resolve*` for deriving a value or decision from current state.
-  - Good fit today: `resolvePlacementWorld`, `resolveCameraView`, collision `resolve*` functions.
-- Do not use `resolve*` when the primary behavior is searching for an already-existing object/node/value.
+- Use `derive*` for deriving a value or decision from current state.
+  - For future APIs, prefer `derivePlacementWorld`, `deriveCameraView`, and other `derive*` names over introducing new `resolve*` names.
+- Do not use `derive*` when the primary behavior is searching for an already-existing object/node/value.
   - If the function mostly iterates/traverses/queries to locate something, prefer `find*`.
-  - Example: a function that walks a belt chain to locate its leaf should prefer `findLeafBelt`, not `resolveLeafBelt`.
+  - Example: a function that walks a belt chain to locate its leaf should prefer `findLeafBelt`, not `deriveLeafBelt`.
 - Use `compute*` for derivation that is primarily computation based
   - Good fit today: `computeBeltRailPosition`
-- Do not use `resolve*` for simple owner reads/getters.
+- Do not use `derive*` for simple owner reads/getters.
   - If no derivation occurs, use `get*` (or `require*` for non-nullable access).
 - Do not use `compute*` for search/traversal either.
   - `compute*` should be reserved for calculated/derived outputs, not for locating existing state.
-- Avoid plain `resolve*` for APIs whose primary contract is “write into provided object”.
+- Avoid plain `derive*` for APIs whose primary contract is “write into provided object”.
 
 ### Practical verb split
 
@@ -161,15 +161,15 @@ This section is intentionally explicit to reduce drift.
   - Example: `getSceneContext()`
 - `find*` → search existing state to locate something
   - Example: `findLeafBeltEntityId()`
-- `resolve*` → derive/select/decide a value from current state
-  - Example: `resolvePlacementWorld()`
+- `derive*` → derive/select/decide a value from current state
+  - Example: `derivePlacementWorld()`
 - `compute*` → calculate a value from inputs/state
   - Example: `computeBeltRailPosition()`
 
 Rule of thumb:
 
 - If you would describe the implementation as “look through / walk / scan / search until found,” use `find*`.
-- If you would describe it as “figure out / decide / map current state into the right output,” use `resolve*`.
+- If you would describe it as “figure out / decide / map current state into the right output,” use `derive*`.
 - If you would describe it as “calculate,” use `compute*`.
 - If you would describe it as “read,” use `get*`.
 
@@ -185,8 +185,8 @@ Rule of thumb:
 
 For APIs with output destination arguments, standardize on the naming:
 
-- `resolve*Into`
-  - Example: `resolveWorldTransform2DInto(world, entityId, out)`
+- `derive*Into`
+  - For future APIs, prefer names like `deriveWorldTransform2DInto(world, entityId, out)`.
 
 Parameter naming for destination values:
 
@@ -209,7 +209,7 @@ Parameter naming for destination values:
 - Keep `invariantQuery` and `useInvariantContext` naming model.
 - For future out-parameter APIs, prefer `write*` + trailing `out`.
 - Candidate rename to align semantics in the future:
-  - `resolveWorldTransform2D(...)` → `resolveWorldTransform2DInto(...)`.
+  - `resolveWorldTransform2D(...)` → `deriveWorldTransform2DInto(...)`.
 
 ## Documentation / skill capture
 

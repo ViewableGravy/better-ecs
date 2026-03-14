@@ -3,7 +3,7 @@ import { spawnBox } from "@client/entities/box";
 import { GhostPreviewComponent } from "@client/entities/ghost";
 import { spawnLandClaim } from "@client/entities/land-claim";
 import {
-  LAND_CLAIM_OWNER_NAME,
+    LAND_CLAIM_OWNER_NAME,
 } from "@client/entities/land-claim/const";
 import { spawnTransportBelt } from "@client/entities/transport-belt";
 import { PhysicsWorldManager } from "@client/scenes/world/physics/physics-world-manager";
@@ -24,6 +24,7 @@ describe("Placement", () => {
     PhysicsWorldManager.beginFrame([world]);
 
     expect(Placement.canPlaceItem(world, GridSingleton.worldToGridCoordinates(20, 0), "box")).toBe(false);
+    expect(Placement.canPlaceItem(world, GridSingleton.worldToGridCoordinates(20, 0), "wall")).toBe(false);
 
     spawnLandClaim(world, {
       snappedX,
@@ -35,8 +36,10 @@ describe("Placement", () => {
     PhysicsWorldManager.beginFrame([world]);
 
     expect(Placement.canPlaceItem(world, GridSingleton.worldToGridCoordinates(20, 0), "box")).toBe(true);
+    expect(Placement.canPlaceItem(world, GridSingleton.worldToGridCoordinates(20, 0), "wall")).toBe(true);
     expect(Placement.canPlaceItem(world, GridSingleton.worldToGridCoordinates(280, 0), "transport-belt")).toBe(true);
     expect(Placement.canPlaceItem(world, GridSingleton.worldToGridCoordinates(300, 0), "box")).toBe(false);
+    expect(Placement.canPlaceItem(world, GridSingleton.worldToGridCoordinates(300, 0), "wall")).toBe(false);
     expect(Placement.canPlaceItem(world, GridSingleton.worldToGridCoordinates(300, 0), "transport-belt")).toBe(false);
   });
 

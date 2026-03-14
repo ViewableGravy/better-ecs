@@ -1,6 +1,14 @@
 import { boxPlacementDefinition } from "@client/systems/world/build-mode/placement/box";
 import { landClaimPlacementDefinition } from "@client/systems/world/build-mode/placement/land-claim";
 import { transportBeltPlacementDefinition } from "@client/systems/world/build-mode/placement/transport-belt";
+import { wallPlacementDefinition } from "@client/systems/world/build-mode/placement/wall";
+
+/**********************************************************************************************************
+ *   TYPE DEFINITIONS
+ **********************************************************************************************************/
+
+export type BuildItemType = keyof typeof buildItemDefinitions;
+export type BuildItemDefinition = (typeof buildItemDefinitions)[BuildItemType];
 
 /**********************************************************************************************************
  *   COMPONENT START
@@ -10,10 +18,10 @@ const buildItemDefinitions = {
   box: boxPlacementDefinition,
   "land-claim": landClaimPlacementDefinition,
   "transport-belt": transportBeltPlacementDefinition,
+  wall: wallPlacementDefinition,
 } as const;
 
-export type BuildItemType = keyof typeof buildItemDefinitions;
-export type BuildItemDefinition = (typeof buildItemDefinitions)[BuildItemType];
+
 
 // `Object.keys(...)` widens to `string[]`, so this cast preserves the concrete registry keys as the runtime id list.
 export const BUILD_ITEM_TYPES = Object.keys(buildItemDefinitions) as BuildItemType[];
