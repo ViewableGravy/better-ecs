@@ -1,3 +1,4 @@
+import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import {
     TransportBeltConnectionUtils,
     updateTransportBeltVariant,
@@ -11,6 +12,8 @@ import type { UserWorld } from "@engine";
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
+
+const MAX_REFRESH_PASSES = 4;
 
 export class TransportBeltAutoShapeManager {
   public static refreshAffectedBelts(world: UserWorld, placedBeltEntityId: TransportBeltEntityId): void {
@@ -33,14 +36,29 @@ export class TransportBeltAutoShapeManager {
       return;
     }
 
-    for (const beltEntityId of affectedBeltEntityIds) {
-      const resolvedVariant = TransportBeltRotationVariantManager.deriveBeltVariant(world, { beltEntityId });
+    for (let pass = 0; pass < MAX_REFRESH_PASSES; pass += 1) {
+      let didChangeVariant = false;
 
-      if (!resolvedVariant) {
-        continue;
+      for (const beltEntityId of affectedBeltEntityIds) {
+        const resolvedVariant = TransportBeltRotationVariantManager.deriveBeltVariant(world, { beltEntityId });
+
+        if (!resolvedVariant) {
+          continue;
+        }
+
+        const belt = world.require(beltEntityId, ConveyorBeltComponent);
+
+        if (belt.variant === resolvedVariant) {
+          continue;
+        }
+
+        updateTransportBeltVariant(world, beltEntityId, resolvedVariant);
+        didChangeVariant = true;
       }
 
-      updateTransportBeltVariant(world, beltEntityId, resolvedVariant);
+      if (!didChangeVariant) {
+        break;
+      }
     }
 
     for (const beltEntityId of affectedBeltEntityIds) {

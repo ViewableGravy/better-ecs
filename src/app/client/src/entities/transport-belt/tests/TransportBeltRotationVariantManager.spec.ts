@@ -63,4 +63,18 @@ describe("TransportBeltRotationVariantManager", () => {
     expect(world.require(beltEntityId, ConveyorBeltComponent).variant).toBe("angled-bottom-right");
     expect(TransportBeltRotationVariantManager.deriveBeltVariant(world, { beltEntityId })).toBe("horizontal-right");
   });
+
+  it("switches a bottom-right belt back to straight once both straight neighbors exist", () => {
+    const world = new UserWorld(new World("scene"));
+
+    spawnTransportBelt(world, { x: 10, y: 50, variant: "vertical-up" });
+    const beltEntityId = spawnTransportBelt(world, { x: 10, y: 30, variant: "angled-bottom-right" });
+    spawnTransportBelt(world, { x: 30, y: 30, variant: "horizontal-right" });
+
+    expect(TransportBeltRotationVariantManager.deriveBeltVariant(world, { beltEntityId })).toBe("angled-bottom-right");
+
+    spawnTransportBelt(world, { x: -10, y: 30, variant: "horizontal-right" });
+
+    expect(TransportBeltRotationVariantManager.deriveBeltVariant(world, { beltEntityId })).toBe("horizontal-right");
+  });
 });
