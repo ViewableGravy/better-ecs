@@ -76,7 +76,8 @@ export const Scene = createContextScene("MainScene")({
 
     await new Promise((resolve) => setTimeout(resolve, 500)); // artificial delay to show loading overlay
 
-    await assets.load("player-sprite");
+    await assets.loadSheet("player-idle");
+    await assets.loadSheet("player-moving");
     await assets.loadSheet("iron-gear");
     await assets.loadSheet("transport-belt");
     await assets.load("land-claim:viewable-gravy-nameplate");
