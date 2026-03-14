@@ -1,11 +1,9 @@
 import type { TransportBeltSide } from "@client/entities/transport-belt/consts";
 import {
-    BUILD_ITEM_TYPES,
     type BuildItemType,
 } from "@client/systems/world/build-mode/build-items";
 import type { EntityId, KeyBind } from "@engine";
 import { Color } from "@engine/components";
-import z from "zod";
 
 /**********************************************************************************************************
 *   CONSTS
@@ -108,19 +106,3 @@ export const buildModeStateDefault: BuildModeState = {
   dragPlacementAnchorGridY: null,
   dragPlacedGridKeys: [],
 };
-
-export const buildModeStateSchema = z.object({
-  selectedItem: z.enum(BUILD_ITEM_TYPES).nullable(),
-  gridVisible: z.boolean(),
-  pendingPlace: z.boolean(),
-  pendingDelete: z.boolean(),
-  placePointerActive: z.boolean(),
-  placementEndSide: z.enum(["top", "right", "bottom", "left"]),
-  ghostEntityId: z
-    .custom<EntityId>((value) => typeof value === "number" && Number.isInteger(value))
-    .nullable(),
-  dragPlacementAxis: z.enum(["horizontal", "vertical"]).nullable(),
-  dragPlacementAnchorGridX: z.number().int().nullable(),
-  dragPlacementAnchorGridY: z.number().int().nullable(),
-  dragPlacedGridKeys: z.array(z.string()),
-});

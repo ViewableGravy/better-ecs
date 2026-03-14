@@ -1,27 +1,23 @@
 import type { KeyBind } from "@engine";
-import { z } from "zod";
-
-/***** SCHEMA *****/
-export const schema = z.object({
-  fps: z.array(z.number()),
-  ups: z.array(z.number()),
-  fpsBuffer: z.object({
-    start: z.number().nullable(),
-    frames: z.number(),
-  }),
-  upsBuffer: z.object({
-    start: z.number().nullable(),
-    updates: z.number(),
-  }),
-  mode: z.enum(["disabled", "simple", "default", "advanced"]),
-  customFps: z.number().nullable(),
-  customUps: z.number().nullable(),
-});
-
-export type FPSCounterData = z.infer<typeof schema>;
 
 /***** TYPE DEFINITIONS *****/
 export type DisplayMode = "disabled" | "simple" | "default" | "advanced";
+
+export type FPSCounterData = {
+  fps: number[];
+  ups: number[];
+  fpsBuffer: {
+    start: number | null;
+    frames: number;
+  };
+  upsBuffer: {
+    start: number | null;
+    updates: number;
+  };
+  mode: DisplayMode;
+  customFps: number | null;
+  customUps: number | null;
+};
 
 export type Opts = {
   element: HTMLElement;

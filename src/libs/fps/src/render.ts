@@ -1,11 +1,11 @@
 import type { EngineSystem } from "@engine";
-import { fromContext, Engine, OverrideSystem } from "@engine/context";
-import { schema, type Opts } from "@libs/fps/types";
+import { Engine, fromContext, OverrideSystem } from "@engine/context";
+import type { FPSCounterData, Opts } from "@libs/fps/types";
 
 export function render(opts: Opts) {
   const now = performance.now();
   const engine = fromContext(Engine);
-  const system = fromContext(OverrideSystem<EngineSystem<typeof schema>>("plugin:fps-counter"));
+  const system = fromContext(OverrideSystem<EngineSystem<FPSCounterData>>("plugin:fps-counter"));
   if (!system) {
     return;
   }

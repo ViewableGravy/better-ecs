@@ -1,19 +1,15 @@
-import { expectTypeOf } from "vitest";
-import z from "zod";
-import {
-  createEngine,
-  createSystem,
-  type EngineSystemFactory,
-  type InferEngineSystem,
-  type SystemNames,
-} from "@engine/core";
 import { fromContext, System } from "@engine/context";
+import {
+    createEngine,
+    createSystem,
+    type EngineSystemFactory,
+    type InferEngineSystem,
+    type SystemNames,
+} from "@engine/core";
+import { expectTypeOf } from "vitest";
 
 const CounterSystem = createSystem("app:counter")({
-  schema: {
-    default: { count: 0 },
-    schema: z.object({ count: z.number() }),
-  },
+  state: { count: 0 },
   methods(system) {
     return {
       increment() {
@@ -52,5 +48,5 @@ expectTypeOf(counter).toEqualTypeOf<ReturnType<typeof CounterSystem>>();
 expectTypeOf(counter.data).toEqualTypeOf<{ count: number }>();
 expectTypeOf(counter.increment).toEqualTypeOf<() => void>();
 
-export { };
+export {};
 

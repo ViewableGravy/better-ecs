@@ -1,27 +1,24 @@
-import { EventPool } from "@utils";
 import { fromContext, OverrideSystem } from "@engine/context";
 import { createSystem, type EngineSystem } from "@engine/core/system";
-import { InputStateSchema } from "@engine/systems/input/input.types";
+import type { InputState } from "@engine/systems/input/input.types";
 import { createMatchKeybind } from "@engine/systems/input/keybind/keybind";
+import { EventPool } from "@utils";
 
 /***** SYSTEM START *****/
 export const inputSystem = createSystem("engine:input")({
   initialize: Initialize,
   system: Entrypoint,
   enabled: true,
-  schema: {
-    default: {
-      mouseClientX: 0,
-      mouseClientY: 0,
-      keysDown: new Set<string>(),
-      pressedThisTick: new Set<string>(),
-      releasedThisTick: new Set<string>(),
-      keysActive: new Set<string>(),
-      pressedBetweenUpdate: new Set<string>(),
-      eventBuffer: [],
-    },
-    schema: InputStateSchema,
-  },
+  state: {
+    mouseClientX: 0,
+    mouseClientY: 0,
+    keysDown: new Set<string>(),
+    pressedThisTick: new Set<string>(),
+    releasedThisTick: new Set<string>(),
+    keysActive: new Set<string>(),
+    pressedBetweenUpdate: new Set<string>(),
+    eventBuffer: [],
+  } as InputState,
   methods(system) {
     // Return methods object that will be merged with system
     const data = system.data;
@@ -34,7 +31,7 @@ export const inputSystem = createSystem("engine:input")({
 
 /***** ENTRYPOINT START *****/
 function Entrypoint() {
-  const { data } = fromContext(OverrideSystem<EngineSystem<typeof InputStateSchema>>("engine:input"));
+  const { data } = fromContext(OverrideSystem<EngineSystem<InputState>>("engine:input"));
 
   // Clear per-tick buffers at start of this update
   data.pressedThisTick.clear();
@@ -91,7 +88,7 @@ function Initialize() {
   // Only initialize in browser environment
   if (typeof window === "undefined") return;
 
-  const { data } = fromContext(OverrideSystem<EngineSystem<typeof InputStateSchema>>("engine:input"));
+  const { data } = fromContext(OverrideSystem<EngineSystem<InputState>>("engine:input"));
 
   const eventPool = new EventPool();
 

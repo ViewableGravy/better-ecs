@@ -1,26 +1,21 @@
 import { clamp, createSystem } from "@engine";
 import { Camera } from "@engine/components";
-import { fromContext, Engine, System as ContextSystem } from "@engine/context";
-import z from "zod";
+import { System as ContextSystem, Engine, fromContext } from "@engine/context";
 
 const MIN_ORTHO_SIZE = 120;
 const MAX_ORTHO_SIZE = 2400;
 const ZOOM_SENSITIVITY = 0.0015;
 
+type CameraZoomState = {
+  pendingWheelDelta: number;
+  wheelHandler: ((event: WheelEvent) => void) | null;
+};
+
 export const System = createSystem("camera-zoom")({
-  schema: {
-    default: {
-      pendingWheelDelta: 0,
-      wheelHandler: null,
-    },
-    schema: z.object({
-      pendingWheelDelta: z.number(),
-      wheelHandler: z.function({
-        input: [z.instanceof(WheelEvent)],
-        output: z.void(),
-      }).nullable(),
-    })
-  },
+  state: {
+    pendingWheelDelta: 0,
+    wheelHandler: null,
+  } as CameraZoomState,
   initialize() {
     const { canvas } = fromContext(Engine)
     const { data } = fromContext(ContextSystem("camera-zoom"));

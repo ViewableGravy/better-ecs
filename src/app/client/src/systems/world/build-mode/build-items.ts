@@ -1,8 +1,8 @@
-import { boxPlacementDefinition } from "@client/systems/world/build-mode/placement/box";
-import { landClaimPlacementDefinition } from "@client/systems/world/build-mode/placement/land-claim";
-import { transportBeltPlacementDefinition } from "@client/systems/world/build-mode/placement/transport-belt";
 import type { ActivePlacementDragMode } from "@client/systems/world/build-mode/placement/types";
-import { wallPlacementDefinition } from "@client/systems/world/build-mode/placement/wall";
+import { boxPlacementDefinition } from "@client/systems/world/build-mode/specs/box";
+import { landClaimPlacementDefinition } from "@client/systems/world/build-mode/specs/land-claim";
+import { transportBeltPlacementDefinition } from "@client/systems/world/build-mode/specs/transport-belt";
+import { wallPlacementDefinition } from "@client/systems/world/build-mode/specs/wall";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS

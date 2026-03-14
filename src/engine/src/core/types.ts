@@ -1,5 +1,3 @@
-import type { StandardSchemaV1 } from "@standard-schema/spec";
-
 // --- Engine Lifecycle Types ---
 export type EngineUpdate = {
   readonly delta: number;
@@ -32,11 +30,4 @@ export type MetaStats = {
   /** Timestamp of the last update in milliseconds */
   lastUpdateTime: number;
 }
-
-// --- Schema Types ---
-export type StandardSchema = { '~standard': unknown };
-export type InferStandardSchema<TSchema> = TSchema extends StandardSchemaV1<infer TInput, infer TOutput> ? {
-  input: TInput;
-  output: TOutput;
-} : never;
 

@@ -4,15 +4,14 @@
  * Tests that scene names are properly inferred and setScene has correct types.
  */
 
-import { expectTypeOf } from "vitest";
-import z from "zod";
 import {
-  createEngine,
-  createInitializationSystem,
-  createScene,
-  createSystem,
-  type SceneDefinition,
+    createEngine,
+    createInitializationSystem,
+    createScene,
+    createSystem,
+    type SceneDefinition,
 } from "@engine/core";
+import { expectTypeOf } from "vitest";
 
 // ============================================================
 // Setup: Create test scenes and systems
@@ -49,22 +48,19 @@ const PauseScene = createScene("pause")({
 
 // Minimal test system
 const TestSystem = createSystem("test")({
-  schema: {
-    default: { count: 0 },
-    schema: z.object({ count: z.number() }),
-  },
+  state: { count: 0 },
   system() {
     /* no-op */
   },
 });
 
-const NoSchemaSystem = createSystem("test:no-schema")({
+const NoStateSystem = createSystem("test:no-state")({
   system() {
     /* no-op */
   },
 });
 
-expectTypeOf<ReturnType<typeof NoSchemaSystem>["data"]>().toEqualTypeOf<Record<string, never>>();
+expectTypeOf<ReturnType<typeof NoStateSystem>["data"]>().toEqualTypeOf<Record<string, never>>();
 
 // ============================================================
 // Test: createScene returns correct types
@@ -85,7 +81,7 @@ expectTypeOf(PauseScene.name).toEqualTypeOf<"pause">();
 // ============================================================
 
 const engine = createEngine({
-  systems: [TestSystem, NoSchemaSystem],
+  systems: [TestSystem, NoStateSystem],
   scenes: [MenuScene, GameScene, PauseScene],
 });
 
@@ -183,11 +179,11 @@ expectTypeOf<TestSystemNames>().not.toBeAny();
 // Should include registered system name
 expectTypeOf<"test">().toExtend<TestSystemNames>();
 
-// Should include schema-less system name
-expectTypeOf<"test:no-schema">().toExtend<TestSystemNames>();
+// Should include state-less system name
+expectTypeOf<"test:no-state">().toExtend<TestSystemNames>();
 
 // Should include scene-registered system name
 expectTypeOf<"scene:only">().toExtend<TestSystemNames>();
 
-export { };
+export {};
 

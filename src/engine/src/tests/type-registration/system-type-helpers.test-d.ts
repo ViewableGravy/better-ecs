@@ -1,5 +1,3 @@
-import { expectTypeOf } from "vitest";
-import z from "zod";
 import {
     createEngine,
     createScene,
@@ -23,12 +21,10 @@ import {
     type UserlandSystemNames,
     type UserlandSystems,
 } from "@engine/core";
+import { expectTypeOf } from "vitest";
 
 const GlobalSystem = createSystem("app:global")({
-  schema: {
-    default: { score: 0 },
-    schema: z.object({ score: z.number() }),
-  },
+  state: { score: 0 },
   methods(system) {
     return {
       reset() {
@@ -96,5 +92,5 @@ expectTypeOf<EngineEngineSystem<EngineSystemFactory<"engine:input">>>().toEqualT
 expectTypeOf<Systems<TestEngine>>().toExtend<EngineSystems | UserlandSystems<TestEngine>>();
 expectTypeOf<UserlandSystem<"engine:input", TestEngine>>().toEqualTypeOf<never>();
 
-export { };
+export {};
 

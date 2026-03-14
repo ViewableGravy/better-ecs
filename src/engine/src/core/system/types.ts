@@ -1,43 +1,36 @@
-import type { StandardSchemaV1 } from "@standard-schema/spec";
-import type { InferStandardSchema, StandardSchema } from "@engine/core/types";
-
 export type SystemPriority = number;
 export type SystemCleanup = () => void;
 export type SystemInitialize = () => void | SystemCleanup;
 
 export type EmptySystemData = Record<string, never>;
-export type EmptySystemSchema = StandardSchemaV1<EmptySystemData, EmptySystemData>;
+export type EmptySystemState = EmptySystemData;
 
-export type SystemOpts<TSchema extends StandardSchema, TMethods extends Record<string, any>> = {
-	schema?: {
-		default: InferStandardSchema<NoInfer<TSchema>>["input"];
-		schema: TSchema;
-	};
+export type SystemOpts<TState extends object, TMethods extends Record<string, any>> = {
+	state?: TState;
 	priority?: SystemPriority;
 	enabled?: boolean;
 	system: () => void;
 	initialize?: SystemInitialize;
-	methods?: (system: EngineSystem<TSchema>) => TMethods;
+	methods?: (system: EngineSystem<TState>) => TMethods;
 };
 
 export type SystemFactory<
 	TName extends string,
-	TSchema extends StandardSchema,
+	TState extends object,
 	TMethods extends Record<string, any>,
 > = {
-	(): EngineSystem<TSchema> & TMethods;
+	(): EngineSystem<TState> & TMethods;
 	["~types"]: {
 		name: TName;
-		schema: TSchema;
+		state: TState;
 	};
 };
 
-export type SystemFactoryTuple = Array<SystemFactory<string, StandardSchema, Record<string, any>>>;
+export type SystemFactoryTuple = Array<SystemFactory<string, object, Record<string, any>>>;
 
-export type EngineSystem<TSchema extends StandardSchema = StandardSchema> = {
+export type EngineSystem<TState extends object = object> = {
 	name: string;
-	data: InferStandardSchema<TSchema>["output"];
-	schema: TSchema;
+	data: TState;
 	priority: SystemPriority;
 	system: () => void;
 	initialize?: SystemInitialize;

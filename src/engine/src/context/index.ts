@@ -1,16 +1,16 @@
-import { mouseApi, type Mouse as MouseInterface } from "@engine/systems/input/mouse";
 import { getContextEngine, getContextRender } from "@engine/core/context";
 import type {
-  AllSceneNames,
-  RegisteredAssetManager,
-  RegisteredEngine,
-  RegisteredSystems,
-  SystemNames,
+    AllSceneNames,
+    RegisteredAssetManager,
+    RegisteredEngine,
+    RegisteredSystems,
+    SystemNames,
 } from "@engine/core/engine-types";
 import type { AnyRenderPipelineContext } from "@engine/core/render-pipeline/context";
 import type { SceneContext } from "@engine/core/scene/scene-context";
 import type { EngineSystem } from "@engine/core/system";
 import type { UserWorld } from "@engine/ecs/world";
+import { mouseApi, type Mouse as MouseInterface } from "@engine/systems/input/mouse";
 
 /***** TYPE DEFINITIONS *****/
 export type EngineContextOptions<T> = {
@@ -213,7 +213,7 @@ export function System<TSystem extends RegisteredSystemNames>(
  *
  * @example
  * ```ts
- * const { data } = fromContext(OverrideSystem<EngineSystem<typeof schema>>("plugin:fps-counter"));
+ * const { data } = fromContext(OverrideSystem<EngineSystem<FPSCounterData>>("plugin:fps-counter"));
  * ```
  */
 export function OverrideSystem<TOverride extends EngineSystem>(

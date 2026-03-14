@@ -1,5 +1,4 @@
 import type { KeyBind } from "@engine";
-import { z } from "zod";
 
 export type PhysicsOpts = {
   debug?: false | {
@@ -9,8 +8,6 @@ export type PhysicsOpts = {
 
 export type PhysicsDebugOpts = Exclude<NonNullable<PhysicsOpts["debug"]>, false>;
 
-export const debugStateSchema = z.object({
-  visible: z.boolean(),
-});
-
-export type DebugState = z.infer<typeof debugStateSchema>;
+export type DebugState = {
+  visible: boolean;
+};
