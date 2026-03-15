@@ -26,6 +26,9 @@ const PLAYER_PLAYBACK_RATE_BY_STATE: Record<PlayerAnimationState, number> = {
 
 const PLAYER_SPRITE_WIDTH = 35;
 const PLAYER_SPRITE_HEIGHT = 35;
+const PLAYER_Z_BASE = 0.31;
+const PLAYER_Z_PER_WORLD_Y = 0.000001;
+const PLAYER_DEPTH_SORT_LEEWAY = 2;
 
 function getPlayerAnimationFrames(
   animationState: PlayerAnimationState,
@@ -60,8 +63,16 @@ export function createPlayerSprite(
   });
 
   sprite.layer = previousSprite?.layer ?? RENDER_LAYERS.world;
-  sprite.zOrder = previousSprite?.zOrder ?? 1;
+  sprite.zOrder = previousSprite?.zOrder ?? resolvePlayerSpriteZOrder(0);
   sprite.playbackRate = PLAYER_PLAYBACK_RATE_BY_STATE[animationState];
 
   return sprite;
+}
+
+export function resolvePlayerSpriteZOrder(worldY: number): number {
+  return PLAYER_Z_BASE + worldY * PLAYER_Z_PER_WORLD_Y;
+}
+
+export function resolvePlayerSpriteDepthSortY(playerBottomY: number): number {
+  return playerBottomY - PLAYER_DEPTH_SORT_LEEWAY;
 }

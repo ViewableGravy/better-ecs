@@ -5,6 +5,7 @@ import {
 } from "@client/entities/transport-belt";
 import { TransportBeltGridQuery } from "@client/entities/transport-belt/core";
 import { TransportBeltRotationVariantManager } from "@client/entities/transport-belt/placement/TransportBeltRotationVariantManager";
+import { TransportBeltTerminalDecorationManager } from "@client/entities/transport-belt/placement/TransportBeltTerminalDecorationManager";
 import type { TransportBeltEntityId } from "@client/entities/transport-belt/types";
 import type { GridCoordinates } from "@client/systems/world/build-mode/grid-singleton";
 import type { UserWorld } from "@engine";
@@ -64,6 +65,8 @@ export class TransportBeltAutoShapeManager {
     for (const beltEntityId of affectedBeltEntityIds) {
       TransportBeltConnectionUtils.reconnectBelt(world, beltEntityId);
     }
+
+    TransportBeltTerminalDecorationManager.syncBelts(world, affectedBeltEntityIds);
   }
 
   private static resolveAffectedBeltEntityIds(

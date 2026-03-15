@@ -3,7 +3,12 @@ import {
     PlayerComponent,
     type PlayerDirection,
 } from "@client/components/player";
-import { createPlayerSprite } from "@client/entities/player/render/createPlayerSprite";
+import { PLAYER_GROUNDED_HITBOX_RADIUS } from "@client/entities/player";
+import {
+    createPlayerSprite,
+    resolvePlayerSpriteDepthSortY,
+    resolvePlayerSpriteZOrder,
+} from "@client/entities/player/render/createPlayerSprite";
 import { createSystem, mutate } from "@engine";
 import { AnimatedSprite, Transform2D } from "@engine/components";
 import { System as ContextSystem, Delta, fromContext, World } from "@engine/context";
@@ -69,6 +74,10 @@ export const System = createSystem("movement")({
         }
       });
     }
+
+    const playerBottomY = transform.curr.pos.y + PLAYER_GROUNDED_HITBOX_RADIUS;
+
+    animatedSprite.zOrder = resolvePlayerSpriteZOrder(resolvePlayerSpriteDepthSortY(playerBottomY));
 
     const nextAnimationState: PlayerAnimationState = x === 0 && y === 0 ? "idle" : "moving";
     const nextDirection = resolveDirectionFromAxes(x, y) ?? player.direction;

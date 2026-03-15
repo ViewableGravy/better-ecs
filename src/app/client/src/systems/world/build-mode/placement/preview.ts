@@ -17,6 +17,7 @@ export type PlacementPreviewAdapter<TPayload = void> = {
   sync: (
     options: PlacementPreviewSyncOptions,
     ghostEntityId: EntityId | null,
+    ownerId: string,
     payload?: TPayload,
   ) => EntityId;
 };
@@ -29,7 +30,7 @@ export function createGhostPreviewAdapter<TPayload = void>(
   preset: GhostPreset<TPayload>,
 ): PlacementPreviewAdapter<TPayload> {
   return {
-    sync({ context, canPlace }, ghostEntityId, payload) {
+    sync({ context, canPlace }, ghostEntityId, ownerId, payload) {
       return GhostPreviewManager.sync(
         context.previewWorld,
         ghostEntityId,
@@ -38,6 +39,7 @@ export function createGhostPreviewAdapter<TPayload = void>(
         preset,
         payload,
         canPlace,
+        ownerId,
       );
     },
   };

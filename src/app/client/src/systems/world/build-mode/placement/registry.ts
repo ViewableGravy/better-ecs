@@ -27,7 +27,7 @@ export type RegisteredResolvedPlacement = {
   canPlace: boolean;
   preview: {
     world: UserWorld;
-    sync: (ghostEntityId: EntityId | null) => EntityId;
+    sync: (ghostEntityId: EntityId | null, ownerId: string) => EntityId;
   };
   commit: {
     world: UserWorld;
@@ -85,13 +85,14 @@ function createRegisteredResolvedPlacement<TPayload>(
     canPlace,
     preview: {
       world: context.previewWorld,
-      sync(ghostEntityId) {
+      sync(ghostEntityId, ownerId) {
         return definition.preview.sync(
           {
             context,
             canPlace,
           },
           ghostEntityId,
+          ownerId,
           payload,
         );
       },

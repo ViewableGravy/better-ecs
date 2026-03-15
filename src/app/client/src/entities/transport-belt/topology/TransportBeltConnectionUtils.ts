@@ -1,7 +1,9 @@
 import { canConveyorStoreEntities, ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import { TransportBeltLeaf } from "@client/components/transport-belt-leaf";
 import {
+    getConveyorLaneSlots,
     getTransportBeltVariantDescriptor,
+    setConveyorLaneTailBlocked,
     TransportBeltGridQuery,
 } from "@client/entities/transport-belt/core";
 import { TransportBeltTerminalDecorationManager } from "@client/entities/transport-belt/placement/TransportBeltTerminalDecorationManager";
@@ -64,7 +66,12 @@ export class TransportBeltConnectionUtils {
       const previousBelt = world.get(previousEntityId, ConveyorBeltComponent);
 
       if (previousBelt) {
+        const previousHadNoNextConnection = previousBelt.nextEntityId === null;
         previousBelt.nextEntityId = beltEntityId;
+
+        if (previousHadNoNextConnection) {
+          this.blockTailTransfers(previousBelt);
+        }
       }
     }
 
@@ -157,6 +164,10 @@ export class TransportBeltConnectionUtils {
     belt.previousEntityId = previousEntityId;
     belt.nextEntityId = nextEntityId;
 
+    if (oldNextEntityId === null && nextEntityId !== null) {
+      this.blockTailTransfers(belt);
+    }
+
     if (oldPreviousEntityId !== null && oldPreviousEntityId !== previousEntityId) {
       const oldPreviousBelt = world.get(oldPreviousEntityId, ConveyorBeltComponent);
 
@@ -179,7 +190,12 @@ export class TransportBeltConnectionUtils {
       const previousBelt = world.get(previousEntityId, ConveyorBeltComponent);
 
       if (previousBelt) {
+        const previousHadNoNextConnection = previousBelt.nextEntityId === null;
         previousBelt.nextEntityId = beltEntityId;
+
+        if (previousHadNoNextConnection) {
+          this.blockTailTransfers(previousBelt);
+        }
       }
     }
 
@@ -316,6 +332,18 @@ export class TransportBeltConnectionUtils {
 
   private static isConnectableVariant(variant: string): boolean {
     return canConveyorStoreEntities(variant) && getTransportBeltVariantDescriptor(variant) !== undefined;
+  }
+
+  private static blockTailTransfers(conveyor: ConveyorBeltComponent): void {
+    for (const side of ["left", "right"] as const) {
+      const slots = getConveyorLaneSlots(conveyor, side);
+
+      if (slots[3] === null) {
+        continue;
+      }
+
+      setConveyorLaneTailBlocked(conveyor, side, true);
+    }
   }
 
   private static refreshLeafAnchors(

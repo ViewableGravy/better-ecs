@@ -23,12 +23,13 @@ export class GhostUtils {
     world: UserWorld,
     ghostEntityId: TEntityId,
     kind: GhostKind = "box",
+    ownerId: string = "local-player",
     previewVariant: string | null = null,
   ): TEntityId {
     world.add(ghostEntityId, CollisionProfiles.ghost());
     world.add(
       ghostEntityId,
-      new GhostPreviewComponent(kind, previewVariant),
+      new GhostPreviewComponent(kind, ownerId, previewVariant),
     );
 
     this.stripPlacedOnlyComponents(world, ghostEntityId);

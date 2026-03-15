@@ -90,6 +90,22 @@ describe("spawnTransportBelt connectivity", () => {
     expectTerminalDecoration(world, secondBeltId, "end", 20, 0, "transport-belt:end-right_1");
   });
 
+  it("removes terminal pieces correctly when the upstream belt is placed second", () => {
+    const world = new UserWorld(new World("scene"));
+    const tailBeltId = spawnTransportBelt(world, { x: 20, y: 0, variant: "horizontal-right" });
+    const headBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "horizontal-right" });
+
+    const headBelt = world.require(headBeltId, ConveyorBeltComponent);
+    const tailBelt = world.require(tailBeltId, ConveyorBeltComponent);
+
+    expect(headBelt.nextEntityId).toBe(tailBeltId);
+    expect(tailBelt.previousEntityId).toBe(headBeltId);
+    expect(findTerminalDecorationEntityId(world, headBeltId, "end")).toBeNull();
+    expect(findTerminalDecorationEntityId(world, tailBeltId, "start")).toBeNull();
+    expectTerminalDecoration(world, headBeltId, "start", -20, 0, "transport-belt:start-left_1");
+    expectTerminalDecoration(world, tailBeltId, "end", 20, 0, "transport-belt:end-right_1");
+  });
+
   it("connects a straight belt into a compatible curve", () => {
     const world = new UserWorld(new World("scene"));
     const straightBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "horizontal-right" });

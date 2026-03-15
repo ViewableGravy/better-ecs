@@ -1,4 +1,4 @@
-import { PlayerComponent } from "@client/components/player";
+import { getPlayerEntityId } from "@client/entities/player/actions";
 import type { UserWorld } from "@engine";
 import { Transform2D } from "@engine/components";
 import invariant from "tiny-invariant";
@@ -10,7 +10,7 @@ import invariant from "tiny-invariant";
  */
 export class PlayerUtils {
   public static getTransform(world: UserWorld) {
-    const [playerId] = world.query(PlayerComponent);
+    const playerId = getPlayerEntityId(world);
     invariant(playerId, "Player entity not found in world.");
 
     const transform = world.get(playerId, Transform2D);

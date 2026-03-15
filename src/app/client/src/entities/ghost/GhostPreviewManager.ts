@@ -19,14 +19,15 @@ export class GhostPreviewManager {
     preset: GhostPreset<TPayload>,
     payload?: TPayload,
     isPlaceable: boolean = true,
+    ownerId: string = "local-player",
   ): EntityId {
     const previewVariant = preset.resolvePreviewVariant?.(payload) ?? null;
 
-    if (!this.matchesGhostKind(world, ghostEntityId, preset.kind)) {
+    if (!this.matchesGhost(world, ghostEntityId, preset.kind, ownerId)) {
       this.destroyGhost(world, ghostEntityId);
       const nextGhostEntityId = preset.spawn(world, x, y, payload);
 
-      GhostUtils.applyEffect(world, nextGhostEntityId, preset.kind, previewVariant);
+      GhostUtils.applyEffect(world, nextGhostEntityId, preset.kind, ownerId, previewVariant);
       GhostUtils.syncPlacementState(world, nextGhostEntityId, isPlaceable);
 
       return nextGhostEntityId;
@@ -67,10 +68,11 @@ export class GhostPreviewManager {
     ghostPreview.previewVariant = previewVariant;
   }
 
-  private static matchesGhostKind(
+  private static matchesGhost(
     world: UserWorld,
     ghostEntityId: EntityId | null,
     kind: string,
+    ownerId: string,
   ): ghostEntityId is EntityId {
     if (ghostEntityId === null || !world.has(ghostEntityId, GhostPreviewComponent)) {
       return false;
@@ -78,6 +80,6 @@ export class GhostPreviewManager {
 
     const ghostPreview = world.require(ghostEntityId, GhostPreviewComponent);
 
-    return ghostPreview.kind === kind;
+    return ghostPreview.kind === kind && ghostPreview.ownerId === ownerId;
   }
 }

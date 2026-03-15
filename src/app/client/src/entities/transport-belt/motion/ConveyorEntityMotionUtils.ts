@@ -296,7 +296,7 @@ export class ConveyorEntityMotionUtils {
     slots[3] = null;
     progress[3] = 0;
     setConveyorLaneTailBlocked(conveyor, side, false);
-    world.add(entityId, new Parent(nextConveyorEntityId));
+    this.syncParent(world, entityId, nextConveyorEntityId);
   }
 
   private static transferSideLoadLane(
@@ -330,8 +330,19 @@ export class ConveyorEntityMotionUtils {
     sourceSlots[3] = null;
     sourceProgress[3] = 0;
     setConveyorLaneTailBlocked(sourceConveyor, sourceLane, false);
-    world.add(sourceEntityId, new Parent(targetConveyorEntityId));
+    this.syncParent(world, sourceEntityId, targetConveyorEntityId);
 
     return true;
+  }
+
+  private static syncParent(world: UserWorld, entityId: EntityId, parentEntityId: EntityId): void {
+    const parent = world.get(entityId, Parent);
+
+    if (!parent) {
+      world.add(entityId, new Parent(parentEntityId));
+      return;
+    }
+
+    parent.entityId = parentEntityId;
   }
 }

@@ -1,9 +1,30 @@
 import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import { destroyTransportBelt, spawnTransportBelt } from "@client/entities/transport-belt";
 import { TransportBeltAutoShapeManager } from "@client/entities/transport-belt/placement/TransportBeltAutoShapeManager";
+import { TransportBeltTerminalDecoration } from "@client/entities/transport-belt/placement/TransportBeltTerminalDecoration";
 import { GridSingleton } from "@client/systems/world/build-mode/grid-singleton";
 import { UserWorld, World } from "@engine";
 import { describe, expect, it } from "vitest";
+
+function findTerminalDecorationEntityId(
+  world: UserWorld,
+  ownerEntityId: number,
+  role: "start" | "end",
+): number | null {
+  for (const decorationEntityId of world.query(TransportBeltTerminalDecoration)) {
+    const decoration = world.get(decorationEntityId, TransportBeltTerminalDecoration);
+
+    if (!decoration) {
+      continue;
+    }
+
+    if (decoration.ownerEntityId === ownerEntityId && decoration.role === role) {
+      return decorationEntityId;
+    }
+  }
+
+  return null;
+}
 
 describe("TransportBeltAutoShapeManager", () => {
   it("bends a belt when exactly one side neighbor uniquely feeds its start", () => {
@@ -145,5 +166,17 @@ describe("TransportBeltAutoShapeManager", () => {
     TransportBeltAutoShapeManager.refreshAffectedBelts(world, placedBeltId);
 
     expect(world.require(bentBeltId, ConveyorBeltComponent).variant).toBe("angled-bottom-right");
+  });
+
+  it("removes a tail belt end decoration after adding a conveyor directly in front of it", () => {
+    const world = new UserWorld(new World("scene"));
+
+    const headBeltId = spawnTransportBelt(world, { x: 10, y: 10, variant: "vertical-down" });
+    const placedBeltId = spawnTransportBelt(world, { x: 10, y: 30, variant: "vertical-down" });
+
+    TransportBeltAutoShapeManager.refreshAffectedBelts(world, placedBeltId);
+
+    expect(findTerminalDecorationEntityId(world, headBeltId, "end")).toBeNull();
+    expect(world.require(headBeltId, ConveyorBeltComponent).nextEntityId).toBe(placedBeltId);
   });
 });
