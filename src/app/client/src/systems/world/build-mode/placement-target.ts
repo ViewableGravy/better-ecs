@@ -5,12 +5,16 @@ import { resolveDeepestContextAtPoint, SpatialContexts } from "@libs/spatial-con
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
  **********************************************************************************************************/
-export type PlacementWorldResolution = {
+export type PlacementTargetResolution = {
+  inputWorld: UserWorld;
+  focusedWorld: UserWorld;
+  previewWorld: UserWorld;
+  previewContextId?: ContextId;
   focusedContextId?: ContextId;
   hoveredContextId?: ContextId;
-  contextId?: ContextId;
+  commitContextId?: ContextId;
   relationship?: ContextRelationship;
-  world?: UserWorld | undefined;
+  commitWorld?: UserWorld;
   blocked: boolean;
 };
 
@@ -20,21 +24,26 @@ export type PlacementWorldResolution = {
 export function resolvePlacementWorld(
   engine: RegisteredEngine,
   worldPointer: MousePoint,
-): PlacementWorldResolution {
+): PlacementTargetResolution {
   const manager = SpatialContexts.requireManager(engine.scene.context);
 
   const focusedContextId = manager.focusedContextId;
+  const focusedWorld = manager.focusedWorld;
   const hoveredContextId = resolveDeepestContextAtPoint(manager, worldPointer);
   const relationship = manager.getContextRelationship(focusedContextId, hoveredContextId);
   const canPlaceInHoveredWorld = relationship === "self" || relationship === "ancestor";
-  const placementWorld = canPlaceInHoveredWorld ? manager.getWorld(hoveredContextId) : undefined;
+  const commitWorld = canPlaceInHoveredWorld ? manager.getWorld(hoveredContextId) : undefined;
 
   return {
+    inputWorld: focusedWorld,
+    focusedWorld,
+    previewWorld: focusedWorld,
+    previewContextId: focusedContextId,
     focusedContextId,
     hoveredContextId,
-    contextId: canPlaceInHoveredWorld ? hoveredContextId : undefined,
+    commitContextId: canPlaceInHoveredWorld ? hoveredContextId : undefined,
     relationship,
-    world: placementWorld,
-    blocked: !canPlaceInHoveredWorld || !placementWorld,
+    commitWorld,
+    blocked: !canPlaceInHoveredWorld || !commitWorld,
   };
 }

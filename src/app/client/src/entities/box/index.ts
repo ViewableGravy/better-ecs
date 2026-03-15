@@ -16,26 +16,33 @@ const INSET_HALF_BOX_SIZE = HALF_BOX_SIZE - GRID_COLLIDER_INSET_PX;
 const PLACED_FILL = new Color(1, 0.2, 0.8, 1);
 const PLACED_STROKE = new Color(1, 1, 1, 1);
 
-type SpawnBoxOptions = {
+type SpawnPlacedBoxOptions = {
   snappedX: number;
   snappedY: number;
   renderVisibilityRole: RenderVisibilityRole;
+  profile?: "placed";
 };
+
+type SpawnPreviewBoxOptions = {
+  snappedX: number;
+  snappedY: number;
+  profile: "preview";
+};
+
+type SpawnBoxOptions = SpawnPlacedBoxOptions | SpawnPreviewBoxOptions;
 
 export function spawnBox(world: UserWorld, opts: SpawnBoxOptions): EntityId {
   const placed = world.create();
+
   world.add(placed, new Transform2D(opts.snappedX + HALF_BOX_SIZE, opts.snappedY + HALF_BOX_SIZE));
-  world.add(
-    placed,
-    new Shape(
-      "rectangle",
-      BOX_SIZE,
-      BOX_SIZE,
-      new Color(PLACED_FILL.r, PLACED_FILL.g, PLACED_FILL.b, PLACED_FILL.a),
-      new Color(PLACED_STROKE.r, PLACED_STROKE.g, PLACED_STROKE.b, PLACED_STROKE.a),
-      1,
-    ),
-  );
+  addBoxRenderable(world, placed);
+
+  if (opts.profile === "preview") {
+    world.add(placed, new Debug("box-ghost"));
+
+    return placed;
+  }
+
   world.add(
     placed,
     new RectangleCollider(
@@ -51,4 +58,18 @@ export function spawnBox(world: UserWorld, opts: SpawnBoxOptions): EntityId {
   world.add(placed, new RenderVisibility(opts.renderVisibilityRole, 1));
   world.add(placed, new Debug("box"));
   return placed;
+}
+
+function addBoxRenderable(world: UserWorld, entityId: EntityId): void {
+  world.add(
+    entityId,
+    new Shape(
+      "rectangle",
+      BOX_SIZE,
+      BOX_SIZE,
+      new Color(PLACED_FILL.r, PLACED_FILL.g, PLACED_FILL.b, PLACED_FILL.a),
+      new Color(PLACED_STROKE.r, PLACED_STROKE.g, PLACED_STROKE.b, PLACED_STROKE.a),
+      1,
+    ),
+  );
 }

@@ -1,42 +1,19 @@
-import { canConveyorStoreEntities, ConveyorBeltComponent } from "@client/components/conveyor-belt";
+import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import {
     TransportBeltConnectionUtils,
     updateTransportBeltVariant,
 } from "@client/entities/transport-belt";
-import { getTransportBeltVariantByFlow, type TransportBeltSide, type TransportBeltVariant } from "@client/entities/transport-belt/consts";
-import {
-    getOppositeTransportBeltSide,
-    getTransportBeltVariantDescriptor,
-    isStraightTransportBeltFlow,
-    TransportBeltGridQuery,
-} from "@client/entities/transport-belt/core";
+import { TransportBeltGridQuery } from "@client/entities/transport-belt/core";
+import { TransportBeltRotationVariantManager } from "@client/entities/transport-belt/placement/TransportBeltRotationVariantManager";
 import type { TransportBeltEntityId } from "@client/entities/transport-belt/types";
 import type { GridCoordinates } from "@client/systems/world/build-mode/grid-singleton";
 import type { UserWorld } from "@engine";
 
 /**********************************************************************************************************
- *   TYPE DEFINITIONS
- **********************************************************************************************************/
-
-type NeighborCandidate = readonly [sideA: TransportBeltSide, sideB: TransportBeltSide];
-
-/**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
 
-const STRAIGHT_VARIANT_BY_END_SIDE: Readonly<Record<TransportBeltSide, TransportBeltVariant>> = {
-  top: "vertical-up",
-  right: "horizontal-right",
-  bottom: "vertical-down",
-  left: "horizontal-left",
-};
-
-const PERPENDICULAR_INCOMING_SIDES_BY_END_SIDE: Readonly<Record<TransportBeltSide, NeighborCandidate>> = {
-  top: ["left", "right"],
-  right: ["top", "bottom"],
-  bottom: ["left", "right"],
-  left: ["top", "bottom"],
-};
+const MAX_REFRESH_PASSES = 4;
 
 export class TransportBeltAutoShapeManager {
   public static refreshAffectedBelts(world: UserWorld, placedBeltEntityId: TransportBeltEntityId): void {
@@ -59,100 +36,34 @@ export class TransportBeltAutoShapeManager {
       return;
     }
 
-    for (const beltEntityId of affectedBeltEntityIds) {
-      const resolvedVariant = this.resolveVariant(world, beltEntityId);
+    for (let pass = 0; pass < MAX_REFRESH_PASSES; pass += 1) {
+      let didChangeVariant = false;
 
-      if (!resolvedVariant) {
-        continue;
+      for (const beltEntityId of affectedBeltEntityIds) {
+        const resolvedVariant = TransportBeltRotationVariantManager.deriveBeltVariant(world, { beltEntityId });
+
+        if (!resolvedVariant) {
+          continue;
+        }
+
+        const belt = world.require(beltEntityId, ConveyorBeltComponent);
+
+        if (belt.variant === resolvedVariant) {
+          continue;
+        }
+
+        updateTransportBeltVariant(world, beltEntityId, resolvedVariant);
+        didChangeVariant = true;
       }
 
-      updateTransportBeltVariant(world, beltEntityId, resolvedVariant);
+      if (!didChangeVariant) {
+        break;
+      }
     }
 
     for (const beltEntityId of affectedBeltEntityIds) {
       TransportBeltConnectionUtils.reconnectBelt(world, beltEntityId);
     }
-  }
-
-  public static resolveVariant(world: UserWorld, beltEntityId: TransportBeltEntityId): TransportBeltVariant | null {
-    const belt = world.get(beltEntityId, ConveyorBeltComponent);
-
-    if (!canConveyorStoreEntities(belt.variant)) {
-      return null;
-    }
-
-    const descriptor = getTransportBeltVariantDescriptor(belt.variant);
-
-    if (!descriptor) {
-      return null;
-    }
-
-    const [startSide, endSide] = descriptor.flow;
-    const coordinates = TransportBeltGridQuery.resolveBeltCoordinates(world, beltEntityId);
-    const straightThroughVariant = this.resolveStraightThroughVariant(world, endSide, coordinates);
-
-    if (straightThroughVariant !== null) {
-      return straightThroughVariant;
-    }
-
-    if (this.isIncomingFromSide(world, coordinates, startSide)) {
-      return belt.variant as TransportBeltVariant;
-    }
-
-    const uniqueIncomingSide = this.resolveUniqueIncomingSide(world, coordinates, endSide);
-
-    if (uniqueIncomingSide === null) {
-      return STRAIGHT_VARIANT_BY_END_SIDE[endSide];
-    }
-
-    return getTransportBeltVariantByFlow(uniqueIncomingSide, endSide) ?? STRAIGHT_VARIANT_BY_END_SIDE[endSide];
-  }
-
-  private static resolveStraightThroughVariant(
-    world: UserWorld,
-    endSide: TransportBeltSide,
-    coordinates: GridCoordinates,
-  ): TransportBeltVariant | null {
-    const defaultTailSide = getOppositeTransportBeltSide(endSide);
-
-    if (this.isStraightIncomingFromSide(world, coordinates, defaultTailSide)
-      && this.isStraightOutgoingToSide(world, coordinates, endSide)) {
-      return STRAIGHT_VARIANT_BY_END_SIDE[endSide];
-    }
-
-    return null;
-  }
-
-  private static isStraightIncomingFromSide(
-    world: UserWorld,
-    coordinates: GridCoordinates,
-    side: TransportBeltSide,
-  ): boolean {
-    const neighborDescriptor = this.resolveNeighborDescriptor(world, coordinates, side);
-
-    if (!neighborDescriptor || !isStraightTransportBeltFlow(neighborDescriptor.flow)) {
-      return false;
-    }
-
-    const [, neighborEndSide] = neighborDescriptor.flow;
-
-    return neighborEndSide === getOppositeTransportBeltSide(side);
-  }
-
-  private static isStraightOutgoingToSide(
-    world: UserWorld,
-    coordinates: GridCoordinates,
-    side: TransportBeltSide,
-  ): boolean {
-    const neighborDescriptor = this.resolveNeighborDescriptor(world, coordinates, side);
-
-    if (!neighborDescriptor || !isStraightTransportBeltFlow(neighborDescriptor.flow)) {
-      return false;
-    }
-
-    const [neighborStartSide] = neighborDescriptor.flow;
-
-    return neighborStartSide === getOppositeTransportBeltSide(side);
   }
 
   private static resolveAffectedBeltEntityIds(
@@ -192,66 +103,5 @@ export class TransportBeltAutoShapeManager {
     }
 
     return [...affected];
-  }
-
-  private static resolveUniqueIncomingSide(
-    world: UserWorld,
-    coordinates: GridCoordinates,
-    endSide: TransportBeltSide,
-  ): TransportBeltSide | null {
-    const defaultTailSide = getOppositeTransportBeltSide(endSide);
-
-    if (this.isIncomingFromSide(world, coordinates, defaultTailSide)) {
-      return null;
-    }
-
-    const [candidateA, candidateB] = PERPENDICULAR_INCOMING_SIDES_BY_END_SIDE[endSide];
-    const contributingSides: TransportBeltSide[] = [];
-
-    if (this.isIncomingFromSide(world, coordinates, candidateA)) {
-      contributingSides.push(candidateA);
-    }
-
-    if (this.isIncomingFromSide(world, coordinates, candidateB)) {
-      contributingSides.push(candidateB);
-    }
-
-    if (contributingSides.length !== 1) {
-      return null;
-    }
-
-    return contributingSides[0];
-  }
-
-  private static isIncomingFromSide(
-    world: UserWorld,
-    coordinates: GridCoordinates,
-    side: TransportBeltSide,
-  ): boolean {
-    const neighborDescriptor = this.resolveNeighborDescriptor(world, coordinates, side);
-
-    if (!neighborDescriptor) {
-      return false;
-    }
-
-    const [, neighborEndSide] = neighborDescriptor.flow;
-
-    return neighborEndSide === getOppositeTransportBeltSide(side);
-  }
-
-  private static resolveNeighborDescriptor(
-    world: UserWorld,
-    coordinates: GridCoordinates,
-    side: TransportBeltSide,
-  ) {
-    const neighborEntityId = TransportBeltGridQuery.resolveNeighborEntityId(world, coordinates, side);
-
-    if (neighborEntityId === null) {
-      return null;
-    }
-
-    const neighborBelt = world.require(neighborEntityId, ConveyorBeltComponent);
-
-    return getTransportBeltVariantDescriptor(neighborBelt.variant) ?? null;
   }
 }

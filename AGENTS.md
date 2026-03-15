@@ -140,20 +140,20 @@ This section is intentionally explicit to reduce drift.
   - If ids are expected to be valid by contract, assert once (`invariant(...)` or `require*`) and continue with non-nullable flow.
   - Exception: destructive/idempotent methods (for example `destroy`) may return booleans instead of throwing when absence is expected.
 
-### `resolve` vs out-parameter naming
+### `derive` vs out-parameter naming
 
-- Use `resolve*` for deriving a value or decision from current state.
-  - Good fit today: `resolvePlacementWorld`, `resolveCameraView`, collision `resolve*` functions.
-- Do not use `resolve*` when the primary behavior is searching for an already-existing object/node/value.
+- Use `derive*` for deriving a value or decision from current state.
+  - For future APIs, prefer `derivePlacementWorld`, `deriveCameraView`, and other `derive*` names over introducing new `resolve*` names.
+- Do not use `derive*` when the primary behavior is searching for an already-existing object/node/value.
   - If the function mostly iterates/traverses/queries to locate something, prefer `find*`.
-  - Example: a function that walks a belt chain to locate its leaf should prefer `findLeafBelt`, not `resolveLeafBelt`.
+  - Example: a function that walks a belt chain to locate its leaf should prefer `findLeafBelt`, not `deriveLeafBelt`.
 - Use `compute*` for derivation that is primarily computation based
   - Good fit today: `computeBeltRailPosition`
-- Do not use `resolve*` for simple owner reads/getters.
+- Do not use `derive*` for simple owner reads/getters.
   - If no derivation occurs, use `get*` (or `require*` for non-nullable access).
 - Do not use `compute*` for search/traversal either.
   - `compute*` should be reserved for calculated/derived outputs, not for locating existing state.
-- Avoid plain `resolve*` for APIs whose primary contract is “write into provided object”.
+- Avoid plain `derive*` for APIs whose primary contract is “write into provided object”.
 
 ### Practical verb split
 
@@ -161,15 +161,15 @@ This section is intentionally explicit to reduce drift.
   - Example: `getSceneContext()`
 - `find*` → search existing state to locate something
   - Example: `findLeafBeltEntityId()`
-- `resolve*` → derive/select/decide a value from current state
-  - Example: `resolvePlacementWorld()`
+- `derive*` → derive/select/decide a value from current state
+  - Example: `derivePlacementWorld()`
 - `compute*` → calculate a value from inputs/state
   - Example: `computeBeltRailPosition()`
 
 Rule of thumb:
 
 - If you would describe the implementation as “look through / walk / scan / search until found,” use `find*`.
-- If you would describe it as “figure out / decide / map current state into the right output,” use `resolve*`.
+- If you would describe it as “figure out / decide / map current state into the right output,” use `derive*`.
 - If you would describe it as “calculate,” use `compute*`.
 - If you would describe it as “read,” use `get*`.
 
@@ -185,8 +185,8 @@ Rule of thumb:
 
 For APIs with output destination arguments, standardize on the naming:
 
-- `resolve*Into`
-  - Example: `resolveWorldTransform2DInto(world, entityId, out)`
+- `derive*Into`
+  - For future APIs, prefer names like `deriveWorldTransform2DInto(world, entityId, out)`.
 
 Parameter naming for destination values:
 
@@ -209,7 +209,7 @@ Parameter naming for destination values:
 - Keep `invariantQuery` and `useInvariantContext` naming model.
 - For future out-parameter APIs, prefer `write*` + trailing `out`.
 - Candidate rename to align semantics in the future:
-  - `resolveWorldTransform2D(...)` → `resolveWorldTransform2DInto(...)`.
+  - `resolveWorldTransform2D(...)` → `deriveWorldTransform2DInto(...)`.
 
 ## Documentation / skill capture
 
@@ -221,26 +221,4 @@ If solving a problem required investigation, trial/error, or non-obvious steps, 
 - Add `template.md` when response shape matters.
 - Prefer multiple small scripts for broad workflows.
 
-<!-- nx configuration start-->
-<!-- Leave the start & end comments to automatically receive updates. -->
-
-# General Guidelines for working with Nx
-
-- For navigating/exploring the workspace, invoke the `nx-workspace` skill first - it has patterns for querying projects, targets, and dependencies
-- When running tasks (for example build, lint, test, e2e, etc.), always prefer running the task through `nx` (i.e. `nx run`, `nx run-many`, `nx affected`) instead of using the underlying tooling directly
-- Prefix nx commands with the workspace's package manager (e.g., `pnpm nx build`, `npm exec nx test`) - avoids using globally installed CLI
-- You have access to the Nx MCP server and its tools, use them to help the user
-- For Nx plugin best practices, check `node_modules/@nx/<plugin>/PLUGIN.md`. Not all plugins have this file - proceed without it if unavailable.
-- NEVER guess CLI flags - always check nx_docs or `--help` first when unsure
-
-## Scaffolding & Generators
-
-- For scaffolding tasks (creating apps, libs, project structure, setup), ALWAYS invoke the `nx-generate` skill FIRST before exploring or calling MCP tools
-
-## When to use nx_docs
-
-- USE for: advanced config options, unfamiliar flags, migration guides, plugin configuration, edge cases
-- DON'T USE for: basic generator syntax (`nx g @nx/react:app`), standard commands, things you already know
-- The `nx-generate` skill handles generator discovery internally - don't call nx_docs just to look up generator syntax
-
-<!-- nx configuration end-->
+**Note: You have access to the memory tool. If any message in the user prompt includes "fact" about the code base, such as "we do X in Y case, so can you please do Z", then X should be stored in the relevant memory. Over time we can retain important information this was.**

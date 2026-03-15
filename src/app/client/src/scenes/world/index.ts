@@ -20,7 +20,7 @@ import { System as PortalSystem } from "@client/systems/world/portal";
 import { System as Collision } from "@client/systems/world/scene-collision";
 import { fromContext, FromEngine } from "@engine/context";
 import {
-  createContextScene
+    createContextScene
 } from "@libs/spatial-contexts";
 
 export const Scene = createContextScene("MainScene")({
@@ -76,8 +76,14 @@ export const Scene = createContextScene("MainScene")({
 
     await new Promise((resolve) => setTimeout(resolve, 500)); // artificial delay to show loading overlay
 
-    await assets.load("player-sprite");
+    await assets.loadSheet("player-idle");
+    await assets.loadSheet("player-moving");
     await assets.loadSheet("iron-gear");
     await assets.loadSheet("transport-belt");
+    await assets.loadSheet("wall-single");
+    await assets.loadSheet("wall-ending-left");
+    await assets.loadSheet("wall-ending-right");
+    await assets.loadSheet("wall-horizontal");
+    await assets.load("land-claim:viewable-gravy-nameplate");
   },
 });

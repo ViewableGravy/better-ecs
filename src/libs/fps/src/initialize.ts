@@ -1,6 +1,6 @@
 import type { EngineSystem } from "@engine";
 import { fromContext, OverrideSystem } from "@engine/context";
-import { schema } from "@libs/fps/types";
+import type { FPSCounterData } from "@libs/fps/types";
 
 export function initialize(element: HTMLElement) {
   element.innerHTML = /* html */`
@@ -90,7 +90,7 @@ export function initialize(element: HTMLElement) {
   `;
 
   // Set initial mode from system data
-  const { data } = fromContext(OverrideSystem<EngineSystem<typeof schema>>("plugin:fps-counter"));
+  const { data } = fromContext(OverrideSystem<EngineSystem<FPSCounterData>>("plugin:fps-counter"));
   const container = element.querySelector('aside');
   if (container) {
     container.setAttribute('data-mode', data.mode);

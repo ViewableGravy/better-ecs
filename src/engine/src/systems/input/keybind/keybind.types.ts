@@ -56,6 +56,19 @@ export interface KeyBind {
 }
 
 /**
+ * Create a KeyBind object with type safety. 
+ */
+export function createKeybind(keybind: KeyCode | KeyBind): KeyBind {
+  const code = typeof keybind === "string" ? keybind : keybind.code;
+  const modifiers = typeof keybind === "string" ? {} : keybind.modifiers;
+
+  return {
+    code: code,
+    modifiers: modifiers,
+  };
+}
+
+/**
  * Represents a group of keybinds sharing the same modifiers.
  * Useful for concise definition of multiple keys.
  */

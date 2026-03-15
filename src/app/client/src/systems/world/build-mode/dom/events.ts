@@ -1,5 +1,5 @@
 import { type RegisteredSystems } from "@engine";
-import { fromContext, Engine, System } from "@engine/context";
+import { Engine, fromContext, System } from "@engine/context";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -33,6 +33,8 @@ export class BuildModeDomEvents {
 
     instance.canvas.addEventListener("pointerdown", instance.onPointerDown);
     instance.canvas.addEventListener("contextmenu", instance.onContextMenu);
+    window.addEventListener("pointerup", instance.onPointerUp);
+    window.addEventListener("pointercancel", instance.onPointerCancel);
 
     return () => instance.remove();
   }
@@ -40,6 +42,8 @@ export class BuildModeDomEvents {
   private remove(): void {
     this.canvas.removeEventListener("pointerdown", this.onPointerDown);
     this.canvas.removeEventListener("contextmenu", this.onContextMenu);
+    window.removeEventListener("pointerup", this.onPointerUp);
+    window.removeEventListener("pointercancel", this.onPointerCancel);
 
     if (BuildModeDomEvents.#instance === this) {
       BuildModeDomEvents.#instance = null;
@@ -49,12 +53,25 @@ export class BuildModeDomEvents {
   private onPointerDown = (event: PointerEvent): void => {
     if (event.button === 0) {
       this.data.pendingPlace = true;
+      this.data.placePointerActive = true;
     }
 
     if (event.button === 2) {
       this.data.pendingDelete = true;
       event.preventDefault();
     }
+  };
+
+  private onPointerUp = (event: PointerEvent): void => {
+    if (event.button !== 0) {
+      return;
+    }
+
+    this.data.placePointerActive = false;
+  };
+
+  private onPointerCancel = (): void => {
+    this.data.placePointerActive = false;
   };
 
   private onContextMenu = (event: MouseEvent): void => {

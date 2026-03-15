@@ -1,6 +1,5 @@
-import type { inputSystem } from "@engine/systems/input";
-import type { transformSnapshotSystem } from "@engine/systems/transformSnapshot";
 import { AssetManager } from "@engine/asset";
+import { SceneManager } from "@engine/core";
 import type { EngineClass } from "@engine/core/engine";
 import type { EngineEditor } from "@engine/core/engine-editor";
 import type { EngineUtils } from "@engine/core/engine-utils";
@@ -9,8 +8,8 @@ import type { EngineInput } from "@engine/core/input";
 import type { RenderPipeline } from "@engine/core/render-pipeline";
 import type { SceneDefinition, SceneDefinitionTuple } from "@engine/core/scene/scene.types";
 import type { EngineSystem, SystemFactory, SystemFactoryTuple } from "@engine/core/system";
-import type { InferStandardSchema, StandardSchema } from "@engine/core/types";
-import { SceneManager } from "@engine/core";
+import type { inputSystem } from "@engine/systems/input";
+import type { transformSnapshotSystem } from "@engine/systems/transformSnapshot";
 
 // --- Type Registration (via module augmentation) ---
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type, @typescript-eslint/no-empty-interface
@@ -48,7 +47,7 @@ type AnySystemFactory = {
   (): unknown;
   ["~types"]: {
     name: string;
-    schema: StandardSchema;
+    state: object;
   };
 };
 
@@ -96,15 +95,15 @@ export type InferSystemName<TSystem extends AnySystemFactory> =
     : never;
 
 /**
- * Schema type for a SystemFactory.
+ * State type for a SystemFactory.
  */
-export type InferSystemSchema<TSystem extends AnySystemFactory> = TSystem["~types"]["schema"];
+export type InferSystemState<TSystem extends AnySystemFactory> = TSystem["~types"]["state"];
 
 /**
- * Data type inferred from a system's Standard Schema output.
+ * Data type inferred from a system's declared state.
  */
 export type InferSystemData<TSystem extends AnySystemFactory> =
-  InferStandardSchema<InferSystemSchema<TSystem>>["output"];
+  InferSystemState<TSystem>;
 
 /**
  * Methods attached to the system by the factory `methods` option.
@@ -113,7 +112,7 @@ export type InferSystemMethods<TSystem extends AnySystemFactory> =
   TSystem extends SystemFactory<string, any, infer TMethods>
     ? TMethods
     : TSystem extends { (): infer TResult }
-      ? Omit<TResult, keyof EngineSystem<TSystem["~types"]["schema"]>>
+      ? Omit<TResult, keyof EngineSystem<TSystem["~types"]["state"]>>
       : never;
 
 /**

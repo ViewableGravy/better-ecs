@@ -1,55 +1,19 @@
-import { HOUSE_INTERIOR, RenderVisibility, type RenderVisibilityRole } from "@client/components/render-visibility";
-import { CollisionProfiles } from "@client/scenes/world/physics/collision-profiles";
-import { Vec2, type UserWorld } from "@engine";
-import { Color, Debug, Shape, Transform2D } from "@engine/components";
-import { RectangleCollider } from "@libs/physics";
-
-type SpawnWallOptions = {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  visible?: boolean;
-  fill?: Color;
-  stroke?: Color;
-  strokeWidth?: number;
-  zIndex?: number;
-  renderOrder?: number;
-  role?: RenderVisibilityRole;
-  baseAlpha?: number;
-};
-
-export function spawnWall(world: UserWorld, opts: SpawnWallOptions): number {
-  const entity = world.create();
-
-  world.add(entity, new Transform2D(opts.x, opts.y));
-
-  if (opts.visible ?? true) {
-    world.add(
-      entity,
-      new Shape(
-        "rectangle",
-        opts.width,
-        opts.height,
-        opts.fill ?? new Color(0.28, 0.18, 0.12, 1),
-        opts.stroke ?? new Color(0.15, 0.08, 0.05, 1),
-        opts.strokeWidth ?? 2,
-        opts.zIndex ?? 4,
-        opts.renderOrder ?? 0,
-      ),
-    );
-    world.add(entity, new RenderVisibility(opts.role ?? HOUSE_INTERIOR, opts.baseAlpha ?? 1));
-  }
-
-  const halfWidth = opts.width * 0.5;
-  const halfHeight = opts.height * 0.5;
-
-  world.add(
-    entity,
-    new RectangleCollider(new Vec2(-halfWidth, -halfHeight), new Vec2(opts.width, opts.height)),
-  );
-  world.add(entity, CollisionProfiles.solid());
-  world.add(entity, new Debug("wall"));
-
-  return entity;
-}
+export { PlaceableWallComponent } from "@client/entities/wall/components";
+export { destroyPlaceableWall } from "@client/entities/wall/mutation/delete";
+export { updatePlaceableWallVisual } from "@client/entities/wall/mutation/update";
+export {
+    PLACEABLE_WALL_ASSET_ID_BY_VARIANT,
+    PLACEABLE_WALL_HORIZONTAL_VARIANTS,
+    PLACEABLE_WALL_VARIANTS
+} from "@client/entities/wall/query/pool";
+export {
+    derivePlaceableWallEndingLeftVariant,
+    derivePlaceableWallEndingRightVariant,
+    derivePlaceableWallHorizontalVariant,
+    derivePlaceableWallSingleVariant,
+    type PlaceableWallVisualVariant
+} from "@client/entities/wall/query/variant";
+export { PlaceableWallGhost } from "@client/entities/wall/spawn/ghost";
+export { spawnPlaceableWall } from "@client/entities/wall/spawn/placeable";
+export { spawnWall } from "@client/entities/wall/spawn/spawn";
+export { PlaceableWallAutoShapeManager } from "@client/entities/wall/utils/shapeManager";

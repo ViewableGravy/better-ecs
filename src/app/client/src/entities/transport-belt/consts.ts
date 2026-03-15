@@ -1,10 +1,15 @@
+import {
+    CARDINAL_GRID_OFFSETS,
+    type CardinalSide,
+} from "@client/systems/world/build-mode/grid-neighbor-query";
+
 export { CONVEYOR_SLOT_POSITIONS } from "@client/entities/transport-belt/core/slots";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
  **********************************************************************************************************/
 
-export type TransportBeltSide = "left" | "right" | "top" | "bottom";
+export type TransportBeltSide = CardinalSide;
 
 export type TransportBeltFlow = readonly [start: TransportBeltSide, end: TransportBeltSide];
 
@@ -39,12 +44,7 @@ export type TransportBeltVariant = (typeof TRANSPORT_BELT_VARIANTS)[number];
 
 export const TRANSPORT_BELT_HALF_SIZE = 10;
 
-export const TRANSPORT_BELT_SIDE_GRID_OFFSETS: Readonly<Record<TransportBeltSide, readonly [x: number, y: number]>> = {
-  left: [-1, 0],
-  right: [1, 0],
-  top: [0, -1],
-  bottom: [0, 1],
-};
+export const TRANSPORT_BELT_SIDE_GRID_OFFSETS = CARDINAL_GRID_OFFSETS;
 
 export const TRANSPORT_BELT_FLOW_BY_VARIANT: Readonly<Record<string, TransportBeltFlow>> = {
   "horizontal-right": ["left", "right"],

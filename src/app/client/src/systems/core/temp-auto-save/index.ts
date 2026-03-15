@@ -15,24 +15,21 @@ const PlayerPositionStorageSchema = z.object({
   y: z.number(),
 });
 
-const AutoSaveStateSchema = z.object({
-  hasHydrated: z.boolean(),
-  lastSavedX: z.number().nullable(),
-  lastSavedY: z.number().nullable(),
-});
+type AutoSaveState = {
+  hasHydrated: boolean;
+  lastSavedX: number | null;
+  lastSavedY: number | null;
+};
 
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
 export const System = createSystem("temp:auto-save-player-position")({
-  schema: {
-    schema: AutoSaveStateSchema,
-    default: {
-      hasHydrated: false,
-      lastSavedX: null,
-      lastSavedY: null,
-    },
-  },
+  state: {
+    hasHydrated: false,
+    lastSavedX: null,
+    lastSavedY: null,
+  } as AutoSaveState,
   system() {
     const world = fromContext(World);
     const { data } = fromContext(ContextSystem("temp:auto-save-player-position"));

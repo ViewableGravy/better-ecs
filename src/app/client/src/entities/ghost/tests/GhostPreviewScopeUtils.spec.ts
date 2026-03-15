@@ -1,7 +1,9 @@
 import { BoxGhost } from "@client/entities/box/ghost";
-import { GhostPreviewComponent } from "@client/entities/ghost";
-import { GhostPreviewManager } from "@client/systems/world/build-mode/ghost-preview-manager";
-import { GhostPreviewScopeUtils } from "@client/systems/world/build-mode/ghost-preview-scope";
+import {
+    GhostPreviewComponent,
+    GhostPreviewManager,
+    GhostPreviewScopeUtils,
+} from "@client/entities/ghost";
 import { UserWorld, World } from "@engine";
 import { describe, expect, it } from "vitest";
 

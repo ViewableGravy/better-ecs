@@ -1,9 +1,10 @@
 import { canConveyorStoreEntities, ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import { TransportBeltLeaf } from "@client/components/transport-belt-leaf";
 import {
-    getTransportBeltVariantDescriptor,
-    TransportBeltGridQuery,
+  getTransportBeltVariantDescriptor,
+  TransportBeltGridQuery,
 } from "@client/entities/transport-belt/core";
+import { TransportBeltTerminalDecorationManager } from "@client/entities/transport-belt/placement/TransportBeltTerminalDecorationManager";
 import type { TransportBeltEntityId } from "@client/entities/transport-belt/types";
 import type { GridCoordinates } from "@client/systems/world/build-mode/grid-singleton";
 import type { EntityId, UserWorld } from "@engine";
@@ -76,6 +77,7 @@ export class TransportBeltConnectionUtils {
     }
 
     this.refreshLeafAnchors(world, [beltEntityId, previousEntityId, nextEntityId]);
+    this.syncTerminalDecorationsNearCoordinates(world, coordinates);
   }
 
   /**
@@ -92,6 +94,10 @@ export class TransportBeltConnectionUtils {
       world.destroy(beltEntityId);
       return;
     }
+
+    const coordinates = TransportBeltGridQuery.resolveBeltCoordinates(world, beltEntityId);
+
+    TransportBeltTerminalDecorationManager.destroyOwnedDecorations(world, beltEntityId);
 
     const { previousEntityId, nextEntityId } = belt;
 
@@ -119,6 +125,7 @@ export class TransportBeltConnectionUtils {
     world.destroy(beltEntityId);
 
     this.refreshLeafAnchors(world, [previousEntityId, nextEntityId]);
+    this.syncTerminalDecorationsNearCoordinates(world, coordinates);
   }
 
   public static reconnectBelt(world: UserWorld, beltEntityId: TransportBeltEntityId): void {
@@ -191,6 +198,7 @@ export class TransportBeltConnectionUtils {
       previousEntityId,
       nextEntityId,
     ]);
+    this.syncTerminalDecorationsNearCoordinates(world, coordinates);
   }
 
   private static findAdjacentBeltEntityId(
@@ -396,5 +404,29 @@ export class TransportBeltConnectionUtils {
     }
 
     return null;
+  }
+
+  private static syncTerminalDecorationsNearCoordinates(
+    world: UserWorld,
+    coordinates: GridCoordinates,
+  ): void {
+    const nearbyBeltEntityIds: EntityId[] = [];
+    const centerBeltEntityId = TransportBeltGridQuery.findBeltEntityAtCoordinates(world, coordinates);
+
+    if (centerBeltEntityId !== null) {
+      nearbyBeltEntityIds.push(centerBeltEntityId);
+    }
+
+    for (const side of ["top", "right", "bottom", "left"] as const) {
+      const neighborEntityId = TransportBeltGridQuery.resolveNeighborEntityId(world, coordinates, side);
+
+      if (neighborEntityId === null) {
+        continue;
+      }
+
+      nearbyBeltEntityIds.push(neighborEntityId);
+    }
+
+    TransportBeltTerminalDecorationManager.syncBelts(world, nearbyBeltEntityIds);
   }
 }

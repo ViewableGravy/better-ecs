@@ -1,28 +1,41 @@
-import { GhostPreviewComponent, type GhostPreset } from "@client/entities/ghost";
-import { HALF_BOX_SIZE } from "@client/systems/world/build-mode/const";
+import { HALF_BOX_SIZE } from "@client/systems/world/build-mode/metrics";
 import type { EntityId, UserWorld } from "@engine";
 import { Transform2D } from "@engine/components";
+
+import { GhostPreviewComponent } from "@client/entities/ghost/component";
+import type { GhostPreset } from "@client/entities/ghost/spawner";
+import { GhostUtils } from "@client/entities/ghost/utils";
 
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
 
 export class GhostPreviewManager {
-  public static sync<TPayload, TGhostEntityId extends EntityId<any>>(
+  public static sync<TPayload>(
     world: UserWorld,
-    ghostEntityId: TGhostEntityId | null,
+    ghostEntityId: EntityId | null,
     x: number,
     y: number,
-    preset: GhostPreset<TPayload, TGhostEntityId>,
+    preset: GhostPreset<TPayload>,
     payload?: TPayload,
-  ): TGhostEntityId {
+    isPlaceable: boolean = true,
+  ): EntityId {
+    const previewVariant = preset.resolvePreviewVariant?.(payload) ?? null;
+
     if (!this.matchesGhostKind(world, ghostEntityId, preset.kind)) {
       this.destroyGhost(world, ghostEntityId);
-      return preset.spawn(world, x, y, payload);
+      const nextGhostEntityId = preset.spawn(world, x, y, payload);
+
+      GhostUtils.applyEffect(world, nextGhostEntityId, preset.kind, previewVariant);
+      GhostUtils.syncPlacementState(world, nextGhostEntityId, isPlaceable);
+
+      return nextGhostEntityId;
     }
 
     this.syncPosition(world, ghostEntityId, x, y);
     preset.sync?.(world, ghostEntityId, payload);
+    this.syncPreviewVariant(world, ghostEntityId, previewVariant);
+    GhostUtils.syncPlacementState(world, ghostEntityId, isPlaceable);
 
     return ghostEntityId;
   }
@@ -40,6 +53,16 @@ export class GhostPreviewManager {
     }
 
     world.destroy(ghostEntityId);
+  }
+
+  private static syncPreviewVariant(
+    world: UserWorld,
+    ghostEntityId: EntityId,
+    previewVariant: string | null,
+  ): void {
+    const ghostPreview = world.require(ghostEntityId, GhostPreviewComponent);
+
+    ghostPreview.previewVariant = previewVariant;
   }
 
   private static matchesGhostKind(

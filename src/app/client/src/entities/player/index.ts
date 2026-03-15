@@ -1,18 +1,19 @@
 import { OrbitMotion } from "@client/components/orbit-motion";
 import { PlayerComponent } from "@client/components/player";
-import { PlayerFeetComponent } from "@client/components/player-feet";
-import { RENDER_LAYERS } from "@client/consts";
+import { createPlayerSprite } from "@client/entities/player/render/createPlayerSprite";
 import { CollisionProfiles } from "@client/scenes/world/physics/collision-profiles";
 import { type EntityId, type UserWorld } from "@engine";
 import {
-  Color,
-  Debug,
-  Parent,
-  Shape,
-  Sprite,
-  Transform2D,
+    AnimatedSprite,
+    Color,
+    Debug,
+    Parent,
+    Shape,
+    Transform2D,
 } from "@engine/components";
-import { CircleCollider, PointCollider } from "@libs/physics";
+import { CircleCollider } from "@libs/physics";
+
+export const PLAYER_GROUNDED_HITBOX_RADIUS = 3;
 
 export function ensurePlayer(world: UserWorld) {
   let [player] = world.query(PlayerComponent);
@@ -26,28 +27,15 @@ export function ensurePlayer(world: UserWorld) {
 
 export function spawnPlayer(world: UserWorld): EntityId<PlayerComponent> {
   const player = world.create();
-
-  // Create a sprite component referencing the asset by key
-  const sprite = new Sprite("player-sprite", 40, 40);
-  sprite.layer = RENDER_LAYERS.world;
-  sprite.zOrder = 1;
+  const sprite = createPlayerSprite("idle", "s");
 
   // Create player
-  world.add(player, sprite);
+  world.add(player, AnimatedSprite, sprite);
   world.add(player, new Transform2D(0, 0));
   world.add(player, new PlayerComponent("NewPlayer"));
-  world.add(player, new CircleCollider(16));
+  world.add(player, new CircleCollider(PLAYER_GROUNDED_HITBOX_RADIUS));
   world.add(player, CollisionProfiles.actor());
   world.add(player, new Debug("player"));
-
-  // create players feet
-  const feet = world.create();
-  world.add(feet, new Parent(player));
-  world.add(feet, new Transform2D(0, 15));
-  world.add(feet, new PointCollider());
-  world.add(feet, CollisionProfiles.ghost());
-  world.add(feet, new PlayerFeetComponent(player));
-  world.add(feet, new Debug("player-feet"));
 
   // create an anchor for orbiting objects
   const orbitAnchor = world.create();

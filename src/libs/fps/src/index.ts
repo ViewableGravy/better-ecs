@@ -3,13 +3,12 @@ import {
     createSystem,
     type EngineSystem,
     type RenderPass,
-    type StandardSchema,
     type SystemFactory,
 } from "@engine";
-import { fromContext, Engine, OverrideSystem } from "@engine/context";
+import { Engine, fromContext, OverrideSystem } from "@engine/context";
 import { initialize } from "@libs/fps/initialize";
 import { render } from "@libs/fps/render";
-import { schema, type FPSCounterData, type Opts } from "@libs/fps/types";
+import { type FPSCounterData, type Opts } from "@libs/fps/types";
 import { update } from "@libs/fps/update";
 
 const defaultState: FPSCounterData = {
@@ -24,20 +23,17 @@ const defaultState: FPSCounterData = {
 
 export const System = (
   opts: Opts,
-): SystemFactory<"plugin:fps-counter", StandardSchema, Record<string, never>> => {
+): SystemFactory<"plugin:fps-counter", FPSCounterData, Record<string, never>> => {
   return createSystem("plugin:fps-counter")({
     system: EntryPoint,
     initialize: () => initialize(opts.element),
     priority: 1,
-    schema: {
-      schema: schema,
-      default: { ...defaultState, mode: opts.defaultMode ?? defaultState.mode },
-    },
+    state: { ...defaultState, mode: opts.defaultMode ?? defaultState.mode },
   });
 
   function EntryPoint() {
     const engine = fromContext(Engine);
-    const { data } = fromContext(OverrideSystem<EngineSystem<typeof schema>>("plugin:fps-counter"));
+    const { data } = fromContext(OverrideSystem<EngineSystem<FPSCounterData>>("plugin:fps-counter"));
     const now = performance.now();
 
     if (data.customFps !== null && engine.meta.fps !== data.customFps) {
@@ -60,7 +56,7 @@ export const System = (
 };
 
 export type FPSPlugin = {
-  system: SystemFactory<"plugin:fps-counter", StandardSchema, Record<string, never>>;
+  system: SystemFactory<"plugin:fps-counter", FPSCounterData, Record<string, never>>;
   pass: RenderPass;
 };
 

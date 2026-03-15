@@ -3,14 +3,14 @@ import { describe, expect, it } from "vitest";
 import { createSystem } from "@engine/core";
 
 describe("createSystem", () => {
-  it("should default schema/data to an empty object when schema is omitted", () => {
-    const NoSchemaSystem = createSystem("test:no-schema-default")({
+  it("should default state/data to an empty object when state is omitted", () => {
+    const NoStateSystem = createSystem("test:no-state-default")({
       system() {
         /* no-op */
       },
     });
 
-    const system = NoSchemaSystem();
+    const system = NoStateSystem();
 
     expect(system.data).toEqual({});
     expect(system.priority).toBe(0);

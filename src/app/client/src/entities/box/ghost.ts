@@ -1,20 +1,17 @@
-import { OUTSIDE } from "@client/components/render-visibility";
 import { spawnBox } from "@client/entities/box";
-import { applyGhostEffect, type GhostPreset } from "@client/entities/ghost";
+import { createGhostPreset } from "@client/entities/ghost/spawner";
 
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
 
-export const BoxGhost: GhostPreset = {
+export const BoxGhost = createGhostPreset({
   kind: "box",
   spawn(world, x, y) {
-    const boxEntityId = spawnBox(world, {
+    return spawnBox(world, {
       snappedX: x,
       snappedY: y,
-      renderVisibilityRole: OUTSIDE,
+      profile: "preview",
     });
-
-    return applyGhostEffect(world, boxEntityId, this.kind);
   },
-};
+});

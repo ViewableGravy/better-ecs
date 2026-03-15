@@ -117,6 +117,24 @@ describe("TransportBeltAutoShapeManager", () => {
     expect(world.require(bentBeltId, ConveyorBeltComponent).variant).toBe("vertical-up");
   });
 
+  it("straightens a bottom-right belt when an opposite straight feeder is added later", () => {
+    const world = new UserWorld(new World("scene"));
+
+    spawnTransportBelt(world, { x: 10, y: 50, variant: "vertical-up" });
+    const middleBeltId = spawnTransportBelt(world, { x: 10, y: 30, variant: "angled-bottom-right" });
+    const eastBeltId = spawnTransportBelt(world, { x: 30, y: 30, variant: "horizontal-right" });
+
+    TransportBeltAutoShapeManager.refreshAffectedBelts(world, eastBeltId);
+
+    expect(world.require(middleBeltId, ConveyorBeltComponent).variant).toBe("angled-bottom-right");
+
+    const westBeltId = spawnTransportBelt(world, { x: -10, y: 30, variant: "horizontal-right" });
+
+    TransportBeltAutoShapeManager.refreshAffectedBelts(world, westBeltId);
+
+    expect(world.require(middleBeltId, ConveyorBeltComponent).variant).toBe("horizontal-right");
+  });
+
   it("preserves an existing valid bend when a competing backside belt is added", () => {
     const world = new UserWorld(new World("scene"));
 

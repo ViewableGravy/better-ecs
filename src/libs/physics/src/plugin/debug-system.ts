@@ -9,7 +9,7 @@ import { RectangleCollider } from "@libs/physics/colliders/rectangle";
 import { COLLISION_LAYERS, CollisionParticipation } from "@libs/physics/entity/collision-participation";
 import { getEntityCollider } from "@libs/physics/entity/get";
 import { ColliderDebugProxy } from "@libs/physics/plugin/components/collider-debug-proxy";
-import { debugStateSchema, type PhysicsDebugOpts } from "@libs/physics/plugin/types";
+import { type DebugState, type PhysicsDebugOpts } from "@libs/physics/plugin/types";
 
 const COLLIDER_DEBUG_STYLE = {
   fill: new Color(1, 1, 1, 0.08),
@@ -24,10 +24,7 @@ const SHARED_WORLD_TRANSFORM = new Transform2D();
 
 export function createDebugSystem(opts: PhysicsDebugOpts) {
   return createSystem("plugin:physics:debug")({
-    schema: {
-      default: { visible: false },
-      schema: debugStateSchema,
-    },
+    state: { visible: false } as DebugState,
     system() {
       const { data } = fromContext(System("plugin:physics:debug"));
       const engine = fromContext(Engine);

@@ -1,14 +1,13 @@
 import type { AnyEngine, EngineSystem } from "@engine";
-import { fromContext, Engine, OverrideSystem, System } from "@engine/context";
-import invariant from "tiny-invariant";
+import { Engine, fromContext, OverrideSystem, System } from "@engine/context";
 import { updateModeVisibility } from "@libs/fps/initialize";
-import type { Opts } from "@libs/fps/types";
-import { schema } from "@libs/fps/types";
+import type { FPSCounterData, Opts } from "@libs/fps/types";
+import invariant from "tiny-invariant";
 
 const SLIDER_INIT_ATTR = "data-fps-sliders-initialized";
 
 export function update(opts: Opts) {
-  const { data } = fromContext(OverrideSystem<EngineSystem<typeof schema>>("plugin:fps-counter"));
+  const { data } = fromContext(OverrideSystem<EngineSystem<FPSCounterData>>("plugin:fps-counter"));
   const engine = fromContext(Engine);
   const now = performance.now();
 

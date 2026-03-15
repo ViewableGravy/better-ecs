@@ -1,7 +1,40 @@
-import { PlayerComponent } from "@client/components/player";
+import {
+    type PlayerAnimationState,
+    PlayerComponent,
+    type PlayerDirection,
+} from "@client/components/player";
+import { createPlayerSprite } from "@client/entities/player/render/createPlayerSprite";
 import { createSystem } from "@engine";
-import { Transform2D } from "@engine/components";
+import { AnimatedSprite, Transform2D } from "@engine/components";
 import { System as ContextSystem, Delta, fromContext, World } from "@engine/context";
+
+function isActive(keysActive: Set<string>, primaryCode: string, secondaryCode: string): boolean {
+  return keysActive.has(primaryCode) || keysActive.has(secondaryCode);
+}
+
+function resolveMovementAxes(keysActive: Set<string>): { x: -1 | 0 | 1; y: -1 | 0 | 1 } {
+  const x = (isActive(keysActive, "ArrowRight", "KeyD") ? 1 : 0)
+    - (isActive(keysActive, "ArrowLeft", "KeyA") ? 1 : 0);
+  const y = (isActive(keysActive, "ArrowDown", "KeyS") ? 1 : 0)
+    - (isActive(keysActive, "ArrowUp", "KeyW") ? 1 : 0);
+
+  return {
+    x: x as -1 | 0 | 1,
+    y: y as -1 | 0 | 1,
+  };
+}
+
+function resolveDirectionFromAxes(x: -1 | 0 | 1, y: -1 | 0 | 1): PlayerDirection | undefined {
+  if (x === 0 && y === -1) return "n";
+  if (x === 1 && y === -1) return "ne";
+  if (x === 1 && y === 0) return "e";
+  if (x === 1 && y === 1) return "se";
+  if (x === 0 && y === 1) return "s";
+  if (x === -1 && y === 1) return "sw";
+  if (x === -1 && y === 0) return "w";
+  if (x === -1 && y === -1) return "nw";
+  return undefined;
+}
 
 export const System = createSystem("movement")({
   system() {
@@ -12,28 +45,38 @@ export const System = createSystem("movement")({
 
     /***** QUERIES *****/
     const [playerId] = world.invariantQuery(PlayerComponent);
+    const player = world.require(playerId, PlayerComponent);
     const transform = world.require(playerId, Transform2D);
 
-    // Handle movement using physical key codes (layout-independent)
-    // Maps physical keys to movement directions
-    for (const code of data.keysActive) {
-      const speed = 100 * (updateDelta / 1000);
+    let animatedSprite = world.get(playerId, AnimatedSprite);
 
-      // Vertical movement: Arrow keys or W/S
-      if (code === "ArrowUp" || code === "KeyW") {
-        transform.curr.pos.y -= speed;
-      }
-      if (code === "ArrowDown" || code === "KeyS") {
-        transform.curr.pos.y += speed;
-      }
-
-      // Horizontal movement: Arrow keys or A/D
-      if (code === "ArrowLeft" || code === "KeyA") {
-        transform.curr.pos.x -= speed;
-      }
-      if (code === "ArrowRight" || code === "KeyD") {
-        transform.curr.pos.x += speed;
-      }
+    if (!animatedSprite) {
+      animatedSprite = createPlayerSprite(player.animationState, player.direction);
+      world.add(playerId, AnimatedSprite, animatedSprite);
     }
+
+    const { x, y } = resolveMovementAxes(data.keysActive);
+    const speed = 100 * (updateDelta / 1000);
+
+    if (x !== 0) {
+      transform.curr.pos.x += x * speed;
+    }
+
+    if (y !== 0) {
+      transform.curr.pos.y += y * speed;
+    }
+
+    const nextAnimationState: PlayerAnimationState = x === 0 && y === 0 ? "idle" : "moving";
+    const nextDirection = resolveDirectionFromAxes(x, y) ?? player.direction;
+
+    if (player.animationState === nextAnimationState && player.direction === nextDirection) {
+      return;
+    }
+
+    player.animationState = nextAnimationState;
+    player.direction = nextDirection;
+
+    world.remove(playerId, AnimatedSprite);
+    world.add(playerId, AnimatedSprite, createPlayerSprite(nextAnimationState, nextDirection, animatedSprite));
   },
 });
