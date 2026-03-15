@@ -2,6 +2,8 @@ import type { RegisteredAssets } from "@engine/core";
 import { Component } from "@engine/ecs/component";
 import { SerializableComponent, serializable } from "@engine/serialization";
 
+const DESERIALIZED_SPRITE_ASSET_ID_PLACEHOLDER = "" as Exclude<keyof RegisteredAssets, number | symbol>;
+
 export class Color {
   constructor(
     public r: number = 1,
@@ -120,7 +122,7 @@ export class Sprite extends Component {
   declare public isDynamic: boolean;
 
   constructor(
-    assetId: Exclude<keyof RegisteredAssets, number | symbol>,
+    assetId: Exclude<keyof RegisteredAssets, number | symbol> = DESERIALIZED_SPRITE_ASSET_ID_PLACEHOLDER,
     width: number = 0,
     height: number = 0,
     anchorX: number = 0.5,

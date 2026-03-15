@@ -1,6 +1,6 @@
 export type SystemPriority = number;
 export type SystemCleanup = () => void;
-export type SystemInitialize = () => void | SystemCleanup;
+export type SystemInitialize = () => void | SystemCleanup | Promise<void | SystemCleanup>;
 
 export type EmptySystemData = Record<string, never>;
 export type EmptySystemState = EmptySystemData;

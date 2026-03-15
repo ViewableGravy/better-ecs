@@ -138,7 +138,7 @@ export class EngineClass<
 					await this.#init.initializationSystem.system();
 				}
 
-				this.#systemsManager.initializeEngineSystems();
+				await this.#systemsManager.initializeEngineSystems();
 
 				await this.#renderManager.initialize();
 				await this.#renderManager.warmupLoadedTextures();

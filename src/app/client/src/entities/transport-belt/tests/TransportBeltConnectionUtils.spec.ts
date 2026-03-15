@@ -167,6 +167,49 @@ describe("spawnTransportBelt connectivity", () => {
     expect(countLeafBelts(world, [firstBeltId, secondBeltId, thirdBeltId, fourthBeltId])).toBe(1);
   });
 
+  it("rebuilds persisted loop topology from belt positions", () => {
+    const world = new UserWorld(new World("scene"));
+    const firstBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "angled-bottom-right" });
+    const secondBeltId = spawnTransportBelt(world, { x: 20, y: 0, variant: "angled-left-bottom" });
+    const thirdBeltId = spawnTransportBelt(world, { x: 20, y: 20, variant: "angled-top-left" });
+    const fourthBeltId = spawnTransportBelt(world, { x: 0, y: 20, variant: "angled-right-up" });
+
+    const firstBelt = world.require(firstBeltId, ConveyorBeltComponent);
+    const secondBelt = world.require(secondBeltId, ConveyorBeltComponent);
+    const thirdBelt = world.require(thirdBeltId, ConveyorBeltComponent);
+    const fourthBelt = world.require(fourthBeltId, ConveyorBeltComponent);
+
+    firstBelt.previousEntityId = null;
+    firstBelt.nextEntityId = null;
+    firstBelt.isLeaf = false;
+    secondBelt.previousEntityId = firstBeltId;
+    secondBelt.nextEntityId = null;
+    secondBelt.isLeaf = true;
+    thirdBelt.previousEntityId = null;
+    thirdBelt.nextEntityId = firstBeltId;
+    thirdBelt.isLeaf = false;
+    fourthBelt.previousEntityId = thirdBeltId;
+    fourthBelt.nextEntityId = null;
+    fourthBelt.isLeaf = false;
+
+    world.remove(firstBeltId, TransportBeltLeaf);
+    world.add(secondBeltId, new TransportBeltLeaf());
+    world.remove(thirdBeltId, TransportBeltLeaf);
+    world.remove(fourthBeltId, TransportBeltLeaf);
+
+    TransportBeltConnectionUtils.reconnectAllBelts(world);
+
+    expect(firstBelt.previousEntityId).toBe(fourthBeltId);
+    expect(firstBelt.nextEntityId).toBe(secondBeltId);
+    expect(secondBelt.previousEntityId).toBe(firstBeltId);
+    expect(secondBelt.nextEntityId).toBe(thirdBeltId);
+    expect(thirdBelt.previousEntityId).toBe(secondBeltId);
+    expect(thirdBelt.nextEntityId).toBe(fourthBeltId);
+    expect(fourthBelt.previousEntityId).toBe(thirdBeltId);
+    expect(fourthBelt.nextEntityId).toBe(firstBeltId);
+    expect(countLeafBelts(world, [firstBeltId, secondBeltId, thirdBeltId, fourthBeltId])).toBe(1);
+  });
+
   it("rewires an inserted middle belt into the existing line", () => {
     const world = new UserWorld(new World("scene"));
     const firstBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "horizontal-right" });

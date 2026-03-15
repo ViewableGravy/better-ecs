@@ -94,9 +94,9 @@ export function createEngine<
 				});
 			},
 			executeSystemInitialize(system) {
-				executeWithContext({ engine, scene: engine.scene.context }, () => {
-					runSystemInitialize(system);
-				});
+					void executeWithContext({ engine, scene: engine.scene.context }, async () => {
+						await runSystemInitialize(system);
+					});
 			},
 			async reloadActiveScene() {
 				await engine.scene.reload();

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { AnimatedSprite } from "../../components/sprite/animated/component";
 import { Transform2D } from "../../components/transform/transform2d";
 import { createEngine } from "../../core/factory";
 import { registerEngine, unregisterEngine } from "../../core/global-engine";
@@ -17,6 +18,18 @@ class Marker extends Component {
 
 serializable("string")(Marker.prototype, "value");
 SerializableComponent(Marker);
+
+class BigMarker extends Component {
+  declare public value: bigint;
+
+  constructor(value: bigint = 0n) {
+    super();
+    this.value = value;
+  }
+}
+
+serializable("bigint")(BigMarker.prototype, "value");
+SerializableComponent(BigMarker);
 
 function createTrackedEngine() {
   const engine = createEngine({
@@ -142,5 +155,60 @@ describe("engine diff tracking", () => {
     expect(target.world.get(entityId, Marker)).toBeUndefined();
     expect(target.world.all()).toEqual([]);
     expect(target.serialization.peekDiffCommands()).toEqual([]);
+  });
+
+  it("replays constructor-backed sprite components from serialized diffs", () => {
+    const source = createTrackedEngine();
+    const entityId = source.world.create();
+
+    source.world.add(entityId, new AnimatedSprite({
+      assets: ["player-idle:s_1", "player-idle:s_2"],
+      width: 35,
+      height: 35,
+      anchorY: 0.8,
+      playbackRate: 0.15,
+      useGlobalOffset: true,
+    }));
+
+    const commands = drain(source);
+
+    unregisterEngine();
+
+    const target = createTrackedEngine();
+
+    target.serialization.applyDiffCommands(commands);
+
+    const sprite = target.world.get(entityId, AnimatedSprite);
+
+    expect(sprite).toBeDefined();
+    expect(sprite?.frames).toEqual(["player-idle:s_1", "player-idle:s_2"]);
+    expect(sprite?.width).toBe(35);
+    expect(sprite?.height).toBe(35);
+    expect(sprite?.anchorY).toBe(0.8);
+    expect(sprite?.playbackRate).toBe(0.15);
+    expect(sprite?.useGlobalOffset).toBe(true);
+  });
+
+  it("restores bigint fields using their declared serializable type", () => {
+    const source = createTrackedEngine();
+    const entityId = source.world.create();
+    const marker = new BigMarker(7n);
+
+    source.world.add(entityId, marker);
+    drain(source);
+
+    marker.value = 13n;
+    const commands = drain(source);
+
+    unregisterEngine();
+
+    const target = createTrackedEngine();
+    target.world.createWithId(entityId);
+    target.world.add(entityId, new BigMarker(1n));
+    drain(target);
+
+    target.serialization.applyDiffCommands(commands);
+
+    expect(target.world.get(entityId, BigMarker)?.value).toBe(13n);
   });
 });

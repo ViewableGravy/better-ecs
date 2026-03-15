@@ -263,9 +263,19 @@ export function applySerializedChanges(
 ): void {
   const apply = () => {
     const componentRecord = component as unknown as Record<string, unknown>;
+    const fieldTypeByProperty = new Map(
+      getSerializableFields(component.constructor as Function).map((field) => [field.property, field.type]),
+    );
 
     for (const [fieldKey, value] of Object.entries(changes)) {
       const current = componentRecord[fieldKey];
+      const fieldType = fieldTypeByProperty.get(fieldKey);
+
+      if (fieldType === "bigint" && typeof value === "string") {
+        componentRecord[fieldKey] = BigInt(value);
+        continue;
+      }
+
       componentRecord[fieldKey] = materializeSerializedValue(current, value);
     }
 

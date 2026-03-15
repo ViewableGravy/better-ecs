@@ -3,6 +3,7 @@ import type { RegisteredAssets } from "@engine/core";
 import { SerializableComponent, serializable } from "@engine/serialization";
 
 type SpriteAssetId = Exclude<keyof RegisteredAssets, number | symbol>;
+const DESERIALIZED_ANIMATED_SPRITE_FRAME_PLACEHOLDER = "" as SpriteAssetId;
 
 type AnimatedSpriteConfig = {
   assets: readonly SpriteAssetId[];
@@ -41,13 +42,16 @@ export class AnimatedSprite extends Sprite {
   @serializable("boolean")
   declare public useGlobalOffset: boolean;
 
+  constructor();
   constructor(frames: readonly SpriteAssetId[]);
   constructor(config: AnimatedSpriteConfig);
-  constructor(configOrFrames: AnimatedSpriteConfig | readonly SpriteAssetId[]) {
+  constructor(configOrFrames?: AnimatedSpriteConfig | readonly SpriteAssetId[]) {
     let config: AnimatedSpriteConfig | undefined;
     let frames: readonly SpriteAssetId[];
 
-    if (isAnimatedSpriteConfig(configOrFrames)) {
+    if (configOrFrames === undefined) {
+      frames = [DESERIALIZED_ANIMATED_SPRITE_FRAME_PLACEHOLDER];
+    } else if (isAnimatedSpriteConfig(configOrFrames)) {
       config = configOrFrames;
       frames = config.assets;
     } else {

@@ -1,6 +1,7 @@
 import type { AssetManager } from "@engine/asset/AssetManager";
 import type { EngineClass } from "@engine/core/engine";
 import type { EngineEditor } from "@engine/core/engine-editor";
+import type { EngineSerializationManager } from "@engine/core/engine-serialization";
 import type { EngineUtils } from "@engine/core/engine-utils";
 import type { EngineRenderCullingSettings } from "@engine/core/engine/render-culling";
 import type { EngineInput } from "@engine/core/input";
@@ -33,6 +34,7 @@ export type AnyEngine = {
   renderCulling: EngineRenderCullingSettings;
   editor: EngineEditor;
   input: EngineInput;
+  serialization: EngineSerializationManager;
   utils: EngineUtils;
   canvas: HTMLCanvasElement;
 };

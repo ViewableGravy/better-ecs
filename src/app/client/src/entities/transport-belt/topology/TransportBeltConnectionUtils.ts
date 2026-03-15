@@ -1,8 +1,8 @@
 import { canConveyorStoreEntities, ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import { TransportBeltLeaf } from "@client/components/transport-belt-leaf";
 import {
-  getTransportBeltVariantDescriptor,
-  TransportBeltGridQuery,
+    getTransportBeltVariantDescriptor,
+    TransportBeltGridQuery,
 } from "@client/entities/transport-belt/core";
 import { TransportBeltTerminalDecorationManager } from "@client/entities/transport-belt/placement/TransportBeltTerminalDecorationManager";
 import type { TransportBeltEntityId } from "@client/entities/transport-belt/types";
@@ -199,6 +199,38 @@ export class TransportBeltConnectionUtils {
       nextEntityId,
     ]);
     this.syncTerminalDecorationsNearCoordinates(world, coordinates);
+  }
+
+  /**
+   * Recomputes belt topology from world layout after loading persisted state.
+   *
+   * Persisted previous/next pointers and loop anchors are runtime-derived state,
+   * so they should be rebuilt from spatial neighbors when a scene is restored.
+   */
+  public static reconnectAllBelts(world: UserWorld): void {
+    const beltEntityIds = [...world.query(ConveyorBeltComponent)];
+
+    for (const beltEntityId of beltEntityIds) {
+      const belt = world.get(beltEntityId, ConveyorBeltComponent);
+
+      if (!belt || !this.isConnectableVariant(belt.variant)) {
+        continue;
+      }
+
+      belt.previousEntityId = null;
+      belt.nextEntityId = null;
+      this.syncLeafMarker(world, beltEntityId, belt, false);
+    }
+
+    for (const beltEntityId of beltEntityIds) {
+      const belt = world.get(beltEntityId, ConveyorBeltComponent);
+
+      if (!belt || !this.isConnectableVariant(belt.variant)) {
+        continue;
+      }
+
+      this.reconnectBelt(world, beltEntityId as TransportBeltEntityId);
+    }
   }
 
   private static findAdjacentBeltEntityId(

@@ -26,6 +26,8 @@
       "@libs/physics/*": ["./src/libs/physics/src/*"],
       "@libs/spatial-contexts": ["./src/libs/spatial-contexts/src/index.ts"],
       "@libs/spatial-contexts/*": ["./src/libs/spatial-contexts/src/*"],
+      "@libs/state-sync": ["./src/libs/state-sync/src/index.ts"],
+      "@libs/state-sync/*": ["./src/libs/state-sync/src/*"],
       "@utils": ["./src/utils/src/index.ts"],
       "@utils/*": ["./src/utils/src/*"],
 

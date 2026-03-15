@@ -279,10 +279,9 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
     this.#userWorld.setWorld(newWorld);
 
     await executeWithContext({ engine: this.#engineRef, scene: newContext }, async () => {
-      this.#systemsManager.initializeSceneSystems(scene.name);
-
       await scene.sceneSetup(newContext);
       await scene.setup(this.#userWorld);
+      await this.#systemsManager.initializeSceneSystems(scene.name);
 
       if (this.#engineRef) {
         await this.#engineRef.warmupLoadedTextures();
