@@ -1,4 +1,5 @@
 import { Color } from "@engine/components/sprite/sprite";
+import { Serializable, serializable } from "@engine/serialization";
 
 export type ShapeType = "rectangle" | "circle" | "line";
 
@@ -6,29 +7,37 @@ export type ShapeType = "rectangle" | "circle" | "line";
  * Simple shape component for rendering basic shapes without textures.
  * Useful for prototyping, debugging, and simple games.
  */
-export class Shape {
+export class Shape extends Serializable {
   /** Type of shape to render */
+  @serializable("string")
   public type: ShapeType;
   
   /** Width (for rectangle) or radius (for circle) */
+  @serializable("float")
   public width: number;
   
   /** Height (for rectangle, ignored for circle) */
+  @serializable("float")
   public height: number;
   
   /** Fill color */
+  @serializable("json")
   public fill: Color;
   
   /** Stroke color (null = no stroke) */
+  @serializable("json")
   public stroke: Color | null;
   
   /** Stroke width in pixels */
+  @serializable("float")
   public strokeWidth: number;
   
   /** Z-order for sorting */
+  @serializable("float")
   public zOrder: number;
   
   /** Render layer */
+  @serializable("float")
   public layer: number;
 
   constructor(
@@ -41,6 +50,7 @@ export class Shape {
     zOrder: number = 0,
     layer: number = 0
   ) {
+    super();
     this.type = type;
     this.width = width;
     this.height = height;

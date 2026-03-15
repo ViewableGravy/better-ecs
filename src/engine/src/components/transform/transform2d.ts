@@ -1,4 +1,5 @@
 import { Vec2 } from "@engine/math/vec/vec2";
+import { Serializable, serializable } from "@engine/serialization";
 
 export class TransformState2D {
   public pos: Vec2;
@@ -18,11 +19,14 @@ export class TransformState2D {
   }
 }
 
-export class Transform2D {
+export class Transform2D extends Serializable {
+  @serializable("json")
   public curr: TransformState2D;
+
   public prev: TransformState2D;
 
   constructor(x: number = 0, y: number = 0, rotation: number = 0, scaleX: number = 1, scaleY: number = 1) {
+    super();
     this.curr = new TransformState2D(x, y, rotation, scaleX, scaleY);
     this.prev = new TransformState2D(x, y, rotation, scaleX, scaleY);
   }

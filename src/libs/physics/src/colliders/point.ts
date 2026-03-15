@@ -1,1 +1,3 @@
-export class PointCollider {}
+import { Serializable } from "@engine";
+
+export class PointCollider extends Serializable {}

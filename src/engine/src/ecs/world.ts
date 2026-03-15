@@ -1,13 +1,14 @@
 // packages/engine/src/ecs/world.ts
 import { Parent } from "@engine/components";
 import type {
-  EntityComponentLookupResult,
-  EntityId,
-  InvariantQueryResult,
-  QueryResult,
+    EntityComponentLookupResult,
+    EntityId,
+    InvariantQueryResult,
+    QueryResult,
 } from "@engine/ecs/entity";
 import { createEntityId, getEntityIndex, invalidateEntity } from "@engine/ecs/entity";
 import { ComponentStore } from "@engine/ecs/storage";
+import { Serializable, type SerializedObject } from "@engine/serialization";
 import type { Class } from "type-fest";
 
 type ForEach1Callback<TA> = (entityId: EntityId<TA>, componentA: TA) => void;
@@ -18,6 +19,21 @@ type ForEach3Callback<TA, TB, TC> = (
   componentB: TB,
   componentC: TC,
 ) => void;
+
+export type SerializedWorldComponent = {
+  type: string;
+  data: SerializedObject;
+};
+
+export type SerializedWorldEntity = {
+  entityId: EntityId;
+  components: SerializedWorldComponent[];
+};
+
+export type SerializedWorld = {
+  sceneId: string | null;
+  entities: SerializedWorldEntity[];
+};
 
 export interface IUserWorld {
   create(): EntityId;
@@ -34,6 +50,7 @@ export interface IUserWorld {
   getComponentTypes(entityId: EntityId): Function[];
   has<T>(entityId: EntityId<T>, componentType: Class<T>): boolean;
   remove<T>(entityId: EntityId<T>, componentType: Class<T>): void;
+  serialize(): SerializedWorld;
 
   move(entityId: EntityId, world: UserWorld): void;
 
@@ -142,6 +159,10 @@ export class UserWorld implements IUserWorld {
 
   remove(entityId: EntityId, componentType: Class<any>): void {
     this.world.removeComponent(entityId, componentType);
+  }
+
+  serialize(): SerializedWorld {
+    return this.world.serialize();
   }
 
   move(entityId: EntityId, world: UserWorld): void {
@@ -701,6 +722,40 @@ export class World {
     }
 
     return componentTypes;
+  }
+
+  public serialize(): SerializedWorld {
+    const entities = this.getEntities().sort((left, right) => left - right);
+
+    return {
+      sceneId: this.sceneId ?? null,
+      entities: entities.map((entityId) => ({
+        entityId,
+        components: this.serializeEntityComponents(entityId),
+      })),
+    };
+  }
+
+  private serializeEntityComponents(entityId: EntityId): SerializedWorldComponent[] {
+    const componentTypes = this.getComponentTypes(entityId).sort((left, right) => {
+      return left.name.localeCompare(right.name);
+    });
+
+    const components: SerializedWorldComponent[] = [];
+
+    for (const componentType of componentTypes) {
+      const component = this.getComponent(entityId, componentType);
+      if (!(component instanceof Serializable)) {
+        continue;
+      }
+
+      components.push({
+        type: componentType.name,
+        data: component.toJSON(),
+      });
+    }
+
+    return components;
   }
 
   /**

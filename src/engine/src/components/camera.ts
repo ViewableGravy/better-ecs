@@ -1,37 +1,50 @@
+import { Serializable, serializable } from "@engine/serialization";
+
 export type ProjectionType = "orthographic" | "perspective";
 
-export class Camera {
+export class Camera extends Serializable {
   /** Projection type */
+  @serializable("string")
   public projection: ProjectionType;
   
   /** Half-height in world units (orthographic) */
+  @serializable("float")
   public orthoSize: number;
   
   /** Field of view in degrees (perspective) */
+  @serializable("float")
   public fov: number;
   
   /** Near clipping plane */
+  @serializable("float")
   public near: number;
   
   /** Far clipping plane */
+  @serializable("float")
   public far: number;
   
   /** Viewport position X (normalized 0-1) */
+  @serializable("float")
   public viewportX: number;
   
   /** Viewport position Y (normalized 0-1) */
+  @serializable("float")
   public viewportY: number;
   
   /** Viewport width (normalized 0-1) */
+  @serializable("float")
   public viewportWidth: number;
   
   /** Viewport height (normalized 0-1) */
+  @serializable("float")
   public viewportHeight: number;
   
   /** Whether this camera is enabled */
+  @serializable("boolean")
   public enabled: boolean;
 
   /** Whether this is the primary scene camera */
+  @serializable("boolean")
   public primary: boolean;
 
   constructor(
@@ -47,6 +60,7 @@ export class Camera {
     enabled: boolean = true,
     primary: boolean = false,
   ) {
+    super();
     this.projection = projection;
     this.orthoSize = orthoSize;
     this.fov = fov;

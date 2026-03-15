@@ -1,5 +1,6 @@
 import { Color, Sprite } from "@engine/components/sprite/sprite";
 import type { RegisteredAssets } from "@engine/core";
+import { serializable } from "@engine/serialization";
 
 type SpriteAssetId = Exclude<keyof RegisteredAssets, number | symbol>;
 
@@ -27,10 +28,16 @@ function isAnimatedSpriteConfig(
 }
 
 export class AnimatedSprite extends Sprite {
+  @serializable("json")
   public readonly frames: readonly SpriteAssetId[];
 
+  @serializable("float")
   public playbackRate = 1;
+
+  @serializable("float")
   public startTime = performance.now();
+
+  @serializable("boolean")
   public useGlobalOffset = false;
 
   constructor(frames: readonly SpriteAssetId[]);

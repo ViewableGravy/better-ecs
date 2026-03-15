@@ -1,4 +1,5 @@
 import type { RegisteredAssets } from "@engine/core";
+import { Serializable, serializable } from "@engine/serialization";
 
 export class Color {
   constructor(
@@ -67,35 +68,45 @@ export class Color {
  * The render system reads this component together with Transform2D to draw
  * the entity on screen.
  */
-export class Sprite {
+export class Sprite extends Serializable {
   /** The asset ID of the texture to display. */
+  @serializable("string")
   public assetId: Exclude<keyof RegisteredAssets, number | symbol>;
 
   /** Display width in world units (0 = derive from texture). */
+  @serializable("float")
   public width: number;
 
   /** Display height in world units (0 = derive from texture). */
+  @serializable("float")
   public height: number;
 
   /** Anchor / pivot X (0-1, origin for rotation/scaling). */
+  @serializable("float")
   public anchorX: number;
 
   /** Anchor / pivot Y (0-1, origin for rotation/scaling). */
+  @serializable("float")
   public anchorY: number;
 
   /** Horizontal flip. */
+  @serializable("boolean")
   public flipX: boolean;
 
   /** Vertical flip. */
+  @serializable("boolean")
   public flipY: boolean;
 
   /** Multiplicative color tint. */
+  @serializable("json")
   public tint: Color;
 
   /** Z-order for sorting within a layer. */
+  @serializable("float")
   public zOrder: number;
 
   /** Render layer for multi-pass rendering. */
+  @serializable("float")
   public layer: number;
 
   /**
@@ -103,6 +114,7 @@ export class Sprite {
    * - true: always evaluate this sprite in the queue hot path (default)
    * - false: eligible for static cohort reuse
    */
+  @serializable("boolean")
   public isDynamic: boolean;
 
   constructor(
@@ -118,6 +130,7 @@ export class Sprite {
     layer: number = 0,
     isDynamic: boolean = true,
   ) {
+    super();
     this.assetId = assetId;
     this.width = width;
     this.height = height;
