@@ -25,22 +25,6 @@ export function createDiffCommandsForSceneStateDelta(
 }
 
 /**
- * Create a reusable diff driver with its own command buffer.
- */
-export function createSceneStateDiffCommandBuffer() {
-  const buffer = new SceneStateDiffCommandBuffer();
-
-  return {
-    /**
-     * Reuse the same pooled command buffer across multiple diff runs.
-     */
-    diff(current: SerializedSceneState, target: SerializedSceneState, startingVersion: number = 0): readonly DiffCommand[] {
-      return diffWithBuffer(buffer, current, target, startingVersion);
-    },
-  };
-}
-
-/**
  * Run a scene-state diff using a caller-provided pooled command buffer.
  */
 function diffWithBuffer(

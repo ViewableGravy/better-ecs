@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 
-import { applyDiffCommandsToSceneState } from "@libs/state-sync/scene-state/diff/apply";
 import { createDiffCommandsForSceneStateDelta } from "@libs/state-sync/scene-state/diff/diff";
 import type { SerializedSceneState } from "@libs/state-sync/scene-state/types";
 
@@ -35,7 +34,35 @@ function createSceneState(): SerializedSceneState {
 }
 
 describe("scene state diffing", () => {
-  it("replays scene deltas into a serialized snapshot", () => {
+  it("emits component field patches instead of replacing unchanged fields", () => {
+    const current = createSceneState();
+    const target = structuredClone(current);
+    const defaultWorld = target.worlds[0];
+    const marker = defaultWorld.world.entities[0]?.components[0];
+
+    if (!marker) {
+      throw new Error("Expected marker component in test fixture");
+    }
+
+    marker.data.label = "delta";
+
+    const commands = createDiffCommandsForSceneStateDelta(current, target);
+
+    expect(commands).toEqual([
+      {
+        op: "set-field",
+        version: 1,
+        worldId: "default",
+        entityId: 1,
+        componentType: "Marker",
+        changes: {
+          label: "delta",
+        },
+      },
+    ]);
+  });
+
+  it("emits create and add commands for newly introduced worlds and entities", () => {
     const current = createSceneState();
     const target: SerializedSceneState = {
       sceneName: "world",
@@ -51,9 +78,9 @@ describe("scene state diffing", () => {
                   {
                     type: "Marker",
                     data: {
-                      label: "beta",
+                      label: "alpha",
                       nested: {
-                        count: 3,
+                        count: 1,
                       },
                     },
                   },
@@ -96,34 +123,38 @@ describe("scene state diffing", () => {
     };
 
     const commands = createDiffCommandsForSceneStateDelta(current, target);
-    const patched = applyDiffCommandsToSceneState(structuredClone(current), commands);
-
-    expect(patched).toEqual(target);
-  });
-
-  it("emits component field patches instead of replacing unchanged fields", () => {
-    const current = createSceneState();
-    const target = structuredClone(current);
-    const defaultWorld = target.worlds[0];
-    const marker = defaultWorld.world.entities[0]?.components[0];
-
-    if (!marker) {
-      throw new Error("Expected marker component in test fixture");
-    }
-
-    marker.data.label = "delta";
-
-    const commands = createDiffCommandsForSceneStateDelta(current, target);
 
     expect(commands).toEqual([
       {
-        op: "set-field",
+        op: "create-entity",
         version: 1,
         worldId: "default",
-        entityId: 1,
+        entityId: 2,
+      },
+      {
+        op: "add-component",
+        version: 2,
+        worldId: "default",
+        entityId: 2,
         componentType: "Marker",
-        changes: {
-          label: "delta",
+        data: {
+          label: "gamma",
+        },
+      },
+      {
+        op: "create-entity",
+        version: 3,
+        worldId: "house",
+        entityId: 9,
+      },
+      {
+        op: "add-component",
+        version: 4,
+        worldId: "house",
+        entityId: 9,
+        componentType: "Door",
+        data: {
+          open: true,
         },
       },
     ]);

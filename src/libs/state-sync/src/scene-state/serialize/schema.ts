@@ -17,7 +17,7 @@ const SerializedValueSchema: z.ZodType<SerializedValue> = z.lazy(() => {
 const SerializedObjectSchema: z.ZodType<SerializedObject> = z.record(z.string(), SerializedValueSchema);
 const EntityIdSchema = z.custom<EntityId>((value) => typeof value === "number");
 
-export const SerializedSceneStateSchema = z.object({
+const SerializedSceneStateSchema = z.object({
   sceneName: z.string(),
   worlds: z.array(
     z.object({
@@ -51,8 +51,4 @@ export function parseSerializedSceneState(value: unknown): SerializedSceneState 
   }
 
   return parsed.data;
-}
-
-export function isSerializedSceneState(value: unknown): value is SerializedSceneState {
-  return parseSerializedSceneState(value) !== null;
 }
