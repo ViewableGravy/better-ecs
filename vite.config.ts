@@ -2,7 +2,6 @@ import tailwindcss from "@tailwindcss/vite";
 import { resolve } from "node:path";
 import { defineConfig } from "vite";
 import glsl from "vite-plugin-glsl";
-import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
   root: resolve(__dirname, "src/app/client"),
@@ -14,23 +13,12 @@ export default defineConfig({
     },
   },
   plugins: [
-    tsconfigPaths({
-      projects: [
-        resolve(__dirname, "tsconfig.base.json"),
-        resolve(__dirname, "src/app/client/tsconfig.json"),
-        resolve(__dirname, "src/app/server/tsconfig.json"),
-        resolve(__dirname, "src/engine/tsconfig.json"),
-        resolve(__dirname, "src/libs/fps/tsconfig.json"),
-        resolve(__dirname, "src/libs/physics/tsconfig.json"),
-        resolve(__dirname, "src/libs/spatial-contexts/tsconfig.json"),
-        resolve(__dirname, "src/utils/tsconfig.json"),
-        resolve(__dirname, "vite/engine-hmr/tsconfig.json"),
-        resolve(__dirname, "src/engine/src/tests/type-registration/tsconfig.json"),
-      ],
-    }),
     tailwindcss(),
     glsl(),
   ],
+  resolve: {
+    tsconfigPaths: true, // Enable built-in tsconfig paths support
+  },
   server: {
     fs: {
       allow: [resolve(__dirname)],

@@ -5,14 +5,15 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   plugins: [
-    glsl(),
     tsconfigPaths({
       projects: [
         fileURLToPath(new URL('../../tsconfig.base.json', import.meta.url)),
         fileURLToPath(new URL('./tsconfig.json', import.meta.url)),
         fileURLToPath(new URL('./tsconfig.lib.json', import.meta.url)),
+        fileURLToPath(new URL('./src/tests/tsconfig.json', import.meta.url)),
       ],
     }),
+    glsl(),
   ],
   resolve: {
     alias: {

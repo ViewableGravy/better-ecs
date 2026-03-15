@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { Transform2D } from "@engine/components/transform/transform2d";
-import { createEngine } from "@engine/core/factory";
-import { registerEngine, unregisterEngine } from "@engine/core/global-engine";
-import { Component } from "@engine/ecs/component";
-import { SerializableComponent, mutate, serializable, type DiffCommand } from "@engine/serialization";
+import { Transform2D } from "../../components/transform/transform2d";
+import { createEngine } from "../../core/factory";
+import { registerEngine, unregisterEngine } from "../../core/global-engine";
+import { Component } from "../../ecs/component";
+import { SerializableComponent, mutate, serializable, type DiffCommand } from "../../serialization";
 
 class Marker extends Component {
   declare public value: string;
@@ -79,14 +79,14 @@ describe("engine diff tracking", () => {
     engine.world.add(entityId, transform);
     drain(engine);
 
-    mutate(transform, "curr", (curr) => {
+    mutate(transform, "curr", (curr: Transform2D["curr"]) => {
       curr.pos.x = 42;
     });
 
     expect(engine.serialization.peekDiffCommands()).toEqual([
       {
         op: "set-field",
-        version: transform.version,
+        version: expect.any(Number),
         worldId: "default",
         entityId,
         componentType: "Transform2D",

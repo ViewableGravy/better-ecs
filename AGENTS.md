@@ -221,4 +221,4 @@ If solving a problem required investigation, trial/error, or non-obvious steps, 
 - Add `template.md` when response shape matters.
 - Prefer multiple small scripts for broad workflows.
 
-**Note: You have access to the memory tool. If any message in the user prompt includes "fact" about the code base, such as "we do X in Y case, so can you please do Z", then X should be stored in the relevant memory. Over time we can retain important information this was.**
+Agressively use the memory tool during development in this project. Memory is the core way that we keep information across sessions and is therefore extremely important. I would like you to put a priority on skill authoring as well. Memory is good for short term, relevant information (and other information) but I would heavily request that you create skills even when it seems trivial. Skills are extremely useful for the developer and for the agent as they give you awesome context around functions, and patterns in the code base. 

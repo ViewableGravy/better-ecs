@@ -29,6 +29,28 @@ const readTsConfig = async (filePath) => {
   return parsed.config ?? {};
 };
 
+const toPosixPath = (value) => value.split(path.sep).join("/");
+
+const relativizeTargets = (targets, fromTsconfigPath, sourceConfigPath) => {
+  const fromDir = path.dirname(fromTsconfigPath);
+  const sourceDir = path.dirname(sourceConfigPath);
+
+  return targets.map((target) => {
+    const absoluteTarget = path.resolve(sourceDir, target);
+    const relativeTarget = path.relative(fromDir, absoluteTarget);
+
+    if (relativeTarget === "") {
+      return ".";
+    }
+
+    if (relativeTarget.startsWith(".")) {
+      return toPosixPath(relativeTarget);
+    }
+
+    return toPosixPath(`./${relativeTarget}`);
+  });
+};
+
 const normalizeAliasEntries = (entries, tsconfigPath) => {
   if (!Array.isArray(entries)) {
     throw new Error(`Expected an array of aliases for ${tsconfigPath}`);
@@ -84,14 +106,26 @@ const main = async () => {
     const tsconfigPath = path.resolve(ROOT, tsconfigRelativePath);
     const tsconfig = await readTsConfig(tsconfigPath);
     const additionalPaths = normalizeAliasEntries(aliasEntries, tsconfigRelativePath);
+    const rewrittenBasePaths = Object.fromEntries(
+      Object.entries(basePaths).map(([alias, targets]) => [
+        alias,
+        relativizeTargets(targets, tsconfigPath, baseConfigPath),
+      ]),
+    );
+    const rewrittenAdditionalPaths = Object.fromEntries(
+      Object.entries(additionalPaths).map(([alias, targets]) => [
+        alias,
+        relativizeTargets(targets, tsconfigPath, tsconfigPath),
+      ]),
+    );
 
     if (!tsconfig.compilerOptions || typeof tsconfig.compilerOptions !== "object") {
       tsconfig.compilerOptions = {};
     }
 
     tsconfig.compilerOptions.paths = {
-      ...basePaths,
-      ...additionalPaths,
+      ...rewrittenBasePaths,
+      ...rewrittenAdditionalPaths,
     };
 
     await writeFile(tsconfigPath, `${JSON.stringify(tsconfig, null, 2)}\n`, "utf8");
