@@ -8,8 +8,8 @@ import { defineOverworldContext } from "@client/scenes/world/contexts/define-ove
 import { System as CameraFollow } from "@client/systems/core/camera-follow";
 import { System as CameraZoom } from "@client/systems/core/camera-zoom";
 import { System as Movement } from "@client/systems/core/movement";
+import { System as Persistence } from "@client/systems/core/persistence";
 import { System as PhysicsWorldSync } from "@client/systems/core/physics-world-sync";
-import { System as TempAutoSavePlayerPosition } from "@client/systems/core/temp-auto-save";
 import { System as BuildModeSystem } from "@client/systems/world/build-mode";
 import { System as ConveyorEntityMotion } from "@client/systems/world/conveyor-entity-motion";
 import { System as ConveyorMovement } from "@client/systems/world/conveyor-movement";
@@ -32,7 +32,6 @@ export const Scene = createContextScene("MainScene")({
   }),
   systems: [
     FPSSystem,
-    TempAutoSavePlayerPosition,
     Movement,
     PhysicsWorldSync,
     ConveyorEntityMotion,
@@ -46,6 +45,7 @@ export const Scene = createContextScene("MainScene")({
     PortalSystem,
     BuildModeSystem,
     DebugOverlaySystem,
+    Persistence,
   ],
   contexts: [
     defineOverworldContext({

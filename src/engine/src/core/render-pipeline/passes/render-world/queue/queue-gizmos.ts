@@ -1,14 +1,14 @@
 import {
-  Gizmo,
-  GIZMO_ARROW_HEAD_WORLD,
-  GIZMO_AXIS_LENGTH_WORLD,
-  GIZMO_PLANE_HANDLE_OFFSET_X_WORLD,
-  GIZMO_PLANE_HANDLE_OFFSET_Y_WORLD,
-  GIZMO_PLANE_HANDLE_SIZE_WORLD,
-  GIZMO_RING_RADIUS_WORLD,
-  GIZMO_ROTATE_RING_RADIUS_WORLD,
-  GIZMO_SCALE_MIN_DISTANCE_WORLD,
-  type GizmoHandle,
+    Gizmo,
+    GIZMO_ARROW_HEAD_WORLD,
+    GIZMO_AXIS_LENGTH_WORLD,
+    GIZMO_PLANE_HANDLE_OFFSET_X_WORLD,
+    GIZMO_PLANE_HANDLE_OFFSET_Y_WORLD,
+    GIZMO_PLANE_HANDLE_SIZE_WORLD,
+    GIZMO_RING_RADIUS_WORLD,
+    GIZMO_ROTATE_RING_RADIUS_WORLD,
+    GIZMO_SCALE_MIN_DISTANCE_WORLD,
+    type GizmoHandle,
 } from "@engine/components/gizmo";
 import { Color } from "@engine/components/sprite/sprite";
 import { Transform2D } from "@engine/components/transform";
@@ -16,11 +16,11 @@ import { fromContext, FromRender } from "@engine/context";
 import { getWorldTransform2D } from "@engine/ecs/hierarchy";
 import type { UserWorld } from "@engine/ecs/world";
 import type {
-  DenseShapeRenderData,
-  EngineFrameAllocatorRegistry,
-  InternalFrameAllocator,
-  Renderer,
-  RenderQueue,
+    DenseShapeRenderData,
+    EngineFrameAllocatorRegistry,
+    InternalFrameAllocator,
+    Renderer,
+    RenderQueue,
 } from "@engine/render";
 
 /**********************************************************************************************************
@@ -91,7 +91,7 @@ export function queueGizmos(
   for (const entityId of world.query(Gizmo, Transform2D)) {
     const gizmo = world.require(entityId, Gizmo);
 
-    const worldTransform = getWorldTransform2D(world, entityId);
+    const worldTransform = getWorldTransform2D(world, entityId) ?? world.get(entityId, Transform2D);
     if (!worldTransform) {
       continue;
     }

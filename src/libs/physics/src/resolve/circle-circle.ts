@@ -1,3 +1,4 @@
+import { mutate } from "@engine";
 import type { Transform2D } from "@engine/components";
 import { CircleCollider } from "@libs/physics/colliders/circle";
 
@@ -18,7 +19,9 @@ export function resolveCircleVsCircle(
 
   const distance = Math.sqrt(distanceSq);
   if (distance === 0) {
-    subjectTransform.curr.pos.x += minDistance;
+    mutate(subjectTransform, "curr", (curr) => {
+      curr.pos.x += minDistance;
+    });
     return;
   }
 
@@ -26,6 +29,8 @@ export function resolveCircleVsCircle(
   const nx = dx / distance;
   const ny = dy / distance;
 
-  subjectTransform.curr.pos.x += nx * overlap;
-  subjectTransform.curr.pos.y += ny * overlap;
+  mutate(subjectTransform, "curr", (curr) => {
+    curr.pos.x += nx * overlap;
+    curr.pos.y += ny * overlap;
+  });
 }

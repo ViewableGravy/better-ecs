@@ -1,4 +1,5 @@
 import type { EntityId } from "@engine";
+import { Component, SerializableComponent, serializable } from "@engine";
 
 export const DEFAULT_CONVEYOR_BELT_SPEED = 19;
 
@@ -16,22 +17,35 @@ export function canConveyorStoreEntities(variant: string): boolean {
   return !variant.startsWith("start-") && !variant.startsWith("end-");
 }
 
-export class ConveyorBeltComponent {
+@SerializableComponent
+export class ConveyorBeltComponent extends Component {
   // Slots for physical entities on this belt, separated into left and right lanes based on belt flow direction
-  public readonly left: ConveyorSlots = [null, null, null, null];
-  public readonly right: ConveyorSlots = [null, null, null, null];
+  @serializable("json")
+  declare public readonly left: ConveyorSlots;
+
+  @serializable("json")
+  declare public readonly right: ConveyorSlots;
 
   // Visual progress of entities in their slots
-  public readonly leftProgress: ConveyorSlotProgress = [0, 0, 0, 0];
-  public readonly rightProgress: ConveyorSlotProgress = [0, 0, 0, 0];
+  @serializable("json")
+  declare public readonly leftProgress: ConveyorSlotProgress;
+
+  @serializable("json")
+  declare public readonly rightProgress: ConveyorSlotProgress;
 
   // Tracks whether a tail-slot item is currently hard-stopped at the belt seam.
-  public leftTailBlocked = false;
-  public rightTailBlocked = false;
+  @serializable("boolean")
+  declare public leftTailBlocked: boolean;
+
+  @serializable("boolean")
+  declare public rightTailBlocked: boolean;
 
   // Doubly Linked List style pointers
-  public previousEntityId: EntityId | null = null;
-  public nextEntityId: EntityId | null = null;
+  @serializable("json")
+  declare public previousEntityId: EntityId | null;
+
+  @serializable("json")
+  declare public nextEntityId: EntityId | null;
 
   /**
    * Marker used to determine whether this belt is considered a leaf in a belt network. This exists in ADDITION to the presence
@@ -41,10 +55,27 @@ export class ConveyorBeltComponent {
    * leafs in the network to perform initial belt iteration, while isLeaf exists for querying during iteration, which would
    * otherwise be an expensive operation for large networks.
    */
-  public isLeaf = false;
+  @serializable("boolean")
+  declare public isLeaf: boolean;
 
-  constructor(
-    public variant: string,
-    public speed = DEFAULT_CONVEYOR_BELT_SPEED,
-  ) {}
+  @serializable("string")
+  declare public variant: string;
+
+  @serializable("float")
+  declare public speed: number;
+
+  constructor(variant: string, speed = DEFAULT_CONVEYOR_BELT_SPEED) {
+    super();
+    this.left = [null, null, null, null];
+    this.right = [null, null, null, null];
+    this.leftProgress = [0, 0, 0, 0];
+    this.rightProgress = [0, 0, 0, 0];
+    this.leftTailBlocked = false;
+    this.rightTailBlocked = false;
+    this.previousEntityId = null;
+    this.nextEntityId = null;
+    this.isLeaf = false;
+    this.variant = variant;
+    this.speed = speed;
+  }
 }

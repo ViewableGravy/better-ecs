@@ -1,14 +1,15 @@
+import { mutate } from "@engine";
 import type { Transform2D } from "@engine/components";
 import { CircleCollider } from "@libs/physics/colliders/circle";
 import { RectangleCollider } from "@libs/physics/colliders/rectangle";
-import {
-  clamp,
-  getRectangleBottom,
-  getRectangleLeft,
-  getRectangleRight,
-  getRectangleTop,
-} from "@libs/physics/utils";
 import { resolveCircleInsideRect } from "@libs/physics/resolve/utils";
+import {
+    clamp,
+    getRectangleBottom,
+    getRectangleLeft,
+    getRectangleRight,
+    getRectangleTop,
+} from "@libs/physics/utils";
 
 export function resolveCircleVsRect(
   subject: CircleCollider,
@@ -42,6 +43,8 @@ export function resolveCircleVsRect(
   const nx = dx / distance;
   const ny = dy / distance;
 
-  subjectTransform.curr.pos.x += nx * overlap;
-  subjectTransform.curr.pos.y += ny * overlap;
+  mutate(subjectTransform, "curr", (curr) => {
+    curr.pos.x += nx * overlap;
+    curr.pos.y += ny * overlap;
+  });
 }

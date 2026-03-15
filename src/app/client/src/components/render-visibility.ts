@@ -1,3 +1,4 @@
+import { Component, SerializableComponent, serializable } from "@engine";
 import { Tagged } from 'type-fest';
 
 /**
@@ -15,10 +16,18 @@ export const OUTSIDE = createVisibilityRole(1);
 export const HOUSE_ROOF = createVisibilityRole(2);
 export const HOUSE_INTERIOR = createVisibilityRole(3);
 
-export class RenderVisibility {
-  constructor(
-    public role: RenderVisibilityRole,
-    public baseAlpha: number = 1,
-  ) {}
+@SerializableComponent
+export class RenderVisibility extends Component {
+  @serializable("int")
+  declare public role: RenderVisibilityRole;
+
+  @serializable("float")
+  declare public baseAlpha: number;
+
+  constructor(role: RenderVisibilityRole, baseAlpha: number = 1) {
+    super();
+    this.role = role;
+    this.baseAlpha = baseAlpha;
+  }
 }
 

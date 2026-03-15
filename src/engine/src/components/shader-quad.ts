@@ -1,5 +1,7 @@
 import { Color } from "@engine/components/sprite/sprite";
 import type { RegisteredAssets } from "@engine/core";
+import { Component } from "@engine/ecs/component";
+import { SerializableComponent, serializable } from "@engine/serialization";
 
 /**
  * ShaderQuad component — a custom shader rendered onto a quad attached to an entity.
@@ -7,33 +9,43 @@ import type { RegisteredAssets } from "@engine/core";
  * The render pipeline resolves `assetId` to a shader source pair and draws a quad
  * using the entity world transform.
  */
-export class ShaderQuad {
+@SerializableComponent
+export class ShaderQuad extends Component {
   /** Asset ID of the shader source pair (vertex + fragment). */
-  public assetId: Exclude<keyof RegisteredAssets, number | symbol>;
+  @serializable("string")
+  declare public assetId: Exclude<keyof RegisteredAssets, number | symbol>;
 
   /** Display width in world units. */
-  public width: number;
+  @serializable("float")
+  declare public width: number;
 
   /** Display height in world units. */
-  public height: number;
+  @serializable("float")
+  declare public height: number;
 
   /** Anchor / pivot X (0-1, origin for rotation/scaling). */
-  public anchorX: number;
+  @serializable("float")
+  declare public anchorX: number;
 
   /** Anchor / pivot Y (0-1, origin for rotation/scaling). */
-  public anchorY: number;
+  @serializable("float")
+  declare public anchorY: number;
 
   /** Multiplicative color tint. */
-  public tint: Color;
+  @serializable("json")
+  declare public tint: Color;
 
   /** Whether to pass `performance.now()` to the shader `uTime` uniform. */
-  public useTime: boolean;
+  @serializable("boolean")
+  declare public useTime: boolean;
 
   /** Z-order for sorting within a layer. */
-  public zOrder: number;
+  @serializable("float")
+  declare public zOrder: number;
 
   /** Render layer for multi-pass rendering. */
-  public layer: number;
+  @serializable("float")
+  declare public layer: number;
 
   constructor(
     assetId: Exclude<keyof RegisteredAssets, number | symbol>,
@@ -46,6 +58,7 @@ export class ShaderQuad {
     zOrder: number = 0,
     layer: number = 0,
   ) {
+    super();
     this.assetId = assetId;
     this.width = width;
     this.height = height;

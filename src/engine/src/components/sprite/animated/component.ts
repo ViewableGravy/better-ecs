@@ -1,7 +1,9 @@
 import { Color, Sprite } from "@engine/components/sprite/sprite";
 import type { RegisteredAssets } from "@engine/core";
+import { SerializableComponent, serializable } from "@engine/serialization";
 
 type SpriteAssetId = Exclude<keyof RegisteredAssets, number | symbol>;
+const DESERIALIZED_ANIMATED_SPRITE_FRAME_PLACEHOLDER = "" as SpriteAssetId;
 
 type AnimatedSpriteConfig = {
   assets: readonly SpriteAssetId[];
@@ -26,20 +28,30 @@ function isAnimatedSpriteConfig(
   return !Array.isArray(value);
 }
 
+@SerializableComponent
 export class AnimatedSprite extends Sprite {
-  public readonly frames: readonly SpriteAssetId[];
+  @serializable("json")
+  declare public readonly frames: readonly SpriteAssetId[];
 
-  public playbackRate = 1;
-  public startTime = performance.now();
-  public useGlobalOffset = false;
+  @serializable("float")
+  declare public playbackRate: number;
 
+  @serializable("float")
+  declare public startTime: number;
+
+  @serializable("boolean")
+  declare public useGlobalOffset: boolean;
+
+  constructor();
   constructor(frames: readonly SpriteAssetId[]);
   constructor(config: AnimatedSpriteConfig);
-  constructor(configOrFrames: AnimatedSpriteConfig | readonly SpriteAssetId[]) {
+  constructor(configOrFrames?: AnimatedSpriteConfig | readonly SpriteAssetId[]) {
     let config: AnimatedSpriteConfig | undefined;
     let frames: readonly SpriteAssetId[];
 
-    if (isAnimatedSpriteConfig(configOrFrames)) {
+    if (configOrFrames === undefined) {
+      frames = [DESERIALIZED_ANIMATED_SPRITE_FRAME_PLACEHOLDER];
+    } else if (isAnimatedSpriteConfig(configOrFrames)) {
       config = configOrFrames;
       frames = config.assets;
     } else {
@@ -65,6 +77,9 @@ export class AnimatedSprite extends Sprite {
     );
 
     this.frames = frames;
+    this.playbackRate = 1;
+    this.startTime = performance.now();
+    this.useGlobalOffset = false;
 
     if (config?.playbackRate !== undefined) {
       this.playbackRate = config.playbackRate;

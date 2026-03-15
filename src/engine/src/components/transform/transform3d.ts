@@ -1,4 +1,6 @@
+import { Component } from "@engine/ecs/component";
 import { Vec3 } from "@engine/math/vec/vec3";
+import { SerializableComponent, serializable } from "@engine/serialization";
 
 export class TransformState3D {
   public pos: Vec3;
@@ -19,12 +21,20 @@ export class TransformState3D {
   }
 }
 
-export class Transform3D {
-  public curr: TransformState3D;
+@SerializableComponent
+export class Transform3D extends Component {
+  @serializable("json")
+  declare public curr: TransformState3D;
+
   public prev: TransformState3D;
 
   constructor(x: number = 0, y: number = 0, z: number = 0, rotationX: number = 0, rotationY: number = 0, rotationZ: number = 0, scaleX: number = 1, scaleY: number = 1, scaleZ: number = 1) {
+    super();
     this.curr = new TransformState3D(x, y, z, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ);
     this.prev = new TransformState3D(x, y, z, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ);
+  }
+
+  protected override onAfterDeserialized(): void {
+    this.prev.copyFrom(this.curr);
   }
 }

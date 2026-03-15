@@ -4,7 +4,7 @@ import {
     type PlayerDirection,
 } from "@client/components/player";
 import { createPlayerSprite } from "@client/entities/player/render/createPlayerSprite";
-import { createSystem } from "@engine";
+import { createSystem, mutate } from "@engine";
 import { AnimatedSprite, Transform2D } from "@engine/components";
 import { System as ContextSystem, Delta, fromContext, World } from "@engine/context";
 
@@ -58,12 +58,16 @@ export const System = createSystem("movement")({
     const { x, y } = resolveMovementAxes(data.keysActive);
     const speed = 100 * (updateDelta / 1000);
 
-    if (x !== 0) {
-      transform.curr.pos.x += x * speed;
-    }
+    if (x !== 0 || y !== 0) {
+      mutate(transform, "curr", (curr) => {
+        if (x !== 0) {
+          curr.pos.x += x * speed;
+        }
 
-    if (y !== 0) {
-      transform.curr.pos.y += y * speed;
+        if (y !== 0) {
+          curr.pos.y += y * speed;
+        }
+      });
     }
 
     const nextAnimationState: PlayerAnimationState = x === 0 && y === 0 ? "idle" : "moving";

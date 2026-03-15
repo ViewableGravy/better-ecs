@@ -3,6 +3,7 @@
 import { SystemOpts } from "@engine/core";
 
 export * from "@engine/core";
+export * from "@engine/ecs/component";
 export * from "@engine/ecs/entity";
 export * from "@engine/ecs/hierarchy";
 export * from "@engine/ecs/storage";

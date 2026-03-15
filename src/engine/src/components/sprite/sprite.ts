@@ -1,4 +1,8 @@
 import type { RegisteredAssets } from "@engine/core";
+import { Component } from "@engine/ecs/component";
+import { SerializableComponent, serializable } from "@engine/serialization";
+
+const DESERIALIZED_SPRITE_ASSET_ID_PLACEHOLDER = "" as Exclude<keyof RegisteredAssets, number | symbol>;
 
 export class Color {
   constructor(
@@ -67,46 +71,58 @@ export class Color {
  * The render system reads this component together with Transform2D to draw
  * the entity on screen.
  */
-export class Sprite {
+@SerializableComponent
+export class Sprite extends Component {
   /** The asset ID of the texture to display. */
-  public assetId: Exclude<keyof RegisteredAssets, number | symbol>;
+  @serializable("string")
+  declare public assetId: Exclude<keyof RegisteredAssets, number | symbol>;
 
   /** Display width in world units (0 = derive from texture). */
-  public width: number;
+  @serializable("float")
+  declare public width: number;
 
   /** Display height in world units (0 = derive from texture). */
-  public height: number;
+  @serializable("float")
+  declare public height: number;
 
   /** Anchor / pivot X (0-1, origin for rotation/scaling). */
-  public anchorX: number;
+  @serializable("float")
+  declare public anchorX: number;
 
   /** Anchor / pivot Y (0-1, origin for rotation/scaling). */
-  public anchorY: number;
+  @serializable("float")
+  declare public anchorY: number;
 
   /** Horizontal flip. */
-  public flipX: boolean;
+  @serializable("boolean")
+  declare public flipX: boolean;
 
   /** Vertical flip. */
-  public flipY: boolean;
+  @serializable("boolean")
+  declare public flipY: boolean;
 
   /** Multiplicative color tint. */
-  public tint: Color;
+  @serializable("json")
+  declare public tint: Color;
 
   /** Z-order for sorting within a layer. */
-  public zOrder: number;
+  @serializable("float")
+  declare public zOrder: number;
 
   /** Render layer for multi-pass rendering. */
-  public layer: number;
+  @serializable("float")
+  declare public layer: number;
 
   /**
    * Queue update policy.
    * - true: always evaluate this sprite in the queue hot path (default)
    * - false: eligible for static cohort reuse
    */
-  public isDynamic: boolean;
+  @serializable("boolean")
+  declare public isDynamic: boolean;
 
   constructor(
-    assetId: Exclude<keyof RegisteredAssets, number | symbol>,
+    assetId: Exclude<keyof RegisteredAssets, number | symbol> = DESERIALIZED_SPRITE_ASSET_ID_PLACEHOLDER,
     width: number = 0,
     height: number = 0,
     anchorX: number = 0.5,
@@ -118,6 +134,7 @@ export class Sprite {
     layer: number = 0,
     isDynamic: boolean = true,
   ) {
+    super();
     this.assetId = assetId;
     this.width = width;
     this.height = height;
