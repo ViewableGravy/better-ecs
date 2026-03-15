@@ -4,6 +4,7 @@ import { AssetManager } from "@engine/asset/AssetManager";
 import { executeWithContext } from "@engine/core/context";
 import { EngineClass } from "@engine/core/engine";
 import type { CreateEngineOptions } from "@engine/core/factory/types";
+import { registerEngine } from "@engine/core/global-engine";
 import type { SceneDefinition, SceneDefinitionTuple, SceneName } from "@engine/core/scene/scene.types";
 import {
     executeSystemCleanup as runSystemCleanup,
@@ -47,9 +48,14 @@ export function createEngine<
 		opts.render ?? null,
 		opts.loading,
 		opts.config?.render?.culling,
+		opts.config?.serialization,
 		null,
 		shouldBootstrapCanvasFromRoot,
 	);
+
+	if (!opts.manualRegisterEngine) {
+		registerEngine(engine);
+	}
 
 	if (rootElement) {
 		const engineUiContextValue: EngineUiContextValue = engine;

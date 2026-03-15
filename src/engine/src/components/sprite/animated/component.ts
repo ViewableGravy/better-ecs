@@ -1,6 +1,6 @@
 import { Color, Sprite } from "@engine/components/sprite/sprite";
 import type { RegisteredAssets } from "@engine/core";
-import { serializable } from "@engine/serialization";
+import { SerializableComponent, serializable } from "@engine/serialization";
 
 type SpriteAssetId = Exclude<keyof RegisteredAssets, number | symbol>;
 
@@ -27,18 +27,19 @@ function isAnimatedSpriteConfig(
   return !Array.isArray(value);
 }
 
+@SerializableComponent
 export class AnimatedSprite extends Sprite {
   @serializable("json")
-  public readonly frames: readonly SpriteAssetId[];
+  declare public readonly frames: readonly SpriteAssetId[];
 
   @serializable("float")
-  public playbackRate = 1;
+  declare public playbackRate: number;
 
   @serializable("float")
-  public startTime = performance.now();
+  declare public startTime: number;
 
   @serializable("boolean")
-  public useGlobalOffset = false;
+  declare public useGlobalOffset: boolean;
 
   constructor(frames: readonly SpriteAssetId[]);
   constructor(config: AnimatedSpriteConfig);
@@ -72,6 +73,9 @@ export class AnimatedSprite extends Sprite {
     );
 
     this.frames = frames;
+    this.playbackRate = 1;
+    this.startTime = performance.now();
+    this.useGlobalOffset = false;
 
     if (config?.playbackRate !== undefined) {
       this.playbackRate = config.playbackRate;

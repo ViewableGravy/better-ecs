@@ -1,24 +1,24 @@
-import { PlayerComponent } from "@client/components/player";
 import { ContextVisualBinding } from "@client/components/context-visual-binding";
 import { InsideContext } from "@client/components/inside-context";
+import { PlayerComponent } from "@client/components/player";
 import {
-  HOUSE_INTERIOR,
-  HOUSE_ROOF,
-  OUTSIDE,
-  RenderVisibility,
+    HOUSE_INTERIOR,
+    HOUSE_ROOF,
+    OUTSIDE,
+    RenderVisibility,
 } from "@client/components/render-visibility";
 import {
-  BlendTransition,
-  BlendTransitionMutator,
+    BlendTransition,
+    BlendTransitionMutator,
 } from "@client/systems/world/house-transition/transitionMutator";
 import { lerp } from "@client/utilities/math";
-import { createRenderPass, type UserWorld } from "@engine";
-import { fromContext, Engine } from "@engine/context";
+import { createRenderPass, mutate, type UserWorld } from "@engine";
 import { Shape, Sprite } from "@engine/components";
+import { Engine, fromContext } from "@engine/context";
 import {
-  SpatialContexts,
-  type ContextId,
-  type SpatialContextManager,
+    SpatialContexts,
+    type ContextId,
+    type SpatialContextManager,
 } from "@libs/spatial-contexts";
 
 const INSIDE_OUTSIDE_ALPHA = 0.5;
@@ -60,7 +60,9 @@ export const ApplyContextVisualsPass = createRenderPass("apply-context-visuals")
         continue;
       }
 
-      sprite.tint.a = playerAlpha;
+      mutate(sprite, "tint", (tint) => {
+        tint.a = playerAlpha;
+      });
     }
 
     for (const entityId of world.query(Shape, RenderVisibility)) {
@@ -80,10 +82,16 @@ export const ApplyContextVisualsPass = createRenderPass("apply-context-visuals")
         visualContextId: visualBinding?.contextId,
       });
 
-      shape.fill.a = visibility.baseAlpha * alphaMultiplier;
+      mutate(shape, "fill", (fill) => {
+        fill.a = visibility.baseAlpha * alphaMultiplier;
+      });
 
       if (shape.stroke) {
-        shape.stroke.a = visibility.baseAlpha * alphaMultiplier;
+        mutate(shape, "stroke", (stroke) => {
+          if (stroke) {
+            stroke.a = visibility.baseAlpha * alphaMultiplier;
+          }
+        });
       }
     }
   },

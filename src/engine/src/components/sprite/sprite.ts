@@ -1,5 +1,6 @@
 import type { RegisteredAssets } from "@engine/core";
-import { Serializable, serializable } from "@engine/serialization";
+import { Component } from "@engine/ecs/component";
+import { SerializableComponent, serializable } from "@engine/serialization";
 
 export class Color {
   constructor(
@@ -68,46 +69,47 @@ export class Color {
  * The render system reads this component together with Transform2D to draw
  * the entity on screen.
  */
-export class Sprite extends Serializable {
+@SerializableComponent
+export class Sprite extends Component {
   /** The asset ID of the texture to display. */
   @serializable("string")
-  public assetId: Exclude<keyof RegisteredAssets, number | symbol>;
+  declare public assetId: Exclude<keyof RegisteredAssets, number | symbol>;
 
   /** Display width in world units (0 = derive from texture). */
   @serializable("float")
-  public width: number;
+  declare public width: number;
 
   /** Display height in world units (0 = derive from texture). */
   @serializable("float")
-  public height: number;
+  declare public height: number;
 
   /** Anchor / pivot X (0-1, origin for rotation/scaling). */
   @serializable("float")
-  public anchorX: number;
+  declare public anchorX: number;
 
   /** Anchor / pivot Y (0-1, origin for rotation/scaling). */
   @serializable("float")
-  public anchorY: number;
+  declare public anchorY: number;
 
   /** Horizontal flip. */
   @serializable("boolean")
-  public flipX: boolean;
+  declare public flipX: boolean;
 
   /** Vertical flip. */
   @serializable("boolean")
-  public flipY: boolean;
+  declare public flipY: boolean;
 
   /** Multiplicative color tint. */
   @serializable("json")
-  public tint: Color;
+  declare public tint: Color;
 
   /** Z-order for sorting within a layer. */
   @serializable("float")
-  public zOrder: number;
+  declare public zOrder: number;
 
   /** Render layer for multi-pass rendering. */
   @serializable("float")
-  public layer: number;
+  declare public layer: number;
 
   /**
    * Queue update policy.
@@ -115,7 +117,7 @@ export class Sprite extends Serializable {
    * - false: eligible for static cohort reuse
    */
   @serializable("boolean")
-  public isDynamic: boolean;
+  declare public isDynamic: boolean;
 
   constructor(
     assetId: Exclude<keyof RegisteredAssets, number | symbol>,

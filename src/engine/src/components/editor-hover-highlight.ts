@@ -1,8 +1,10 @@
-import { Serializable, serializable } from "@engine/serialization";
+import { Component } from "@engine/ecs/component";
+import { SerializableComponent, serializable } from "@engine/serialization";
 
-export class EditorHoverHighlight extends Serializable {
+@SerializableComponent
+export class EditorHoverHighlight extends Component {
   @serializable("float")
-  public amount: number;
+  declare public amount: number;
 
   constructor(amount: number = 0.15) {
     super();

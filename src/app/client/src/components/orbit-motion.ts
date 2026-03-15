@@ -1,14 +1,15 @@
-import { Serializable, serializable } from "@engine";
+import { Component, SerializableComponent, serializable } from "@engine";
 
-export class OrbitMotion extends Serializable {
+@SerializableComponent
+export class OrbitMotion extends Component {
   @serializable("float")
-  public radius: number;
-
-  @serializable("float")
-  public speedRadiansPerSecond: number;
+  declare public radius: number;
 
   @serializable("float")
-  public angleRadians: number;
+  declare public speedRadiansPerSecond: number;
+
+  @serializable("float")
+  declare public angleRadians: number;
 
   constructor(radius: number, speedRadiansPerSecond: number, angleRadians: number = 0) {
     super();

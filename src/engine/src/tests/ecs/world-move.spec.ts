@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import { Parent } from "@engine/components";
+import { Component } from "@engine/ecs/component";
 import { UserWorld, World } from "@engine/ecs/world";
-import { Serializable, serializable } from "@engine/serialization";
+import { SerializableComponent, serializable } from "@engine/serialization";
 
-class Marker extends Serializable {
+@SerializableComponent
+class Marker extends Component {
   @serializable("string")
   public value: string;
 

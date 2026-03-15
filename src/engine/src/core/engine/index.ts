@@ -2,6 +2,7 @@ import { AssetManager } from "@engine/asset/AssetManager";
 import { CanvasManager } from "@engine/core/canvas";
 import { executeWithContext } from "@engine/core/context";
 import { EngineEditor } from "@engine/core/engine-editor";
+import { EngineSerializationManager } from "@engine/core/engine-serialization";
 import { EngineUtils } from "@engine/core/engine-utils";
 import { DeltaState } from "@engine/core/engine/delta";
 import { InitState } from "@engine/core/engine/init";
@@ -42,6 +43,7 @@ export class EngineClass<
 	public readonly scene: SceneManager<TScenes>;
 	public readonly editor: EngineEditor;
 	public readonly input: EngineInput;
+	public readonly serialization: EngineSerializationManager;
 	public readonly utils: EngineUtils;
 	public readonly meta: Meta = new Meta(this.#phase.is);
 	public readonly renderCulling: EngineRenderCullingSettings;
@@ -53,6 +55,7 @@ export class EngineClass<
 		public readonly render: RenderPipeline | null,
 		loadingOverlay: EngineOverlay | undefined,
 		renderCulling: EngineRenderCullingOptions | undefined,
+		serialization: { enableDirtyQueue?: boolean } | undefined,
 		canvas: HTMLCanvasElement | null,
 		awaitCanvasBeforeStart = false,
 	) {
@@ -65,6 +68,7 @@ export class EngineClass<
 			resolveCanvas: () => this.canvas,
 			getEngine: () => this,
 		});
+		this.serialization = new EngineSerializationManager(this, serialization);
 		this.renderCulling = resolveEngineRenderCullingSettings(renderCulling);
 		this.editor = new EngineEditor(this);
 		this.#engineLoadingOverlay = loadingOverlay ?? null;

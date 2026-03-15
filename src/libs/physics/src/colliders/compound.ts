@@ -1,17 +1,18 @@
-import { Serializable, serializable } from "@engine";
+import { Component, SerializableComponent, serializable } from "@engine";
 import type { PrimitiveCollider } from "@libs/physics/types";
 
-export class CompoundCollider extends Serializable {
+@SerializableComponent
+export class CompoundCollider extends Component {
   private readonly checkedPairs = new WeakMap<
     PrimitiveCollider,
     WeakMap<PrimitiveCollider, number>
   >();
 
   @serializable("json")
-  public readonly collider: PrimitiveCollider;
+  declare public readonly collider: PrimitiveCollider;
 
   @serializable("json")
-  public readonly children: PrimitiveCollider[];
+  declare public readonly children: PrimitiveCollider[];
 
   public constructor(collider: PrimitiveCollider, children: PrimitiveCollider[]) {
     super();

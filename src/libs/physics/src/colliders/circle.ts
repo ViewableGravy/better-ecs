@@ -1,8 +1,9 @@
-import { Serializable, serializable } from "@engine";
+import { Component, SerializableComponent, serializable } from "@engine";
 
-export class CircleCollider extends Serializable {
+@SerializableComponent
+export class CircleCollider extends Component {
   @serializable("float")
-  public radius: number;
+  declare public radius: number;
 
   public constructor(radius: number) {
     super();

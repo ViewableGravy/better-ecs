@@ -1,3 +1,4 @@
-import { Serializable } from "@engine";
+import { Component, SerializableComponent } from "@engine";
 
-export class PointCollider extends Serializable {}
+@SerializableComponent
+export class PointCollider extends Component {}

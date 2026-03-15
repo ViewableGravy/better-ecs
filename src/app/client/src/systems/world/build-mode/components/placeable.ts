@@ -1,8 +1,9 @@
-import { Serializable, serializable } from "@engine";
+import { Component, SerializableComponent, serializable } from "@engine";
 
-export class Placeable extends Serializable {
+@SerializableComponent
+export class Placeable extends Component {
   @serializable("string")
-  public itemType: string;
+  declare public itemType: string;
 
   public constructor(itemType: string) {
     super();

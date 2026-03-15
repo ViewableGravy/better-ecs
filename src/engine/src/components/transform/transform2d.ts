@@ -1,5 +1,6 @@
+import { Component } from "@engine/ecs/component";
 import { Vec2 } from "@engine/math/vec/vec2";
-import { Serializable, serializable } from "@engine/serialization";
+import { SerializableComponent, serializable } from "@engine/serialization";
 
 export class TransformState2D {
   public pos: Vec2;
@@ -19,9 +20,10 @@ export class TransformState2D {
   }
 }
 
-export class Transform2D extends Serializable {
+@SerializableComponent
+export class Transform2D extends Component {
   @serializable("json")
-  public curr: TransformState2D;
+  declare public curr: TransformState2D;
 
   public prev: TransformState2D;
 
@@ -29,5 +31,9 @@ export class Transform2D extends Serializable {
     super();
     this.curr = new TransformState2D(x, y, rotation, scaleX, scaleY);
     this.prev = new TransformState2D(x, y, rotation, scaleX, scaleY);
+  }
+
+  protected override onAfterDeserialized(): void {
+    this.prev.copyFrom(this.curr);
   }
 }

@@ -1,18 +1,19 @@
 import { Transform2D } from "@engine/components/transform/transform2d";
-import { serializable } from "@engine/serialization";
+import { SerializableComponent, serializable } from "@engine/serialization";
 
+@SerializableComponent
 export class ShaderTransform2D extends Transform2D {
   @serializable("float")
-  public width: number;
+  declare public width: number;
 
   @serializable("float")
-  public height: number;
+  declare public height: number;
 
   @serializable("float")
-  public anchorX: number;
+  declare public anchorX: number;
 
   @serializable("float")
-  public anchorY: number;
+  declare public anchorY: number;
 
   constructor(
     x: number = 0,

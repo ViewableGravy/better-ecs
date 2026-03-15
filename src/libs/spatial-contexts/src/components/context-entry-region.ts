@@ -1,16 +1,17 @@
-import { Rectangle, Serializable, serializable } from "@engine";
+import { Component, Rectangle, SerializableComponent, serializable } from "@engine";
 import type { ContextId } from "@libs/spatial-contexts/context-id";
 
 /**
  * Component that defines a region in a world that acts as an entry point to another spatial context.
  * When the player/camera enters this region, it can trigger context transitions or layering.
  */
-export class ContextEntryRegion extends Serializable {
+@SerializableComponent
+export class ContextEntryRegion extends Component {
   @serializable("string")
-  public targetContextId: ContextId;
+  declare public targetContextId: ContextId;
 
   @serializable("json")
-  public bounds: Rectangle;
+  declare public bounds: Rectangle;
 
   constructor(targetContextId: ContextId, bounds: Rectangle) {
     super();

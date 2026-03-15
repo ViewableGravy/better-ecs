@@ -1,5 +1,5 @@
 import { PlayerComponent } from "@client/components/player";
-import { createSystem } from "@engine";
+import { createSystem, mutate } from "@engine";
 import { Transform2D } from "@engine/components";
 import { System as ContextSystem, fromContext, World } from "@engine/context";
 import { z } from "zod";
@@ -42,7 +42,9 @@ export const System = createSystem("temp:auto-save-player-position")({
 
       const hydrated = tryReadStoredPlayerPosition();
       if (hydrated) {
-        transform.curr.pos.set(hydrated.x, hydrated.y);
+        mutate(transform, "curr", (curr) => {
+          curr.pos.set(hydrated.x, hydrated.y);
+        });
         transform.prev.pos.set(hydrated.x, hydrated.y);
         data.lastSavedX = hydrated.x;
         data.lastSavedY = hydrated.y;

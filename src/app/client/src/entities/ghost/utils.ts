@@ -4,14 +4,14 @@ import { GhostPreviewComponent, type GhostKind } from "@client/entities/ghost/co
 import { CollisionProfiles } from "@client/scenes/world/physics/collision-profiles";
 import { Placeable } from "@client/systems/world/build-mode/components";
 import {
-  GHOST_FILL,
-  GHOST_STROKE,
-  INVALID_GHOST_FILL,
-  INVALID_GHOST_STROKE,
-  INVALID_GHOST_TINT,
-  VALID_GHOST_TINT,
+    GHOST_FILL,
+    GHOST_STROKE,
+    INVALID_GHOST_FILL,
+    INVALID_GHOST_STROKE,
+    INVALID_GHOST_TINT,
+    VALID_GHOST_TINT,
 } from "@client/systems/world/build-mode/const";
-import type { EntityId, UserWorld } from "@engine";
+import { mutate, type EntityId, type UserWorld } from "@engine";
 import { AnimatedSprite, Color, Parent, Shape, Sprite, Transform2D } from "@engine/components";
 
 /**********************************************************************************************************
@@ -61,12 +61,14 @@ export class GhostUtils {
     const animatedSprite = world.get(ghostEntityId, AnimatedSprite);
 
     if (animatedSprite) {
-      animatedSprite.tint.set(
-        isPlaceable ? VALID_GHOST_TINT.r : INVALID_GHOST_TINT.r,
-        isPlaceable ? VALID_GHOST_TINT.g : INVALID_GHOST_TINT.g,
-        isPlaceable ? VALID_GHOST_TINT.b : INVALID_GHOST_TINT.b,
-        isPlaceable ? VALID_GHOST_TINT.a : INVALID_GHOST_TINT.a,
-      );
+      mutate(animatedSprite, "tint", (tint) => {
+        tint.set(
+          isPlaceable ? VALID_GHOST_TINT.r : INVALID_GHOST_TINT.r,
+          isPlaceable ? VALID_GHOST_TINT.g : INVALID_GHOST_TINT.g,
+          isPlaceable ? VALID_GHOST_TINT.b : INVALID_GHOST_TINT.b,
+          isPlaceable ? VALID_GHOST_TINT.a : INVALID_GHOST_TINT.a,
+        );
+      });
       animatedSprite.zOrder = Number.MAX_SAFE_INTEGER;
       return;
     }
@@ -74,12 +76,14 @@ export class GhostUtils {
     const sprite = world.get(ghostEntityId, Sprite);
 
     if (sprite) {
-      sprite.tint.set(
-        isPlaceable ? VALID_GHOST_TINT.r : INVALID_GHOST_TINT.r,
-        isPlaceable ? VALID_GHOST_TINT.g : INVALID_GHOST_TINT.g,
-        isPlaceable ? VALID_GHOST_TINT.b : INVALID_GHOST_TINT.b,
-        isPlaceable ? VALID_GHOST_TINT.a : INVALID_GHOST_TINT.a,
-      );
+      mutate(sprite, "tint", (tint) => {
+        tint.set(
+          isPlaceable ? VALID_GHOST_TINT.r : INVALID_GHOST_TINT.r,
+          isPlaceable ? VALID_GHOST_TINT.g : INVALID_GHOST_TINT.g,
+          isPlaceable ? VALID_GHOST_TINT.b : INVALID_GHOST_TINT.b,
+          isPlaceable ? VALID_GHOST_TINT.a : INVALID_GHOST_TINT.a,
+        );
+      });
       sprite.zOrder = Number.MAX_SAFE_INTEGER;
     }
   }

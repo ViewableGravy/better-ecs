@@ -1,6 +1,7 @@
 import { Color } from "@engine/components/sprite/sprite";
 import type { RegisteredAssets } from "@engine/core";
-import { Serializable, serializable } from "@engine/serialization";
+import { Component } from "@engine/ecs/component";
+import { SerializableComponent, serializable } from "@engine/serialization";
 
 /**
  * ShaderQuad component — a custom shader rendered onto a quad attached to an entity.
@@ -8,42 +9,43 @@ import { Serializable, serializable } from "@engine/serialization";
  * The render pipeline resolves `assetId` to a shader source pair and draws a quad
  * using the entity world transform.
  */
-export class ShaderQuad extends Serializable {
+@SerializableComponent
+export class ShaderQuad extends Component {
   /** Asset ID of the shader source pair (vertex + fragment). */
   @serializable("string")
-  public assetId: Exclude<keyof RegisteredAssets, number | symbol>;
+  declare public assetId: Exclude<keyof RegisteredAssets, number | symbol>;
 
   /** Display width in world units. */
   @serializable("float")
-  public width: number;
+  declare public width: number;
 
   /** Display height in world units. */
   @serializable("float")
-  public height: number;
+  declare public height: number;
 
   /** Anchor / pivot X (0-1, origin for rotation/scaling). */
   @serializable("float")
-  public anchorX: number;
+  declare public anchorX: number;
 
   /** Anchor / pivot Y (0-1, origin for rotation/scaling). */
   @serializable("float")
-  public anchorY: number;
+  declare public anchorY: number;
 
   /** Multiplicative color tint. */
   @serializable("json")
-  public tint: Color;
+  declare public tint: Color;
 
   /** Whether to pass `performance.now()` to the shader `uTime` uniform. */
   @serializable("boolean")
-  public useTime: boolean;
+  declare public useTime: boolean;
 
   /** Z-order for sorting within a layer. */
   @serializable("float")
-  public zOrder: number;
+  declare public zOrder: number;
 
   /** Render layer for multi-pass rendering. */
   @serializable("float")
-  public layer: number;
+  declare public layer: number;
 
   constructor(
     assetId: Exclude<keyof RegisteredAssets, number | symbol>,

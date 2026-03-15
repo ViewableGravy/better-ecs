@@ -1,5 +1,5 @@
 import type { EntityId } from "@engine";
-import { Serializable, serializable } from "@engine";
+import { Component, SerializableComponent, serializable } from "@engine";
 
 export const DEFAULT_CONVEYOR_BELT_SPEED = 19;
 
@@ -17,34 +17,35 @@ export function canConveyorStoreEntities(variant: string): boolean {
   return !variant.startsWith("start-") && !variant.startsWith("end-");
 }
 
-export class ConveyorBeltComponent extends Serializable {
+@SerializableComponent
+export class ConveyorBeltComponent extends Component {
   // Slots for physical entities on this belt, separated into left and right lanes based on belt flow direction
   @serializable("json")
-  public readonly left: ConveyorSlots = [null, null, null, null];
+  declare public readonly left: ConveyorSlots;
 
   @serializable("json")
-  public readonly right: ConveyorSlots = [null, null, null, null];
+  declare public readonly right: ConveyorSlots;
 
   // Visual progress of entities in their slots
   @serializable("json")
-  public readonly leftProgress: ConveyorSlotProgress = [0, 0, 0, 0];
+  declare public readonly leftProgress: ConveyorSlotProgress;
 
   @serializable("json")
-  public readonly rightProgress: ConveyorSlotProgress = [0, 0, 0, 0];
+  declare public readonly rightProgress: ConveyorSlotProgress;
 
   // Tracks whether a tail-slot item is currently hard-stopped at the belt seam.
   @serializable("boolean")
-  public leftTailBlocked = false;
+  declare public leftTailBlocked: boolean;
 
   @serializable("boolean")
-  public rightTailBlocked = false;
+  declare public rightTailBlocked: boolean;
 
   // Doubly Linked List style pointers
   @serializable("json")
-  public previousEntityId: EntityId | null = null;
+  declare public previousEntityId: EntityId | null;
 
   @serializable("json")
-  public nextEntityId: EntityId | null = null;
+  declare public nextEntityId: EntityId | null;
 
   /**
    * Marker used to determine whether this belt is considered a leaf in a belt network. This exists in ADDITION to the presence
@@ -55,16 +56,25 @@ export class ConveyorBeltComponent extends Serializable {
    * otherwise be an expensive operation for large networks.
    */
   @serializable("boolean")
-  public isLeaf = false;
+  declare public isLeaf: boolean;
 
   @serializable("string")
-  public variant: string;
+  declare public variant: string;
 
   @serializable("float")
-  public speed: number;
+  declare public speed: number;
 
   constructor(variant: string, speed = DEFAULT_CONVEYOR_BELT_SPEED) {
     super();
+    this.left = [null, null, null, null];
+    this.right = [null, null, null, null];
+    this.leftProgress = [0, 0, 0, 0];
+    this.rightProgress = [0, 0, 0, 0];
+    this.leftTailBlocked = false;
+    this.rightTailBlocked = false;
+    this.previousEntityId = null;
+    this.nextEntityId = null;
+    this.isLeaf = false;
     this.variant = variant;
     this.speed = speed;
   }

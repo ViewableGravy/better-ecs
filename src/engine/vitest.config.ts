@@ -1,11 +1,14 @@
 import { fileURLToPath } from 'node:url';
+import glsl from 'vite-plugin-glsl';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   plugins: [
+    glsl(),
     tsconfigPaths({
       projects: [
+        fileURLToPath(new URL('../../tsconfig.base.json', import.meta.url)),
         fileURLToPath(new URL('./tsconfig.json', import.meta.url)),
         fileURLToPath(new URL('./tsconfig.lib.json', import.meta.url)),
       ],
@@ -18,6 +21,7 @@ export default defineConfig({
   },
   test: {
     include: ['src/**/*.spec.ts'],
+    setupFiles: ['src/tests/setup/unregister-engine.ts'],
     typecheck: {
       enabled: false,
       include: ['src/**/*.spec-d.ts', 'src/**/*.test-d.ts'],

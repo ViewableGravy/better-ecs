@@ -1,3 +1,4 @@
-import { Serializable } from "@engine";
+import { Component, SerializableComponent } from "@engine";
 
-export class TransportBeltLeaf extends Serializable {}
+@SerializableComponent
+export class TransportBeltLeaf extends Component {}

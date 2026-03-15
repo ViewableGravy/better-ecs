@@ -1,14 +1,16 @@
 // packages/engine/src/ecs/world.ts
 import { Parent } from "@engine/components";
+import { fromEngine, registeredEngine } from "@engine/core/global-engine";
+import { Component } from "@engine/ecs/component";
 import type {
     EntityComponentLookupResult,
     EntityId,
     InvariantQueryResult,
     QueryResult,
 } from "@engine/ecs/entity";
-import { createEntityId, getEntityIndex, invalidateEntity } from "@engine/ecs/entity";
+import { createEntityId, getEntityIndex, invalidateEntity, registerEntityId } from "@engine/ecs/entity";
 import { ComponentStore } from "@engine/ecs/storage";
-import { Serializable, type SerializedObject } from "@engine/serialization";
+import { isSerializableComponentInstance, type SerializedObject } from "@engine/serialization";
 import type { Class } from "type-fest";
 
 type ForEach1Callback<TA> = (entityId: EntityId<TA>, componentA: TA) => void;
@@ -37,6 +39,7 @@ export type SerializedWorld = {
 
 export interface IUserWorld {
   create(): EntityId;
+  createWithId(entityId: EntityId): EntityId;
 
   destroy(...componentTypes: Function[]): void;
   destroy(entityId: EntityId): void;
@@ -98,6 +101,10 @@ export class UserWorld implements IUserWorld {
 
   create(): EntityId {
     return this.world.createEntity();
+  }
+
+  createWithId(entityId: EntityId): EntityId {
+    return this.world.createEntityWithId(entityId);
   }
 
   destroy(...componentTypes: Function[]): void;
@@ -262,9 +269,19 @@ export class World {
 
   /** Optional scene identifier for debugging */
   public sceneId?: string;
+  public worldId?: string;
 
   constructor(sceneId?: string) {
     this.sceneId = sceneId;
+  }
+
+  setWorldId(worldId: string): this {
+    this.worldId = worldId;
+    return this;
+  }
+
+  private resolveWorldId(): string {
+    return this.worldId ?? this.sceneId ?? "default";
   }
 
   /**
@@ -273,6 +290,22 @@ export class World {
   createEntity(): EntityId {
     const entityId = createEntityId();
     this.entities.add(entityId);
+    if (registeredEngine) {
+      fromEngine((engine) => engine.serialization.recordEntityCreated(this.resolveWorldId(), entityId));
+    }
+    return entityId;
+  }
+
+  createEntityWithId(entityId: EntityId): EntityId {
+    if (this.entities.has(entityId)) {
+      throw new Error(`Entity ${entityId} already exists`);
+    }
+
+    registerEntityId(entityId);
+    this.entities.add(entityId);
+    if (registeredEngine) {
+      fromEngine((engine) => engine.serialization.recordEntityCreated(this.resolveWorldId(), entityId));
+    }
     return entityId;
   }
 
@@ -296,9 +329,17 @@ export class World {
 
     // Remove from all component stores
     for (const store of this.componentStores.values()) {
+      const component = store.get(entityId);
+      if (component instanceof Component) {
+        component.__detach();
+      }
+
       store.remove(entityId);
     }
 
+    if (registeredEngine) {
+      fromEngine((engine) => engine.serialization.recordEntityDestroyed(this.resolveWorldId(), entityId));
+    }
     invalidateEntity(entityId);
     this.entities.delete(entityId);
   }
@@ -377,6 +418,13 @@ export class World {
     }
 
     store.add(entityId, comp);
+
+    if (comp instanceof Component) {
+      comp.__attach(entityId, this.resolveWorldId());
+      if (registeredEngine) {
+        fromEngine((engine) => engine.serialization.recordComponentAdded(comp));
+      }
+    }
   }
 
   /**
@@ -403,6 +451,14 @@ export class World {
   removeComponent<T>(entityId: EntityId<T>, componentType: Function): void {
     const store = this.componentStores.get(componentType);
     if (store) {
+      const component = (store as ComponentStore<T>).get(entityId);
+      if (component instanceof Component) {
+        if (registeredEngine) {
+          fromEngine((engine) => engine.serialization.recordComponentRemoved(component));
+        }
+        component.__detach();
+      }
+
       store.remove(entityId);
     }
   }
@@ -745,7 +801,7 @@ export class World {
 
     for (const componentType of componentTypes) {
       const component = this.getComponent(entityId, componentType);
-      if (!(component instanceof Serializable)) {
+      if (!isSerializableComponentInstance(component)) {
         continue;
       }
 

@@ -2,17 +2,18 @@
  *   COMPONENT START
  **********************************************************************************************************/
 
-import { Serializable, serializable } from "@engine";
+import { Component, SerializableComponent, serializable } from "@engine";
 
-export class LandClaim extends Serializable {
+@SerializableComponent
+export class LandClaim extends Component {
   @serializable("string")
-  public ownerName: string;
+  declare public ownerName: string;
 
   @serializable("float")
-  public ownedRadiusTiles: number;
+  declare public ownedRadiusTiles: number;
 
   @serializable("float")
-  public buildableRadiusTiles: number;
+  declare public buildableRadiusTiles: number;
 
   public constructor(ownerName: string, ownedRadiusTiles: number, buildableRadiusTiles: number) {
     super();

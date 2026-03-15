@@ -1,13 +1,14 @@
 import type { EntityId } from "@engine";
-import { Serializable, serializable } from "@engine";
+import { Component, SerializableComponent, serializable } from "@engine";
 import type { ContextId } from "@libs/spatial-contexts";
 
-export class InsideContext extends Serializable {
+@SerializableComponent
+export class InsideContext extends Component {
   @serializable("string")
-  public contextId: ContextId;
+  declare public contextId: ContextId;
 
   @serializable("int")
-  public sourceRegionEntity: EntityId;
+  declare public sourceRegionEntity: EntityId;
 
   constructor(contextId: ContextId, sourceRegionEntity: EntityId) {
     super();

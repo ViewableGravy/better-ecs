@@ -1,5 +1,6 @@
 import type { EngineClass } from "@engine/core/engine";
 import type { RegisteredEngine } from "@engine/core/engine-types";
+import { fromEngine, registeredEngine } from "@engine/core/global-engine";
 import type { AnyRenderPipelineContext } from "@engine/core/render-pipeline";
 import type { SceneContext } from "@engine/core/scene/scene-context";
 
@@ -94,11 +95,15 @@ export function executeWithContext<T>(context: Partial<LooseContext>, fn: () => 
  * @internal used by fromContext and internal engine systems
  */
 export function getContextEngine(): RegisteredEngine {
-  if (!context.engine) {
+  if (context.engine) {
+    return context.engine;
+  }
+
+  if (!registeredEngine) {
     throw new Error("fromContext() called outside of a system execution context");
   }
 
-  return context.engine;
+  return fromEngine((engine) => engine);
 }
 
 /**
