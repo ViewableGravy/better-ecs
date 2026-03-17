@@ -28,4 +28,8 @@ export class Queue<T> {
   pop(): T | undefined {
     return this.#items.pop();
   }
+
+  replaceAt(index: number, item: T): void {
+    this.#items[index] = item;
+  }
 }

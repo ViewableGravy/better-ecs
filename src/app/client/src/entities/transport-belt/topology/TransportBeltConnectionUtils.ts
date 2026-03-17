@@ -70,7 +70,7 @@ export class TransportBeltConnectionUtils {
         previousBelt.nextEntityId = beltEntityId;
 
         if (previousHadNoNextConnection) {
-          this.blockTailTransfers(previousBelt);
+          this.blockTailTransfers(world, previousEntityId, previousBelt);
         }
       }
     }
@@ -165,7 +165,7 @@ export class TransportBeltConnectionUtils {
     belt.nextEntityId = nextEntityId;
 
     if (oldNextEntityId === null && nextEntityId !== null) {
-      this.blockTailTransfers(belt);
+      this.blockTailTransfers(world, beltEntityId, belt);
     }
 
     if (oldPreviousEntityId !== null && oldPreviousEntityId !== previousEntityId) {
@@ -194,7 +194,7 @@ export class TransportBeltConnectionUtils {
         previousBelt.nextEntityId = beltEntityId;
 
         if (previousHadNoNextConnection) {
-          this.blockTailTransfers(previousBelt);
+          this.blockTailTransfers(world, previousEntityId, previousBelt);
         }
       }
     }
@@ -334,7 +334,11 @@ export class TransportBeltConnectionUtils {
     return canConveyorStoreEntities(variant) && getTransportBeltVariantDescriptor(variant) !== undefined;
   }
 
-  private static blockTailTransfers(conveyor: ConveyorBeltComponent): void {
+  private static blockTailTransfers(
+    world: UserWorld,
+    conveyorEntityId: EntityId,
+    conveyor: ConveyorBeltComponent,
+  ): void {
     for (const side of ["left", "right"] as const) {
       const slots = getConveyorLaneSlots(conveyor, side);
 

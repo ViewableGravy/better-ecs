@@ -1,23 +1,15 @@
-import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
-import { TransportBeltConnectionUtils } from "@client/entities/transport-belt";
-import type { SceneStateSyncLoadContext } from "@libs/state-sync";
 import {
-    LocalStorageInputAdapter,
-    LocalStorageOutputAdapter,
+    IndexedDbWorkerInputAdapter,
+    IndexedDbWorkerOutputAdapter,
     serializationSystem,
 } from "@libs/state-sync";
 
-export const STORAGE_KEY = "better-ecs:scene-state";
-
-function reconnectPersistedTransportBelts(context: SceneStateSyncLoadContext): void {
-  for (const world of context.engine.scene.context.worlds) {
-    if ([...world.query(ConveyorBeltComponent)].length === 0) {
-      continue;
-    }
-
-    TransportBeltConnectionUtils.reconnectAllBelts(world);
-  }
-}
+import {
+    STORAGE_DATABASE_NAME,
+    STORAGE_KEY,
+    STORAGE_STORE_NAME,
+} from "./const";
+import { reconnectPersistedTransportBelts } from "./utilities";
 
 /**********************************************************************************************************
  *   COMPONENT START
@@ -25,15 +17,18 @@ function reconnectPersistedTransportBelts(context: SceneStateSyncLoadContext): v
 
 export const System = serializationSystem({
   name: "client:persistence",
-  inputAdapter: new LocalStorageInputAdapter({
+  inputAdapter: new IndexedDbWorkerInputAdapter({
+    databaseName: STORAGE_DATABASE_NAME,
+    storeName: STORAGE_STORE_NAME,
     storageKey: STORAGE_KEY,
     onHydrate: (_sceneState, context) => {
       reconnectPersistedTransportBelts(context);
     },
   }),
-  outputAdapter: new LocalStorageOutputAdapter({
+  outputAdapter: new IndexedDbWorkerOutputAdapter({
+    databaseName: STORAGE_DATABASE_NAME,
+    storeName: STORAGE_STORE_NAME,
     storageKey: STORAGE_KEY,
     flushIntervalMs: 1000,
-    frameBudgetMs: 0.5,
   }),
 });

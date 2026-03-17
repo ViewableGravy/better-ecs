@@ -7,12 +7,10 @@ import {
     type SpriteRenderRecord,
 } from "@engine/core/render-pipeline/passes/render-world/sprite-render-record";
 
-/**********************************************************************************************************
- *   COMPONENT START
- **********************************************************************************************************/
 export function writeSpriteRecord(record: SpriteRenderRecord, assetId: string, sprite: Sprite): number {
   let changed = false;
   const target = record.sprite;
+  const resolvedAlpha = sprite.tint.a;
 
   if (target.assetId !== assetId) {
     target.assetId = assetId;
@@ -62,8 +60,8 @@ export function writeSpriteRecord(record: SpriteRenderRecord, assetId: string, s
     target.tint.b = sprite.tint.b;
     changed = true;
   }
-  if (target.tint.a !== sprite.tint.a) {
-    target.tint.a = sprite.tint.a;
+  if (target.tint.a !== resolvedAlpha) {
+    target.tint.a = resolvedAlpha;
     changed = true;
   }
 

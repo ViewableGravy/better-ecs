@@ -61,7 +61,6 @@ export class ConveyorEntityMotionUtils {
     ConveyorEntityMotionUtils.advanceConveyor(
       this.world,
       conveyor,
-      this.nextConveyorEntityId,
       nextConveyor,
       this.updateDelta,
     );
@@ -86,7 +85,6 @@ export class ConveyorEntityMotionUtils {
   public static advanceConveyor(
     world: UserWorld,
     conveyor: ConveyorBeltComponent,
-    nextConveyorEntityId: EntityId | null,
     nextConveyor: ConveyorBeltComponent | null,
     updateDelta: number,
   ): void {
@@ -95,7 +93,6 @@ export class ConveyorEntityMotionUtils {
     this.advanceLane(
       world,
       conveyor,
-      nextConveyorEntityId,
       nextConveyor,
       "left",
       updateDelta * CONVEYOR_SLOT_COUNT_PER_LANE / leftAdvanceDuration,
@@ -104,14 +101,16 @@ export class ConveyorEntityMotionUtils {
     this.advanceLane(
       world,
       conveyor,
-      nextConveyorEntityId,
       nextConveyor,
       "right",
       updateDelta * CONVEYOR_SLOT_COUNT_PER_LANE / rightAdvanceDuration,
     );
   }
 
-  public static syncConveyorTransforms(world: UserWorld, conveyor: ConveyorBeltComponent): void {
+  public static syncConveyorTransforms(
+    world: UserWorld,
+    conveyor: ConveyorBeltComponent,
+  ): void {
     for (const side of CONVEYOR_SIDES) {
       this.syncLaneTransforms(world, conveyor, side);
     }
@@ -127,6 +126,7 @@ export class ConveyorEntityMotionUtils {
 
     const didTransferLeftLane = this.transferSideLoadLane(
       world,
+      transfer.sourceEntityId,
       sourceConveyor,
       "left",
       transfer.targetEntityId,
@@ -136,6 +136,7 @@ export class ConveyorEntityMotionUtils {
     );
     const didTransferRightLane = this.transferSideLoadLane(
       world,
+      transfer.sourceEntityId,
       sourceConveyor,
       "right",
       transfer.targetEntityId,
@@ -150,7 +151,6 @@ export class ConveyorEntityMotionUtils {
   private static advanceLane(
     world: UserWorld,
     conveyor: ConveyorBeltComponent,
-    nextConveyorEntityId: EntityId | null,
     nextConveyor: ConveyorBeltComponent | null,
     side: ConveyorSide,
     progressDelta: number,
@@ -158,7 +158,9 @@ export class ConveyorEntityMotionUtils {
     const slots = getConveyorLaneSlots(conveyor, side);
     const progress = getConveyorLaneProgress(conveyor, side);
     const nextSlots = nextConveyor ? getConveyorLaneSlots(nextConveyor, side) : null;
-    const nextProgress = nextConveyor ? getConveyorLaneProgress(nextConveyor, side) : null;
+    const nextProgress = nextConveyor
+      ? getConveyorLaneProgress(nextConveyor, side)
+      : null;
 
     for (const index of CONVEYOR_SLOT_INDICES_DESC) {
       const entityId = slots[index];
@@ -187,9 +189,9 @@ export class ConveyorEntityMotionUtils {
         this.transferToNextConveyor(
           world,
           conveyor,
+          nextConveyor,
           side,
           entityId,
-          nextConveyorEntityId,
           slots,
           progress,
           nextSlots,
@@ -222,7 +224,11 @@ export class ConveyorEntityMotionUtils {
     }
   }
 
-  private static syncLaneTransforms(world: UserWorld, conveyor: ConveyorBeltComponent, side: ConveyorSide): void {
+  private static syncLaneTransforms(
+    world: UserWorld,
+    conveyor: ConveyorBeltComponent,
+    side: ConveyorSide,
+  ): void {
     const slots = getConveyorLaneSlots(conveyor, side);
     const progress = getConveyorLaneProgress(conveyor, side);
 
@@ -272,15 +278,18 @@ export class ConveyorEntityMotionUtils {
   private static transferToNextConveyor(
     world: UserWorld,
     conveyor: ConveyorBeltComponent,
+    nextConveyor: ConveyorBeltComponent | null,
     side: ConveyorSide,
     entityId: EntityId,
-    nextConveyorEntityId: EntityId | null,
     slots: ConveyorBeltComponent["left"],
     progress: ConveyorBeltComponent["leftProgress"],
     nextSlots: ConveyorBeltComponent["left"] | null,
     nextProgress: ConveyorBeltComponent["leftProgress"] | null,
   ): void {
+    const nextConveyorEntityId = nextConveyor?.attachedEntityId;
+
     if (nextConveyorEntityId === null
+      || nextConveyorEntityId === undefined
       || nextSlots === null
       || nextProgress === null
       || nextSlots[0] !== null) {
@@ -301,6 +310,7 @@ export class ConveyorEntityMotionUtils {
 
   private static transferSideLoadLane(
     world: UserWorld,
+    sourceConveyorEntityId: EntityId,
     sourceConveyor: ConveyorBeltComponent,
     sourceLane: ConveyorSide,
     targetConveyorEntityId: EntityId,

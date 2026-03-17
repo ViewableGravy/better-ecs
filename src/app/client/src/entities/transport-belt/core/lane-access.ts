@@ -1,4 +1,4 @@
-import { type ConveyorBeltComponent, type ConveyorSide } from "@client/components/conveyor-belt";
+import { ConveyorBeltComponent, type ConveyorSide } from "@client/components/conveyor-belt";
 
 /**********************************************************************************************************
  *   COMPONENT START
@@ -26,7 +26,10 @@ export function getConveyorLaneProgress(
   return conveyor.rightProgress;
 }
 
-export function isConveyorLaneTailBlocked(conveyor: ConveyorBeltComponent, side: ConveyorSide): boolean {
+export function isConveyorLaneTailBlocked(
+  conveyor: ConveyorBeltComponent,
+  side: ConveyorSide,
+): boolean {
   if (side === "left") {
     return conveyor.leftTailBlocked;
   }

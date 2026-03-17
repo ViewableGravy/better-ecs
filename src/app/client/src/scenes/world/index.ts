@@ -15,6 +15,7 @@ import { System as ConveyorEntityMotion } from "@client/systems/world/conveyor-e
 import { System as ConveyorMovement } from "@client/systems/world/conveyor-movement";
 import { DebugOverlaySystem } from "@client/systems/world/debug-overlay";
 import { HouseContextSystem } from "@client/systems/world/house-transition";
+import { System as HouseVisualsSystem } from "@client/systems/world/house-visuals";
 import { PlayerOrbitSystem } from "@client/systems/world/player-orbit";
 import { System as PortalSystem } from "@client/systems/world/portal";
 import { System as Collision } from "@client/systems/world/scene-collision";
@@ -42,6 +43,7 @@ export const Scene = createContextScene("MainScene")({
     PhysicsDebugSystem,
     PlayerOrbitSystem,
     HouseContextSystem,
+    HouseVisualsSystem,
     PortalSystem,
     BuildModeSystem,
     DebugOverlaySystem,

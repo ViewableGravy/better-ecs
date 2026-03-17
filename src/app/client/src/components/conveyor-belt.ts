@@ -26,18 +26,13 @@ export class ConveyorBeltComponent extends Component {
   @serializable("json")
   declare public readonly right: ConveyorSlots;
 
-  // Visual progress of entities in their slots
-  @serializable("json")
+  // Runtime-only interpolation state used for carried-item motion and visuals.
   declare public readonly leftProgress: ConveyorSlotProgress;
 
-  @serializable("json")
   declare public readonly rightProgress: ConveyorSlotProgress;
 
-  // Tracks whether a tail-slot item is currently hard-stopped at the belt seam.
-  @serializable("boolean")
   declare public leftTailBlocked: boolean;
 
-  @serializable("boolean")
   declare public rightTailBlocked: boolean;
 
   // Doubly Linked List style pointers

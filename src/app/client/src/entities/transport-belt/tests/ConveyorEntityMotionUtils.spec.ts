@@ -82,8 +82,22 @@ const ConveyorEntityMotionUtils = {
       RuntimeConveyorEntityMotionUtils.syncConveyorTransforms(world, conveyor);
     }
   },
-  advanceConveyor: RuntimeConveyorEntityMotionUtils.advanceConveyor.bind(RuntimeConveyorEntityMotionUtils),
-  syncConveyorTransforms: RuntimeConveyorEntityMotionUtils.syncConveyorTransforms.bind(RuntimeConveyorEntityMotionUtils),
+  advanceConveyor(
+    world: UserWorld,
+    conveyor: ConveyorBeltComponent,
+    nextConveyor: ConveyorBeltComponent | null,
+    updateDelta: number,
+  ): void {
+    RuntimeConveyorEntityMotionUtils.advanceConveyor(
+      world,
+      conveyor,
+      nextConveyor,
+      updateDelta,
+    );
+  },
+  syncConveyorTransforms(world: UserWorld, conveyor: ConveyorBeltComponent): void {
+    RuntimeConveyorEntityMotionUtils.syncConveyorTransforms(world, conveyor);
+  },
 };
 
 describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
@@ -103,7 +117,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     conveyor.leftProgress[0] = 1;
     conveyor.leftProgress[1] = 1;
 
-    ConveyorEntityMotionUtils.advanceConveyor(world, conveyor, null, null, 0);
+    ConveyorEntityMotionUtils.advanceConveyor(world, conveyor, null, 0);
     ConveyorEntityMotionUtils.syncConveyorTransforms(world, conveyor);
 
     expect(conveyor.left).toEqual([null, slot0EntityId, slot1EntityId, null]);
@@ -138,7 +152,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     conveyor.leftProgress[2] = 1;
     conveyor.rightProgress[1] = 1;
 
-    ConveyorEntityMotionUtils.advanceConveyor(world, conveyor, null, null, 0);
+    ConveyorEntityMotionUtils.advanceConveyor(world, conveyor, null, 0);
     ConveyorEntityMotionUtils.syncConveyorTransforms(world, conveyor);
 
     expect(conveyor.left).toEqual([null, slot0EntityId, null, slot2EntityId]);
@@ -171,7 +185,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     conveyor.leftProgress[2] = 1;
     conveyor.rightProgress[0] = 1;
 
-    ConveyorEntityMotionUtils.advanceConveyor(world, conveyor, null, null, 0);
+    ConveyorEntityMotionUtils.advanceConveyor(world, conveyor, null, 0);
     ConveyorEntityMotionUtils.syncConveyorTransforms(world, conveyor);
 
     expect(conveyor.left).toEqual([null, left0EntityId, left1EntityId, left2EntityId]);
@@ -192,7 +206,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     conveyor.right[3] = entityId;
     conveyor.rightProgress[3] = 1;
 
-    ConveyorEntityMotionUtils.advanceConveyor(world, conveyor, null, null, 0);
+    ConveyorEntityMotionUtils.advanceConveyor(world, conveyor, null, 0);
     ConveyorEntityMotionUtils.syncConveyorTransforms(world, conveyor);
 
     expect(conveyor.right).toEqual([null, null, null, entityId]);
@@ -318,7 +332,6 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     ConveyorEntityMotionUtils.advanceConveyor(
       world,
       conveyor,
-      null,
       null,
       SLOT_ADVANCE_DURATION_MS / CONVEYOR_SLOT_COUNT_PER_LANE,
     );

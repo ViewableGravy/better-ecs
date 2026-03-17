@@ -1,7 +1,18 @@
-/**
- * Legacy placeholder kept temporarily while migrating to render passes.
- * Context visuals are now applied in `systems/render/passes/ApplyContextVisualsPass`.
- */
-export const HouseVisualsSystem = () => {
-  throw new Error("HouseVisualsSystem is deprecated. Use ApplyContextVisualsPass instead.");
-};
+import { createSystem } from "@engine";
+import { Engine, fromContext, World } from "@engine/context";
+import { SpatialContexts } from "@libs/spatial-contexts";
+
+import { applyHouseVisuals } from "./utilities";
+
+export const System = createSystem("main:house-visuals")({
+  system() {
+    const world = fromContext(World);
+    const engine = fromContext(Engine);
+    const manager = SpatialContexts.getManager(engine.scene.context);
+    if (!manager) {
+      return;
+    }
+
+    applyHouseVisuals(world, manager);
+  },
+});

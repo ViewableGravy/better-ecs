@@ -21,6 +21,7 @@ export type EngineSerializationOptions = {
 export class EngineSerializationManager {
   readonly #commands = new Queue<DiffCommand>();
   readonly #engine: AnyEngine;
+  readonly #pendingSetFieldIndexes = new Map<string, number>();
 
   #version = 0;
   #suspendDepth = 0;
@@ -149,6 +150,8 @@ export class EngineSerializationManager {
 
   drainDiffCommands(): DiffCommand[] {
     const commands = this.#commands.drain();
+    this.#pendingSetFieldIndexes.clear();
+
     if (commands.length === 0) {
       return commands;
     }
@@ -204,10 +207,74 @@ export class EngineSerializationManager {
       return;
     }
 
+    if (command.op === "set-field") {
+      this.enqueueSetFieldCommand(command);
+      return;
+    }
+
+    this.invalidatePendingSetFieldIndexes(command);
     this.#commands.enqueue(command);
+  }
+
+  private enqueueSetFieldCommand(command: Extract<DiffCommand, { op: "set-field" }>): void {
+    const fieldKeys = Object.keys(command.changes);
+
+    if (fieldKeys.length !== 1) {
+      this.#commands.enqueue(command);
+      return;
+    }
+
+    const [fieldKey] = fieldKeys;
+    const pendingFieldKey = this.getFieldCommandKey(
+      command.worldId,
+      command.entityId,
+      command.componentType,
+      fieldKey,
+    );
+    const pendingIndex = this.#pendingSetFieldIndexes.get(pendingFieldKey);
+
+    if (pendingIndex !== undefined) {
+      this.#commands.replaceAt(pendingIndex, command);
+      return;
+    }
+
+    this.#commands.enqueue(command);
+    this.#pendingSetFieldIndexes.set(pendingFieldKey, this.#commands.size - 1);
+  }
+
+  private invalidatePendingSetFieldIndexes(command: Exclude<DiffCommand, { op: "set-field" }>): void {
+    if (command.op === "create-entity" || command.op === "destroy-entity") {
+      return this.clearPendingSetFieldIndexesForEntity(command.worldId, command.entityId);
+    }
+
+    this.clearPendingSetFieldIndexesForComponent(command.worldId, command.entityId, command.componentType);
+  }
+
+  private clearPendingSetFieldIndexesForEntity(worldId: string, entityId: EntityId): void {
+    const prefix = `${worldId}::${entityId}::`;
+
+    for (const key of this.#pendingSetFieldIndexes.keys()) {
+      if (key.startsWith(prefix)) {
+        this.#pendingSetFieldIndexes.delete(key);
+      }
+    }
+  }
+
+  private clearPendingSetFieldIndexesForComponent(worldId: string, entityId: EntityId, componentType: string): void {
+    const prefix = `${worldId}::${entityId}::${componentType}::`;
+
+    for (const key of this.#pendingSetFieldIndexes.keys()) {
+      if (key.startsWith(prefix)) {
+        this.#pendingSetFieldIndexes.delete(key);
+      }
+    }
   }
 
   private getComponentCommandKey(worldId: string, entityId: EntityId, componentType: string): string {
     return `${worldId}::${entityId}::${componentType}`;
+  }
+
+  private getFieldCommandKey(worldId: string, entityId: EntityId, componentType: string, fieldKey: string): string {
+    return `${worldId}::${entityId}::${componentType}::${fieldKey}`;
   }
 }

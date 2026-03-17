@@ -120,6 +120,32 @@ describe("engine diff tracking", () => {
     ]);
   });
 
+  it("coalesces repeated pending field writes to the latest value", () => {
+    const engine = createTrackedEngine();
+    const entityId = engine.world.create();
+    const marker = new Marker("initial");
+
+    engine.world.add(entityId, marker);
+    drain(engine);
+
+    marker.value = "one";
+    marker.value = "two";
+    marker.value = "three";
+
+    expect(engine.serialization.peekDiffCommands()).toEqual([
+      {
+        op: "set-field",
+        version: marker.version,
+        worldId: "default",
+        entityId,
+        componentType: "Marker",
+        changes: {
+          value: "three",
+        },
+      },
+    ]);
+  });
+
   it("tracks structural mutations and replays them in order", () => {
     const source = createTrackedEngine();
     const entityId = source.world.create();
