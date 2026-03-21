@@ -3,11 +3,11 @@ import { describe, expect, it } from "vitest";
 import { Parent } from "@engine/components";
 import { Component } from "@engine/ecs/component";
 import { UserWorld, World } from "@engine/ecs/world";
-import { SerializableComponent, serializable } from "@engine/serialization";
+import { StateComponent, state } from "@engine/serialization";
 
-@SerializableComponent
+@StateComponent
 class Marker extends Component {
-  @serializable("string")
+  @state("string")
   public value: string;
 
   constructor(value: string) {

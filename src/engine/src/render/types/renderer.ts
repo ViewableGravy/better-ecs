@@ -2,20 +2,21 @@ import type { ShaderSourceAsset } from "@engine/asset";
 import type { LooseAssetManager } from "@engine/asset/AssetManager";
 import type { Camera } from "@engine/components/camera";
 import type { Shape } from "@engine/components/shape";
-import type { Color, Sprite } from "@engine/components/sprite/sprite";
+import type { Rgba, Sprite } from "@engine/components/sprite/sprite";
 import type { Texture } from "@engine/components/texture";
 import type { ShaderTransform2D, Transform2D } from "@engine/components/transform";
+import type { SpriteRenderState } from "@engine/core/render-pipeline/passes/render-world/sprite-render-record";
 import type { TextureCache, TextureCacheConfig } from "@engine/render/textureCache/texture-cache";
 import type { ShapeRenderInput } from "@engine/render/types/low-level";
 
 export { type TextureCacheConfig } from "@engine/render/textureCache/texture-cache";
 export type { TextureHandle, TextureInfo, TextureState, TextureStatus } from "@engine/render/textureCache/texture-cache";
 export type {
-  DenseShapeRenderData,
-  ShapeRenderData,
-  ShapeRenderInput,
-  SpriteRenderData,
-  TexturedQuadRenderData
+    DenseShapeRenderData,
+    ShapeRenderData,
+    ShapeRenderInput,
+    SpriteRenderData,
+    TexturedQuadRenderData
 } from "@engine/render/types/low-level";
 
 export type Renderable = Sprite | Shape;
@@ -23,7 +24,7 @@ export type Settable = Camera;
 
 export interface ShaderQuadOptions {
   texture?: Texture;
-  tint?: Color;
+  tint?: Rgba;
   time?: number;
 }
 
@@ -39,7 +40,7 @@ export interface TexturedQuadDrawData {
   scaleY: number;
   anchorX: number;
   anchorY: number;
-  tint?: Color;
+  tint?: Rgba;
   time: number;
 }
 
@@ -73,9 +74,10 @@ export interface Renderer {
 
   begin(): void;
   end(): void;
-  clear(color: Color): void;
+  clear(color: Rgba): void;
 
   render(renderable: Renderable, transform: Transform2D, alpha: number): void;
+  renderSprite(sprite: SpriteRenderState, transform: Transform2D, alpha: number): void;
   set(value: Settable, transform: Transform2D, alpha: number): void;
 
   drawShape(data: ShapeRenderInput): void;

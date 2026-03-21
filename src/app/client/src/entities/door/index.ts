@@ -1,7 +1,7 @@
 import { OUTSIDE, RenderVisibility, type RenderVisibilityRole } from "@client/components/render-visibility";
 import { CollisionProfiles } from "@client/scenes/world/physics/collision-profiles";
 import { Vec2, type UserWorld } from "@engine";
-import { Color, Debug, Shape, Transform2D } from "@engine/components";
+import { Debug, FillColor, Rgba, Shape, StrokeColor, Transform2D } from "@engine/components";
 import { RectangleCollider } from "@libs/physics";
 import { Portal, type PortalOpts } from "@libs/spatial-contexts";
 
@@ -10,8 +10,8 @@ type SpawnDoorOptions = {
   y: number;
   width?: number;
   height?: number;
-  fill: Color;
-  stroke?: Color;
+  fill: Rgba;
+  stroke?: Rgba;
   portal?: PortalOpts;
   hasCollider?: boolean;
   role?: RenderVisibilityRole;
@@ -22,21 +22,12 @@ export function spawnDoor(world: UserWorld, opts: SpawnDoorOptions): number {
   const entity = world.create();
   const width = opts.width ?? 40;
   const height = opts.height ?? 80;
+  const shape = new Shape("rectangle", width, height, 2, 10, 0);
 
   world.add(entity, new Transform2D(opts.x, opts.y));
-  world.add(
-    entity,
-    new Shape(
-      "rectangle",
-      width,
-      height,
-      opts.fill,
-      opts.stroke ?? new Color(0, 0, 0, 1),
-      2,
-      10,
-      0,
-    ),
-  );
+  world.add(entity, shape);
+  world.add(entity, new FillColor(opts.fill));
+  world.add(entity, new StrokeColor(opts.stroke ?? new Rgba(0, 0, 0, 1)));
 
   if (opts.hasCollider ?? true) {
     const halfWidth = width * 0.5;

@@ -1,8 +1,8 @@
-import { Component, SerializableComponent, serializable } from "@engine";
+import { Component, StateComponent, state } from "@engine";
 
-@SerializableComponent
+@StateComponent
 export class Placeable extends Component {
-  @serializable("string")
+  @state("string")
   declare public itemType: string;
 
   public constructor(itemType: string) {

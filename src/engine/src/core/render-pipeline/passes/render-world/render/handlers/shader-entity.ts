@@ -1,7 +1,7 @@
 import type { LooseAssetManager } from "@engine/asset/AssetManager";
 import { isShaderSourceAsset } from "@engine/asset/utils";
-import { EditorHoverHighlight, ShaderQuad } from "@engine/components";
-import { Color } from "@engine/components/sprite/sprite";
+import { EditorHoverHighlight, resolveEntityTint, ShaderQuad } from "@engine/components";
+import { Rgba } from "@engine/components/sprite/sprite";
 import type { Transform2D } from "@engine/components/transform";
 import { fromContext, FromEngine, FromRender } from "@engine/context";
 import type { ShaderEntityRenderCommand } from "@engine/core/render-pipeline/passes/render-world/render/culling/utils";
@@ -16,8 +16,9 @@ type ShaderRenderer = Pick<Renderer, "drawTexturedQuad">;
 /**********************************************************************************************************
  *   CONSTS
  **********************************************************************************************************/
-const HOVER_TINT_COLOR = new Color(1, 1, 0, 1);
-const SHARED_HOVER_TINT = new Color(1, 1, 1, 1);
+const HOVER_TINT_COLOR = new Rgba(1, 1, 0, 1);
+const SHARED_RESOLVED_TINT = new Rgba(1, 1, 1, 1);
+const SHARED_HOVER_TINT = new Rgba(1, 1, 1, 1);
 
 /**********************************************************************************************************
  *   COMPONENT START
@@ -43,9 +44,10 @@ export function handleShaderEntityCommand(
   }
 
   const hoverHighlight = world.get(entityId, EditorHoverHighlight);
+  const resolvedTint = resolveEntityTint(world, entityId, SHARED_RESOLVED_TINT);
   const tint = hoverHighlight
-    ? blendColor(shaderQuad.tint, HOVER_TINT_COLOR, hoverHighlight.amount, SHARED_HOVER_TINT)
-    : shaderQuad.tint;
+    ? blendColor(resolvedTint, HOVER_TINT_COLOR, hoverHighlight.amount, SHARED_HOVER_TINT)
+    : resolvedTint;
 
   renderer.drawTexturedQuad({
     shader: loadedShader,

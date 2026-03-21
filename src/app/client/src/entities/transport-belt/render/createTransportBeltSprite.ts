@@ -1,6 +1,6 @@
 import { RENDER_LAYERS } from "@client/consts";
 import type { TransportBeltVariant } from "@client/entities/transport-belt/consts";
-import { AnimatedSprite, Color } from "@engine/components";
+import { AnimatedSprite } from "@engine/components";
 
 const TRANSPORT_BELT_FRAMES = [
   1, 2, 3, 4, 5, 6, 7, 8,
@@ -22,14 +22,6 @@ export function createTransportBeltSprite(
     assets: TRANSPORT_BELT_FRAMES.map((frame) => `transport-belt:${variant}_${frame}` as const),
     width: TRANSPORT_BELT_FRAME_SIZE * scale,
     height: TRANSPORT_BELT_FRAME_SIZE * scale,
-    tint: previousSprite
-      ? new Color(
-        previousSprite.tint.r,
-        previousSprite.tint.g,
-        previousSprite.tint.b,
-        previousSprite.tint.a,
-      )
-      : undefined,
     useGlobalOffset: true,
   });
 

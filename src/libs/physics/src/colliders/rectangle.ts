@@ -1,12 +1,12 @@
-import { Component, Rectangle, SerializableComponent, serializable, type Vec2 } from "@engine";
+import { Component, Rectangle, StateComponent, state, type Vec2 } from "@engine";
 
 type BoundsArgs = [bounds: Rectangle];
 type VecArgs = [position: Vec2, size: Vec2];
 type Args = BoundsArgs | VecArgs;
 
-@SerializableComponent
+@StateComponent
 export class RectangleCollider extends Component {
-  @serializable("json")
+  @state("json")
   declare public bounds: Rectangle;
 
   public constructor(position: Vec2, size: Vec2);

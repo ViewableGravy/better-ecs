@@ -9,4 +9,6 @@ export * from "@engine/components/shape";
 export * from "@engine/components/sprite/index";
 export * from "@engine/components/texture";
 export * from "@engine/components/transform";
+export * from "@engine/components/visual";
+export * from "@engine/components/visual-resolution";
 

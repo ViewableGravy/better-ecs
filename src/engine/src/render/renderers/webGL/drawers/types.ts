@@ -1,4 +1,4 @@
-import type { Color } from "@engine/components/sprite/sprite";
+import type { Rgba } from "@engine/components/sprite/sprite";
 import type { WebGLProgramRegistry } from "@engine/render/renderers/webGL/registry";
 import type { ShapeRenderInput, ShapeType } from "@engine/render/types/low-level";
 
@@ -10,7 +10,7 @@ export interface ShapeDrawerContext {
   center: Vec2;
   cameraZoom: number;
   programs: WebGLProgramRegistry;
-  drawColorTriangles(vertices: Float32Array, color: Color): void;
+  drawColorTriangles(vertices: Float32Array, color: Rgba): void;
   drawMeshLinesFromTriangles(vertices: Float32Array): void;
   drawMeshLinesFromTriangleStrip(vertices: Float32Array): void;
 }

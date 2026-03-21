@@ -17,6 +17,7 @@ type ListenerMap = {
 
 type WorkerRequest =
   | { type: "load"; requestId: number }
+  | { type: "clear"; requestId: number }
   | { type: "seed"; state: SerializedSceneState }
   | { type: "emit-batch"; commands: DiffCommand[] };
 
@@ -29,6 +30,10 @@ type WorkerResponse =
     }
   | {
       type: "flushed";
+    }
+  | {
+      type: "cleared";
+      requestId: number;
     }
   | {
       type: "error";
@@ -48,6 +53,7 @@ export class IndexedDbWorkerBackend
   };
   readonly #worker: Worker;
   readonly #loadRequests = new Map<number, (state: SerializedSceneState | null) => void>();
+  readonly #clearRequests = new Map<number, () => void>();
 
   #requestId = 0;
 
@@ -95,6 +101,15 @@ export class IndexedDbWorkerBackend
     return result;
   }
 
+  async clear(): Promise<void> {
+    const requestId = this.nextRequestId();
+
+    await new Promise<void>((resolve) => {
+      this.#clearRequests.set(requestId, resolve);
+      this.postMessage({ type: "clear", requestId });
+    });
+  }
+
   seed(state: SerializedSceneState): void {
     this.postMessage({ type: "seed", state });
   }
@@ -127,6 +142,7 @@ export class IndexedDbWorkerBackend
     this.#worker.removeEventListener("message", this.handleMessage);
     this.#worker.terminate();
     this.#loadRequests.clear();
+    this.#clearRequests.clear();
   }
 
   private assertCompatibleOptions(options: IndexedDbWorkerAdapterOptions): void {
@@ -151,6 +167,15 @@ export class IndexedDbWorkerBackend
 
     if (message.type === "flushed") {
       this.emitEvent("flushed", { type: "flushed" });
+      return;
+    }
+
+    if (message.type === "cleared") {
+      const resolve = this.#clearRequests.get(message.requestId);
+      if (resolve) {
+        this.#clearRequests.delete(message.requestId);
+        resolve();
+      }
       return;
     }
 

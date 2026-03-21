@@ -1,5 +1,5 @@
 import type { EntityId } from "@engine";
-import { Component, SerializableComponent, serializable } from "@engine";
+import { Component, StateComponent, state } from "@engine";
 
 export const DEFAULT_CONVEYOR_BELT_SPEED = 19;
 
@@ -17,13 +17,13 @@ export function canConveyorStoreEntities(variant: string): boolean {
   return !variant.startsWith("start-") && !variant.startsWith("end-");
 }
 
-@SerializableComponent
+@StateComponent
 export class ConveyorBeltComponent extends Component {
   // Slots for physical entities on this belt, separated into left and right lanes based on belt flow direction
-  @serializable("json")
+  @state("json")
   declare public readonly left: ConveyorSlots;
 
-  @serializable("json")
+  @state("json")
   declare public readonly right: ConveyorSlots;
 
   // Runtime-only interpolation state used for carried-item motion and visuals.
@@ -36,10 +36,10 @@ export class ConveyorBeltComponent extends Component {
   declare public rightTailBlocked: boolean;
 
   // Doubly Linked List style pointers
-  @serializable("json")
+  @state("json")
   declare public previousEntityId: EntityId | null;
 
-  @serializable("json")
+  @state("json")
   declare public nextEntityId: EntityId | null;
 
   /**
@@ -50,13 +50,13 @@ export class ConveyorBeltComponent extends Component {
    * leafs in the network to perform initial belt iteration, while isLeaf exists for querying during iteration, which would
    * otherwise be an expensive operation for large networks.
    */
-  @serializable("boolean")
+  @state("boolean")
   declare public isLeaf: boolean;
 
-  @serializable("string")
+  @state("string")
   declare public variant: string;
 
-  @serializable("float")
+  @state("float")
   declare public speed: number;
 
   constructor(variant: string, speed = DEFAULT_CONVEYOR_BELT_SPEED) {

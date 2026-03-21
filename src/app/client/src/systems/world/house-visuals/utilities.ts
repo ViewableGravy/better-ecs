@@ -13,7 +13,7 @@ import {
 } from "@client/systems/world/house-transition/transitionMutator";
 import { lerp } from "@client/utilities/math";
 import type { UserWorld } from "@engine";
-import { AnimatedSprite, Shape, Sprite } from "@engine/components";
+import { AnimatedSprite, FillColor, Shape, Sprite, StrokeColor, Tint } from "@engine/components";
 import type {
     ContextId,
     SpatialContextManager,
@@ -74,13 +74,27 @@ export function applyHouseVisuals(
 
 function applyPlayerAlpha(world: UserWorld, alpha: number): void {
   for (const entityId of world.query(PlayerComponent, Sprite)) {
-    const sprite = world.require(entityId, Sprite);
-    sprite.tint.a = alpha;
+    const tint = world.get(entityId, Tint);
+
+    if (tint) {
+      tint.value.a = alpha;
+    } else {
+      const nextTint = new Tint();
+      nextTint.value.a = alpha;
+      world.add(entityId, nextTint);
+    }
   }
 
   for (const entityId of world.query(PlayerComponent, AnimatedSprite)) {
-    const sprite = world.require(entityId, AnimatedSprite);
-    sprite.tint.a = alpha;
+    const tint = world.get(entityId, Tint);
+
+    if (tint) {
+      tint.value.a = alpha;
+    } else {
+      const nextTint = new Tint();
+      nextTint.value.a = alpha;
+      world.add(entityId, nextTint);
+    }
   }
 }
 
@@ -101,7 +115,6 @@ function applyShapeAlpha(
   } = args;
 
   for (const entityId of world.query(Shape, RenderVisibility)) {
-    const shape = world.require(entityId, Shape);
     const visibility = world.require(entityId, RenderVisibility);
     const visualBinding = world.get(entityId, ContextVisualBinding);
     const alphaMultiplier = getAlphaMultiplier({
@@ -113,11 +126,15 @@ function applyShapeAlpha(
       visualContextId: visualBinding?.contextId,
     });
     const nextAlpha = visibility.baseAlpha * alphaMultiplier;
+    const fillColor = world.get(entityId, FillColor);
+    const strokeColor = world.get(entityId, StrokeColor);
 
-    shape.fill.a = nextAlpha;
+    if (fillColor) {
+      fillColor.value.a = nextAlpha;
+    }
 
-    if (shape.stroke) {
-      shape.stroke.a = nextAlpha;
+    if (strokeColor) {
+      strokeColor.value.a = nextAlpha;
     }
   }
 }

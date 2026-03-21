@@ -807,7 +807,7 @@ export class World {
 
       components.push({
         type: componentType.name,
-        data: component.toJSON(),
+        data: component.toJSON("save"),
       });
     }
 

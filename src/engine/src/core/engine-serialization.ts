@@ -5,6 +5,7 @@ import { DiffManager, type DiffCommand } from "@engine/serialization/diff";
 import { Queue } from "@engine/serialization/queue";
 import { getSerializableComponentConstructor, isSerializableComponentInstance } from "@engine/serialization/serializableComponent";
 import type { SerializedValue } from "@engine/serialization/state";
+import { getComponentStatePolicy } from "@engine/serialization/state";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -92,6 +93,10 @@ export class EngineSerializationManager {
       return;
     }
 
+    if (!getComponentStatePolicy(component.constructor).dirtyTracking) {
+      return;
+    }
+
     const version = this.nextVersion();
     component.__markDirty(version);
 
@@ -101,7 +106,7 @@ export class EngineSerializationManager {
       worldId: component.worldId,
       entityId: component.attachedEntityId,
       componentType: component.constructor.name,
-      data: component.toJSON(),
+      data: component.toJSON("dirty"),
     });
   }
 
@@ -111,6 +116,10 @@ export class EngineSerializationManager {
     }
 
     if (!isSerializableComponentInstance(component) || !component.worldId || component.attachedEntityId === undefined) {
+      return;
+    }
+
+    if (!getComponentStatePolicy(component.constructor).dirtyTracking) {
       return;
     }
 

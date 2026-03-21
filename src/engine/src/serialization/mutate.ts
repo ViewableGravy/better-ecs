@@ -42,7 +42,7 @@ export function mutate<
 ): TComponent[TFieldKey] {
   invariant(
     hasSerializableField(component.constructor as Function, fieldKey),
-    `Field "${fieldKey}" is not registered with @serializable(...)`,
+    `Field "${fieldKey}" is not registered with @state(...)`,
   );
 
   const componentRecord = component as unknown as Record<string, unknown>;

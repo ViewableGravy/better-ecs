@@ -1,4 +1,4 @@
-import { Component, SerializableComponent, serializable } from "@engine";
+import { Component, StateComponent, state } from "@engine";
 import type { ContextId } from "@libs/spatial-contexts/context-id";
 
 export type PortalMode = "focus" | "teleport";
@@ -20,24 +20,29 @@ export type PortalOpts = {
   label?: string;
 };
 
-@SerializableComponent
+const DEFAULT_PORTAL_OPTS: PortalOpts = {
+  mode: "focus",
+  targetContextId: "" as ContextId,
+};
+
+@StateComponent
 export class Portal extends Component {
-  @serializable("string")
+  @state("string")
   declare public mode: PortalMode;
 
-  @serializable("string")
+  @state("string")
   declare public targetContextId: ContextId;
 
-  @serializable("json")
+  @state("json")
   declare public spawn?: PortalSpawn2D;
 
-  @serializable("boolean")
+  @state("boolean")
   declare public requireInteraction: boolean;
 
-  @serializable("string")
+  @state("string")
   declare public label?: string;
 
-  constructor(opts: PortalOpts) {
+  constructor(opts: PortalOpts = DEFAULT_PORTAL_OPTS) {
     super();
     this.mode = opts.mode;
     this.targetContextId = opts.targetContextId;

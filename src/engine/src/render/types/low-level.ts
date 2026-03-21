@@ -1,5 +1,5 @@
 import type { ShaderSourceAsset } from "@engine/asset";
-import type { Color } from "@engine/components/sprite/sprite";
+import type { Rgba } from "@engine/components/sprite/sprite";
 
 /**
  * Data required to draw a sprite at the low level.
@@ -21,7 +21,7 @@ export interface SpriteRenderData {
   sourceHeight: number;
   flipX: boolean;
   flipY: boolean;
-  tint: Color;
+  tint: Rgba;
 }
 
 /**
@@ -45,7 +45,7 @@ export interface TexturedQuadRenderData {
   sourceHeight: number;
   flipX: boolean;
   flipY: boolean;
-  tint: Color;
+  tint: Rgba;
   time: number;
 }
 
@@ -63,8 +63,8 @@ export interface ShapeRenderDataBase {
   rotation: number;
   scaleX: number;
   scaleY: number;
-  fill: Color;
-  stroke: Color | null;
+  fill: Rgba;
+  stroke: Rgba | null;
   strokeWidth: number;
 }
 

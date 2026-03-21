@@ -1,9 +1,9 @@
 import { Component } from "@engine/ecs/component";
-import { SerializableComponent, serializable } from "@engine/serialization";
+import { StateComponent, state } from "@engine/serialization";
 
-@SerializableComponent
+@StateComponent
 export class EditorHoverHighlight extends Component {
-  @serializable("float")
+  @state("float")
   declare public amount: number;
 
   constructor(amount: number = 0.15) {

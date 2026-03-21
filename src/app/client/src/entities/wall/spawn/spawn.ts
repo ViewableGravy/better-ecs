@@ -1,7 +1,7 @@
 import { HOUSE_INTERIOR, RenderVisibility, type RenderVisibilityRole } from "@client/components/render-visibility";
 import { CollisionProfiles } from "@client/scenes/world/physics/collision-profiles";
 import { Vec2, type UserWorld } from "@engine";
-import { Color, Debug, Shape, Transform2D } from "@engine/components";
+import { Debug, FillColor, Rgba, Shape, StrokeColor, Transform2D } from "@engine/components";
 import { RectangleCollider } from "@libs/physics";
 
 /**********************************************************************************************************
@@ -14,8 +14,8 @@ type SpawnWallOptions = {
 	width: number;
 	height: number;
 	visible?: boolean;
-	fill?: Color;
-	stroke?: Color;
+	fill?: Rgba;
+	stroke?: Rgba;
 	strokeWidth?: number;
 	zIndex?: number;
 	renderOrder?: number;
@@ -33,19 +33,21 @@ export function spawnWall(world: UserWorld, options: SpawnWallOptions): number {
 	world.add(entity, new Transform2D(options.x, options.y));
 
 	if (options.visible ?? true) {
+		const shape = new Shape(
+			"rectangle",
+			options.width,
+			options.height,
+			options.strokeWidth ?? 2,
+			options.zIndex ?? 4,
+			options.renderOrder ?? 0,
+		);
+
 		world.add(
 			entity,
-			new Shape(
-				"rectangle",
-				options.width,
-				options.height,
-				options.fill ?? new Color(0.28, 0.18, 0.12, 1),
-				options.stroke ?? new Color(0.15, 0.08, 0.05, 1),
-				options.strokeWidth ?? 2,
-				options.zIndex ?? 4,
-				options.renderOrder ?? 0,
-			),
+			shape,
 		);
+		world.add(entity, new FillColor(options.fill ?? new Rgba(0.28, 0.18, 0.12, 1)));
+		world.add(entity, new StrokeColor(options.stroke ?? new Rgba(0.15, 0.08, 0.05, 1)));
 		world.add(entity, new RenderVisibility(options.role ?? HOUSE_INTERIOR, options.baseAlpha ?? 1));
 	}
 

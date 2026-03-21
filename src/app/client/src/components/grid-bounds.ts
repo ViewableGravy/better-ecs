@@ -1,4 +1,4 @@
-import { Component, SerializableComponent } from "@engine";
+import { Component, StateComponent } from "@engine";
 
-@SerializableComponent
+@StateComponent
 export class GridBounds extends Component {}

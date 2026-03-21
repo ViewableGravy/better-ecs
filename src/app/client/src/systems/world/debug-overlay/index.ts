@@ -1,7 +1,7 @@
 import { PlayerComponent } from "@client/components/player";
 import { Placeable } from "@client/systems/world/build-mode/components";
 import { createSystem } from "@engine";
-import { Shape, Transform2D } from "@engine/components";
+import { FillColor, Shape, Transform2D } from "@engine/components";
 import { useContextManager } from "@libs/spatial-contexts";
 import { HOUSE_INTERIOR, HOUSE_ROOF, OUTSIDE, RenderVisibility } from "@client/components/render-visibility";
 
@@ -339,19 +339,20 @@ function getAlphaState(manager: ReturnType<typeof useContextManager>) {
 
     for (const entityId of world.query(Shape, RenderVisibility)) {
       const shape = world.get(entityId, Shape);
+      const fillColor = world.get(entityId, FillColor);
       const visibility = world.get(entityId, RenderVisibility);
-      if (!shape || !visibility) continue;
+      if (!shape || !fillColor || !visibility) continue;
 
       if (visibility.role === OUTSIDE) {
-        sample.outside = shape.fill.a;
+        sample.outside = fillColor.value.a;
       }
 
       if (visibility.role === HOUSE_ROOF) {
-        sample.roof = shape.fill.a;
+        sample.roof = fillColor.value.a;
       }
 
       if (visibility.role === HOUSE_INTERIOR) {
-        sample.interior = shape.fill.a;
+        sample.interior = fillColor.value.a;
       }
     }
   }

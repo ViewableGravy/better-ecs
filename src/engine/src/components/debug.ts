@@ -1,9 +1,9 @@
 import { Component } from "@engine/ecs/component";
-import { SerializableComponent, serializable } from "@engine/serialization";
+import { StateComponent, state } from "@engine/serialization";
 
-@SerializableComponent
+@StateComponent
 export class Debug extends Component {
-  @serializable("string")
+  @state("string")
   declare public name: string;
 
   public createdAt: number;

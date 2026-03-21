@@ -1,5 +1,5 @@
 import type { EntityId } from "@engine";
-import { Component, SerializableComponent, serializable } from "@engine";
+import { Component, StateComponent, state } from "@engine";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -11,21 +11,21 @@ export type GhostKind = string;
  *   COMPONENT START
  **********************************************************************************************************/
 
-@SerializableComponent
+@StateComponent
 export class GhostPreviewComponent extends Component {
-  @serializable("string")
+  @state("string")
   declare public readonly kind: GhostKind;
 
-  @serializable("string")
+  @state("string")
   declare public ownerId: string;
 
-  @serializable("json")
+  @state("json")
   declare public previewVariant: string | null;
 
-  @serializable("boolean")
+  @state("boolean")
   declare public isPlaceable: boolean;
 
-  @serializable("json")
+  @state("json")
   declare public invalidIndicatorEntityId: EntityId | null;
 
   public constructor(

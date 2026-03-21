@@ -1,13 +1,13 @@
-import { Color } from "@engine/components";
-import { defineContext, type ContextId } from "@libs/spatial-contexts";
 import { HOUSE_INTERIOR } from "@client/components/render-visibility";
 import { spawnBackground } from "@client/entities/background";
 import { spawnChair } from "@client/entities/chair";
 import { spawnDoor } from "@client/entities/door";
 import { spawnTable } from "@client/entities/table";
 import { spawnWall } from "@client/entities/wall";
-import { createHouseLayout } from "@client/scenes/world/utilities/house-layout";
 import { setupContextCamera } from "@client/scenes/world/contexts/shared";
+import { createHouseLayout } from "@client/scenes/world/utilities/house-layout";
+import { Rgba } from "@engine/components";
+import { defineContext, type ContextId } from "@libs/spatial-contexts";
 
 type HouseContextOptions = {
   overworldId: ContextId;
@@ -33,8 +33,8 @@ export function defineHouseContext(options: HouseContextOptions) {
       spawnBackground(world, {
         width: options.houseHalfWidth * 2,
         height: options.houseHalfHeight * 2,
-        color: new Color(0.4, 0.3, 0.2, 1),
-        stroke: new Color(0.18, 0.1, 0.07, 1),
+        color: new Rgba(0.4, 0.3, 0.2, 1),
+        stroke: new Rgba(0.18, 0.1, 0.07, 1),
         strokeWidth: 6,
         role: HOUSE_INTERIOR,
         gridBounds: true,
@@ -55,8 +55,8 @@ export function defineHouseContext(options: HouseContextOptions) {
         y: houseLayout.doorway.y,
         width: houseLayout.doorway.width,
         height: houseLayout.doorway.height,
-        fill: new Color(0.25, 0.55, 0.95, 1),
-        stroke: new Color(0.08, 0.2, 0.42, 1),
+        fill: new Rgba(0.25, 0.55, 0.95, 1),
+        stroke: new Rgba(0.08, 0.2, 0.42, 1),
         hasCollider: false,
         role: HOUSE_INTERIOR,
       });
@@ -71,7 +71,7 @@ export function defineHouseContext(options: HouseContextOptions) {
       spawnDoor(world, {
         x: 120,
         y: 0,
-        fill: new Color(0.85, 0.85, 0.85, 1),
+        fill: new Rgba(0.85, 0.85, 0.85, 1),
         role: HOUSE_INTERIOR,
         portal: {
           mode: "teleport",

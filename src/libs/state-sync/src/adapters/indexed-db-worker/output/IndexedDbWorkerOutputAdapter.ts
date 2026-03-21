@@ -10,6 +10,10 @@ export class IndexedDbWorkerOutputAdapter implements SceneStateSyncOutputAdapter
     this.#backend = IndexedDbWorkerBackend.instance(options);
   }
 
+  async clear(): Promise<void> {
+    await this.#backend.clear();
+  }
+
   update(context: SceneStateSyncOutputAdapterContext): void {
     if (context.commands.length === 0) {
       return;

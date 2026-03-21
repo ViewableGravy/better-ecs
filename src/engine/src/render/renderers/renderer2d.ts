@@ -2,28 +2,31 @@ import type { ShaderSourceAsset } from "@engine/asset";
 import type { LooseAssetManager } from "@engine/asset/AssetManager";
 import { Camera } from "@engine/components/camera";
 import { Shape } from "@engine/components/shape";
-import { Color, Sprite } from "@engine/components/sprite/sprite";
+import { Rgba, Sprite } from "@engine/components/sprite/sprite";
 import { Texture, type TextureSourceData } from "@engine/components/texture";
 import type { ShaderTransform2D, Transform2D } from "@engine/components/transform";
+import type { SpriteRenderState } from "@engine/core/render-pipeline/passes/render-world/sprite-render-record";
 import { RenderCommand } from "@engine/render/render-command";
 import { TextureCache } from "@engine/render/textureCache/texture-cache";
 import type {
-  DenseShapeRenderData,
-  Renderable,
-  Renderer,
-  RendererConfig,
-  Settable,
-  ShaderQuadOptions,
-  ShapeRenderInput,
-  SpriteRenderData,
-  TexturedQuadDrawData,
-  TexturedQuadRenderData,
+    DenseShapeRenderData,
+    Renderable,
+    Renderer,
+    RendererConfig,
+    Settable,
+    ShaderQuadOptions,
+    ShapeRenderInput,
+    SpriteRenderData,
+    TexturedQuadDrawData,
+    TexturedQuadRenderData,
 } from "@engine/render/types/renderer";
 import type { RendererAPI } from "@engine/render/types/renderer-api";
 
-const FALLBACK_PENDING_COLOR = new Color(1, 0, 1, 0.4);
-const FALLBACK_ERROR_COLOR = new Color(1, 0, 0, 0.6);
-const DEFAULT_SHADER_QUAD_TINT = new Color(1, 1, 1, 1);
+const FALLBACK_PENDING_COLOR = new Rgba(1, 0, 1, 0.4);
+const FALLBACK_ERROR_COLOR = new Rgba(1, 0, 0, 0.6);
+const DEFAULT_SPRITE_TINT = new Rgba(1, 1, 1, 1);
+const DEFAULT_SHADER_QUAD_TINT = new Rgba(1, 1, 1, 1);
+const DEFAULT_SHAPE_FILL = new Rgba(1, 1, 1, 1);
 
 const SHARED_SHAPE_DATA: DenseShapeRenderData = {
   type: "rectangle",
@@ -34,7 +37,7 @@ const SHARED_SHAPE_DATA: DenseShapeRenderData = {
   rotation: 0,
   scaleX: 1,
   scaleY: 1,
-  fill: new Color(),
+  fill: new Rgba(),
   stroke: null,
   strokeWidth: 0,
   fillEnabled: true,
@@ -53,8 +56,8 @@ const SHARED_FALLBACK_SHAPE_DATA: DenseShapeRenderData = {
   rotation: 0,
   scaleX: 1,
   scaleY: 1,
-  fill: new Color(),
-  stroke: new Color(),
+  fill: new Rgba(),
+  stroke: new Rgba(),
   strokeWidth: 2,
   fillEnabled: true,
   arcEnabled: false,
@@ -141,13 +144,13 @@ export class Renderer2D implements Renderer {
     this.#command.endFrame();
   }
 
-  clear(color: Color): void {
+  clear(color: Rgba): void {
     this.#command.clear(color);
   }
 
   render(renderable: Renderable, transform: Transform2D, alpha: number): void {
     if (renderable instanceof Sprite) {
-      this.#renderSprite(renderable, transform, alpha);
+      this.#renderSpriteWithTint(renderable, DEFAULT_SPRITE_TINT, transform, alpha);
       return;
     }
 
@@ -155,6 +158,10 @@ export class Renderer2D implements Renderer {
       this.#renderShape(renderable, transform, alpha);
       return;
     }
+  }
+
+  renderSprite(sprite: SpriteRenderState, transform: Transform2D, alpha: number): void {
+    this.#renderSpriteWithTint(sprite, sprite.tint, transform, alpha);
   }
 
   set(value: Settable, transform: Transform2D, alpha: number): void {
@@ -196,7 +203,7 @@ export class Renderer2D implements Renderer {
       sourceHeight: 0,
       flipX: false,
       flipY: false,
-      tint: new Color(),
+      tint: new Rgba(),
       time: 0,
     });
 
@@ -273,7 +280,12 @@ export class Renderer2D implements Renderer {
     return this.#command.getHeight();
   }
 
-  #renderSprite(sprite: Sprite, transform: Transform2D, alpha: number): void {
+  #renderSpriteWithTint(
+    sprite: Pick<SpriteRenderState, "assetId" | "width" | "height" | "anchorX" | "anchorY" | "flipX" | "flipY">,
+    tint: Rgba,
+    transform: Transform2D,
+    alpha: number,
+  ): void {
     const textureInfo = this.cache.get(sprite.assetId);
 
     if (!textureInfo) {
@@ -307,7 +319,7 @@ export class Renderer2D implements Renderer {
         sourceHeight: 0,
         flipX: false,
         flipY: false,
-        tint: new Color(),
+        tint: new Rgba(),
       };
     }
 
@@ -328,7 +340,7 @@ export class Renderer2D implements Renderer {
     spriteData.sourceHeight = textureInfo.frameHeight;
     spriteData.flipX = sprite.flipX;
     spriteData.flipY = sprite.flipY;
-    spriteData.tint = sprite.tint;
+    spriteData.tint = tint;
 
     this.#command.drawSprite(spriteData);
   }
@@ -342,8 +354,8 @@ export class Renderer2D implements Renderer {
     SHARED_SHAPE_DATA.rotation = transform.curr.rotation;
     SHARED_SHAPE_DATA.scaleX = transform.curr.scale.x;
     SHARED_SHAPE_DATA.scaleY = transform.curr.scale.y;
-    SHARED_SHAPE_DATA.fill = shape.fill;
-    SHARED_SHAPE_DATA.stroke = shape.stroke;
+    SHARED_SHAPE_DATA.fill = DEFAULT_SHAPE_FILL;
+    SHARED_SHAPE_DATA.stroke = null;
     SHARED_SHAPE_DATA.strokeWidth = shape.strokeWidth;
     SHARED_SHAPE_DATA.fillEnabled = true;
     SHARED_SHAPE_DATA.arcEnabled = false;
@@ -355,7 +367,7 @@ export class Renderer2D implements Renderer {
   }
 
   #drawFallback(
-    sprite: Sprite,
+    sprite: Pick<SpriteRenderState, "assetId" | "width" | "height" | "anchorX" | "anchorY" | "flipX" | "flipY">,
     transform: Transform2D,
     alpha: number,
     state: "pending" | "ready" | "error",

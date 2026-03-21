@@ -1,9 +1,9 @@
-import { Component, SerializableComponent, serializable } from "@engine";
+import { Component, StateComponent, state } from "@engine";
 import type { ContextId } from "@libs/spatial-contexts";
 
-@SerializableComponent
+@StateComponent
 export class ContextVisualBinding extends Component {
-  @serializable("string")
+  @state("string")
   declare public contextId: ContextId;
 
   constructor(contextId: ContextId) {

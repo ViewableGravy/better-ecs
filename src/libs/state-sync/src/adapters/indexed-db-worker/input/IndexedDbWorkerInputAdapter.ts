@@ -14,14 +14,34 @@ export class IndexedDbWorkerInputAdapter implements SceneStateSyncLoadAdapter {
     const storedState = await this.#backend.load();
 
     if (storedState) {
-      context.applySceneState(storedState);
-      context.drainDiffCommands();
+      const initialSceneState = context.serializeSceneState();
 
-      if (this.options.onHydrate) {
-        await this.options.onHydrate(storedState, context);
+      try {
+        context.applySceneState(storedState);
+        context.drainDiffCommands();
+
+        if (this.options.onHydrate) {
+          await this.options.onHydrate(storedState, context);
+        }
+
+        return true;
+      } catch (error) {
+        console.error("Failed to hydrate IndexedDB scene state. Clearing persisted scene and restoring defaults.", error);
+
+        await this.#backend.clear();
+
+        try {
+          context.applySceneState(initialSceneState);
+          context.drainDiffCommands();
+        } catch (restoreError) {
+          console.error("Failed to restore the initial scene state after clearing persisted scene data.", restoreError);
+          throw restoreError;
+        }
+
+        this.#backend.seed(initialSceneState);
+        context.drainDiffCommands();
+        return false;
       }
-
-      return true;
     }
 
     this.#backend.seed(context.serializeSceneState());

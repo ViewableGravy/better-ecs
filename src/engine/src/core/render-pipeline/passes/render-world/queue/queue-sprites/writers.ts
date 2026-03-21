@@ -1,4 +1,5 @@
 import { Sprite } from "@engine/components";
+import { Rgba } from "@engine/components/sprite/sprite";
 import { Transform2D } from "@engine/components/transform";
 import {
     SPRITE_RENDER_DIRTY_NONE,
@@ -7,10 +8,9 @@ import {
     type SpriteRenderRecord,
 } from "@engine/core/render-pipeline/passes/render-world/sprite-render-record";
 
-export function writeSpriteRecord(record: SpriteRenderRecord, assetId: string, sprite: Sprite): number {
+export function writeSpriteRecord(record: SpriteRenderRecord, assetId: string, sprite: Sprite, tint: Rgba): number {
   let changed = false;
   const target = record.sprite;
-  const resolvedAlpha = sprite.tint.a;
 
   if (target.assetId !== assetId) {
     target.assetId = assetId;
@@ -48,20 +48,24 @@ export function writeSpriteRecord(record: SpriteRenderRecord, assetId: string, s
     target.zOrder = sprite.zOrder;
     changed = true;
   }
-  if (target.tint.r !== sprite.tint.r) {
-    target.tint.r = sprite.tint.r;
+  if (target.isDynamic !== sprite.isDynamic) {
+    target.isDynamic = sprite.isDynamic;
     changed = true;
   }
-  if (target.tint.g !== sprite.tint.g) {
-    target.tint.g = sprite.tint.g;
+  if (target.tint.r !== tint.r) {
+    target.tint.r = tint.r;
     changed = true;
   }
-  if (target.tint.b !== sprite.tint.b) {
-    target.tint.b = sprite.tint.b;
+  if (target.tint.g !== tint.g) {
+    target.tint.g = tint.g;
     changed = true;
   }
-  if (target.tint.a !== resolvedAlpha) {
-    target.tint.a = resolvedAlpha;
+  if (target.tint.b !== tint.b) {
+    target.tint.b = tint.b;
+    changed = true;
+  }
+  if (target.tint.a !== tint.a) {
+    target.tint.a = tint.a;
     changed = true;
   }
 

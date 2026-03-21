@@ -1,11 +1,10 @@
-import { Color } from "@engine/components/sprite/sprite";
-import type { TextureSourceData } from "@engine/components/texture";
+import { Rgba } from "@engine/components/sprite/sprite";
 import type {
-  CircleShapeRenderData,
-  DenseShapeRenderData,
-  ShapeRenderInput,
-  SpriteRenderData,
-  TexturedQuadRenderData,
+    CircleShapeRenderData,
+    DenseShapeRenderData,
+    ShapeRenderInput,
+    SpriteRenderData,
+    TexturedQuadRenderData,
 } from "@engine/render/types/low-level";
 import type { RendererAPI } from "@engine/render/types/renderer-api";
 
@@ -33,7 +32,7 @@ export class Canvas2DRenderAPI implements RendererAPI {
     }
   }
 
-  preloadTextures(_sources: readonly TextureSourceData[]): void {
+  preloadTextures(): void {
     return;
   }
 
@@ -48,7 +47,7 @@ export class Canvas2DRenderAPI implements RendererAPI {
     // Canvas2D is immediate mode, nothing to flush
   }
 
-  clear(color: Color): void {
+  clear(color: Rgba): void {
     if (!this.ctx || !this.canvas) return;
     this.ctx.fillStyle = color.toRgba();
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);

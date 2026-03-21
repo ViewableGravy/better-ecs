@@ -11,11 +11,13 @@ import {
 } from "@client/systems/world/build-mode/metrics";
 import { Vec2, type EntityId, type UserWorld } from "@engine";
 import {
-    Color,
     Debug,
+    FillColor,
     Parent,
+    Rgba,
     Shape,
     Sprite,
+    StrokeColor,
     Transform2D,
 } from "@engine/components";
 import { RectangleCollider } from "@libs/physics";
@@ -166,26 +168,26 @@ function addLandClaimRenderable(world: UserWorld, entityId: EntityId): void {
       "rectangle",
       LAND_CLAIM_FLAG_POLE_WIDTH,
       LAND_CLAIM_FLAG_POLE_HEIGHT,
-      cloneColor(LAND_CLAIM_POLE_FILL),
-      cloneColor(LAND_CLAIM_POLE_STROKE),
       1,
       0.35,
       RENDER_LAYERS.world,
     ),
   );
+  world.add(entityId, new FillColor(cloneColor(LAND_CLAIM_POLE_FILL)));
+  world.add(entityId, new StrokeColor(cloneColor(LAND_CLAIM_POLE_STROKE)));
 }
 
 function spawnClaimOverlay(
   world: UserWorld,
   parentEntityId: EntityId,
   size: number,
-  fill: Color,
+  fill: Rgba,
   renderVisibilityRole: RenderVisibilityRole | undefined,
   zOrder: number,
   debugLabel: string,
 ): void {
   const overlayEntityId = world.create();
-  const overlayFill = new Color(fill.r, fill.g, fill.b, 1);
+  const overlayFill = new Rgba(fill.r, fill.g, fill.b, 1);
 
   world.add(overlayEntityId, new Parent(parentEntityId));
   world.add(overlayEntityId, new Transform2D(0, 0));
@@ -195,13 +197,12 @@ function spawnClaimOverlay(
       "rectangle",
       size,
       size,
-      overlayFill,
-      null,
       0,
       zOrder,
       RENDER_LAYERS.background,
     ),
   );
+  world.add(overlayEntityId, new FillColor(overlayFill));
   if (renderVisibilityRole !== undefined) {
     world.add(overlayEntityId, new RenderVisibility(renderVisibilityRole, fill.a));
   }
@@ -224,13 +225,13 @@ function spawnFlagCloth(
       "rectangle",
       LAND_CLAIM_FLAG_WIDTH,
       LAND_CLAIM_FLAG_HEIGHT,
-      cloneColor(LAND_CLAIM_FLAG_FILL),
-      cloneColor(LAND_CLAIM_FLAG_STROKE),
       1,
       0.45,
       RENDER_LAYERS.world,
     ),
   );
+  world.add(flagEntityId, new FillColor(cloneColor(LAND_CLAIM_FLAG_FILL)));
+  world.add(flagEntityId, new StrokeColor(cloneColor(LAND_CLAIM_FLAG_STROKE)));
   if (renderVisibilityRole !== undefined) {
     world.add(flagEntityId, new RenderVisibility(renderVisibilityRole, 1));
   }
@@ -263,8 +264,8 @@ function spawnNameplate(
   world.add(nameplateEntityId, new Debug(debugLabel));
 }
 
-function cloneColor(color: Color): Color {
-  return new Color(color.r, color.g, color.b, color.a);
+function cloneColor(color: Rgba): Rgba {
+  return new Rgba(color.r, color.g, color.b, color.a);
 }
 
 export { LandClaim } from "@client/entities/land-claim/component";

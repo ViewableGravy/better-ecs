@@ -1,14 +1,22 @@
 import { Component } from "@engine/ecs/component";
 import { notifyTrackedFieldMutation } from "@engine/serialization/serializableComponent";
-import { registerSerializableField, type SerializableType } from "@engine/serialization/state";
+import { registerSerializableField, type SerializableType, type StatePolicy } from "@engine/serialization/state";
 import invariant from "tiny-invariant";
 
 
-export function serializable(type: SerializableType = "json") {
+type StateFieldOptions = {
+  policy?: Partial<StatePolicy>;
+};
+
+export function state(type: SerializableType = "json", options?: StateFieldOptions) {
   return function decorator(target: { constructor: Function }, propertyKey: string | symbol) {
     invariant(typeof propertyKey === "string", "Serializable fields must use string property names");
 
-    registerSerializableField(target.constructor, { property: propertyKey, type });
+    registerSerializableField(target.constructor, {
+      property: propertyKey,
+      type,
+      policy: options?.policy,
+    });
 
     const storageKey = Symbol(`serializable:${propertyKey}`);
 

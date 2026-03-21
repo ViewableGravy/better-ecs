@@ -22,7 +22,7 @@ import { spawnWall } from "@client/entities/wall";
 import { setupContextPlayer } from "@client/scenes/world/contexts/shared";
 import { createHouseLayout } from "@client/scenes/world/utilities/house-layout";
 import type { UserWorld } from "@engine";
-import { Color } from "@engine/components";
+import { Rgba } from "@engine/components";
 import { defineContext, type ContextId } from "@libs/spatial-contexts";
 
 type OverworldContextOptions = {
@@ -243,8 +243,8 @@ export function defineOverworldContext(options: OverworldContextOptions) {
         y: houseLayout.doorway.y,
         width: houseLayout.doorway.width,
         height: houseLayout.doorway.height,
-        fill: new Color(0.25, 0.55, 0.95, 1),
-        stroke: new Color(0.08, 0.2, 0.42, 1),
+        fill: new Rgba(0.25, 0.55, 0.95, 1),
+        stroke: new Rgba(0.08, 0.2, 0.42, 1),
         hasCollider: false,
         role: OUTSIDE,
       });
@@ -273,7 +273,7 @@ export function defineOverworldContext(options: OverworldContextOptions) {
       spawnDoor(world, {
         x: 0,
         y: -220,
-        fill: new Color(0.5, 0.65, 1, 1),
+        fill: new Rgba(0.5, 0.65, 1, 1),
         role: OUTSIDE,
         portal: {
           mode: "teleport",

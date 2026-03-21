@@ -1,13 +1,13 @@
 import { Component } from "@engine/ecs/component";
 import type { EntityId } from "@engine/ecs/entity";
-import { SerializableComponent, serializable } from "@engine/serialization";
+import { StateComponent, state } from "@engine/serialization";
 
 /**
  * Marks an entity as a child of another entity.
  */
-@SerializableComponent
+@StateComponent
 export class Parent extends Component {
-  @serializable("int")
+  @state("int")
   declare public entityId: EntityId;
 
   constructor(entityId: EntityId) {

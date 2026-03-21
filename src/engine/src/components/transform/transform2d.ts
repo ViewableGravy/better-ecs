@@ -1,6 +1,6 @@
 import { Component } from "@engine/ecs/component";
 import { Vec2 } from "@engine/math/vec/vec2";
-import { SerializableComponent, serializable } from "@engine/serialization";
+import { StateComponent, state } from "@engine/serialization";
 
 export class TransformState2D {
   public pos: Vec2;
@@ -20,9 +20,9 @@ export class TransformState2D {
   }
 }
 
-@SerializableComponent
+@StateComponent
 export class Transform2D extends Component {
-  @serializable("json")
+  @state("json")
   declare public curr: TransformState2D;
 
   public prev: TransformState2D;

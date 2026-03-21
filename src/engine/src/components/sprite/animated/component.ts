@@ -1,6 +1,6 @@
-import { Color, Sprite } from "@engine/components/sprite/sprite";
+import { Sprite } from "@engine/components/sprite/sprite";
 import type { RegisteredAssets } from "@engine/core";
-import { SerializableComponent, serializable } from "@engine/serialization";
+import { StateComponent, state } from "@engine/serialization";
 
 type SpriteAssetId = Exclude<keyof RegisteredAssets, number | symbol>;
 const DESERIALIZED_ANIMATED_SPRITE_FRAME_PLACEHOLDER = "" as SpriteAssetId;
@@ -13,7 +13,6 @@ type AnimatedSpriteConfig = {
   anchorY?: number;
   flipX?: boolean;
   flipY?: boolean;
-  tint?: Color;
   zOrder?: number;
   layer?: number;
   isDynamic?: boolean;
@@ -28,18 +27,18 @@ function isAnimatedSpriteConfig(
   return !Array.isArray(value);
 }
 
-@SerializableComponent
+@StateComponent
 export class AnimatedSprite extends Sprite {
-  @serializable("json")
+  @state("json")
   declare public readonly frames: readonly SpriteAssetId[];
 
-  @serializable("float")
+  @state("float")
   declare public playbackRate: number;
 
-  @serializable("float")
+  @state("float")
   declare public startTime: number;
 
-  @serializable("boolean")
+  @state("boolean")
   declare public useGlobalOffset: boolean;
 
   constructor();
@@ -70,7 +69,6 @@ export class AnimatedSprite extends Sprite {
       config?.anchorY,
       config?.flipX,
       config?.flipY,
-      config?.tint,
       config?.zOrder,
       config?.layer,
       config?.isDynamic,

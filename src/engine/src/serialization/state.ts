@@ -32,12 +32,26 @@ export type SerializedValue =
 export type SerializableField = {
   property: string;
   type: SerializableType;
+  policy?: Partial<StatePolicy>;
+};
+
+export type StatePolicy = {
+  save: boolean;
+  replicate: boolean;
+  dirtyTracking: boolean;
+};
+
+export const DEFAULT_STATE_POLICY: StatePolicy = {
+  save: true,
+  replicate: true,
+  dirtyTracking: true,
 };
 
 export type SerializableComponentConstructor = new (...args: any[]) => Component;
 
 const serializableFields = new Map<Function, SerializableField[]>();
 const serializableComponentConstructors = new Map<string, SerializableComponentConstructor>();
+const componentStatePolicies = new Map<Function, StatePolicy>();
 
 export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -77,8 +91,14 @@ export function getSerializableFields(target: Function): SerializableField[] {
       continue;
     }
 
+    const componentPolicy = getComponentStatePolicy(constructor);
+
     for (const field of fields) {
-      mergedFields.set(field.property, field);
+      mergedFields.set(field.property, {
+        property: field.property,
+        type: field.type,
+        policy: resolveStatePolicy(componentPolicy, field.policy),
+      });
     }
   }
 
@@ -89,8 +109,16 @@ export function hasSerializableField(target: Function, property: string): boolea
   return getSerializableFields(target).some((field) => field.property === property);
 }
 
-export function registerSerializableComponentConstructor(constructor: SerializableComponentConstructor): void {
+export function getSerializableField(target: Function, property: string): SerializableField | undefined {
+  return getSerializableFields(target).find((field) => field.property === property);
+}
+
+export function registerSerializableComponentConstructor(
+  constructor: SerializableComponentConstructor,
+  policy: StatePolicy = DEFAULT_STATE_POLICY,
+): void {
   serializableComponentConstructors.set(constructor.name, constructor);
+  componentStatePolicies.set(constructor, policy);
 }
 
 export function getSerializableComponentConstructor(name: string): SerializableComponentConstructor {
@@ -100,6 +128,41 @@ export function getSerializableComponentConstructor(name: string): SerializableC
   }
 
   return constructor;
+}
+
+export function getComponentStatePolicy(target: Function): StatePolicy {
+  const constructors: Function[] = [];
+  let currentTarget: Function | null = target;
+
+  while (currentTarget && currentTarget !== Object) {
+    constructors.unshift(currentTarget);
+    currentTarget = Object.getPrototypeOf(currentTarget) as Function | null;
+  }
+
+  let resolved = DEFAULT_STATE_POLICY;
+
+  for (const constructor of constructors) {
+    const policy = componentStatePolicies.get(constructor);
+    if (!policy) {
+      continue;
+    }
+
+    resolved = policy;
+  }
+
+  return resolved;
+}
+
+export function resolveStatePolicy(base: StatePolicy, override?: Partial<StatePolicy>): StatePolicy {
+  if (!override) {
+    return base;
+  }
+
+  return {
+    save: override.save ?? base.save,
+    replicate: override.replicate ?? base.replicate,
+    dirtyTracking: override.dirtyTracking ?? base.dirtyTracking,
+  };
 }
 
 export function materializeSerializedValue(current: unknown, value: SerializedValue): unknown {

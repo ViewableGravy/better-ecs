@@ -1,18 +1,18 @@
-import { Component, SerializableComponent, serializable } from "@engine";
+import { Component, StateComponent, state } from "@engine";
 
 export type PlayerDirection = "n" | "ne" | "e" | "se" | "s" | "sw" | "w" | "nw";
 
 export type PlayerAnimationState = "idle" | "moving";
 
-@SerializableComponent
+@StateComponent
 export class PlayerComponent extends Component {
-  @serializable("string")
+  @state("string")
   declare public name: string;
 
-  @serializable("string")
+  @state("string")
   declare public direction: PlayerDirection;
 
-  @serializable("string")
+  @state("string")
   declare public animationState: PlayerAnimationState;
 
   constructor(name: string, direction: PlayerDirection = "s", animationState: PlayerAnimationState = "idle") {

@@ -1,15 +1,18 @@
 import {
-    IndexedDbWorkerInputAdapter,
-    IndexedDbWorkerOutputAdapter,
+    persistenceInputAdapter,
+    persistenceOutputAdapter,
+} from "@client/systems/core/persistence/controller";
+import { ResetPersistedSceneQuickAction } from "@client/systems/core/persistence/resetPersistedSceneQuickAction";
+import { registerQuickAction } from "@engine/ui/quick-actions";
+import {
     serializationSystem,
 } from "@libs/state-sync";
 
-import {
-    STORAGE_DATABASE_NAME,
-    STORAGE_KEY,
-    STORAGE_STORE_NAME,
-} from "./const";
-import { reconnectPersistedTransportBelts } from "./utilities";
+registerQuickAction({
+  id: "client:reset-persisted-scene",
+  component: ResetPersistedSceneQuickAction,
+  order: 60,
+});
 
 /**********************************************************************************************************
  *   COMPONENT START
@@ -17,18 +20,6 @@ import { reconnectPersistedTransportBelts } from "./utilities";
 
 export const System = serializationSystem({
   name: "client:persistence",
-  inputAdapter: new IndexedDbWorkerInputAdapter({
-    databaseName: STORAGE_DATABASE_NAME,
-    storeName: STORAGE_STORE_NAME,
-    storageKey: STORAGE_KEY,
-    onHydrate: (_sceneState, context) => {
-      reconnectPersistedTransportBelts(context);
-    },
-  }),
-  outputAdapter: new IndexedDbWorkerOutputAdapter({
-    databaseName: STORAGE_DATABASE_NAME,
-    storeName: STORAGE_STORE_NAME,
-    storageKey: STORAGE_KEY,
-    flushIntervalMs: 1000,
-  }),
+  inputAdapter: persistenceInputAdapter,
+  outputAdapter: persistenceOutputAdapter,
 });

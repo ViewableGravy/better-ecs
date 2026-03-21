@@ -1,4 +1,4 @@
-import { Component, SerializableComponent, serializable } from "@engine";
+import { Component, StateComponent, state } from "@engine";
 import { Tagged } from 'type-fest';
 
 /**
@@ -16,12 +16,12 @@ export const OUTSIDE = createVisibilityRole(1);
 export const HOUSE_ROOF = createVisibilityRole(2);
 export const HOUSE_INTERIOR = createVisibilityRole(3);
 
-@SerializableComponent
+@StateComponent
 export class RenderVisibility extends Component {
-  @serializable("int")
+  @state("int")
   declare public role: RenderVisibilityRole;
 
-  @serializable("float")
+  @state("float")
   declare public baseAlpha: number;
 
   constructor(role: RenderVisibilityRole, baseAlpha: number = 1) {

@@ -1,14 +1,14 @@
-import { Component, SerializableComponent, serializable } from "@engine";
+import { Component, StateComponent, state } from "@engine";
 
-@SerializableComponent
+@StateComponent
 export class OrbitMotion extends Component {
-  @serializable("float")
+  @state("float")
   declare public radius: number;
 
-  @serializable("float")
+  @state("float")
   declare public speedRadiansPerSecond: number;
 
-  @serializable("float")
+  @state("float")
   declare public angleRadians: number;
 
   constructor(radius: number, speedRadiansPerSecond: number, angleRadians: number = 0) {

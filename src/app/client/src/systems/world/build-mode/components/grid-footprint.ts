@@ -1,11 +1,11 @@
-import { Component, SerializableComponent, serializable } from "@engine";
+import { Component, StateComponent, state } from "@engine";
 
-@SerializableComponent
+@StateComponent
 export class GridFootprint extends Component {
-  @serializable("float")
+  @state("float")
   declare public width: number;
 
-  @serializable("float")
+  @state("float")
   declare public height: number;
 
   public constructor(width: number, height: number) {

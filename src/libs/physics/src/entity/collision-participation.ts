@@ -1,4 +1,4 @@
-import { Component, SerializableComponent, serializable } from "@engine";
+import { Component, StateComponent, state } from "@engine";
 
 export type CollisionLayerMask = bigint;
 
@@ -23,7 +23,7 @@ export const COLLISION_LAYERS = {
 /**
  * Collision/query filtering metadata for an entity collider.
  */
-@SerializableComponent
+@StateComponent
 export class CollisionParticipation extends Component {
   /**
    * Channels this collider belongs to.
@@ -31,7 +31,7 @@ export class CollisionParticipation extends Component {
    * Used by both physics and query filtering.
    * Example: `layers = COLLISION_LAYERS.SOLID | COLLISION_LAYERS.VISIBILITY`.
    */
-  @serializable("bigint")
+  @state("bigint")
   declare public readonly layers: CollisionLayerMask;
 
   /**
@@ -40,7 +40,7 @@ export class CollisionParticipation extends Component {
    * Used only by physics resolution filtering.
    * Example: `collidesWith = COLLISION_LAYERS.ACTOR | COLLISION_LAYERS.SOLID`.
    */
-  @serializable("bigint")
+  @state("bigint")
   declare public readonly collidesWith: CollisionLayerMask;
 
   /**
@@ -49,13 +49,13 @@ export class CollisionParticipation extends Component {
    * Used only by query filtering.
    * Example: `queryableBy = COLLISION_LAYERS.QUERY | COLLISION_LAYERS.VISIBILITY`.
    */
-  @serializable("bigint")
+  @state("bigint")
   declare public readonly queryableBy: CollisionLayerMask;
 
   /**
    * When true, overlap may still be queried but physical resolution is skipped.
    */
-  @serializable("boolean")
+  @state("boolean")
   declare public readonly isSensor: boolean;
 
   public constructor(

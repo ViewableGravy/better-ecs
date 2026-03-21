@@ -2,6 +2,7 @@ import { PreviewMode } from "@engine/ui/components/previewMode";
 import { EngineCanvas } from "@engine/ui/layout/canvas";
 import { EngineEditorLayout } from "@engine/ui/layout/components/engineEditorLayout/index";
 import { QuickActions } from "@engine/ui/layout/quick-actions";
+import { RegisteredQuickActions } from "@engine/ui/layout/quick-actions/registeredQuickActions";
 import { LeftSidebar } from "@engine/ui/layout/sidebar";
 import styles from "@engine/ui/layout/styles.module.css";
 import { EngineUiContext, type EngineUiContextValue } from "@engine/ui/utilities/engine-context";
@@ -44,6 +45,7 @@ export const DefaultEngineEditorView: React.FC<DefaultEngineEditorViewProps> = (
 								<QuickActions.CullingBoundsToggle />
 								<QuickActions.PreviewModeToggle />
 								<QuickActions.SaveWorld />
+								<RegisteredQuickActions />
 								<QuickActions.ReloadCanvas />
 								<QuickActions.ReloadEngine />
 							</EngineEditorLayout.QuickActions>

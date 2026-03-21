@@ -1,4 +1,5 @@
-import { Sprite } from "@engine/components";
+import { resolveEntityTint, Sprite } from "@engine/components";
+import { Rgba } from "@engine/components/sprite/sprite";
 import {
     SpriteRenderRecordCache,
     type SpriteRenderRecordCacheEntry,
@@ -19,6 +20,7 @@ import type { EngineFrameAllocatorRegistry, InternalFrameAllocator, RenderQueue 
 /***** COMPONENT START *****/
 export class QueueSpriteEntityManager {
   private static _instance: QueueSpriteEntityManager | null = null;
+  private static readonly SHARED_TINT = new Rgba(1, 1, 1, 1);
 
   private constructor(
     private cache: SpriteRenderRecordCache,
@@ -88,8 +90,9 @@ export class QueueSpriteEntityManager {
     }
 
     const record = entry.record;
+    const tint = resolveEntityTint(this.world, entityId, QueueSpriteEntityManager.SHARED_TINT);
 
-    record.dirtyMask = writeSpriteRecord(record, assetId, sprite)
+    record.dirtyMask = writeSpriteRecord(record, assetId, sprite, tint)
       | writeTransformRecord(record, worldTransform);
 
     record.isVisible = isSpriteWithinCullingBounds(this.cullingBounds, record.worldTransform, this.alpha, record);

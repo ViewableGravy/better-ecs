@@ -1,12 +1,12 @@
 import type { GridCoordinate } from "@client/systems/world/build-mode/grid-singleton";
-import { Component, SerializableComponent, serializable } from "@engine";
+import { Component, StateComponent, state } from "@engine";
 
-@SerializableComponent
+@StateComponent
 export class GridPosition extends Component {
-  @serializable("int")
+  @state("int")
   declare public x: GridCoordinate;
 
-  @serializable("int")
+  @state("int")
   declare public y: GridCoordinate;
 
   public constructor(x: GridCoordinate, y: GridCoordinate) {

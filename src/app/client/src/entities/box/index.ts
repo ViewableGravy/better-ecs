@@ -5,7 +5,7 @@ import { GridPosition } from "@client/systems/world/build-mode/components/grid-p
 import { Placeable } from "@client/systems/world/build-mode/components/placeable";
 import { GridSingleton } from "@client/systems/world/build-mode/grid-singleton";
 import { Vec2, type EntityId, type UserWorld } from "@engine";
-import { Color, Debug, Shape, Transform2D } from "@engine/components";
+import { Debug, FillColor, Rgba, Shape, StrokeColor, Transform2D } from "@engine/components";
 import { RectangleCollider } from "@libs/physics";
 
 const BOX_SIZE = 20;
@@ -13,8 +13,8 @@ const HALF_BOX_SIZE = BOX_SIZE / 2;
 const GRID_COLLIDER_INSET_PX = 1;
 const INSET_BOX_SIZE = BOX_SIZE - GRID_COLLIDER_INSET_PX * 2;
 const INSET_HALF_BOX_SIZE = HALF_BOX_SIZE - GRID_COLLIDER_INSET_PX;
-const PLACED_FILL = new Color(1, 0.2, 0.8, 1);
-const PLACED_STROKE = new Color(1, 1, 1, 1);
+const PLACED_FILL = new Rgba(1, 0.2, 0.8, 1);
+const PLACED_STROKE = new Rgba(1, 1, 1, 1);
 
 type SpawnPlacedBoxOptions = {
   snappedX: number;
@@ -61,15 +61,7 @@ export function spawnBox(world: UserWorld, opts: SpawnBoxOptions): EntityId {
 }
 
 function addBoxRenderable(world: UserWorld, entityId: EntityId): void {
-  world.add(
-    entityId,
-    new Shape(
-      "rectangle",
-      BOX_SIZE,
-      BOX_SIZE,
-      new Color(PLACED_FILL.r, PLACED_FILL.g, PLACED_FILL.b, PLACED_FILL.a),
-      new Color(PLACED_STROKE.r, PLACED_STROKE.g, PLACED_STROKE.b, PLACED_STROKE.a),
-      1,
-    ),
-  );
+  world.add(entityId, new Shape("rectangle", BOX_SIZE, BOX_SIZE, 1));
+  world.add(entityId, new FillColor(new Rgba(PLACED_FILL.r, PLACED_FILL.g, PLACED_FILL.b, PLACED_FILL.a)));
+  world.add(entityId, new StrokeColor(new Rgba(PLACED_STROKE.r, PLACED_STROKE.g, PLACED_STROKE.b, PLACED_STROKE.a)));
 }

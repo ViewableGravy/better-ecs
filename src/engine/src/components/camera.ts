@@ -1,52 +1,52 @@
 import { Component } from "@engine/ecs/component";
-import { SerializableComponent, serializable } from "@engine/serialization";
+import { StateComponent, state } from "@engine/serialization";
 
 export type ProjectionType = "orthographic" | "perspective";
 
-@SerializableComponent
+@StateComponent
 export class Camera extends Component {
   /** Projection type */
-  @serializable("string")
+  @state("string")
   declare public projection: ProjectionType;
   
   /** Half-height in world units (orthographic) */
-  @serializable("float")
+  @state("float")
   declare public orthoSize: number;
   
   /** Field of view in degrees (perspective) */
-  @serializable("float")
+  @state("float")
   declare public fov: number;
   
   /** Near clipping plane */
-  @serializable("float")
+  @state("float")
   declare public near: number;
   
   /** Far clipping plane */
-  @serializable("float")
+  @state("float")
   declare public far: number;
   
   /** Viewport position X (normalized 0-1) */
-  @serializable("float")
+  @state("float")
   declare public viewportX: number;
   
   /** Viewport position Y (normalized 0-1) */
-  @serializable("float")
+  @state("float")
   declare public viewportY: number;
   
   /** Viewport width (normalized 0-1) */
-  @serializable("float")
+  @state("float")
   declare public viewportWidth: number;
   
   /** Viewport height (normalized 0-1) */
-  @serializable("float")
+  @state("float")
   declare public viewportHeight: number;
   
   /** Whether this camera is enabled */
-  @serializable("boolean")
+  @state("boolean")
   declare public enabled: boolean;
 
   /** Whether this is the primary scene camera */
-  @serializable("boolean")
+  @state("boolean")
   declare public primary: boolean;
 
   constructor(

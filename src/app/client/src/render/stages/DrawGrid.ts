@@ -1,18 +1,18 @@
 import { GridBounds } from "@client/components/grid-bounds";
 import { GridSingleton } from "@client/systems/world/build-mode/grid-singleton";
 import { type UserWorld } from "@engine";
-import { Color, Shape, Transform2D } from "@engine/components";
+import { Rgba, Shape, Transform2D } from "@engine/components";
 import { System as ContextSystem, fromContext } from "@engine/context";
 import type {
-  DenseShapeRenderData,
-  EngineFrameAllocatorRegistry,
-  InternalFrameAllocator,
-  RenderQueue,
-  Renderer,
+    DenseShapeRenderData,
+    EngineFrameAllocatorRegistry,
+    InternalFrameAllocator,
+    RenderQueue,
+    Renderer,
 } from "@engine/render";
 
-const GRID_COLOR = new Color(1, 0.1, 0.75, 1);
-const GRID_FILL = new Color(0, 0, 0, 0);
+const GRID_COLOR = new Rgba(1, 0.1, 0.75, 1);
+const GRID_FILL = new Rgba(0, 0, 0, 0);
 const GRID_LINE_WIDTH = 1;
 const MAX_LINES_PER_AXIS = 600;
 const GRID_LAYER = 0;
@@ -184,8 +184,8 @@ function writeLineShape(
     rotation: number;
     scaleX: number;
     scaleY: number;
-    fill: Color;
-    stroke: Color | null;
+    fill: Rgba;
+    stroke: Rgba | null;
     strokeWidth: number;
   },
   x: number,
@@ -207,7 +207,7 @@ function writeLineShape(
 
   if (template.stroke) {
     if (shape.stroke === null) {
-      shape.stroke = new Color(
+      shape.stroke = new Rgba(
         template.stroke.r,
         template.stroke.g,
         template.stroke.b,

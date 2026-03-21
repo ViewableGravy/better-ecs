@@ -5,10 +5,12 @@ import { CollisionProfiles } from "@client/scenes/world/physics/collision-profil
 import { type EntityId, type UserWorld } from "@engine";
 import {
     AnimatedSprite,
-    Color,
     Debug,
+    FillColor,
     Parent,
+    Rgba,
     Shape,
+    StrokeColor,
     Transform2D,
 } from "@engine/components";
 import { CircleCollider } from "@libs/physics";
@@ -45,23 +47,14 @@ export function spawnPlayer(world: UserWorld): EntityId<PlayerComponent> {
 
   // create an orbiting circle for visual flair
   const orbitingCircle = world.create();
+  const orbitingCircleShape = new Shape("circle", 10, 10, 1, 5, 1);
   world.add(orbitingCircle, new Parent(orbitAnchor));
   world.add(orbitingCircle, new Transform2D(36, 0));
   world.add(orbitingCircle, new OrbitMotion(36, Math.PI));
   world.add(orbitingCircle, new Debug("player-orbit-circle"));
-  world.add(
-    orbitingCircle,
-    new Shape(
-      "circle",
-      10,
-      10,
-      new Color(0.95, 0.85, 0.3, 1),
-      new Color(1, 1, 1, 0.8),
-      1,
-      5,
-      1,
-    ),
-  );
+  world.add(orbitingCircle, orbitingCircleShape);
+  world.add(orbitingCircle, new FillColor(new Rgba(0.95, 0.85, 0.3, 1)));
+  world.add(orbitingCircle, new StrokeColor(new Rgba(1, 1, 1, 0.8)));
 
   // Player tagging is compile-time only; runtime entity ids remain plain numbers.
   return player as EntityId<PlayerComponent>;

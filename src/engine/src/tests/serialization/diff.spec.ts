@@ -5,7 +5,7 @@ import { Transform2D } from "../../components/transform/transform2d";
 import { createEngine } from "../../core/factory";
 import { registerEngine, unregisterEngine } from "../../core/global-engine";
 import { Component } from "../../ecs/component";
-import { SerializableComponent, mutate, serializable, type DiffCommand } from "../../serialization";
+import { StateComponent, mutate, state, type DiffCommand } from "../../serialization";
 
 class Marker extends Component {
   declare public value: string;
@@ -16,8 +16,8 @@ class Marker extends Component {
   }
 }
 
-serializable("string")(Marker.prototype, "value");
-SerializableComponent(Marker);
+state("string")(Marker.prototype, "value");
+StateComponent(Marker);
 
 class BigMarker extends Component {
   declare public value: bigint;
@@ -28,8 +28,8 @@ class BigMarker extends Component {
   }
 }
 
-serializable("bigint")(BigMarker.prototype, "value");
-SerializableComponent(BigMarker);
+state("bigint")(BigMarker.prototype, "value");
+StateComponent(BigMarker);
 
 function createTrackedEngine() {
   const engine = createEngine({

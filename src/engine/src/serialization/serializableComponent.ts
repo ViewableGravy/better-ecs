@@ -1,14 +1,18 @@
 import { fromEngine, registeredEngine } from "@engine/core/global-engine";
 import { Component } from "@engine/ecs/component";
 import {
+    DEFAULT_STATE_POLICY,
     getSerializableComponentConstructor as getRegisteredSerializableComponentConstructor,
+    getSerializableField,
     getSerializableFields,
     isRecord,
     materializeSerializedValue,
     registerSerializableComponentConstructor,
+    resolveStatePolicy,
     type SerializableComponentConstructor,
     type SerializedObject,
     type SerializedValue,
+    type StatePolicy,
 } from "@engine/serialization/state";
 
 /**********************************************************************************************************
@@ -17,12 +21,18 @@ import {
 
 type SerializableComponentMethods = {
   to(type: "json" | "binary"): SerializedObject | ArrayBuffer;
-  toJSON(): SerializedObject;
+  toJSON(mode?: SerializeMode): SerializedObject;
   __afterDeserialized(): void;
   onAfterDeserialized?(): void;
 };
 
 export type SerializableComponentInstance = Component & SerializableComponentMethods;
+
+type StateComponentOptions = {
+  policy?: Partial<StatePolicy>;
+};
+
+type SerializeMode = "all" | "save" | "replicate" | "dirty";
 
 function serializeRecordValue(value: Record<string, unknown>): SerializedObject {
   const result: SerializedObject = {};
@@ -138,11 +148,35 @@ function toBinary(component: SerializableComponentInstance): ArrayBuffer {
   return buffer;
 }
 
-function toJSON(component: SerializableComponentInstance): SerializedObject {
+function shouldIncludeFieldForMode(
+  field: ReturnType<typeof getSerializableFields>[number],
+  mode: SerializeMode,
+): boolean {
+  if (!field.policy) {
+    return true;
+  }
+
+  switch (mode) {
+    case "all":
+      return true;
+    case "save":
+      return field.policy.save ?? false;
+    case "replicate":
+      return field.policy.replicate ?? false;
+    case "dirty":
+      return field.policy.dirtyTracking ?? false;
+  }
+}
+
+function toJSON(component: SerializableComponentInstance, mode: SerializeMode = "all"): SerializedObject {
   const fields = getSerializableFields(component.constructor as Function);
   const result: SerializedObject = {};
 
   for (const field of fields) {
+    if (!shouldIncludeFieldForMode(field, mode)) {
+      continue;
+    }
+
     result[field.property] = serializeValue((component as unknown as Record<string, unknown>)[field.property]);
   }
 
@@ -158,7 +192,7 @@ function attachSerializableMethods<T extends SerializableComponentConstructor>(c
       value(this: SerializableComponentInstance, type: "json" | "binary") {
         switch (type) {
           case "json":
-            return toJSON(this);
+            return toJSON(this, "all");
           case "binary":
             return toBinary(this);
           default:
@@ -171,8 +205,8 @@ function attachSerializableMethods<T extends SerializableComponentConstructor>(c
   if (!Object.prototype.hasOwnProperty.call(prototype, "toJSON")) {
     Object.defineProperty(prototype, "toJSON", {
       configurable: true,
-      value(this: SerializableComponentInstance) {
-        return toJSON(this);
+      value(this: SerializableComponentInstance, mode: SerializeMode = "all") {
+        return toJSON(this, mode);
       },
     });
   }
@@ -187,10 +221,30 @@ function attachSerializableMethods<T extends SerializableComponentConstructor>(c
   }
 }
 
-export function SerializableComponent<T extends SerializableComponentConstructor>(constructor: T): T {
-  registerSerializableComponentConstructor(constructor);
+function decorateStateComponent<T extends SerializableComponentConstructor>(
+  constructor: T,
+  options?: StateComponentOptions,
+): T {
+  registerSerializableComponentConstructor(
+    constructor,
+    resolveStatePolicy(DEFAULT_STATE_POLICY, options?.policy),
+  );
   attachSerializableMethods(constructor);
   return constructor;
+}
+
+export function StateComponent<T extends SerializableComponentConstructor>(constructor: T): T;
+export function StateComponent(options?: StateComponentOptions): <T extends SerializableComponentConstructor>(constructor: T) => T;
+export function StateComponent<T extends SerializableComponentConstructor>(
+  constructorOrOptions?: T | StateComponentOptions,
+): T | ((constructor: T) => T) {
+  if (typeof constructorOrOptions === "function") {
+    return decorateStateComponent(constructorOrOptions);
+  }
+
+  return function decorator(constructor: T): T {
+    return decorateStateComponent(constructor, constructorOrOptions);
+  };
 }
 
 export function isSerializableComponentInstance(value: unknown): value is SerializableComponentInstance {
@@ -245,6 +299,11 @@ export function serializeValue(value: unknown): SerializedValue {
 
 export function notifyTrackedFieldMutation(component: Component, fieldKey: string): void {
   if (!registeredEngine) {
+    return;
+  }
+
+  const field = getSerializableField(component.constructor as Function, fieldKey);
+  if (!field?.policy?.dirtyTracking) {
     return;
   }
 

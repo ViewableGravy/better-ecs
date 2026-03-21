@@ -1,9 +1,8 @@
-import { Sprite } from "@engine/components";
-import { Color } from "@engine/components/sprite/sprite";
+import { Rgba } from "@engine/components/sprite/sprite";
 import { Transform2D } from "@engine/components/transform";
 import {
-  SPRITE_RENDER_DIRTY_NONE,
-  type SpriteRenderRecord,
+    SPRITE_RENDER_DIRTY_NONE,
+    type SpriteRenderRecord,
 } from "@engine/core/render-pipeline/passes/render-world/sprite-render-record";
 import type { FramePoolFactory } from "@engine/render/frame-allocator/types";
 import type { RenderCommand } from "@engine/render/queue/render-queue";
@@ -32,7 +31,7 @@ export const engineFrameAllocatorRegistry: EngineFrameAllocatorRegistry = {
       rotation: 0,
       scaleX: 1,
       scaleY: 1,
-      fill: new Color(1, 1, 1, 1),
+      fill: new Rgba(1, 1, 1, 1),
       stroke: null,
       strokeWidth: 0,
       fillEnabled: true,
@@ -99,7 +98,19 @@ export const engineFrameAllocatorRegistry: EngineFrameAllocatorRegistry = {
   },
   "engine:sprite-render-record": {
     create: () => ({
-      sprite: new Sprite(""),
+      sprite: {
+        assetId: "",
+        width: 0,
+        height: 0,
+        anchorX: 0.5,
+        anchorY: 0.5,
+        flipX: false,
+        flipY: false,
+        layer: 0,
+        zOrder: 0,
+        isDynamic: true,
+        tint: new Rgba(),
+      },
       worldTransform: new Transform2D(),
       spriteVersion: 0,
       transformVersion: 0,
@@ -116,6 +127,7 @@ export const engineFrameAllocatorRegistry: EngineFrameAllocatorRegistry = {
       value.sprite.flipY = false;
       value.sprite.layer = 0;
       value.sprite.zOrder = 0;
+      value.sprite.isDynamic = true;
       value.sprite.tint.r = 1;
       value.sprite.tint.g = 1;
       value.sprite.tint.b = 1;

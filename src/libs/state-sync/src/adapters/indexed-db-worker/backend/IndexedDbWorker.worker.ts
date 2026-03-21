@@ -39,6 +39,10 @@ type WorkerMessage =
       requestId: number;
     }
   | {
+      type: "clear";
+      requestId: number;
+    }
+  | {
       type: "seed";
       state: SerializedSceneState;
     }
@@ -79,6 +83,19 @@ self.addEventListener("message", async (event: MessageEvent<WorkerMessage>) => {
         state: storedState,
         hasStoredState: storedState !== null,
       });
+    } catch (error) {
+      postError(error);
+    }
+    return;
+  }
+
+  if (message.type === "clear") {
+    try {
+      clearFlushTimer();
+      dirty = false;
+      state = null;
+      await clearStoredSceneState(options);
+      self.postMessage({ type: "cleared", requestId: message.requestId });
     } catch (error) {
       postError(error);
     }
@@ -151,6 +168,12 @@ function readStoredSceneState(options: WorkerOptions): Promise<SerializedSceneSt
 function writeStoredSceneState(options: WorkerOptions, snapshot: SerializedSceneState): Promise<void> {
   return withStore(options, "readwrite", async (store) => {
     await requestToPromise(store.put(snapshot, options.storageKey));
+  });
+}
+
+function clearStoredSceneState(options: WorkerOptions): Promise<void> {
+  return withStore(options, "readwrite", async (store) => {
+    await requestToPromise(store.delete(options.storageKey));
   });
 }
 
