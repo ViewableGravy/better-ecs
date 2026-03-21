@@ -1,5 +1,5 @@
 import { GridSingleton } from "@client/systems/world/build-mode/grid-singleton";
-import { Color } from "@engine/components";
+import { Rgba } from "@engine/components";
 
 /**********************************************************************************************************
  *   CONSTS
@@ -24,11 +24,11 @@ export const LAND_CLAIM_NAMEPLATE_WIDTH = 88;
 export const LAND_CLAIM_NAMEPLATE_HEIGHT = 20;
 export const LAND_CLAIM_NAMEPLATE_OFFSET_Y = -30;
 
-export const LAND_CLAIM_POLE_FILL = new Color(0.56, 0.39, 0.22, 1);
-export const LAND_CLAIM_POLE_STROKE = new Color(0.33, 0.2, 0.1, 1);
-export const LAND_CLAIM_FLAG_FILL = new Color(0.18, 0.76, 0.38, 1);
-export const LAND_CLAIM_FLAG_STROKE = new Color(0.87, 0.98, 0.9, 1);
-export const LAND_CLAIM_OWNED_FILL = new Color(0.56, 0.9, 0.62, 0.01);
-export const LAND_CLAIM_BUILDABLE_FILL = new Color(0.95, 0.9, 0.62, 0.025);
+export const LAND_CLAIM_POLE_FILL = new Rgba(0.56, 0.39, 0.22, 1);
+export const LAND_CLAIM_POLE_STROKE = new Rgba(0.33, 0.2, 0.1, 1);
+export const LAND_CLAIM_FLAG_FILL = new Rgba(0.18, 0.76, 0.38, 1);
+export const LAND_CLAIM_FLAG_STROKE = new Rgba(0.87, 0.98, 0.9, 1);
+export const LAND_CLAIM_OWNED_FILL = new Rgba(0.56, 0.9, 0.62, 0.01);
+export const LAND_CLAIM_BUILDABLE_FILL = new Rgba(0.95, 0.9, 0.62, 0.025);
 
 export const LAND_CLAIM_NAMEPLATE_ASSET_ID = "land-claim:viewable-gravy-nameplate";

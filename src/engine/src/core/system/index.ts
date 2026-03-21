@@ -15,12 +15,12 @@ export const executeSystemCleanup = (system: EngineSystem): void => {
 	system.react = undefined;
 };
 
-export const executeSystemInitialize = (system: EngineSystem): void => {
+export const executeSystemInitialize = async (system: EngineSystem): Promise<void> => {
 	executeSystemCleanup(system);
 
 	if (!system.initialize) return;
 
-	const cleanup = system.initialize();
+	const cleanup = await system.initialize();
 	if (typeof cleanup === "function") {
 		system.react = cleanup;
 	}

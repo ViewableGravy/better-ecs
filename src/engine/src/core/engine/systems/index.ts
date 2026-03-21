@@ -36,9 +36,9 @@ export class SystemsManager {
     });
   }
 
-  public initializeEngineSystems(): void {
+  public async initializeEngineSystems(): Promise<void> {
     for (const system of Object.values(this.#engineSystems)) {
-      executeSystemInitialize(system);
+      await executeSystemInitialize(system);
     }
   }
 
@@ -70,7 +70,7 @@ export class SystemsManager {
     return entry.all.find((system) => system.name === name);
   }
 
-  public initializeSceneSystems(sceneName: string): void {
+  public async initializeSceneSystems(sceneName: string): Promise<void> {
     if (this.#initializedSceneSystems.has(sceneName)) {
       return;
     }
@@ -81,7 +81,7 @@ export class SystemsManager {
     }
 
     for (const system of systems.all) {
-      executeSystemInitialize(system);
+      await executeSystemInitialize(system);
     }
 
     this.#initializedSceneSystems.add(sceneName);

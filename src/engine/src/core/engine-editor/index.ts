@@ -5,7 +5,7 @@ import { EngineEditorSelectionManager } from "@engine/core/engine-editor/selecti
 import type { EngineRenderCullingSettings } from "@engine/core/engine/render-culling";
 import type { EngineInput, EngineKeyboardEvent } from "@engine/core/input";
 import { createEngineRunningState, type EngineRunningState } from "@engine/core/running-state";
-import type { UserWorld } from "@engine/ecs/world";
+import type { SerializedWorld, UserWorld } from "@engine/ecs/world";
 import { proxy } from "valtio";
 
 type EngineEditorHost = {
@@ -106,6 +106,38 @@ export class EngineEditor {
     this.viewState.showCullingBounds = next;
     this.#engine.renderCulling.debugOutline = next;
     return next;
+  }
+
+  public serializeWorld(): SerializedWorld {
+    return this.#engine.scene.world.serialize();
+  }
+
+  public stringifyWorld(space: number = 2): string {
+    return JSON.stringify(this.serializeWorld(), null, space);
+  }
+
+  public downloadWorldSnapshot(filename: string = this.createWorldSnapshotFilename()): void {
+    if (typeof document === "undefined" || typeof URL === "undefined") {
+      throw new Error("World snapshot download requires browser document and URL APIs");
+    }
+
+    const snapshot = this.stringifyWorld();
+    const blob = new Blob([snapshot], { type: "application/json" });
+    const objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = objectUrl;
+    link.download = filename;
+    link.click();
+
+    URL.revokeObjectURL(objectUrl);
+  }
+
+  private createWorldSnapshotFilename(): string {
+    const worldId = this.#engine.scene.activeWorldId.replace(/[^a-z0-9-_]+/gi, "-").toLowerCase();
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+
+    return `${worldId || "world"}-${timestamp}.json`;
   }
 
   private onPause(): void {

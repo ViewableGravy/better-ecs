@@ -1,38 +1,53 @@
+import { Component } from "@engine/ecs/component";
+import { StateComponent, state } from "@engine/serialization";
+
 export type ProjectionType = "orthographic" | "perspective";
 
-export class Camera {
+@StateComponent
+export class Camera extends Component {
   /** Projection type */
-  public projection: ProjectionType;
+  @state("string")
+  declare public projection: ProjectionType;
   
   /** Half-height in world units (orthographic) */
-  public orthoSize: number;
+  @state("float")
+  declare public orthoSize: number;
   
   /** Field of view in degrees (perspective) */
-  public fov: number;
+  @state("float")
+  declare public fov: number;
   
   /** Near clipping plane */
-  public near: number;
+  @state("float")
+  declare public near: number;
   
   /** Far clipping plane */
-  public far: number;
+  @state("float")
+  declare public far: number;
   
   /** Viewport position X (normalized 0-1) */
-  public viewportX: number;
+  @state("float")
+  declare public viewportX: number;
   
   /** Viewport position Y (normalized 0-1) */
-  public viewportY: number;
+  @state("float")
+  declare public viewportY: number;
   
   /** Viewport width (normalized 0-1) */
-  public viewportWidth: number;
+  @state("float")
+  declare public viewportWidth: number;
   
   /** Viewport height (normalized 0-1) */
-  public viewportHeight: number;
+  @state("float")
+  declare public viewportHeight: number;
   
   /** Whether this camera is enabled */
-  public enabled: boolean;
+  @state("boolean")
+  declare public enabled: boolean;
 
   /** Whether this is the primary scene camera */
-  public primary: boolean;
+  @state("boolean")
+  declare public primary: boolean;
 
   constructor(
     projection: ProjectionType = "orthographic",
@@ -47,6 +62,7 @@ export class Camera {
     enabled: boolean = true,
     primary: boolean = false,
   ) {
+    super();
     this.projection = projection;
     this.orthoSize = orthoSize;
     this.fov = fov;

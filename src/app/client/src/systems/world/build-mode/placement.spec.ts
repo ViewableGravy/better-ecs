@@ -134,7 +134,7 @@ describe("Placement", () => {
       return;
     }
 
-    const ghostEntityId = resolvedPlacement.preview.sync(null);
+    const ghostEntityId = resolvedPlacement.preview.sync(null, "local-player");
 
     expect(resolvedPlacement.preview.world).toBe(previewWorld);
     expect(resolvedPlacement.commit.world).toBe(commitWorld);

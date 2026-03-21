@@ -77,6 +77,16 @@ export function createEntityId(): EntityId {
   return encodeEntityId(index, 0);
 }
 
+export function registerEntityId(id: EntityId): void {
+  const index = getEntityIndex(id);
+  const generation = getEntityGeneration(id);
+
+  generations.set(index, generation);
+  if (nextIndex <= index) {
+    nextIndex = index + 1;
+  }
+}
+
 /**
  * Extracts the index from an entity ID
  */

@@ -12,46 +12,46 @@
     ],
     "paths": {
       "@client": [
-        "./src/app/client/src/index.ts"
+        "../app/client/src/index.ts"
       ],
       "@client/*": [
-        "./src/app/client/src/*"
+        "../app/client/src/*"
       ],
       "@server": [
-        "./src/app/server/src/main.ts"
+        "../app/server/src/main.ts"
       ],
       "@server/*": [
-        "./src/app/server/src/*"
+        "../app/server/src/*"
       ],
       "@libs/fps": [
-        "./src/libs/fps/src/index.ts"
+        "../libs/fps/src/index.ts"
       ],
       "@libs/fps/*": [
-        "./src/libs/fps/src/*"
+        "../libs/fps/src/*"
       ],
       "@libs/physics": [
-        "./src/libs/physics/src/index.ts"
+        "../libs/physics/src/index.ts"
       ],
       "@libs/physics/*": [
-        "./src/libs/physics/src/*"
+        "../libs/physics/src/*"
       ],
       "@libs/spatial-contexts": [
-        "./src/libs/spatial-contexts/src/index.ts"
+        "../libs/spatial-contexts/src/index.ts"
       ],
       "@libs/spatial-contexts/*": [
-        "./src/libs/spatial-contexts/src/*"
+        "../libs/spatial-contexts/src/*"
       ],
       "@utils": [
-        "./src/utils/src/index.ts"
+        "../utils/src/index.ts"
       ],
       "@utils/*": [
-        "./src/utils/src/*"
+        "../utils/src/*"
       ],
       "@engine": [
-        "./src/engine/src/index.ts"
+        "./src/index.ts"
       ],
       "@engine/*": [
-        "./src/engine/src/*"
+        "./src/*"
       ],
       "@ui": [
         "./src/ui/index.tsx"

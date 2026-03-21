@@ -7,7 +7,7 @@ import {
     PLACEABLE_WALL_Z_PER_WORLD_Y,
 } from "@client/entities/wall/query/pool";
 import type { PlaceableWallVisualVariant } from "@client/entities/wall/query/variant";
-import { Color, Sprite } from "@engine/components";
+import { Sprite } from "@engine/components";
 
 export function createPlaceableWallSprite(
   variant: PlaceableWallVisualVariant,
@@ -22,14 +22,6 @@ export function createPlaceableWallSprite(
     previousSprite?.anchorY,
     previousSprite?.flipX,
     previousSprite?.flipY,
-    previousSprite
-      ? new Color(
-        previousSprite.tint.r,
-        previousSprite.tint.g,
-        previousSprite.tint.b,
-        previousSprite.tint.a,
-      )
-      : undefined,
   );
 
   sprite.layer = previousSprite?.layer ?? RENDER_LAYERS.world;

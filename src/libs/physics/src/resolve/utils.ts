@@ -1,3 +1,4 @@
+import { mutate } from "@engine";
 import type { Transform2D } from "@engine/components";
 
 /**
@@ -24,18 +25,26 @@ export function resolveCircleInsideRect(
 
   if (minHorizontal <= minVertical) {
     if (toLeft <= toRight) {
-      subjectTransform.curr.pos.x = left - radius;
+      mutate(subjectTransform, "curr", (curr) => {
+        curr.pos.x = left - radius;
+      });
       return;
     }
 
-    subjectTransform.curr.pos.x = right + radius;
+    mutate(subjectTransform, "curr", (curr) => {
+      curr.pos.x = right + radius;
+    });
     return;
   }
 
   if (toTop <= toBottom) {
-    subjectTransform.curr.pos.y = top - radius;
+    mutate(subjectTransform, "curr", (curr) => {
+      curr.pos.y = top - radius;
+    });
     return;
   }
 
-  subjectTransform.curr.pos.y = bottom + radius;
+  mutate(subjectTransform, "curr", (curr) => {
+    curr.pos.y = bottom + radius;
+  });
 }

@@ -1,4 +1,4 @@
-import { Color } from "@engine/components/sprite/sprite";
+import { Rgba } from "@engine/components/sprite/sprite";
 import type { CullingBounds } from "@engine/core/render-pipeline/passes/render-world/render/culling/utils";
 import type { Renderer } from "@engine/render";
 
@@ -10,7 +10,7 @@ type ShapeRenderer = Pick<Renderer, "drawShape">;
 /**********************************************************************************************************
  *   CONSTS
  **********************************************************************************************************/
-const CULLING_DEBUG_STROKE = new Color(0, 1, 0.2, 0.9);
+const CULLING_DEBUG_STROKE = new Rgba(0, 1, 0.2, 0.9);
 
 /**********************************************************************************************************
  *   COMPONENT START

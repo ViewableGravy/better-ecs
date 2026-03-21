@@ -1,23 +1,24 @@
-import { AnimatedSprite, EditorHoverHighlight, Sprite } from "@engine/components";
+import { AnimatedSprite, EditorHoverHighlight, resolveEntityTint, Sprite } from "@engine/components";
 import { getFrameAssetIdAtTime } from "@engine/components/sprite/animated";
-import { Color } from "@engine/components/sprite/sprite";
+import { Rgba } from "@engine/components/sprite/sprite";
 import type { Transform2D } from "@engine/components/transform";
 import { fromContext, FromRender } from "@engine/context";
 import type { SpriteEntityRenderCommand } from "@engine/core/render-pipeline/passes/render-world/render/culling/utils";
 import { blendChannel } from "@engine/core/render-pipeline/passes/render-world/render/utils/blend";
-import type { SpriteRenderRecord } from "@engine/core/render-pipeline/passes/render-world/sprite-render-record";
+import type { SpriteRenderRecord, SpriteRenderState } from "@engine/core/render-pipeline/passes/render-world/sprite-render-record";
 import type { Renderer } from "@engine/render";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
  **********************************************************************************************************/
-type SpriteRenderer = Pick<Renderer, "render">;
+type SpriteRenderer = Pick<Renderer, "renderSprite">;
 
 /**********************************************************************************************************
  *   CONSTS
  **********************************************************************************************************/
-const HOVER_TINT_COLOR = new Color(1, 1, 0, 1);
-let SHARED_ANIMATED_RENDER_SPRITE: Sprite | null = null;
+const HOVER_TINT_COLOR = new Rgba(1, 1, 0, 1);
+const SHARED_RESOLVED_TINT = new Rgba(1, 1, 1, 1);
+let SHARED_ANIMATED_RENDER_SPRITE: SpriteRenderState | null = null;
 
 /**********************************************************************************************************
  *   COMPONENT START
@@ -38,7 +39,7 @@ export function handleSpriteEntityCommand(
 
   const hoverHighlight = world.get(entityId, EditorHoverHighlight);
   if (!hoverHighlight) {
-    renderer.render(sprite, transform, interpolationAlpha);
+    renderer.renderSprite(sprite, transform, interpolationAlpha);
     return;
   }
 
@@ -50,30 +51,70 @@ export function handleSpriteEntityCommand(
   sprite.tint.g = blendChannel(sprite.tint.g, HOVER_TINT_COLOR.g, hoverHighlight.amount);
   sprite.tint.b = blendChannel(sprite.tint.b, HOVER_TINT_COLOR.b, hoverHighlight.amount);
 
-  renderer.render(sprite, transform, interpolationAlpha);
+  renderer.renderSprite(sprite, transform, interpolationAlpha);
 
   sprite.tint.r = originalR;
   sprite.tint.g = originalG;
   sprite.tint.b = originalB;
 }
 
-function resolveSpriteForRender(world: SpriteEntityRenderCommand["world"], entityId: SpriteEntityRenderCommand["entityId"]): Sprite | null {
+function resolveSpriteForRender(
+  world: SpriteEntityRenderCommand["world"],
+  entityId: SpriteEntityRenderCommand["entityId"],
+): SpriteRenderState | null {
   const staticSprite = world.get(entityId, Sprite);
   if (staticSprite) {
-    return staticSprite;
+    return projectStaticSprite(world, entityId, staticSprite);
   }
 
-  return projectAnimatedSprite(world.get(entityId, AnimatedSprite), performance.now());
+  return projectAnimatedSprite(world, entityId, world.get(entityId, AnimatedSprite), performance.now());
 }
 
-function projectAnimatedSprite(animatedSprite: AnimatedSprite | undefined, timeMs: number): Sprite | null {
+function projectStaticSprite(
+  world: SpriteEntityRenderCommand["world"],
+  entityId: SpriteEntityRenderCommand["entityId"],
+  sprite: Sprite,
+): SpriteRenderState {
+  return {
+    assetId: sprite.assetId,
+    width: sprite.width,
+    height: sprite.height,
+    anchorX: sprite.anchorX,
+    anchorY: sprite.anchorY,
+    flipX: sprite.flipX,
+    flipY: sprite.flipY,
+    layer: sprite.layer,
+    zOrder: sprite.zOrder,
+    isDynamic: sprite.isDynamic,
+    tint: resolveEntityTint(world, entityId, SHARED_RESOLVED_TINT),
+  };
+}
+
+function projectAnimatedSprite(
+  world: SpriteEntityRenderCommand["world"],
+  entityId: SpriteEntityRenderCommand["entityId"],
+  animatedSprite: AnimatedSprite | undefined,
+  timeMs: number,
+): SpriteRenderState | null {
   if (!animatedSprite) {
     return null;
   }
 
   const sampledAssetId = getFrameAssetIdAtTime(animatedSprite, timeMs);
   if (!SHARED_ANIMATED_RENDER_SPRITE) {
-    SHARED_ANIMATED_RENDER_SPRITE = new Sprite(sampledAssetId);
+    SHARED_ANIMATED_RENDER_SPRITE = {
+      assetId: sampledAssetId,
+      width: 0,
+      height: 0,
+      anchorX: 0.5,
+      anchorY: 0.5,
+      flipX: false,
+      flipY: false,
+      layer: 0,
+      zOrder: 0,
+      isDynamic: true,
+      tint: new Rgba(),
+    };
   }
 
   const projected = SHARED_ANIMATED_RENDER_SPRITE;
@@ -86,9 +127,7 @@ function projectAnimatedSprite(animatedSprite: AnimatedSprite | undefined, timeM
   projected.flipY = animatedSprite.flipY;
   projected.layer = animatedSprite.layer;
   projected.zOrder = animatedSprite.zOrder;
-  projected.tint.r = animatedSprite.tint.r;
-  projected.tint.g = animatedSprite.tint.g;
-  projected.tint.b = animatedSprite.tint.b;
-  projected.tint.a = animatedSprite.tint.a;
+  projected.isDynamic = animatedSprite.isDynamic;
+  resolveEntityTint(world, entityId, projected.tint);
   return projected;
 }

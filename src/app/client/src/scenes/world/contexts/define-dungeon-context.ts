@@ -1,9 +1,9 @@
-import { Color } from "@engine/components";
-import { defineContext, type ContextId } from "@libs/spatial-contexts";
 import { OUTSIDE } from "@client/components/render-visibility";
 import { spawnDoor } from "@client/entities/door";
 import { spawnDungeon } from "@client/entities/dungeon";
 import { setupContextCamera } from "@client/scenes/world/contexts/shared";
+import { Rgba } from "@engine/components";
+import { defineContext, type ContextId } from "@libs/spatial-contexts";
 
 type DungeonContextOptions = {
   overworldId: ContextId;
@@ -25,7 +25,7 @@ export function defineDungeonContext(options: DungeonContextOptions) {
       spawnDoor(world, {
         x: 50,
         y: 220,
-        fill: new Color(0.95, 0.4, 0.35, 1),
+        fill: new Rgba(0.95, 0.4, 0.35, 1),
         role: OUTSIDE,
         portal: {
           mode: "teleport",

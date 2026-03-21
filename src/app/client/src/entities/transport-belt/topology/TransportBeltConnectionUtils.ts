@@ -1,8 +1,10 @@
 import { canConveyorStoreEntities, ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import { TransportBeltLeaf } from "@client/components/transport-belt-leaf";
 import {
-  getTransportBeltVariantDescriptor,
-  TransportBeltGridQuery,
+    getConveyorLaneSlots,
+    getTransportBeltVariantDescriptor,
+    setConveyorLaneTailBlocked,
+    TransportBeltGridQuery,
 } from "@client/entities/transport-belt/core";
 import { TransportBeltTerminalDecorationManager } from "@client/entities/transport-belt/placement/TransportBeltTerminalDecorationManager";
 import type { TransportBeltEntityId } from "@client/entities/transport-belt/types";
@@ -64,7 +66,12 @@ export class TransportBeltConnectionUtils {
       const previousBelt = world.get(previousEntityId, ConveyorBeltComponent);
 
       if (previousBelt) {
+        const previousHadNoNextConnection = previousBelt.nextEntityId === null;
         previousBelt.nextEntityId = beltEntityId;
+
+        if (previousHadNoNextConnection) {
+          this.blockTailTransfers(world, previousEntityId, previousBelt);
+        }
       }
     }
 
@@ -157,6 +164,10 @@ export class TransportBeltConnectionUtils {
     belt.previousEntityId = previousEntityId;
     belt.nextEntityId = nextEntityId;
 
+    if (oldNextEntityId === null && nextEntityId !== null) {
+      this.blockTailTransfers(world, beltEntityId, belt);
+    }
+
     if (oldPreviousEntityId !== null && oldPreviousEntityId !== previousEntityId) {
       const oldPreviousBelt = world.get(oldPreviousEntityId, ConveyorBeltComponent);
 
@@ -179,7 +190,12 @@ export class TransportBeltConnectionUtils {
       const previousBelt = world.get(previousEntityId, ConveyorBeltComponent);
 
       if (previousBelt) {
+        const previousHadNoNextConnection = previousBelt.nextEntityId === null;
         previousBelt.nextEntityId = beltEntityId;
+
+        if (previousHadNoNextConnection) {
+          this.blockTailTransfers(world, previousEntityId, previousBelt);
+        }
       }
     }
 
@@ -199,6 +215,38 @@ export class TransportBeltConnectionUtils {
       nextEntityId,
     ]);
     this.syncTerminalDecorationsNearCoordinates(world, coordinates);
+  }
+
+  /**
+   * Recomputes belt topology from world layout after loading persisted state.
+   *
+   * Persisted previous/next pointers and loop anchors are runtime-derived state,
+   * so they should be rebuilt from spatial neighbors when a scene is restored.
+   */
+  public static reconnectAllBelts(world: UserWorld): void {
+    const beltEntityIds = [...world.query(ConveyorBeltComponent)];
+
+    for (const beltEntityId of beltEntityIds) {
+      const belt = world.get(beltEntityId, ConveyorBeltComponent);
+
+      if (!belt || !this.isConnectableVariant(belt.variant)) {
+        continue;
+      }
+
+      belt.previousEntityId = null;
+      belt.nextEntityId = null;
+      this.syncLeafMarker(world, beltEntityId, belt, false);
+    }
+
+    for (const beltEntityId of beltEntityIds) {
+      const belt = world.get(beltEntityId, ConveyorBeltComponent);
+
+      if (!belt || !this.isConnectableVariant(belt.variant)) {
+        continue;
+      }
+
+      this.reconnectBelt(world, beltEntityId as TransportBeltEntityId);
+    }
   }
 
   private static findAdjacentBeltEntityId(
@@ -284,6 +332,22 @@ export class TransportBeltConnectionUtils {
 
   private static isConnectableVariant(variant: string): boolean {
     return canConveyorStoreEntities(variant) && getTransportBeltVariantDescriptor(variant) !== undefined;
+  }
+
+  private static blockTailTransfers(
+    world: UserWorld,
+    conveyorEntityId: EntityId,
+    conveyor: ConveyorBeltComponent,
+  ): void {
+    for (const side of ["left", "right"] as const) {
+      const slots = getConveyorLaneSlots(conveyor, side);
+
+      if (slots[3] === null) {
+        continue;
+      }
+
+      setConveyorLaneTailBlocked(conveyor, side, true);
+    }
   }
 
   private static refreshLeafAnchors(

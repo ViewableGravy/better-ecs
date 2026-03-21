@@ -6,6 +6,7 @@ export default [
   ...nx.configs["flat/javascript"],
   {
     ignores: [
+      "**/.types/**",
       "**/dist",
       "**/out-tsc",
       "**/vite.config.*.timestamp*",

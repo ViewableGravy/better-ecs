@@ -36,6 +36,13 @@ export { DefaultEngineEditorView } from "@engine/ui/layout";
 export { EngineCanvas } from "@engine/ui/layout/canvas";
 export { EngineEditorLayout } from "@engine/ui/layout/components/engineEditorLayout/index";
 export { QuickActions } from "@engine/ui/layout/quick-actions";
+export { RegisteredQuickActions } from "@engine/ui/layout/quick-actions/registeredQuickActions";
+export {
+    registerQuickAction,
+    useRegisterQuickAction,
+    type QuickActionRegistration,
+    type QuickActionRenderProps
+} from "@engine/ui/quick-actions";
 export { attachCanvas } from "@engine/ui/utilities/attach-canvas";
 export type { AttachCanvasOptions, AttachedCanvas } from "@engine/ui/utilities/attach-canvas";
 export { EngineUiContext } from "@engine/ui/utilities/engine-context";

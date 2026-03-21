@@ -416,8 +416,6 @@ describe("World isolation", () => {
 
 describe("SceneManager", () => {
   it("should expose isTransitioning state", async () => {
-    let wasTransitioning = false;
-
     const MenuScene = createScene("menu")({
       async setup() {
         await new Promise((r) => setTimeout(r, 10));
@@ -432,7 +430,7 @@ describe("SceneManager", () => {
     const transitionPromise = engine.scene.set("menu");
 
     // Check if transitioning immediately after starting
-    wasTransitioning = engine.scene.isTransitioning;
+    const wasTransitioning = engine.scene.isTransitioning;
 
     await transitionPromise;
 

@@ -1,3 +1,4 @@
+import { Component, StateComponent, state } from "@engine";
 import type { ContextId } from "@libs/spatial-contexts/context-id";
 
 export type PortalMode = "focus" | "teleport";
@@ -19,14 +20,30 @@ export type PortalOpts = {
   label?: string;
 };
 
-export class Portal {
-  public mode: PortalMode;
-  public targetContextId: ContextId;
-  public spawn?: PortalSpawn2D;
-  public requireInteraction: boolean;
-  public label?: string;
+const DEFAULT_PORTAL_OPTS: PortalOpts = {
+  mode: "focus",
+  targetContextId: "" as ContextId,
+};
 
-  constructor(opts: PortalOpts) {
+@StateComponent
+export class Portal extends Component {
+  @state("string")
+  declare public mode: PortalMode;
+
+  @state("string")
+  declare public targetContextId: ContextId;
+
+  @state("json")
+  declare public spawn?: PortalSpawn2D;
+
+  @state("boolean")
+  declare public requireInteraction: boolean;
+
+  @state("string")
+  declare public label?: string;
+
+  constructor(opts: PortalOpts = DEFAULT_PORTAL_OPTS) {
+    super();
     this.mode = opts.mode;
     this.targetContextId = opts.targetContextId;
     this.spawn = opts.spawn;

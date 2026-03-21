@@ -3,7 +3,7 @@ import { PlayerComponent } from "@client/components/player";
 import { ConveyorMovementUtils } from "@client/entities/transport-belt/motion/ConveyorMovementUtils";
 import { PhysicsWorldManager } from "@client/scenes/world/physics/physics-world-manager";
 import { BELT_QUERY_FILTER, SHARED_BELT_WORLD_TRANSFORM, SHARED_MOTION, SHARED_PLAYER_WORLD_TRANSFORM } from "@client/systems/world/conveyor-movement/constants";
-import { createSystem, resolveWorldTransform2D, Vec2, type EntityId } from "@engine";
+import { createSystem, mutate, resolveWorldTransform2D, Vec2, type EntityId } from "@engine";
 import { Transform2D } from "@engine/components";
 import { Delta, fromContext, World } from "@engine/context";
 import { COLLISION_LAYERS, RectangleCollider } from "@libs/physics";
@@ -95,7 +95,9 @@ export const System = createSystem("main:conveyor-movement")({
 
     // apply the motion to the player's transform
     const step = belt.speed * seconds;
-    playerTransform.curr.pos.x += SHARED_MOTION.x * step;
-    playerTransform.curr.pos.y += SHARED_MOTION.y * step;
+    mutate(playerTransform, "curr", (curr) => {
+      curr.pos.x += SHARED_MOTION.x * step;
+      curr.pos.y += SHARED_MOTION.y * step;
+    });
   },
 });

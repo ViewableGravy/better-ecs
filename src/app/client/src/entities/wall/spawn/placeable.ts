@@ -47,10 +47,11 @@ export function spawnPlaceableWall(world: UserWorld, options: SpawnPlaceableWall
 	const wallEntityId = world.create();
 	const centerX = options.snappedX + HALF_BOX_SIZE;
 	const centerY = options.snappedY + HALF_BOX_SIZE;
+	const sortWorldY = centerY + PLACEABLE_WALL_COLLIDER_TOP + PLACEABLE_WALL_COLLIDER_HEIGHT;
 	const spriteVariant = options.spriteVariant ?? "single-1";
 
 	world.add(wallEntityId, new Transform2D(centerX, centerY));
-	world.add(wallEntityId, createPlaceableWallSprite(spriteVariant, centerY));
+	world.add(wallEntityId, createPlaceableWallSprite(spriteVariant, sortWorldY));
 
 	if (options.profile === "preview") {
 		world.add(wallEntityId, new Debug("wall-ghost"));

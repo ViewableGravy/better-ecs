@@ -1,26 +1,26 @@
 import {
-  Gizmo,
-  GIZMO_ARROW_HEAD_WORLD,
-  GIZMO_AXIS_LENGTH_WORLD,
-  GIZMO_PLANE_HANDLE_OFFSET_X_WORLD,
-  GIZMO_PLANE_HANDLE_OFFSET_Y_WORLD,
-  GIZMO_PLANE_HANDLE_SIZE_WORLD,
-  GIZMO_RING_RADIUS_WORLD,
-  GIZMO_ROTATE_RING_RADIUS_WORLD,
-  GIZMO_SCALE_MIN_DISTANCE_WORLD,
-  type GizmoHandle,
+    Gizmo,
+    GIZMO_ARROW_HEAD_WORLD,
+    GIZMO_AXIS_LENGTH_WORLD,
+    GIZMO_PLANE_HANDLE_OFFSET_X_WORLD,
+    GIZMO_PLANE_HANDLE_OFFSET_Y_WORLD,
+    GIZMO_PLANE_HANDLE_SIZE_WORLD,
+    GIZMO_RING_RADIUS_WORLD,
+    GIZMO_ROTATE_RING_RADIUS_WORLD,
+    GIZMO_SCALE_MIN_DISTANCE_WORLD,
+    type GizmoHandle,
 } from "@engine/components/gizmo";
-import { Color } from "@engine/components/sprite/sprite";
+import { Rgba } from "@engine/components/sprite/sprite";
 import { Transform2D } from "@engine/components/transform";
 import { fromContext, FromRender } from "@engine/context";
 import { getWorldTransform2D } from "@engine/ecs/hierarchy";
 import type { UserWorld } from "@engine/ecs/world";
 import type {
-  DenseShapeRenderData,
-  EngineFrameAllocatorRegistry,
-  InternalFrameAllocator,
-  Renderer,
-  RenderQueue,
+    DenseShapeRenderData,
+    EngineFrameAllocatorRegistry,
+    InternalFrameAllocator,
+    Renderer,
+    RenderQueue,
 } from "@engine/render";
 
 /**********************************************************************************************************
@@ -42,30 +42,30 @@ const INACTIVE_HANDLE_ALPHA = 0.2;
 const RING_SEGMENTS = 48;
 const FULL_ARC = Math.PI * 2;
 
-const AXIS_RED = new Color(1, 0.25, 0.25, 1);
-const AXIS_GREEN = new Color(0.45, 1, 0.45, 1);
-const RING_SCALE_STROKE = new Color(0.92, 0.92, 0.92, 1);
-const RING_ROTATE_STROKE = new Color(0.3, 0.6, 1, 1);
-const AXIS_RED_HOVER = new Color(1, 0.75, 0.35, 1);
-const AXIS_GREEN_HOVER = new Color(0.85, 1, 0.45, 1);
-const RING_SCALE_STROKE_HOVER = new Color(1, 0.9, 0.45, 1);
-const RING_ROTATE_STROKE_HOVER = new Color(0.5, 0.75, 1, 1);
-const PLANE_STROKE = new Color(0.95, 0.95, 0.95, 1);
-const PLANE_STROKE_HOVER = new Color(1, 0.9, 0.45, 1);
-const AXIS_RED_INACTIVE = new Color(1, 0.25, 0.25, INACTIVE_HANDLE_ALPHA);
-const AXIS_GREEN_INACTIVE = new Color(0.45, 1, 0.45, INACTIVE_HANDLE_ALPHA);
-const RING_SCALE_STROKE_INACTIVE = new Color(0.92, 0.92, 0.92, INACTIVE_HANDLE_ALPHA);
-const RING_ROTATE_STROKE_INACTIVE = new Color(0.3, 0.6, 1, INACTIVE_HANDLE_ALPHA);
-const AXIS_RED_HOVER_INACTIVE = new Color(1, 0.75, 0.35, INACTIVE_HANDLE_ALPHA);
-const AXIS_GREEN_HOVER_INACTIVE = new Color(0.85, 1, 0.45, INACTIVE_HANDLE_ALPHA);
-const RING_SCALE_STROKE_HOVER_INACTIVE = new Color(1, 0.9, 0.45, INACTIVE_HANDLE_ALPHA);
-const RING_ROTATE_STROKE_HOVER_INACTIVE = new Color(0.5, 0.75, 1, INACTIVE_HANDLE_ALPHA);
-const PLANE_STROKE_INACTIVE = new Color(0.95, 0.95, 0.95, INACTIVE_HANDLE_ALPHA);
-const PLANE_STROKE_HOVER_INACTIVE = new Color(1, 0.9, 0.45, INACTIVE_HANDLE_ALPHA);
-const SCALE_PREVIEW_FILL = new Color(1, 1, 1, SCALE_PREVIEW_FILL_ALPHA);
-const ROTATE_PREVIEW_FILL = new Color(0.3, 0.6, 1, ROTATE_PREVIEW_FILL_ALPHA);
+const AXIS_RED = new Rgba(1, 0.25, 0.25, 1);
+const AXIS_GREEN = new Rgba(0.45, 1, 0.45, 1);
+const RING_SCALE_STROKE = new Rgba(0.92, 0.92, 0.92, 1);
+const RING_ROTATE_STROKE = new Rgba(0.3, 0.6, 1, 1);
+const AXIS_RED_HOVER = new Rgba(1, 0.75, 0.35, 1);
+const AXIS_GREEN_HOVER = new Rgba(0.85, 1, 0.45, 1);
+const RING_SCALE_STROKE_HOVER = new Rgba(1, 0.9, 0.45, 1);
+const RING_ROTATE_STROKE_HOVER = new Rgba(0.5, 0.75, 1, 1);
+const PLANE_STROKE = new Rgba(0.95, 0.95, 0.95, 1);
+const PLANE_STROKE_HOVER = new Rgba(1, 0.9, 0.45, 1);
+const AXIS_RED_INACTIVE = new Rgba(1, 0.25, 0.25, INACTIVE_HANDLE_ALPHA);
+const AXIS_GREEN_INACTIVE = new Rgba(0.45, 1, 0.45, INACTIVE_HANDLE_ALPHA);
+const RING_SCALE_STROKE_INACTIVE = new Rgba(0.92, 0.92, 0.92, INACTIVE_HANDLE_ALPHA);
+const RING_ROTATE_STROKE_INACTIVE = new Rgba(0.3, 0.6, 1, INACTIVE_HANDLE_ALPHA);
+const AXIS_RED_HOVER_INACTIVE = new Rgba(1, 0.75, 0.35, INACTIVE_HANDLE_ALPHA);
+const AXIS_GREEN_HOVER_INACTIVE = new Rgba(0.85, 1, 0.45, INACTIVE_HANDLE_ALPHA);
+const RING_SCALE_STROKE_HOVER_INACTIVE = new Rgba(1, 0.9, 0.45, INACTIVE_HANDLE_ALPHA);
+const RING_ROTATE_STROKE_HOVER_INACTIVE = new Rgba(0.5, 0.75, 1, INACTIVE_HANDLE_ALPHA);
+const PLANE_STROKE_INACTIVE = new Rgba(0.95, 0.95, 0.95, INACTIVE_HANDLE_ALPHA);
+const PLANE_STROKE_HOVER_INACTIVE = new Rgba(1, 0.9, 0.45, INACTIVE_HANDLE_ALPHA);
+const SCALE_PREVIEW_FILL = new Rgba(1, 1, 1, SCALE_PREVIEW_FILL_ALPHA);
+const ROTATE_PREVIEW_FILL = new Rgba(0.3, 0.6, 1, ROTATE_PREVIEW_FILL_ALPHA);
 
-const TRANSPARENT_FILL = new Color(0, 0, 0, 0);
+const TRANSPARENT_FILL = new Rgba(0, 0, 0, 0);
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
@@ -91,7 +91,7 @@ export function queueGizmos(
   for (const entityId of world.query(Gizmo, Transform2D)) {
     const gizmo = world.require(entityId, Gizmo);
 
-    const worldTransform = getWorldTransform2D(world, entityId);
+    const worldTransform = getWorldTransform2D(world, entityId) ?? world.get(entityId, Transform2D);
     if (!worldTransform) {
       continue;
     }
@@ -199,7 +199,7 @@ function queuePlaneHandle(
   centerY: number,
   rotation: number,
   size: number,
-  stroke: Color,
+  stroke: Rgba,
   strokeWidth: number,
 ): void {
   if (!import.meta.env.DEV) {
@@ -247,7 +247,7 @@ function queueAxis(
   startY: number,
   endX: number,
   endY: number,
-  stroke: Color,
+  stroke: Rgba,
   arrowHeadLength: number,
   strokeWidth: number,
 ): void {
@@ -362,10 +362,10 @@ function queueRing(
 }
 
 function resolveHandleStroke(
-  stroke: Color,
+  stroke: Rgba,
   activeHandle: Gizmo["activeHandle"],
   handle: GizmoHandle,
-): Color {
+): Rgba {
   if (activeHandle === null || activeHandle === handle) {
     return stroke;
   }
@@ -479,7 +479,7 @@ function queueArc(
   radius: number,
   startAngle: number,
   endAngle: number,
-  stroke: Color,
+  stroke: Rgba,
   strokeWidth: number,
 ): void {
   const angleDelta = endAngle - startAngle;
@@ -510,7 +510,7 @@ function queueDottedLine(
   startY: number,
   endX: number,
   endY: number,
-  stroke: Color,
+  stroke: Rgba,
   strokeWidth: number,
   dashLength: number,
   gapLength: number,
@@ -615,7 +615,7 @@ function queueDottedArc(
   centerX: number,
   centerY: number,
   radius: number,
-  stroke: Color,
+  stroke: Rgba,
   strokeWidth: number,
   dashLength: number,
   gapLength: number,
@@ -648,7 +648,7 @@ function queueLine(
   startY: number,
   endX: number,
   endY: number,
-  stroke: Color,
+  stroke: Rgba,
   strokeWidth: number,
 ): void {
   const deltaX = endX - startX;
@@ -677,8 +677,8 @@ function queueCircle(
   centerX: number,
   centerY: number,
   diameter: number,
-  fill: Color,
-  stroke: Color | null,
+  fill: Rgba,
+  stroke: Rgba | null,
   strokeWidth: number,
   fillEnabled: boolean,
   arcEnabled: boolean,
@@ -722,8 +722,8 @@ function queueRoundedRectangle(
   width: number,
   height: number,
   rotation: number,
-  fill: Color,
-  stroke: Color | null,
+  fill: Rgba,
+  stroke: Rgba | null,
   strokeWidth: number,
   cornerRadius: number,
 ): void {
@@ -761,7 +761,7 @@ function writeLineShape(
   startY: number,
   deltaX: number,
   deltaY: number,
-  stroke: Color,
+  stroke: Rgba,
   strokeWidth: number,
 ): void {
   shape.type = "line";
@@ -790,8 +790,8 @@ function writeCircleShape(
   centerX: number,
   centerY: number,
   diameter: number,
-  fill: Color,
-  stroke: Color | null,
+  fill: Rgba,
+  stroke: Rgba | null,
   strokeWidth: number,
   fillEnabled: boolean,
   arcEnabled: boolean,
@@ -829,8 +829,8 @@ function writeRoundedRectangleShape(
   width: number,
   height: number,
   rotation: number,
-  fill: Color,
-  stroke: Color | null,
+  fill: Rgba,
+  stroke: Rgba | null,
   strokeWidth: number,
   cornerRadius: number,
 ): void {

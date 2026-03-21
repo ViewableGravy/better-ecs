@@ -30,6 +30,9 @@ export const createAppEngine = () => {
           debugOutline: false,
         },
       },
+      serialization: {
+        enableDirtyQueue: true,
+      },
     },
   });
 };

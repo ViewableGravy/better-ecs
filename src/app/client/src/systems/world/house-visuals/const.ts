@@ -1,0 +1,1 @@
+export const INSIDE_OUTSIDE_ALPHA = 0.5;

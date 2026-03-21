@@ -1,5 +1,5 @@
 import type { LooseAssetManager } from "@engine/asset/AssetManager";
-import type { Color } from "@engine/components/sprite/sprite";
+import type { Rgba } from "@engine/components/sprite/sprite";
 import type { TextureSourceData } from "@engine/components/texture";
 import type { ShapeRenderInput, SpriteRenderData, TexturedQuadRenderData } from "@engine/render/types/low-level";
 
@@ -9,7 +9,7 @@ export interface RendererAPI {
 
   beginFrame(): void;
   endFrame(): void;
-  clear(color: Color): void;
+  clear(color: Rgba): void;
 
   setCamera(x: number, y: number, zoom: number): void;
   setMeshOverlayEnabled(enabled: boolean): void;

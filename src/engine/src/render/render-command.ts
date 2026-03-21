@@ -1,5 +1,5 @@
 import type { LooseAssetManager } from "@engine/asset/AssetManager";
-import type { Color } from "@engine/components/sprite/sprite";
+import type { Rgba } from "@engine/components/sprite/sprite";
 import type { TextureSourceData } from "@engine/components/texture";
 import type { ShapeRenderInput, SpriteRenderData, TexturedQuadRenderData } from "@engine/render/types/low-level";
 import type { RendererAPI } from "@engine/render/types/renderer-api";
@@ -27,7 +27,7 @@ export class RenderCommand {
     this.#rendererApi.endFrame();
   }
 
-  clear(color: Color): void {
+  clear(color: Rgba): void {
     this.#rendererApi.clear(color);
   }
 

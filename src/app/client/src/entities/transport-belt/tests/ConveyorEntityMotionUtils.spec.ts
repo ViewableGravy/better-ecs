@@ -82,8 +82,22 @@ const ConveyorEntityMotionUtils = {
       RuntimeConveyorEntityMotionUtils.syncConveyorTransforms(world, conveyor);
     }
   },
-  advanceConveyor: RuntimeConveyorEntityMotionUtils.advanceConveyor.bind(RuntimeConveyorEntityMotionUtils),
-  syncConveyorTransforms: RuntimeConveyorEntityMotionUtils.syncConveyorTransforms.bind(RuntimeConveyorEntityMotionUtils),
+  advanceConveyor(
+    world: UserWorld,
+    conveyor: ConveyorBeltComponent,
+    nextConveyor: ConveyorBeltComponent | null,
+    updateDelta: number,
+  ): void {
+    RuntimeConveyorEntityMotionUtils.advanceConveyor(
+      world,
+      conveyor,
+      nextConveyor,
+      updateDelta,
+    );
+  },
+  syncConveyorTransforms(world: UserWorld, conveyor: ConveyorBeltComponent): void {
+    RuntimeConveyorEntityMotionUtils.syncConveyorTransforms(world, conveyor);
+  },
 };
 
 describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
@@ -103,7 +117,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     conveyor.leftProgress[0] = 1;
     conveyor.leftProgress[1] = 1;
 
-    ConveyorEntityMotionUtils.advanceConveyor(world, conveyor, null, null, 0);
+    ConveyorEntityMotionUtils.advanceConveyor(world, conveyor, null, 0);
     ConveyorEntityMotionUtils.syncConveyorTransforms(world, conveyor);
 
     expect(conveyor.left).toEqual([null, slot0EntityId, slot1EntityId, null]);
@@ -138,7 +152,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     conveyor.leftProgress[2] = 1;
     conveyor.rightProgress[1] = 1;
 
-    ConveyorEntityMotionUtils.advanceConveyor(world, conveyor, null, null, 0);
+    ConveyorEntityMotionUtils.advanceConveyor(world, conveyor, null, 0);
     ConveyorEntityMotionUtils.syncConveyorTransforms(world, conveyor);
 
     expect(conveyor.left).toEqual([null, slot0EntityId, null, slot2EntityId]);
@@ -171,7 +185,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     conveyor.leftProgress[2] = 1;
     conveyor.rightProgress[0] = 1;
 
-    ConveyorEntityMotionUtils.advanceConveyor(world, conveyor, null, null, 0);
+    ConveyorEntityMotionUtils.advanceConveyor(world, conveyor, null, 0);
     ConveyorEntityMotionUtils.syncConveyorTransforms(world, conveyor);
 
     expect(conveyor.left).toEqual([null, left0EntityId, left1EntityId, left2EntityId]);
@@ -192,7 +206,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     conveyor.right[3] = entityId;
     conveyor.rightProgress[3] = 1;
 
-    ConveyorEntityMotionUtils.advanceConveyor(world, conveyor, null, null, 0);
+    ConveyorEntityMotionUtils.advanceConveyor(world, conveyor, null, 0);
     ConveyorEntityMotionUtils.syncConveyorTransforms(world, conveyor);
 
     expect(conveyor.right).toEqual([null, null, null, entityId]);
@@ -254,6 +268,31 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     expect(transform.curr.pos.y).toBe(-4);
   });
 
+  it("resets seam timing when a downstream conveyor is placed after a tail item is already waiting", () => {
+    const world = new UserWorld(new World("scene"));
+    const headBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "horizontal-right" });
+    const entityId = world.create();
+
+    world.add(entityId, new Parent(headBeltId));
+    world.add(entityId, new Transform2D());
+
+    const headBelt = world.require(headBeltId, ConveyorBeltComponent);
+    headBelt.left[3] = entityId;
+    headBelt.leftProgress[3] = 1;
+
+    const tailBeltId = spawnTransportBelt(world, { x: 20, y: 0, variant: "horizontal-right" });
+    const tailBelt = world.require(tailBeltId, ConveyorBeltComponent);
+
+    ConveyorEntityMotionUtils.advanceWorld(
+      world,
+      SLOT_ADVANCE_DURATION_MS / CONVEYOR_SLOT_COUNT_PER_LANE,
+    );
+
+    expect(headBelt.left).toEqual([null, null, null, null]);
+    expect(tailBelt.left).toEqual([entityId, null, null, null]);
+    expect(tailBelt.leftProgress[0]).toBe(0);
+  });
+
   it("does not transfer an end-of-line item into a ghost belt preview", () => {
     const world = new UserWorld(new World("scene"));
     const headBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "horizontal-right" });
@@ -293,7 +332,6 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     ConveyorEntityMotionUtils.advanceConveyor(
       world,
       conveyor,
-      null,
       null,
       SLOT_ADVANCE_DURATION_MS / CONVEYOR_SLOT_COUNT_PER_LANE,
     );
@@ -339,6 +377,37 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     expect(resolveWorldTransform2D(world, entityId, SHARED_WORLD_TRANSFORM)).toBe(true);
     expect(SHARED_WORLD_TRANSFORM.curr.pos.x).toBe(10);
     expect(SHARED_WORLD_TRANSFORM.curr.pos.y).toBe(-4);
+  });
+
+  it("reuses the existing parent component when transferring to the next conveyor", () => {
+    const world = new UserWorld(new World("scene"));
+    const headBeltId = world.create();
+    const tailBeltId = world.create();
+    const headBelt = new ConveyorBeltComponent("horizontal-right");
+    const tailBelt = new ConveyorBeltComponent("horizontal-right");
+    const entityId = world.create();
+
+    headBelt.nextEntityId = tailBeltId;
+    tailBelt.previousEntityId = headBeltId;
+
+    world.add(headBeltId, headBelt);
+    world.add(tailBeltId, tailBelt);
+    world.add(headBeltId, new Transform2D(0, 0, 0));
+    world.add(tailBeltId, new Transform2D(20, 0, 0));
+    tailBelt.isLeaf = true;
+    world.add(tailBeltId, new TransportBeltLeaf());
+    world.add(entityId, new Parent(headBeltId));
+    world.add(entityId, new Transform2D());
+
+    const parentBeforeTransfer = world.require(entityId, Parent);
+
+    headBelt.left[3] = entityId;
+    headBelt.leftProgress[3] = 1;
+
+    ConveyorEntityMotionUtils.advanceBeltLineFromLeaf(world, tailBeltId, 0);
+
+    expect(world.require(entityId, Parent)).toBe(parentBeforeTransfer);
+    expect(parentBeforeTransfer.entityId).toBe(tailBeltId);
   });
 
   it("moves items from a curve into the next connected straight conveyor", () => {

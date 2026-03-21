@@ -1,5 +1,5 @@
-import { EditorHoverHighlight, Shape } from "@engine/components";
-import { Color } from "@engine/components/sprite/sprite";
+import { EditorHoverHighlight, resolveEntityFillColor, resolveEntityStrokeColor, Shape } from "@engine/components";
+import { Rgba } from "@engine/components/sprite/sprite";
 import type { Transform2D } from "@engine/components/transform";
 import { fromContext, FromRender } from "@engine/context";
 import type { ShapeEntityRenderCommand } from "@engine/core/render-pipeline/passes/render-world/render/culling/utils";
@@ -14,7 +14,9 @@ type ShapeRenderer = Pick<Renderer, "drawShape">;
 /**********************************************************************************************************
  *   CONSTS
  **********************************************************************************************************/
-const HOVER_TINT_COLOR = new Color(1, 1, 0, 1);
+const HOVER_TINT_COLOR = new Rgba(1, 1, 0, 1);
+const SHARED_FILL = new Rgba(1, 1, 1, 1);
+const SHARED_STROKE = new Rgba(1, 1, 1, 1);
 
 /**********************************************************************************************************
  *   COMPONENT START
@@ -43,10 +45,11 @@ export function handleShapeEntityCommand(
   shapeCommand.rotation = transform.curr.rotation;
   shapeCommand.scaleX = transform.curr.scale.x;
   shapeCommand.scaleY = transform.curr.scale.y;
-  shapeCommand.fill.r = shape.fill.r;
-  shapeCommand.fill.g = shape.fill.g;
-  shapeCommand.fill.b = shape.fill.b;
-  shapeCommand.fill.a = shape.fill.a;
+  resolveEntityFillColor(world, entityId, SHARED_FILL);
+  shapeCommand.fill.r = SHARED_FILL.r;
+  shapeCommand.fill.g = SHARED_FILL.g;
+  shapeCommand.fill.b = SHARED_FILL.b;
+  shapeCommand.fill.a = SHARED_FILL.a;
 
   const hoverHighlight = world.get(entityId, EditorHoverHighlight);
   if (hoverHighlight) {
@@ -55,14 +58,14 @@ export function handleShapeEntityCommand(
     shapeCommand.fill.b = blendChannel(shapeCommand.fill.b, HOVER_TINT_COLOR.b, hoverHighlight.amount);
   }
 
-  if (shape.stroke) {
+  if (resolveEntityStrokeColor(world, entityId, SHARED_STROKE)) {
     if (shapeCommand.stroke === null) {
-      shapeCommand.stroke = new Color(shape.stroke.r, shape.stroke.g, shape.stroke.b, shape.stroke.a);
+      shapeCommand.stroke = new Rgba(SHARED_STROKE.r, SHARED_STROKE.g, SHARED_STROKE.b, SHARED_STROKE.a);
     } else {
-      shapeCommand.stroke.r = shape.stroke.r;
-      shapeCommand.stroke.g = shape.stroke.g;
-      shapeCommand.stroke.b = shape.stroke.b;
-      shapeCommand.stroke.a = shape.stroke.a;
+      shapeCommand.stroke.r = SHARED_STROKE.r;
+      shapeCommand.stroke.g = SHARED_STROKE.g;
+      shapeCommand.stroke.b = SHARED_STROKE.b;
+      shapeCommand.stroke.a = SHARED_STROKE.a;
     }
 
     if (hoverHighlight && shapeCommand.stroke) {

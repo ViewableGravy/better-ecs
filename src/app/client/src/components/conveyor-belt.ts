@@ -1,4 +1,5 @@
 import type { EntityId } from "@engine";
+import { Component, StateComponent, state } from "@engine";
 
 export const DEFAULT_CONVEYOR_BELT_SPEED = 19;
 
@@ -16,22 +17,30 @@ export function canConveyorStoreEntities(variant: string): boolean {
   return !variant.startsWith("start-") && !variant.startsWith("end-");
 }
 
-export class ConveyorBeltComponent {
+@StateComponent
+export class ConveyorBeltComponent extends Component {
   // Slots for physical entities on this belt, separated into left and right lanes based on belt flow direction
-  public readonly left: ConveyorSlots = [null, null, null, null];
-  public readonly right: ConveyorSlots = [null, null, null, null];
+  @state("json")
+  declare public readonly left: ConveyorSlots;
 
-  // Visual progress of entities in their slots
-  public readonly leftProgress: ConveyorSlotProgress = [0, 0, 0, 0];
-  public readonly rightProgress: ConveyorSlotProgress = [0, 0, 0, 0];
+  @state("json")
+  declare public readonly right: ConveyorSlots;
 
-  // Tracks whether a tail-slot item is currently hard-stopped at the belt seam.
-  public leftTailBlocked = false;
-  public rightTailBlocked = false;
+  // Runtime-only interpolation state used for carried-item motion and visuals.
+  declare public readonly leftProgress: ConveyorSlotProgress;
+
+  declare public readonly rightProgress: ConveyorSlotProgress;
+
+  declare public leftTailBlocked: boolean;
+
+  declare public rightTailBlocked: boolean;
 
   // Doubly Linked List style pointers
-  public previousEntityId: EntityId | null = null;
-  public nextEntityId: EntityId | null = null;
+  @state("json")
+  declare public previousEntityId: EntityId | null;
+
+  @state("json")
+  declare public nextEntityId: EntityId | null;
 
   /**
    * Marker used to determine whether this belt is considered a leaf in a belt network. This exists in ADDITION to the presence
@@ -41,10 +50,27 @@ export class ConveyorBeltComponent {
    * leafs in the network to perform initial belt iteration, while isLeaf exists for querying during iteration, which would
    * otherwise be an expensive operation for large networks.
    */
-  public isLeaf = false;
+  @state("boolean")
+  declare public isLeaf: boolean;
 
-  constructor(
-    public variant: string,
-    public speed = DEFAULT_CONVEYOR_BELT_SPEED,
-  ) {}
+  @state("string")
+  declare public variant: string;
+
+  @state("float")
+  declare public speed: number;
+
+  constructor(variant: string, speed = DEFAULT_CONVEYOR_BELT_SPEED) {
+    super();
+    this.left = [null, null, null, null];
+    this.right = [null, null, null, null];
+    this.leftProgress = [0, 0, 0, 0];
+    this.rightProgress = [0, 0, 0, 0];
+    this.leftTailBlocked = false;
+    this.rightTailBlocked = false;
+    this.previousEntityId = null;
+    this.nextEntityId = null;
+    this.isLeaf = false;
+    this.variant = variant;
+    this.speed = speed;
+  }
 }

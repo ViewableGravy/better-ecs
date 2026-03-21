@@ -1,6 +1,10 @@
 import type { RegisteredAssets } from "@engine/core";
+import { Component } from "@engine/ecs/component";
+import { StateComponent, state } from "@engine/serialization";
 
-export class Color {
+const DESERIALIZED_SPRITE_ASSET_ID_PLACEHOLDER = "" as Exclude<keyof RegisteredAssets, number | symbol>;
+
+export class Rgba {
   constructor(
     public r: number = 1,
     public g: number = 1,
@@ -16,7 +20,7 @@ export class Color {
     return this;
   }
 
-  public copyFrom(other: Color): void {
+  public copyFrom(other: Rgba): void {
     this.r = other.r;
     this.g = other.g;
     this.b = other.b;
@@ -46,10 +50,10 @@ export class Color {
   }
 
   /** Create from hex string */
-  public static fromHex(hex: string): Color {
+  public static fromHex(hex: string): Rgba {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    if (!result) return new Color();
-    return new Color(
+    if (!result) return new Rgba();
+    return new Rgba(
       parseInt(result[1], 16) / 255,
       parseInt(result[2], 16) / 255,
       parseInt(result[3], 16) / 255,
@@ -67,57 +71,65 @@ export class Color {
  * The render system reads this component together with Transform2D to draw
  * the entity on screen.
  */
-export class Sprite {
+@StateComponent
+export class Sprite extends Component {
   /** The asset ID of the texture to display. */
-  public assetId: Exclude<keyof RegisteredAssets, number | symbol>;
+  @state("string")
+  declare public assetId: Exclude<keyof RegisteredAssets, number | symbol>;
 
   /** Display width in world units (0 = derive from texture). */
-  public width: number;
+  @state("float")
+  declare public width: number;
 
   /** Display height in world units (0 = derive from texture). */
-  public height: number;
+  @state("float")
+  declare public height: number;
 
   /** Anchor / pivot X (0-1, origin for rotation/scaling). */
-  public anchorX: number;
+  @state("float")
+  declare public anchorX: number;
 
   /** Anchor / pivot Y (0-1, origin for rotation/scaling). */
-  public anchorY: number;
+  @state("float")
+  declare public anchorY: number;
 
   /** Horizontal flip. */
-  public flipX: boolean;
+  @state("boolean")
+  declare public flipX: boolean;
 
   /** Vertical flip. */
-  public flipY: boolean;
-
-  /** Multiplicative color tint. */
-  public tint: Color;
+  @state("boolean")
+  declare public flipY: boolean;
 
   /** Z-order for sorting within a layer. */
-  public zOrder: number;
+  @state("float")
+  declare public zOrder: number;
 
   /** Render layer for multi-pass rendering. */
-  public layer: number;
+  @state("float")
+  declare public layer: number;
 
   /**
    * Queue update policy.
    * - true: always evaluate this sprite in the queue hot path (default)
    * - false: eligible for static cohort reuse
    */
-  public isDynamic: boolean;
+  @state("boolean")
+  declare public isDynamic: boolean;
 
   constructor(
-    assetId: Exclude<keyof RegisteredAssets, number | symbol>,
+    assetId: Exclude<keyof RegisteredAssets, number | symbol> = DESERIALIZED_SPRITE_ASSET_ID_PLACEHOLDER,
     width: number = 0,
     height: number = 0,
     anchorX: number = 0.5,
     anchorY: number = 0.5,
     flipX: boolean = false,
     flipY: boolean = false,
-    tint: Color = new Color(),
     zOrder: number = 0,
     layer: number = 0,
     isDynamic: boolean = true,
   ) {
+    super();
     this.assetId = assetId;
     this.width = width;
     this.height = height;
@@ -125,7 +137,6 @@ export class Sprite {
     this.anchorY = anchorY;
     this.flipX = flipX;
     this.flipY = flipY;
-    this.tint = tint;
     this.zOrder = zOrder;
     this.layer = layer;
     this.isDynamic = isDynamic;

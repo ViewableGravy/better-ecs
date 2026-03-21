@@ -18,6 +18,8 @@ export class SceneContext<TName extends string = string> {
     this.name = name;
     this.#defaultWorldId = defaultWorldId;
 
+    defaultWorld.setWorldId(this.#defaultWorldId);
+
     this.#worlds.set(this.#defaultWorldId, defaultWorld);
     this.#userWorlds.set(this.#defaultWorldId, new UserWorld(defaultWorld));
   }
@@ -76,6 +78,7 @@ export class SceneContext<TName extends string = string> {
    * If a world is already registered for the id, it will be replaced.
    */
   registerWorld(id: string, world: World): UserWorld {
+	world.setWorldId(id);
     this.#worlds.set(id, world);
 
     const wrapper = this.#userWorlds.get(id);

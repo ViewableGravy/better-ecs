@@ -1,14 +1,13 @@
 import { FPSPass } from "@client/plugins/fps";
-import { ApplyContextVisualsPass } from "@client/render/passes/ApplyContextVisualsPass";
 import { DrawGridPass } from "@client/render/passes/DrawGridPass";
 import { ActiveWorldProvider } from "@client/render/world-provider";
 import { createRenderPipeline, type CreateRenderPipelineContext } from "@engine";
 import { fromContext, FromEngine } from "@engine/context";
 import {
-  DEFAULT_RENDERER_CONFIG,
-  FrameAllocator,
-  Renderer2D,
-  WebGLRenderAPI,
+    DEFAULT_RENDERER_CONFIG,
+    FrameAllocator,
+    Renderer2D,
+    WebGLRenderAPI,
 } from "@engine/render";
 
 export const Render = createRenderPipeline({
@@ -34,7 +33,6 @@ export const Render = createRenderPipeline({
     };
   },
   passes: [
-    ApplyContextVisualsPass,
     DrawGridPass,
   ],
   afterWorldPasses: [

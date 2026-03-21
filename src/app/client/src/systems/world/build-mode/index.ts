@@ -1,4 +1,5 @@
-import { GhostPreviewComponent, GhostPreviewScopeUtils } from "@client/entities/ghost";
+import { GhostPreviewScopeUtils } from "@client/entities/ghost";
+import { getLocalPlayerOwnerId } from "@client/entities/player/actions";
 import { supportsDragPlacement } from "@client/systems/world/build-mode/build-items";
 import {
     buildModeStateDefault,
@@ -45,6 +46,7 @@ export const System = createSystem("main:build-mode")({
     const manager = SpatialContexts.requireManager(engine.scene.context);
     const focusedWorld = manager.focusedWorld;
     const sceneWorlds = engine.scene.context.worlds;
+    const localGhostOwnerId = getLocalPlayerOwnerId({ focusedWorld, rootWorld, sceneWorlds });
 
     // Check for relevant keybinds and update state accordingly.
     InputManager.match();
@@ -67,13 +69,23 @@ export const System = createSystem("main:build-mode")({
       ? null
       : Placement.resolveSelection(placementTarget, gridCoordinates, data);
 
-    GhostPreviewScopeUtils.pruneGhosts(rootWorld, placementTarget.previewWorld, sceneWorlds);
-
-    if (data.selectedItem === null || resolvedPlacement === null) {
-      placementTarget.previewWorld.destroy(GhostPreviewComponent);
+    if (data.selectedItem === null) {
+      GhostPreviewScopeUtils.destroyOwnedGhostsInWorlds(rootWorld, sceneWorlds, localGhostOwnerId);
       data.ghostEntityId = null;
     } else {
-      data.ghostEntityId = resolvedPlacement.preview.sync(data.ghostEntityId);
+      GhostPreviewScopeUtils.pruneGhosts(
+        rootWorld,
+        placementTarget.previewWorld,
+        sceneWorlds,
+        localGhostOwnerId,
+      );
+    }
+
+    if (data.selectedItem === null || resolvedPlacement === null) {
+      GhostPreviewScopeUtils.destroyOwnedGhosts(placementTarget.previewWorld, localGhostOwnerId);
+      data.ghostEntityId = null;
+    } else {
+      data.ghostEntityId = resolvedPlacement.preview.sync(data.ghostEntityId, localGhostOwnerId);
     }
 
     const shouldDelete = data.pendingDelete;

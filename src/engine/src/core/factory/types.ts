@@ -20,6 +20,9 @@ export type EngineConfigOptions = {
 	render?: {
 		culling?: EngineRenderCullingOptions;
 	};
+	serialization?: {
+		enableDirtyQueue?: boolean;
+	};
 };
 
 export type CreateEngineOptions<
@@ -36,6 +39,7 @@ export type CreateEngineOptions<
 	assetLoader?: AssetManager<TAssets, TAssetTypes>;
 	render?: RenderPipeline;
 	loading?: EngineOverlay;
+	manualRegisterEngine?: boolean;
 	config?: EngineConfigOptions;
 };
 

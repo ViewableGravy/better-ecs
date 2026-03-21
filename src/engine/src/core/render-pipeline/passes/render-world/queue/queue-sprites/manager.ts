@@ -1,14 +1,15 @@
-import { Sprite } from "@engine/components";
+import { resolveEntityTint, Sprite } from "@engine/components";
+import { Rgba } from "@engine/components/sprite/sprite";
 import {
-  SpriteRenderRecordCache,
-  type SpriteRenderRecordCacheEntry,
-  type SpriteRenderRecordWorldState,
+    SpriteRenderRecordCache,
+    type SpriteRenderRecordCacheEntry,
+    type SpriteRenderRecordWorldState,
 } from "@engine/core/render-pipeline/passes/render-world/queue/queue-sprites/cache";
 import { pushSpriteRecord, queueSpriteCommand } from "@engine/core/render-pipeline/passes/render-world/queue/queue-sprites/utility";
 import { writeSpriteRecord, writeTransformRecord } from "@engine/core/render-pipeline/passes/render-world/queue/queue-sprites/writers";
 import {
-  isSpriteWithinCullingBounds,
-  type CullingBounds as CullingBoundsValue
+    isSpriteWithinCullingBounds,
+    type CullingBounds as CullingBoundsValue
 } from "@engine/core/render-pipeline/passes/render-world/render/culling/utils";
 import { SPRITE_RENDER_DIRTY_NONE, type SpriteRenderRecord } from "@engine/core/render-pipeline/passes/render-world/sprite-render-record";
 import type { EntityId } from "@engine/ecs/entity";
@@ -19,6 +20,7 @@ import type { EngineFrameAllocatorRegistry, InternalFrameAllocator, RenderQueue 
 /***** COMPONENT START *****/
 export class QueueSpriteEntityManager {
   private static _instance: QueueSpriteEntityManager | null = null;
+  private static readonly SHARED_TINT = new Rgba(1, 1, 1, 1);
 
   private constructor(
     private cache: SpriteRenderRecordCache,
@@ -88,8 +90,9 @@ export class QueueSpriteEntityManager {
     }
 
     const record = entry.record;
+    const tint = resolveEntityTint(this.world, entityId, QueueSpriteEntityManager.SHARED_TINT);
 
-    record.dirtyMask = writeSpriteRecord(record, assetId, sprite)
+    record.dirtyMask = writeSpriteRecord(record, assetId, sprite, tint)
       | writeTransformRecord(record, worldTransform);
 
     record.isVisible = isSpriteWithinCullingBounds(this.cullingBounds, record.worldTransform, this.alpha, record);

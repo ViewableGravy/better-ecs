@@ -1,5 +1,6 @@
-import { Color } from "@engine/components/sprite/sprite";
 import type { RegisteredAssets } from "@engine/core";
+import { Component } from "@engine/ecs/component";
+import { StateComponent, state } from "@engine/serialization";
 
 /**
  * ShaderQuad component — a custom shader rendered onto a quad attached to an entity.
@@ -7,33 +8,39 @@ import type { RegisteredAssets } from "@engine/core";
  * The render pipeline resolves `assetId` to a shader source pair and draws a quad
  * using the entity world transform.
  */
-export class ShaderQuad {
+@StateComponent
+export class ShaderQuad extends Component {
   /** Asset ID of the shader source pair (vertex + fragment). */
-  public assetId: Exclude<keyof RegisteredAssets, number | symbol>;
+  @state("string")
+  declare public assetId: Exclude<keyof RegisteredAssets, number | symbol>;
 
   /** Display width in world units. */
-  public width: number;
+  @state("float")
+  declare public width: number;
 
   /** Display height in world units. */
-  public height: number;
+  @state("float")
+  declare public height: number;
 
   /** Anchor / pivot X (0-1, origin for rotation/scaling). */
-  public anchorX: number;
+  @state("float")
+  declare public anchorX: number;
 
   /** Anchor / pivot Y (0-1, origin for rotation/scaling). */
-  public anchorY: number;
-
-  /** Multiplicative color tint. */
-  public tint: Color;
+  @state("float")
+  declare public anchorY: number;
 
   /** Whether to pass `performance.now()` to the shader `uTime` uniform. */
-  public useTime: boolean;
+  @state("boolean")
+  declare public useTime: boolean;
 
   /** Z-order for sorting within a layer. */
-  public zOrder: number;
+  @state("float")
+  declare public zOrder: number;
 
   /** Render layer for multi-pass rendering. */
-  public layer: number;
+  @state("float")
+  declare public layer: number;
 
   constructor(
     assetId: Exclude<keyof RegisteredAssets, number | symbol>,
@@ -41,17 +48,16 @@ export class ShaderQuad {
     height: number = 128,
     anchorX: number = 0.5,
     anchorY: number = 0.5,
-    tint: Color = new Color(1, 1, 1, 1),
     useTime: boolean = true,
     zOrder: number = 0,
     layer: number = 0,
   ) {
+    super();
     this.assetId = assetId;
     this.width = width;
     this.height = height;
     this.anchorX = anchorX;
     this.anchorY = anchorY;
-    this.tint = tint;
     this.useTime = useTime;
     this.zOrder = zOrder;
     this.layer = layer;

@@ -1,7 +1,7 @@
 import type { ShaderSourceAsset } from "@engine/asset";
 import type { LooseAssetManager } from "@engine/asset/AssetManager";
 import { isShaderSourceAsset } from "@engine/asset/utils";
-import { Color } from "@engine/components/sprite/sprite";
+import { Rgba } from "@engine/components/sprite/sprite";
 import type { TextureSourceData } from "@engine/components/texture";
 import { ShaderCompiler } from "@engine/render/renderers/webGL/compiler";
 import { shapeDrawers, type ShapeDrawerContext, type Vec2 } from "@engine/render/renderers/webGL/drawers";
@@ -41,7 +41,7 @@ export class WebGLRenderAPI implements RendererAPI {
   #spriteBatchCount = 0;
   #spriteBatchTexture: WebGLTexture | null = null;
 
-  static readonly #MESH_OVERLAY_COLOR = new Color(1, 1, 1, 0.5);
+  static readonly #MESH_OVERLAY_COLOR = new Rgba(1, 1, 1, 0.5);
 
   constructor(assets?: LooseAssetManager) {
     this.#assets = assets ?? null;
@@ -103,7 +103,7 @@ export class WebGLRenderAPI implements RendererAPI {
     return;
   }
 
-  clear(color: Color): void {
+  clear(color: Rgba): void {
     const gl = this.#gl;
     if (!gl) {
       return;
@@ -449,7 +449,7 @@ export class WebGLRenderAPI implements RendererAPI {
     return this.#canvas?.height ?? 0;
   }
 
-  #drawColorTriangles(vertices: Float32Array, color: Color): void {
+  #drawColorTriangles(vertices: Float32Array, color: Rgba): void {
     const gl = this.#gl;
     if (!gl) {
       return;
@@ -580,7 +580,7 @@ export class WebGLRenderAPI implements RendererAPI {
     return result;
   }
 
-  #drawColorLines(vertices: Float32Array, color: Color): void {
+  #drawColorLines(vertices: Float32Array, color: Rgba): void {
     const gl = this.#gl;
     if (!gl) {
       return;

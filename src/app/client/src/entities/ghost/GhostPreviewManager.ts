@@ -1,5 +1,5 @@
 import { HALF_BOX_SIZE } from "@client/systems/world/build-mode/metrics";
-import type { EntityId, UserWorld } from "@engine";
+import { mutate, type EntityId, type UserWorld } from "@engine";
 import { Transform2D } from "@engine/components";
 
 import { GhostPreviewComponent } from "@client/entities/ghost/component";
@@ -19,14 +19,15 @@ export class GhostPreviewManager {
     preset: GhostPreset<TPayload>,
     payload?: TPayload,
     isPlaceable: boolean = true,
+    ownerId: string = "local-player",
   ): EntityId {
     const previewVariant = preset.resolvePreviewVariant?.(payload) ?? null;
 
-    if (!this.matchesGhostKind(world, ghostEntityId, preset.kind)) {
+    if (!this.matchesGhost(world, ghostEntityId, preset.kind, ownerId)) {
       this.destroyGhost(world, ghostEntityId);
       const nextGhostEntityId = preset.spawn(world, x, y, payload);
 
-      GhostUtils.applyEffect(world, nextGhostEntityId, preset.kind, previewVariant);
+      GhostUtils.applyEffect(world, nextGhostEntityId, preset.kind, ownerId, previewVariant);
       GhostUtils.syncPlacementState(world, nextGhostEntityId, isPlaceable);
 
       return nextGhostEntityId;
@@ -43,7 +44,9 @@ export class GhostPreviewManager {
   private static syncPosition(world: UserWorld, ghostEntityId: EntityId, x: number, y: number): void {
     const transform = world.require(ghostEntityId, Transform2D);
 
-    transform.curr.pos.set(x + HALF_BOX_SIZE, y + HALF_BOX_SIZE);
+    mutate(transform, "curr", (curr) => {
+      curr.pos.set(x + HALF_BOX_SIZE, y + HALF_BOX_SIZE);
+    });
     transform.prev.pos.set(x + HALF_BOX_SIZE, y + HALF_BOX_SIZE);
   }
 
@@ -65,10 +68,11 @@ export class GhostPreviewManager {
     ghostPreview.previewVariant = previewVariant;
   }
 
-  private static matchesGhostKind(
+  private static matchesGhost(
     world: UserWorld,
     ghostEntityId: EntityId | null,
     kind: string,
+    ownerId: string,
   ): ghostEntityId is EntityId {
     if (ghostEntityId === null || !world.has(ghostEntityId, GhostPreviewComponent)) {
       return false;
@@ -76,6 +80,6 @@ export class GhostPreviewManager {
 
     const ghostPreview = world.require(ghostEntityId, GhostPreviewComponent);
 
-    return ghostPreview.kind === kind;
+    return ghostPreview.kind === kind && ghostPreview.ownerId === ownerId;
   }
 }

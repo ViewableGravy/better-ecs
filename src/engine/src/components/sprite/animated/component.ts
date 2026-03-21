@@ -1,7 +1,9 @@
-import { Color, Sprite } from "@engine/components/sprite/sprite";
+import { Sprite } from "@engine/components/sprite/sprite";
 import type { RegisteredAssets } from "@engine/core";
+import { StateComponent, state } from "@engine/serialization";
 
 type SpriteAssetId = Exclude<keyof RegisteredAssets, number | symbol>;
+const DESERIALIZED_ANIMATED_SPRITE_FRAME_PLACEHOLDER = "" as SpriteAssetId;
 
 type AnimatedSpriteConfig = {
   assets: readonly SpriteAssetId[];
@@ -11,7 +13,6 @@ type AnimatedSpriteConfig = {
   anchorY?: number;
   flipX?: boolean;
   flipY?: boolean;
-  tint?: Color;
   zOrder?: number;
   layer?: number;
   isDynamic?: boolean;
@@ -26,20 +27,30 @@ function isAnimatedSpriteConfig(
   return !Array.isArray(value);
 }
 
+@StateComponent
 export class AnimatedSprite extends Sprite {
-  public readonly frames: readonly SpriteAssetId[];
+  @state("json")
+  declare public readonly frames: readonly SpriteAssetId[];
 
-  public playbackRate = 1;
-  public startTime = performance.now();
-  public useGlobalOffset = false;
+  @state("float")
+  declare public playbackRate: number;
 
+  @state("float")
+  declare public startTime: number;
+
+  @state("boolean")
+  declare public useGlobalOffset: boolean;
+
+  constructor();
   constructor(frames: readonly SpriteAssetId[]);
   constructor(config: AnimatedSpriteConfig);
-  constructor(configOrFrames: AnimatedSpriteConfig | readonly SpriteAssetId[]) {
+  constructor(configOrFrames?: AnimatedSpriteConfig | readonly SpriteAssetId[]) {
     let config: AnimatedSpriteConfig | undefined;
     let frames: readonly SpriteAssetId[];
 
-    if (isAnimatedSpriteConfig(configOrFrames)) {
+    if (configOrFrames === undefined) {
+      frames = [DESERIALIZED_ANIMATED_SPRITE_FRAME_PLACEHOLDER];
+    } else if (isAnimatedSpriteConfig(configOrFrames)) {
       config = configOrFrames;
       frames = config.assets;
     } else {
@@ -58,13 +69,15 @@ export class AnimatedSprite extends Sprite {
       config?.anchorY,
       config?.flipX,
       config?.flipY,
-      config?.tint,
       config?.zOrder,
       config?.layer,
       config?.isDynamic,
     );
 
     this.frames = frames;
+    this.playbackRate = 1;
+    this.startTime = performance.now();
+    this.useGlobalOffset = false;
 
     if (config?.playbackRate !== undefined) {
       this.playbackRate = config.playbackRate;
