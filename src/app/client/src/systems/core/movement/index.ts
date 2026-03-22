@@ -1,7 +1,6 @@
 import {
     type PlayerAnimationState,
     PlayerComponent,
-    type PlayerDirection,
 } from "@client/components/player";
 import { PLAYER_GROUNDED_HITBOX_RADIUS } from "@client/entities/player";
 import {
@@ -9,43 +8,16 @@ import {
     resolvePlayerSpriteDepthSortY,
     resolvePlayerSpriteZOrder,
 } from "@client/entities/player/render/createPlayerSprite";
+import { resolveDirectionFromAxes } from "@client/systems/core/movement/utilities";
 import { createSystem, mutate } from "@engine";
 import { AnimatedSprite, Transform2D } from "@engine/components";
 import { System as ContextSystem, Delta, fromContext, World } from "@engine/context";
 
-function isActive(keysActive: Set<string>, primaryCode: string, secondaryCode: string): boolean {
-  return keysActive.has(primaryCode) || keysActive.has(secondaryCode);
-}
-
-function resolveMovementAxes(keysActive: Set<string>): { x: -1 | 0 | 1; y: -1 | 0 | 1 } {
-  const x = (isActive(keysActive, "ArrowRight", "KeyD") ? 1 : 0)
-    - (isActive(keysActive, "ArrowLeft", "KeyA") ? 1 : 0);
-  const y = (isActive(keysActive, "ArrowDown", "KeyS") ? 1 : 0)
-    - (isActive(keysActive, "ArrowUp", "KeyW") ? 1 : 0);
-
-  return {
-    x: x as -1 | 0 | 1,
-    y: y as -1 | 0 | 1,
-  };
-}
-
-function resolveDirectionFromAxes(x: -1 | 0 | 1, y: -1 | 0 | 1): PlayerDirection | undefined {
-  if (x === 0 && y === -1) return "n";
-  if (x === 1 && y === -1) return "ne";
-  if (x === 1 && y === 0) return "e";
-  if (x === 1 && y === 1) return "se";
-  if (x === 0 && y === 1) return "s";
-  if (x === -1 && y === 1) return "sw";
-  if (x === -1 && y === 0) return "w";
-  if (x === -1 && y === -1) return "nw";
-  return undefined;
-}
-
-export const System = createSystem("movement")({
+export const System = createSystem("main:player-movement-authority")({
   system() {
     /***** CONTEXT *****/
     const world = fromContext(World);
-    const { data } = fromContext(ContextSystem("engine:input"));
+    const { data } = fromContext(ContextSystem("main:local-player-movement-intent"));
     const [updateDelta] = fromContext(Delta);
 
     /***** QUERIES *****/
@@ -60,7 +32,7 @@ export const System = createSystem("movement")({
       world.add(playerId, AnimatedSprite, animatedSprite);
     }
 
-    const { x, y } = resolveMovementAxes(data.keysActive);
+    const { x, y } = data;
     const speed = 100 * (updateDelta / 1000);
 
     if (x !== 0 || y !== 0) {

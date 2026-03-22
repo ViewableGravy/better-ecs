@@ -1,9 +1,17 @@
 import type { RenderVisibilityRole } from "@client/components/render-visibility";
 import { HOUSE_INTERIOR, OUTSIDE } from "@client/components/render-visibility";
 import { BuildModeDragPlacement } from "@client/systems/world/build-mode/drag-placement";
+import { type GridCoordinates, GridSingleton } from "@client/systems/world/build-mode/grid-singleton";
 import { Placement } from "@client/systems/world/build-mode/placement";
-import type { RegisteredEngine, RegisteredSystems } from "@engine";
-import { SpatialContexts, type ContextId } from "@libs/spatial-contexts";
+import {
+    type PlacementTargetResolution,
+    resolvePlacementWorld,
+} from "@client/systems/world/build-mode/placement-target";
+import {
+    type RegisteredResolvedPlacement,
+} from "@client/systems/world/build-mode/placement/registry";
+import type { MousePoint, RegisteredEngine, RegisteredSystems } from "@engine";
+import { type ContextId, SpatialContexts } from "@libs/spatial-contexts";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -11,6 +19,12 @@ import { SpatialContexts, type ContextId } from "@libs/spatial-contexts";
 
 type ResolvedPlacement = NonNullable<ReturnType<typeof Placement.resolveSelection>>;
 type BuildModeSystemData = RegisteredSystems["main:build-mode"]["data"];
+
+type ActiveBuildModePlacement = {
+  gridCoordinates: GridCoordinates;
+  placementTarget: PlacementTargetResolution;
+  resolvedPlacement: RegisteredResolvedPlacement | null;
+};
 
 /**********************************************************************************************************
  *   COMPONENT START
@@ -43,4 +57,22 @@ export function resolvePlacementRenderVisibilityRole(
   }
 
   return HOUSE_INTERIOR;
+}
+
+export function resolveActivePlacement(
+  engine: RegisteredEngine,
+  worldPointer: MousePoint,
+  buildModeState: BuildModeSystemData,
+): ActiveBuildModePlacement {
+  const gridCoordinates = GridSingleton.worldToGridCoordinates(worldPointer.x, worldPointer.y);
+  const placementTarget = resolvePlacementWorld(engine, worldPointer);
+  const resolvedPlacement = placementTarget.blocked || placementTarget.commitWorld === undefined
+    ? null
+    : Placement.resolveSelection(placementTarget, gridCoordinates, buildModeState);
+
+  return {
+    gridCoordinates,
+    placementTarget,
+    resolvedPlacement,
+  };
 }
