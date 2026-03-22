@@ -1,8 +1,7 @@
-import { mutate } from "@engine";
 import type { Transform2D } from "@engine/components";
 import { CircleCollider } from "@libs/physics/colliders/circle";
 import { RectangleCollider } from "@libs/physics/colliders/rectangle";
-import { resolveCircleInsideRect } from "@libs/physics/resolve/utils";
+import { resolveCircleInsideRect, translateWithoutInterpolation } from "@libs/physics/resolve/utils";
 import {
     clamp,
     getRectangleBottom,
@@ -43,8 +42,5 @@ export function resolveCircleVsRect(
   const nx = dx / distance;
   const ny = dy / distance;
 
-  mutate(subjectTransform, "curr", (curr) => {
-    curr.pos.x += nx * overlap;
-    curr.pos.y += ny * overlap;
-  });
+  translateWithoutInterpolation(subjectTransform, nx * overlap, ny * overlap);
 }

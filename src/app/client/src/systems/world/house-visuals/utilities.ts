@@ -8,20 +8,24 @@ import {
     RenderVisibility,
 } from "@client/components/render-visibility";
 import {
+    findContainingContextRegion,
+    findRegionByContextId,
+    isInsideContextRegion,
+} from "@client/scenes/world/utilities/context-collision";
+import { ContextFocusBlendTransitionMutator } from "@client/systems/world/house-transition/contextTransitionMutator";
+import {
     BlendTransition,
     BlendTransitionMutator,
 } from "@client/systems/world/house-transition/transitionMutator";
 import { lerp } from "@client/utilities/math";
 import type { UserWorld } from "@engine";
-import { AnimatedSprite, FillColor, Shape, Sprite, StrokeColor, Tint } from "@engine/components";
-import type {
-    ContextId,
-    SpatialContextManager,
-} from "@libs/spatial-contexts";
+import { AnimatedSprite, FillColor, Shape, Sprite, StrokeColor, Tint, Transform2D } from "@engine/components";
+import { ContextEntryRegion, type ContextId, type SpatialContextManager } from "@libs/spatial-contexts";
 
 import { INSIDE_OUTSIDE_ALPHA } from "./const";
 
 const transitionMutator = new BlendTransitionMutator();
+const contextFocusTransitionMutator = new ContextFocusBlendTransitionMutator();
 
 type PlayerAlphaArgs = {
   contextId: ContextId;
@@ -70,6 +74,22 @@ export function applyHouseVisuals(
     worldContextId: contextId,
     activeInteriorContextId,
   });
+}
+
+export function syncContextTransitionVisuals(
+  manager: SpatialContextManager,
+  updateDelta: number,
+): void {
+  contextFocusTransitionMutator.manager = manager;
+
+  for (const entityId of manager.rootWorld.query(BlendTransition)) {
+    const transition = manager.rootWorld.require(entityId, BlendTransition);
+
+    contextFocusTransitionMutator.set(transition);
+    contextFocusTransitionMutator.tick(updateDelta);
+  }
+
+  contextFocusTransitionMutator.applyFade(resolveContextTransitionTarget(manager));
 }
 
 function applyPlayerAlpha(world: UserWorld, alpha: number): void {
@@ -245,4 +265,71 @@ function getRoofBlendByContext(manager: SpatialContextManager): ReadonlyMap<Cont
   }
 
   return blendByContext;
+}
+
+function resolveContextTransitionTarget(manager: SpatialContextManager): ContextId | undefined {
+  const focusedContextId = manager.focusedContextId;
+
+  if (focusedContextId === manager.rootContextId) {
+    return resolveRootFocusedTransitionTarget(manager);
+  }
+
+  return resolveInteriorFocusedTransitionTarget(manager, focusedContextId);
+}
+
+function resolveRootFocusedTransitionTarget(manager: SpatialContextManager): ContextId | undefined {
+  const [playerId] = manager.rootWorld.query(PlayerComponent, Transform2D);
+
+  if (!playerId) {
+    return undefined;
+  }
+
+  const playerTransform = manager.rootWorld.require(playerId, Transform2D);
+  const region = findContainingContextRegion(manager.rootWorld, playerTransform);
+
+  return region?.contextId;
+}
+
+function resolveInteriorFocusedTransitionTarget(
+  manager: SpatialContextManager,
+  focusedContextId: ContextId,
+): ContextId | undefined {
+  const definition = manager.listDefinitions().find((item) => item.id === focusedContextId);
+
+  if (!definition?.parentId) {
+    return undefined;
+  }
+
+  const parentWorld = manager.getWorld(definition.parentId);
+  const focusedWorld = manager.getWorld(focusedContextId);
+
+  if (!parentWorld || !focusedWorld) {
+    return undefined;
+  }
+
+  const sourceRegion = findRegionByContextId(parentWorld, focusedContextId);
+
+  if (!sourceRegion) {
+    return undefined;
+  }
+
+  const sourceRegionBounds = parentWorld.get(sourceRegion.regionEntityId, ContextEntryRegion);
+
+  if (!sourceRegionBounds) {
+    return undefined;
+  }
+
+  const [playerId] = focusedWorld.query(PlayerComponent, Transform2D);
+
+  if (!playerId) {
+    return undefined;
+  }
+
+  const playerTransform = focusedWorld.require(playerId, Transform2D);
+
+  if (!isInsideContextRegion(playerTransform, sourceRegionBounds)) {
+    return undefined;
+  }
+
+  return focusedContextId;
 }

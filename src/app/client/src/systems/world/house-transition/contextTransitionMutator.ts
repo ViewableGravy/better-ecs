@@ -52,4 +52,21 @@ export class ContextFocusBlendTransitionMutator extends BlendTransitionMutator {
       }
     }
   }
+
+  public isComplete(contextId: ContextId): boolean {
+    for (const entityId of this.manager.rootWorld.query(BlendTransition, ContextVisualBinding)) {
+      const visualBinding = this.manager.rootWorld.require(entityId, ContextVisualBinding);
+
+      if (visualBinding.contextId !== contextId) {
+        continue;
+      }
+
+      const transition = this.manager.rootWorld.require(entityId, BlendTransition);
+      this.set(transition);
+
+      return this.complete;
+    }
+
+    return true;
+  }
 }

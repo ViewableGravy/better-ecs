@@ -268,6 +268,87 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     expect(transform.curr.pos.y).toBe(-4);
   });
 
+  it("preserves previous world position when transferring an item to the next conveyor", () => {
+    const world = new UserWorld(new World("scene"));
+    const headBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "horizontal-right" });
+    const tailBeltId = spawnTransportBelt(world, { x: 20, y: 0, variant: "horizontal-right" });
+    const entityId = world.create();
+
+    ConveyorUtils.addEntity(world, headBeltId, entityId, "left", 3, 1);
+
+    const entityTransform = world.require(entityId, Transform2D);
+    entityTransform.prev.copyFrom(entityTransform.curr);
+
+    ConveyorEntityMotionUtils.advanceWorld(
+      world,
+      SLOT_ADVANCE_DURATION_MS / CONVEYOR_SLOT_COUNT_PER_LANE,
+    );
+
+    const worldTransform = new Transform2D();
+    const resolvedWorldTransform = resolveWorldTransform2D(world, entityId, worldTransform);
+
+    expect(resolvedWorldTransform).toBe(true);
+    expect(world.require(entityId, Parent).entityId).toBe(tailBeltId);
+    expect(worldTransform.prev.pos.x).toBe(10);
+    expect(worldTransform.prev.pos.y).toBe(-4);
+    expect(worldTransform.curr.pos.x).toBe(15);
+    expect(worldTransform.curr.pos.y).toBe(-4);
+  });
+
+  it("preserves previous world position when a side load reparents an item", () => {
+    const world = new UserWorld(new World("scene"));
+    const mainBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "vertical-down" });
+    const sideBeltId = spawnTransportBelt(world, { x: -20, y: 0, variant: "horizontal-right" });
+    const entityId = world.create();
+
+    ConveyorUtils.addEntity(world, sideBeltId, entityId, "left", 3, 1);
+
+    const entityTransform = world.require(entityId, Transform2D);
+    entityTransform.prev.copyFrom(entityTransform.curr);
+
+    ConveyorEntityMotionUtils.advanceWorld(
+      world,
+      SLOT_ADVANCE_DURATION_MS / CONVEYOR_SLOT_COUNT_PER_LANE,
+    );
+
+    const worldTransform = new Transform2D();
+    const resolvedWorldTransform = resolveWorldTransform2D(world, entityId, worldTransform);
+
+    expect(resolvedWorldTransform).toBe(true);
+    expect(world.require(entityId, Parent).entityId).toBe(mainBeltId);
+    expect(worldTransform.prev.pos.x).toBe(-10);
+    expect(worldTransform.prev.pos.y).toBe(-4);
+  });
+
+  it("consumes multi-slot progress in one update instead of clamping visuals to the belt end", () => {
+    const world = new UserWorld(new World("scene"));
+    const conveyorEntityId = world.create();
+    const conveyor = new ConveyorBeltComponent("horizontal-right");
+    const entityId = world.create();
+
+    world.add(conveyorEntityId, conveyor);
+    world.add(entityId, new Transform2D());
+
+    conveyor.left[0] = entityId;
+    conveyor.leftProgress[0] = 0;
+
+    ConveyorEntityMotionUtils.advanceConveyor(
+      world,
+      conveyor,
+      null,
+      SLOT_ADVANCE_DURATION_MS / 2,
+    );
+    ConveyorEntityMotionUtils.syncConveyorTransforms(world, conveyor);
+
+    expect(conveyor.left).toEqual([null, null, entityId, null]);
+    expect(conveyor.leftProgress[2]).toBe(0);
+
+    const transform = world.require(entityId, Transform2D);
+
+    expect(transform.curr.pos.x).toBe(0);
+    expect(transform.curr.pos.y).toBe(-4);
+  });
+
   it("resets seam timing when a downstream conveyor is placed after a tail item is already waiting", () => {
     const world = new UserWorld(new World("scene"));
     const headBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "horizontal-right" });

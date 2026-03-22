@@ -1,8 +1,13 @@
-import { Rectangle, UserWorld, Vec2, World } from "@engine";
+/* eslint-disable @nx/enforce-module-boundaries */
+
 import { describe, expect, it } from "vitest";
 
-import { ContextEntryRegion } from "@libs/spatial-contexts/components/context-entry-region";
-import { contextEntryRegionContainsPoint } from "@libs/spatial-contexts/utilities";
+import { UserWorld, World } from "../../../engine/src/ecs/world";
+import { Rectangle } from "../../../engine/src/math/geometry/rectangle";
+import { Vec2 } from "../../../engine/src/math/vec/vec2";
+
+import { ContextEntryRegion } from "./components/context-entry-region";
+import { contextEntryRegionContainsPoint } from "./utilities";
 
 /**********************************************************************************************************
  *   COMPONENT START

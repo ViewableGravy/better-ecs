@@ -1,6 +1,6 @@
-import { mutate } from "@engine";
 import type { Transform2D } from "@engine/components";
 import { CircleCollider } from "@libs/physics/colliders/circle";
+import { translateWithoutInterpolation } from "@libs/physics/resolve/utils";
 
 export function resolveCircleVsCircle(
   subject: CircleCollider,
@@ -19,9 +19,7 @@ export function resolveCircleVsCircle(
 
   const distance = Math.sqrt(distanceSq);
   if (distance === 0) {
-    mutate(subjectTransform, "curr", (curr) => {
-      curr.pos.x += minDistance;
-    });
+    translateWithoutInterpolation(subjectTransform, minDistance, 0);
     return;
   }
 
@@ -29,8 +27,5 @@ export function resolveCircleVsCircle(
   const nx = dx / distance;
   const ny = dy / distance;
 
-  mutate(subjectTransform, "curr", (curr) => {
-    curr.pos.x += nx * overlap;
-    curr.pos.y += ny * overlap;
-  });
+  translateWithoutInterpolation(subjectTransform, nx * overlap, ny * overlap);
 }

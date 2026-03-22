@@ -1,20 +1,19 @@
+import { InsideContext } from "@client/components/inside-context";
 import { PlayerComponent } from "@client/components/player";
+import {
+    findContainingContextRegion,
+    findRegionByContextId,
+    isInsideContextRegion,
+} from "@client/scenes/world/utilities/context-collision";
 import { ContextFocusBlendTransitionMutator } from "@client/systems/world/house-transition/contextTransitionMutator";
 import {
-  createSystem,
-  type EntityId,
-  type UserWorld,
+    createSystem,
+    type EntityId,
+    type UserWorld,
 } from "@engine";
-import { fromContext, Delta, World } from "@engine/context";
 import { Transform2D } from "@engine/components";
+import { fromContext, World } from "@engine/context";
 import { ContextEntryRegion, type ContextId, useContextManager } from "@libs/spatial-contexts";
-import { InsideContext } from "@client/components/inside-context";
-import {
-  findContainingContextRegion,
-  findRegionByContextId,
-  isInsideContextRegion,
-} from "@client/scenes/world/utilities/context-collision";
-import { BlendTransition } from "@client/systems/world/house-transition/transitionMutator";
 
 /**********************************************************************************************************
 *   CONSTS
@@ -28,31 +27,16 @@ export const HouseContextSystem = createSystem("main:context-focus")({
   system() {
     const manager = useContextManager();
     const world = fromContext(World);
-    const [updateDelta] = fromContext(Delta);
     const [playerId] = world.invariantQuery(PlayerComponent);
     const playerTransform = world.require(playerId, Transform2D);
     const focused = manager.focusedContextId;
 
-    // ensure the mutator has the manager reference. Manager not available in 
+    // ensure the mutator has the manager reference. Manager not available in
     // initialize (yet)
     transitionMutator.manager = manager;
-
-    // Tick roof transitions for all contexts.
-    for (const entityId of manager.rootWorld.query(BlendTransition)) {
-      const transition = manager.rootWorld.require(entityId, BlendTransition);
-
-      transitionMutator.set(transition);
-      transitionMutator.tick(updateDelta);
-    }
     
     if (manager.isRootFocused) {
       const region = findContainingContextRegion(world, playerTransform);
-
-      for (const { contextId } of transitionMutator.rootVisualBindings()) {
-        // If the player is inside of a context region, set that region's context to 1,
-        // while all others are set to 0.
-        transitionMutator.setTarget(contextId === region?.contextId ? 1 : 0);
-      }
 
       if (region) {
         setInsideContext(world, playerId, region.contextId, region.regionEntityId);
@@ -65,12 +49,8 @@ export const HouseContextSystem = createSystem("main:context-focus")({
       // If the player is still marked as inside a context, but they aren't inside
       // the region anymore (given that no region was found here), then when the roof
       // blend is complete, remove the inside context component.
-      if (insideContext) {
-        for (const { contextId } of transitionMutator.rootVisualBindings()) {
-          if (contextId === insideContext.contextId && transitionMutator.complete) {
-            world.remove(playerId, InsideContext);
-          }
-        }
+      if (insideContext && transitionMutator.isComplete(insideContext.contextId)) {
+        world.remove(playerId, InsideContext);
       }
 
       return;
@@ -99,10 +79,9 @@ export const HouseContextSystem = createSystem("main:context-focus")({
     const isInsideSourceRegion = isInsideContextRegion(playerTransform, sourceRegionBounds);
     if (isInsideSourceRegion) {
       setInsideContext(world, playerId, focused, sourceRegion.regionEntityId);
-      return transitionMutator.applyFade(focused);
+      return;
     }
 
-    transitionMutator.applyFade();
     switchContext(manager, world, playerId, definition.parentId);
   },
 });
