@@ -7,6 +7,7 @@ import {
 } from "@engine";
 import { Engine, fromContext, OverrideSystem } from "@engine/context";
 import { initialize } from "@libs/fps/initialize";
+import { syncEngineTargetRates } from "@libs/fps/rates";
 import { render } from "@libs/fps/render";
 import { type FPSCounterData, type Opts } from "@libs/fps/types";
 import { update } from "@libs/fps/update";
@@ -19,6 +20,7 @@ const defaultState: FPSCounterData = {
   mode: "disabled",
   customFps: null,
   customUps: null,
+  lockRatesToLower: false,
 };
 
 export const System = (
@@ -36,13 +38,7 @@ export const System = (
     const { data } = fromContext(OverrideSystem<EngineSystem<FPSCounterData>>("plugin:fps-counter"));
     const now = performance.now();
 
-    if (data.customFps !== null && engine.meta.fps !== data.customFps) {
-      engine.meta.fps = data.customFps;
-    }
-
-    if (data.customUps !== null && engine.meta.ups !== data.customUps) {
-      engine.meta.ups = data.customUps;
-    }
+    syncEngineTargetRates(engine, data);
 
     if (!data.upsBuffer.start) {
       data.upsBuffer.start = now;

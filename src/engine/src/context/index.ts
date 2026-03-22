@@ -82,6 +82,11 @@ export const Delta: EngineContextOptions<
   select: (engine) => [engine.meta.updateDelta, engine.meta.frameDelta, engine.meta.updateProgress],
 };
 
+/** Context option that returns `[updateTick, updateTime]` simulation timing values. */
+export const Simulation: EngineContextOptions<[updateTick: number, updateTime: number]> = {
+  select: (engine) => [engine.meta.updateTick, engine.meta.updateTime],
+};
+
 /** Context option that returns the current active world. */
 export const World: EngineContextOptions<UserWorld> = {
   select: (engine) => engine.world,
@@ -159,6 +164,7 @@ export const Mouse: EngineContextOptions<MouseInterface> = {
 export const FromEngine = {
   Engine: Engine,
   Delta: Delta,
+  Simulation: Simulation,
   World: World,
   Scene: Scene,
   Assets: Assets,

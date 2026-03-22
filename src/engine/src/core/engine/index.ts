@@ -209,6 +209,7 @@ export class EngineClass<
 							this.meta.markUpdated(now);
 							(updateState as any).shouldUpdate = false;
 						} else {
+							this.meta.incrementUpdateTick();
 							this.runUpdateSystems(updateState.shouldUpdate);
 							this.#delta.markUpdated(now);
 							this.meta.markUpdated(now);

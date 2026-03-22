@@ -17,6 +17,7 @@ export type FPSCounterData = {
   mode: DisplayMode;
   customFps: number | null;
   customUps: number | null;
+  lockRatesToLower: boolean;
 };
 
 export type Opts = {

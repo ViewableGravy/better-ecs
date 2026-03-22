@@ -1,5 +1,6 @@
 import type { EngineSystem } from "@engine";
 import { Engine, fromContext, OverrideSystem } from "@engine/context";
+import { resolveEffectiveTargetRates } from "@libs/fps/rates";
 import type { FPSCounterData, Opts } from "@libs/fps/types";
 
 export function render(opts: Opts) {
@@ -42,9 +43,9 @@ export function render(opts: Opts) {
   const currentFps = fps[fps.length - 1];
   const currentUps = ups.length > 0 ? ups[ups.length - 1] : 0;
 
-  // Use custom values if set, otherwise use engine defaults
-  const targetFps = data.customFps ?? engine.meta.fps ?? 60;
-  const targetUps = data.customUps ?? engine.meta.ups ?? 60;
+  const targetRates = resolveEffectiveTargetRates(engine, data);
+  const targetFps = targetRates.fps;
+  const targetUps = targetRates.ups;
 
   if (data.mode === "disabled") {
     return;
@@ -101,24 +102,28 @@ export function render(opts: Opts) {
 
     // Only update sliders if the stored value changed (not on every render)
     // This prevents resetting user input while they're dragging
-    const fpsSlider = opts.element.querySelector("#fps-slider") as HTMLInputElement;
-    const upsSlider = opts.element.querySelector("#ups-slider") as HTMLInputElement;
+    const fpsSlider = opts.element.querySelector("#fps-slider") as HTMLInputElement | null;
+    const upsSlider = opts.element.querySelector("#ups-slider") as HTMLInputElement | null;
+    const lockToggle = opts.element.querySelector("#rate-lock-toggle") as HTMLInputElement | null;
 
     if (fpsSlider && !fpsSlider.matches(":active") && fpsSlider.value !== targetFps.toString()) {
       fpsSlider.value = targetFps.toString();
-      updateSliderFill(fpsSlider, opts.element);
+      updateSliderFill(fpsSlider, opts.element, engine.meta.initialFPS);
     }
 
     if (upsSlider && !upsSlider.matches(":active") && upsSlider.value !== targetUps.toString()) {
       upsSlider.value = targetUps.toString();
-      updateSliderFill(upsSlider, opts.element);
+      updateSliderFill(upsSlider, opts.element, engine.meta.initialUPS);
+    }
+
+    if (lockToggle && lockToggle.checked !== data.lockRatesToLower) {
+      lockToggle.checked = data.lockRatesToLower;
     }
   }
 }
 
-function updateSliderFill(slider: HTMLInputElement, container: HTMLElement) {
+function updateSliderFill(slider: HTMLInputElement, container: HTMLElement, defaultValue: number) {
   const value = parseInt(slider.value);
-  const defaultValue = 60; // Default FPS/UPS
   const max = parseInt(slider.max);
   const percentage = (value / max) * 100;
 

@@ -84,6 +84,11 @@ export function initialize(element: HTMLElement) {
             <div class="absolute top-1/2 left-0 h-3.5 -translate-y-1/2 rounded-l pointer-events-none z-1 transition-all duration-100" id="ups-slider-fill"></div>
           </div>
         </div>
+
+        <label class="flex items-center justify-between gap-3 rounded border border-white/10 bg-white/5 px-2 py-1.5 pointer-events-auto">
+          <span class="text-[11px] font-bold text-gray-300">Lock FPS/UPS to lower rate</span>
+          <input type="checkbox" id="rate-lock-toggle" class="h-3.5 w-3.5 cursor-pointer accent-white" />
+        </label>
       </div>
 
     </aside>

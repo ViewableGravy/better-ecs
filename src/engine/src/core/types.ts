@@ -15,6 +15,10 @@ export type MetaStats = {
   updateDelta: number;
   /** Delta time since last frame in milliseconds */
   frameDelta: number;
+  /** Fixed update interval in milliseconds for the current UPS target */
+  updateTime: number;
+  /** Monotonic simulation tick incremented once per executed update step */
+  updateTick: number;
   /** Checks which phase we are currently in */
   phase: (phase: "update" | "render") => boolean;
   /** Target frames per second */
