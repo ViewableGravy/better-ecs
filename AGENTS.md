@@ -6,11 +6,30 @@ This is the single source of truth for agent behavior and coding conventions in 
 
 ## Workspace map (high-level)
 
-- `apps/` → runnable applications (userland consumers of workspace packages).
-- `packages/` → shared engine/runtime/tooling packages.
-- `docs/` → architecture, implementation notes, and design decisions.
-- `.github/` → agent automation assets (skills, prompts, instructions scaffolding).
-- Root config (`nx.json`, `tsconfig*.json`, `vitest.workspace.ts`, `eslint.config.mjs`) governs workspace-wide behavior.
+```
+src/
+  app/
+    client/           → Frontend client application
+    server/           → Backend server application
+  engine/             → Core engine utilised by frontend and backend
+  libs/
+    fps/              → Package Displays FPS information to the user
+    physics/          → Provides physics + collisions for applications
+    spatial-contexts/ → Provides ability to render a world inside another world
+    state-sync/       → basic synchronisation & serialization systems
+  utils/              → Shared utilities available to all packages
+.github/              → Skills available to agent
+docs/                 → All documentation for the project
+vite/                 → Custom Vite plugins (i.e. HMR)
+```
+
+## Working Process
+You are a very smart model, and very capable, but you have a limited context window, therefore the goal is to only receive information that is vital to your work and not fill up with in-between context. To Achieve this, you rely heavily on the sub-agents tool for any action that is not coding. You are a great coder, and therefore the writing of code should not be delegated, but the following tasks should almost always be delegated
+
+- Investigation / Searching
+- Simple Tool use
+  Note: Context7, NX, etc. are for gather information, and therefore a sub-agent is capable of this
+- Terminal execution
 
 ## Discovering package relationships
 
