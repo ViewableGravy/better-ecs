@@ -1,11 +1,11 @@
 import { AnimatedSprite, Sprite } from "@engine/components";
 import { getFrameAssetIdAtTime } from "@engine/components/sprite/animated";
-import { fromContext, FromRender } from "@engine/context";
+import { Engine, fromContext, FromRender } from "@engine/context";
 import { SpriteRenderRecordCache } from "@engine/core/render-pipeline/passes/render-world/queue/queue-sprites/cache";
 import { QueueSpriteEntityManager } from "@engine/core/render-pipeline/passes/render-world/queue/queue-sprites/manager";
 import { resolveCullingSignature } from "@engine/core/render-pipeline/passes/render-world/queue/queue-sprites/utility";
 import {
-  CullingBounds
+    CullingBounds
 } from "@engine/core/render-pipeline/passes/render-world/render/culling/utils";
 import type { SpriteRenderRecord } from "@engine/core/render-pipeline/passes/render-world/sprite-render-record";
 
@@ -19,6 +19,7 @@ export function queueSprites(): void {
   const interpolationAlpha = fromContext(FromRender.InterpolationAlpha);
   const cullingBounds = fromContext(CullingBounds);
   const frameAllocator = fromContext(FromRender.FrameAllocator);
+  const engine = fromContext(Engine);
 
   // Get sprite render record cache and queue manager instances
   const spriteRecords = frameAllocator.scratch<SpriteRenderRecord>("engine:sprite-render-records");
@@ -28,6 +29,7 @@ export function queueSprites(): void {
   cache.beginFrame();
   const cacheState = cache.resolveWorldState(world);
   const sampledTimeMs = performance.now();
+  const sampledUpdateTick = engine.meta.updateTick;
   const cullingSignature = resolveCullingSignature(cullingBounds, interpolationAlpha);
 
   const manager = QueueSpriteEntityManager.instance(
@@ -53,7 +55,7 @@ export function queueSprites(): void {
       return;
     }
 
-    manager.queue(entityId, animatedSprite, getFrameAssetIdAtTime(animatedSprite, sampledTimeMs), true);
+    manager.queue(entityId, animatedSprite, getFrameAssetIdAtTime(animatedSprite, sampledTimeMs, sampledUpdateTick), true);
   });
 
   // Prune unused sprite records from the cache

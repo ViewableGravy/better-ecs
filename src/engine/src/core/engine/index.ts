@@ -200,9 +200,6 @@ export class EngineClass<
 				this.meta.setDeltas(snapshot.updateDelta, snapshot.frameDelta, updateTime);
 
 				if (!this.scene.isTransitioning) {
-					if (frameState.shouldUpdate) {
-						this.runRenderPipeline(frameState.shouldUpdate);
-					}
 					if (updateState.shouldUpdate) {
 						if (this.editor.runningState.paused) {
 							this.#delta.markUpdated(now);
@@ -215,6 +212,10 @@ export class EngineClass<
 							this.meta.markUpdated(now);
 							(updateState as any).shouldUpdate = false;
 						}
+					}
+
+					if (frameState.shouldUpdate) {
+						this.runRenderPipeline(frameState.shouldUpdate);
 					}
 				}
 

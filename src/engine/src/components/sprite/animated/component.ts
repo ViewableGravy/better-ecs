@@ -5,6 +5,8 @@ import { StateComponent, state } from "@engine/serialization";
 type SpriteAssetId = Exclude<keyof RegisteredAssets, number | symbol>;
 const DESERIALIZED_ANIMATED_SPRITE_FRAME_PLACEHOLDER = "" as SpriteAssetId;
 
+export type AnimatedSpritePlaybackMode = "time" | "tick";
+
 type AnimatedSpriteConfig = {
   assets: readonly SpriteAssetId[];
   width?: number;
@@ -17,7 +19,9 @@ type AnimatedSpriteConfig = {
   layer?: number;
   isDynamic?: boolean;
   playbackRate?: number;
+  playbackMode?: AnimatedSpritePlaybackMode;
   startTime?: number;
+  startTick?: number;
   useGlobalOffset?: boolean;
 };
 
@@ -35,8 +39,14 @@ export class AnimatedSprite extends Sprite {
   @state("float")
   declare public playbackRate: number;
 
+  @state("string")
+  declare public playbackMode: AnimatedSpritePlaybackMode;
+
   @state("float")
   declare public startTime: number;
+
+  @state("float")
+  declare public startTick: number;
 
   @state("boolean")
   declare public useGlobalOffset: boolean;
@@ -76,15 +86,25 @@ export class AnimatedSprite extends Sprite {
 
     this.frames = frames;
     this.playbackRate = 1;
+    this.playbackMode = "time";
     this.startTime = performance.now();
+    this.startTick = 0;
     this.useGlobalOffset = false;
 
     if (config?.playbackRate !== undefined) {
       this.playbackRate = config.playbackRate;
     }
 
+    if (config?.playbackMode !== undefined) {
+      this.playbackMode = config.playbackMode;
+    }
+
     if (config?.startTime !== undefined) {
       this.startTime = config.startTime;
+    }
+
+    if (config?.startTick !== undefined) {
+      this.startTick = config.startTick;
     }
 
     if (config?.useGlobalOffset !== undefined) {

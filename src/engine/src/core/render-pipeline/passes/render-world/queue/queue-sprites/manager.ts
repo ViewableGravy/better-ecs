@@ -79,13 +79,13 @@ export class QueueSpriteEntityManager {
     isAnimatedSprite = false,
   ): void {
     const entry = this.cache.resolveEntryFromState(this.cacheState, entityId);
+    const worldTransform = getWorldTransform2D(this.world, entityId);
 
-    if (this.reuseStaticEntryIfPossible(entry, entityId, sprite, isAnimatedSprite)) {
+    if (!worldTransform) {
       return;
     }
 
-    const worldTransform = getWorldTransform2D(this.world, entityId);
-    if (!worldTransform) {
+    if (this.reuseStaticEntryIfPossible(entry, entityId, sprite, worldTransform, isAnimatedSprite)) {
       return;
     }
 
@@ -122,6 +122,7 @@ export class QueueSpriteEntityManager {
     entry: SpriteRenderRecordCacheEntry,
     entityId: EntityId,
     sprite: Sprite,
+    worldTransform: NonNullable<ReturnType<typeof getWorldTransform2D>>,
     isAnimatedSprite: boolean,
   ): boolean {
     if (isAnimatedSprite) {
@@ -137,6 +138,10 @@ export class QueueSpriteEntityManager {
     }
 
     if (this.cache.shouldRevalidateStatic(entityId)) {
+      return false;
+    }
+
+    if (hasTransformChanged(entry.record.worldTransform, worldTransform)) {
       return false;
     }
 
@@ -188,4 +193,17 @@ export class QueueSpriteEntityManager {
 
     return "static";
   }
+}
+
+function hasTransformChanged(previous: SpriteRenderRecord["worldTransform"], current: SpriteRenderRecord["worldTransform"]): boolean {
+  return previous.curr.pos.x !== current.curr.pos.x
+    || previous.curr.pos.y !== current.curr.pos.y
+    || previous.curr.rotation !== current.curr.rotation
+    || previous.curr.scale.x !== current.curr.scale.x
+    || previous.curr.scale.y !== current.curr.scale.y
+    || previous.prev.pos.x !== current.prev.pos.x
+    || previous.prev.pos.y !== current.prev.pos.y
+    || previous.prev.rotation !== current.prev.rotation
+    || previous.prev.scale.x !== current.prev.scale.x
+    || previous.prev.scale.y !== current.prev.scale.y;
 }

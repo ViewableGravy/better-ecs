@@ -22,11 +22,14 @@ export function createTransportBeltSprite(
     assets: TRANSPORT_BELT_FRAMES.map((frame) => `transport-belt:${variant}_${frame}` as const),
     width: TRANSPORT_BELT_FRAME_SIZE * scale,
     height: TRANSPORT_BELT_FRAME_SIZE * scale,
+    playbackMode: "tick",
     useGlobalOffset: true,
   });
 
-  sprite.playbackRate = previousSprite?.playbackRate ?? 0.5;
+  sprite.playbackRate = previousSprite?.playbackRate ?? 0.25;
+  sprite.playbackMode = previousSprite?.playbackMode ?? "tick";
   sprite.startTime = previousSprite?.startTime ?? sprite.startTime;
+  sprite.startTick = previousSprite?.startTick ?? sprite.startTick;
   sprite.layer = previousSprite?.layer ?? RENDER_LAYERS.world;
   sprite.zOrder = TRANSPORT_BELT_Z_BASE + worldY * TRANSPORT_BELT_Z_PER_WORLD_Y;
 

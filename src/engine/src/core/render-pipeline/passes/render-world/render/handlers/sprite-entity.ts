@@ -2,7 +2,7 @@ import { AnimatedSprite, EditorHoverHighlight, resolveEntityTint, Sprite } from 
 import { getFrameAssetIdAtTime } from "@engine/components/sprite/animated";
 import { Rgba } from "@engine/components/sprite/sprite";
 import type { Transform2D } from "@engine/components/transform";
-import { fromContext, FromRender } from "@engine/context";
+import { Engine, fromContext, FromRender } from "@engine/context";
 import type { SpriteEntityRenderCommand } from "@engine/core/render-pipeline/passes/render-world/render/culling/utils";
 import { blendChannel } from "@engine/core/render-pipeline/passes/render-world/render/utils/blend";
 import type { SpriteRenderRecord, SpriteRenderState } from "@engine/core/render-pipeline/passes/render-world/sprite-render-record";
@@ -67,7 +67,13 @@ function resolveSpriteForRender(
     return projectStaticSprite(world, entityId, staticSprite);
   }
 
-  return projectAnimatedSprite(world, entityId, world.get(entityId, AnimatedSprite), performance.now());
+  return projectAnimatedSprite(
+    world,
+    entityId,
+    world.get(entityId, AnimatedSprite),
+    performance.now(),
+    fromContext(Engine).meta.updateTick,
+  );
 }
 
 function projectStaticSprite(
@@ -95,12 +101,13 @@ function projectAnimatedSprite(
   entityId: SpriteEntityRenderCommand["entityId"],
   animatedSprite: AnimatedSprite | undefined,
   timeMs: number,
+  updateTick: number,
 ): SpriteRenderState | null {
   if (!animatedSprite) {
     return null;
   }
 
-  const sampledAssetId = getFrameAssetIdAtTime(animatedSprite, timeMs);
+  const sampledAssetId = getFrameAssetIdAtTime(animatedSprite, timeMs, updateTick);
   if (!SHARED_ANIMATED_RENDER_SPRITE) {
     SHARED_ANIMATED_RENDER_SPRITE = {
       assetId: sampledAssetId,
