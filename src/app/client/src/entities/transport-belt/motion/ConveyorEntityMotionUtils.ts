@@ -422,7 +422,7 @@ export class ConveyorEntityMotionUtils {
     }
 
     targetSlots[destinationIndex] = sourceEntityId;
-    targetProgress[destinationIndex] = 0;
+    targetProgress[destinationIndex] = 0.5;
     sourceSlots[3] = null;
     sourceProgress[3] = 0;
     setConveyorLaneTailBlocked(sourceConveyor, sourceLane, false);
