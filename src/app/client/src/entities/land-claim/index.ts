@@ -187,7 +187,7 @@ function spawnClaimOverlay(
   debugLabel: string,
 ): void {
   const overlayEntityId = world.create();
-  const overlayFill = new Rgba(fill.r, fill.g, fill.b, 1);
+  const overlayFill = new Rgba(fill.r, fill.g, fill.b, fill.a);
 
   world.add(overlayEntityId, new Parent(parentEntityId));
   world.add(overlayEntityId, new Transform2D(0, 0));
