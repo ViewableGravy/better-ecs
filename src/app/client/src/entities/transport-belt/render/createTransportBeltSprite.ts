@@ -1,5 +1,6 @@
 import { RENDER_LAYERS } from "@client/consts";
 import type { TransportBeltVariant } from "@client/entities/transport-belt/consts";
+import { CONVEYOR_ANIMATION_PLAYBACK_RATE } from "@client/entities/transport-belt/motion/constants";
 import { AnimatedSprite } from "@engine/components";
 
 const TRANSPORT_BELT_FRAMES = [
@@ -26,7 +27,7 @@ export function createTransportBeltSprite(
     useGlobalOffset: true,
   });
 
-  sprite.playbackRate = previousSprite?.playbackRate ?? 0.25;
+  sprite.playbackRate = previousSprite?.playbackRate ?? CONVEYOR_ANIMATION_PLAYBACK_RATE;
   sprite.playbackMode = previousSprite?.playbackMode ?? "tick";
   sprite.startTime = previousSprite?.startTime ?? sprite.startTime;
   sprite.startTick = previousSprite?.startTick ?? sprite.startTick;

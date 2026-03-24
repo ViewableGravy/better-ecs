@@ -7,7 +7,7 @@ import type { ConveyorSideLoadTransfer } from "@client/entities/transport-belt/m
 import { ConveyorBeltChainIterator } from "@client/entities/transport-belt/topology/ConveyorBeltChainIterator";
 import type { EntityId } from "@engine";
 import { createSystem } from "@engine";
-import { Delta, fromContext, World } from "@engine/context";
+import { fromContext, World } from "@engine/context";
 
 const beltIterator = new ConveyorBeltChainIterator();
 const motionUtils = new ConveyorEntityMotionUtils();
@@ -17,11 +17,7 @@ const conveyorsToSync = new Set<EntityId>();
 export const System = createSystem("main:conveyor-entity-motion")({
   system() {
     const world = fromContext(World);
-    const [updateDelta] = fromContext(Delta);
-
-    if (updateDelta <= 0) {
-      return;
-    }
+    const tickDelta = 1;
 
     deferredSideLoads.length = 0;
     conveyorsToSync.clear();
@@ -33,7 +29,7 @@ export const System = createSystem("main:conveyor-entity-motion")({
       }
 
       beltIterator.setLeaf(world, conveyorEntityId);
-      motionUtils.set(world, updateDelta, beltIterator.getInitialNextEntityId());
+      motionUtils.set(world, tickDelta, beltIterator.getInitialNextEntityId());
 
       for (const beltEntityId of beltIterator.iterate()) {
         motionUtils.advanceConveyorEntity(beltEntityId);

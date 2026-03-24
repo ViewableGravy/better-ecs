@@ -1,11 +1,10 @@
 import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import { TransportBeltLeaf } from "@client/components/transport-belt-leaf";
 import {
-    CONVEYOR_SLOT_COUNT_PER_LANE,
     ConveyorBeltChainIterator, ConveyorSideLoadUtils, ConveyorUtils, destroyTransportBelt, getCurveLaneSides,
-    getSlotAdvanceDurations,
-    INSIDE_CURVE_SLOT_ADVANCE_DURATION_MS,
-    INSIDE_CURVE_SPEED_MULTIPLIER, ConveyorEntityMotionUtils as RuntimeConveyorEntityMotionUtils, SLOT_ADVANCE_DURATION_MS, spawnTransportBelt
+    getSlotAdvanceTicks,
+    INSIDE_CURVE_SLOT_ADVANCE_TICKS,
+    INSIDE_CURVE_SPEED_MULTIPLIER, ConveyorEntityMotionUtils as RuntimeConveyorEntityMotionUtils, SLOT_ADVANCE_TICKS, spawnTransportBelt
 } from "@client/entities/transport-belt";
 import { TransportBeltGhost } from "@client/entities/transport-belt/ghost";
 import type { ConveyorSideLoadTransfer } from "@client/entities/transport-belt/motion/types";
@@ -242,7 +241,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     ConveyorEntityMotionUtils.advanceBeltLineFromLeaf(
       world,
       headBeltId,
-      SLOT_ADVANCE_DURATION_MS / CONVEYOR_SLOT_COUNT_PER_LANE,
+      SLOT_ADVANCE_TICKS,
     );
 
     headBelt.isLeaf = false;
@@ -255,7 +254,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     ConveyorEntityMotionUtils.advanceBeltLineFromLeaf(
       world,
       tailBeltId,
-      SLOT_ADVANCE_DURATION_MS / CONVEYOR_SLOT_COUNT_PER_LANE,
+      SLOT_ADVANCE_TICKS,
     );
 
     expect(headBelt.left).toEqual([null, null, null, null]);
@@ -281,7 +280,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
 
     ConveyorEntityMotionUtils.advanceWorld(
       world,
-      SLOT_ADVANCE_DURATION_MS / CONVEYOR_SLOT_COUNT_PER_LANE,
+      SLOT_ADVANCE_TICKS,
     );
 
     const worldTransform = new Transform2D();
@@ -308,7 +307,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
 
     ConveyorEntityMotionUtils.advanceWorld(
       world,
-      SLOT_ADVANCE_DURATION_MS / CONVEYOR_SLOT_COUNT_PER_LANE,
+      SLOT_ADVANCE_TICKS,
     );
 
     const worldTransform = new Transform2D();
@@ -336,7 +335,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
       world,
       conveyor,
       null,
-      SLOT_ADVANCE_DURATION_MS / 2,
+      SLOT_ADVANCE_TICKS * 2,
     );
     ConveyorEntityMotionUtils.syncConveyorTransforms(world, conveyor);
 
@@ -366,7 +365,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
 
     ConveyorEntityMotionUtils.advanceWorld(
       world,
-      SLOT_ADVANCE_DURATION_MS / CONVEYOR_SLOT_COUNT_PER_LANE,
+      SLOT_ADVANCE_TICKS,
     );
 
     expect(headBelt.left).toEqual([null, null, null, null]);
@@ -414,7 +413,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
       world,
       conveyor,
       null,
-      SLOT_ADVANCE_DURATION_MS / CONVEYOR_SLOT_COUNT_PER_LANE,
+      SLOT_ADVANCE_TICKS,
     );
 
     expect(conveyor.left).toEqual([null, entityId, null, null]);
@@ -764,7 +763,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     ConveyorEntityMotionUtils.advanceBeltLineFromLeaf(
       world,
       topRightBeltId,
-      SLOT_ADVANCE_DURATION_MS / CONVEYOR_SLOT_COUNT_PER_LANE,
+      SLOT_ADVANCE_TICKS,
     );
 
     expect(world.require(topItemId, Parent).entityId).toBe(topLeftBeltId);
@@ -817,7 +816,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     ConveyorEntityMotionUtils.advanceBeltLineFromLeaf(
       world,
       initialLeafBeltIds[0],
-      SLOT_ADVANCE_DURATION_MS / CONVEYOR_SLOT_COUNT_PER_LANE,
+      SLOT_ADVANCE_TICKS,
     );
 
     const sideBeltId = spawnTransportBelt(world, { x: -20, y: 20, variant: "horizontal-right" });
@@ -844,7 +843,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     ConveyorEntityMotionUtils.advanceBeltLineFromLeaf(
       world,
       mainLeafBeltId,
-      SLOT_ADVANCE_DURATION_MS / CONVEYOR_SLOT_COUNT_PER_LANE,
+      SLOT_ADVANCE_TICKS,
     );
 
     const parentAfter = {
@@ -889,7 +888,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     ConveyorEntityMotionUtils.advanceBeltLineFromLeaf(
       world,
       initialLeafBeltId,
-      SLOT_ADVANCE_DURATION_MS / CONVEYOR_SLOT_COUNT_PER_LANE,
+      SLOT_ADVANCE_TICKS,
     );
 
     const sideBeltId = spawnTransportBelt(world, { x: -20, y: 20, variant: "horizontal-right" });
@@ -915,7 +914,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     ConveyorEntityMotionUtils.advanceBeltLineFromLeaf(
       world,
       mainLeafBeltId,
-      SLOT_ADVANCE_DURATION_MS / CONVEYOR_SLOT_COUNT_PER_LANE,
+      SLOT_ADVANCE_TICKS,
     );
 
     const topAfter = world.require(topItemId, Transform2D).curr.pos;
@@ -990,7 +989,7 @@ describe("ConveyorWorldMotionUtils.advanceWorld", () => {
     ConveyorUtils.addEntity(world, sideBeltId, leftSideItemId, "left", 3, 1);
     ConveyorUtils.addEntity(world, sideBeltId, rightSideItemId, "right", 3, 1);
 
-    ConveyorEntityMotionUtils.advanceWorld(world, SLOT_ADVANCE_DURATION_MS / CONVEYOR_SLOT_COUNT_PER_LANE);
+    ConveyorEntityMotionUtils.advanceWorld(world, SLOT_ADVANCE_TICKS);
 
     const middleBelt = world.require(middleBeltId, ConveyorBeltComponent);
     const sideBelt = world.require(sideBeltId, ConveyorBeltComponent);
@@ -1024,7 +1023,7 @@ describe("ConveyorWorldMotionUtils.advanceWorld", () => {
     ConveyorUtils.addEntity(world, sideBeltId, transferredItemId, "left", 3, 1);
     ConveyorUtils.addEntity(world, sideBeltId, blockedItemId, "right", 3, 1);
 
-    ConveyorEntityMotionUtils.advanceWorld(world, SLOT_ADVANCE_DURATION_MS / CONVEYOR_SLOT_COUNT_PER_LANE);
+    ConveyorEntityMotionUtils.advanceWorld(world, SLOT_ADVANCE_TICKS);
 
     const topBelt = world.require(topBeltId, ConveyorBeltComponent);
     const middleBelt = world.require(middleBeltId, ConveyorBeltComponent);
@@ -1055,7 +1054,7 @@ describe("ConveyorWorldMotionUtils.advanceWorld", () => {
 
     ConveyorUtils.addEntity(world, sideBeltId, sideItemId, "left", 3, 1);
 
-    ConveyorEntityMotionUtils.advanceWorld(world, SLOT_ADVANCE_DURATION_MS / CONVEYOR_SLOT_COUNT_PER_LANE);
+    ConveyorEntityMotionUtils.advanceWorld(world, SLOT_ADVANCE_TICKS);
 
     const middleBelt = world.require(middleBeltId, ConveyorBeltComponent);
 
@@ -1079,23 +1078,23 @@ describe("conveyor motion timing constants", () => {
   });
 
   it("uses a faster advance duration only for the inside curved lane", () => {
-    expect(getSlotAdvanceDurations("horizontal-right")).toEqual([
-      SLOT_ADVANCE_DURATION_MS,
-      SLOT_ADVANCE_DURATION_MS,
+    expect(getSlotAdvanceTicks("horizontal-right")).toEqual([
+      SLOT_ADVANCE_TICKS,
+      SLOT_ADVANCE_TICKS,
     ]);
-    expect(getSlotAdvanceDurations("angled-right-up")).toEqual([
-      SLOT_ADVANCE_DURATION_MS,
-      INSIDE_CURVE_SLOT_ADVANCE_DURATION_MS,
+    expect(getSlotAdvanceTicks("angled-right-up")).toEqual([
+      SLOT_ADVANCE_TICKS,
+      INSIDE_CURVE_SLOT_ADVANCE_TICKS,
     ]);
-    expect(getSlotAdvanceDurations("angled-left-up")).toEqual([
-      INSIDE_CURVE_SLOT_ADVANCE_DURATION_MS,
-      SLOT_ADVANCE_DURATION_MS,
+    expect(getSlotAdvanceTicks("angled-left-up")).toEqual([
+      INSIDE_CURVE_SLOT_ADVANCE_TICKS,
+      SLOT_ADVANCE_TICKS,
     ]);
   });
 
   it("keeps the inside curved duration aligned with the configured speed multiplier", () => {
-    expect(INSIDE_CURVE_SLOT_ADVANCE_DURATION_MS).toBe(
-      SLOT_ADVANCE_DURATION_MS / INSIDE_CURVE_SPEED_MULTIPLIER,
+    expect(INSIDE_CURVE_SLOT_ADVANCE_TICKS).toBe(
+      SLOT_ADVANCE_TICKS / INSIDE_CURVE_SPEED_MULTIPLIER,
     );
   });
 });

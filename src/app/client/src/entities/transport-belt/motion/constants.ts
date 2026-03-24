@@ -6,7 +6,7 @@ import { Vec2 } from "@engine";
  **********************************************************************************************************/
 
 type CurveLaneSides = readonly [inside: ConveyorSide | null, outside: ConveyorSide | null];
-type SlotAdvanceDurations = readonly [left: number, right: number];
+type SlotAdvanceTicks = readonly [left: number, right: number];
 
 /**********************************************************************************************************
  *   CONSTANTS
@@ -15,12 +15,13 @@ type SlotAdvanceDurations = readonly [left: number, right: number];
 export const CONVEYOR_SIDES: readonly ConveyorSide[] = ["left", "right"];
 export const CONVEYOR_SLOT_INDICES_ASC: readonly ConveyorSlotIndex[] = [0, 1, 2, 3];
 export const CONVEYOR_SLOT_INDICES_DESC: readonly ConveyorSlotIndex[] = [3, 2, 1, 0];
-// This duration represents one full lane traversal on a belt, not a single
-// slot hop. Per-frame motion converts it back into slot progress internally.
-export const SLOT_ADVANCE_DURATION_MS = 1_075;
 export const CONVEYOR_SLOT_COUNT_PER_LANE = 4;
+export const CONVEYOR_ANIMATION_TICKS_PER_FRAME = 2;
+export const SLOT_ADVANCE_TICKS = 16;
+export const CONVEYOR_ANIMATION_FRAMES_PER_SLOT = SLOT_ADVANCE_TICKS / CONVEYOR_ANIMATION_TICKS_PER_FRAME;
+export const CONVEYOR_ANIMATION_PLAYBACK_RATE = 1 / CONVEYOR_ANIMATION_TICKS_PER_FRAME;
 export const INSIDE_CURVE_SPEED_MULTIPLIER = 2;
-export const INSIDE_CURVE_SLOT_ADVANCE_DURATION_MS = SLOT_ADVANCE_DURATION_MS / INSIDE_CURVE_SPEED_MULTIPLIER;
+export const INSIDE_CURVE_SLOT_ADVANCE_TICKS = SLOT_ADVANCE_TICKS / INSIDE_CURVE_SPEED_MULTIPLIER;
 export const SHARED_SLOT_POSITION = new Vec2();
 
 const CURVE_LANE_SIDES_BY_VARIANT: Readonly<Record<string, readonly [inside: ConveyorSide, outside: ConveyorSide]>> = {
@@ -48,16 +49,16 @@ export function getCurveLaneSides(variant: string): CurveLaneSides {
   return laneSides;
 }
 
-export function getSlotAdvanceDurations(variant: string): SlotAdvanceDurations {
+export function getSlotAdvanceTicks(variant: string): SlotAdvanceTicks {
   const [insideLaneSide] = getCurveLaneSides(variant);
 
   if (insideLaneSide === null) {
-    return [SLOT_ADVANCE_DURATION_MS, SLOT_ADVANCE_DURATION_MS];
+    return [SLOT_ADVANCE_TICKS, SLOT_ADVANCE_TICKS];
   }
 
   if (insideLaneSide === "left") {
-    return [INSIDE_CURVE_SLOT_ADVANCE_DURATION_MS, SLOT_ADVANCE_DURATION_MS];
+    return [INSIDE_CURVE_SLOT_ADVANCE_TICKS, SLOT_ADVANCE_TICKS];
   }
 
-  return [SLOT_ADVANCE_DURATION_MS, INSIDE_CURVE_SLOT_ADVANCE_DURATION_MS];
+  return [SLOT_ADVANCE_TICKS, INSIDE_CURVE_SLOT_ADVANCE_TICKS];
 }

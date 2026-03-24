@@ -8,10 +8,9 @@ import {
 import { BeltItemRailsUtility } from "@client/entities/transport-belt/motion/BeltItemRailsUtility";
 import {
     CONVEYOR_SIDES,
-    CONVEYOR_SLOT_COUNT_PER_LANE,
     CONVEYOR_SLOT_INDICES_ASC,
     CONVEYOR_SLOT_INDICES_DESC,
-    getSlotAdvanceDurations,
+    getSlotAdvanceTicks,
     SHARED_SLOT_POSITION,
 } from "@client/entities/transport-belt/motion/constants";
 import type { ConveyorSideLoadTransfer } from "@client/entities/transport-belt/motion/types";
@@ -36,16 +35,16 @@ const MAX_PROGRESS_WITHIN_SLOT = 1 - PROGRESS_SEAM_EPSILON;
 
 export class ConveyorEntityMotionUtils {
   private world: UserWorld | null = null;
-  private updateDelta = 0;
+  private tickDelta = 0;
   private nextConveyorEntityId: EntityId | null = null;
 
   public set(
     world: UserWorld,
-    updateDelta: number,
+    tickDelta: number,
     initialNextConveyorEntityId: EntityId | null,
   ): void {
     this.world = world;
-    this.updateDelta = updateDelta;
+    this.tickDelta = tickDelta;
     this.nextConveyorEntityId = initialNextConveyorEntityId;
   }
 
@@ -68,7 +67,7 @@ export class ConveyorEntityMotionUtils {
       this.world,
       conveyor,
       nextConveyor,
-      this.updateDelta,
+      this.tickDelta,
     );
 
     this.nextConveyorEntityId = conveyorEntityId;
@@ -92,16 +91,16 @@ export class ConveyorEntityMotionUtils {
     world: UserWorld,
     conveyor: ConveyorBeltComponent,
     nextConveyor: ConveyorBeltComponent | null,
-    updateDelta: number,
+    tickDelta: number,
   ): void {
-    const [leftAdvanceDuration, rightAdvanceDuration] = getSlotAdvanceDurations(conveyor.variant);
+    const [leftAdvanceTicks, rightAdvanceTicks] = getSlotAdvanceTicks(conveyor.variant);
 
     this.advanceLane(
       world,
       conveyor,
       nextConveyor,
       "left",
-      updateDelta * CONVEYOR_SLOT_COUNT_PER_LANE / leftAdvanceDuration,
+      tickDelta / leftAdvanceTicks,
     );
 
     this.advanceLane(
@@ -109,7 +108,7 @@ export class ConveyorEntityMotionUtils {
       conveyor,
       nextConveyor,
       "right",
-      updateDelta * CONVEYOR_SLOT_COUNT_PER_LANE / rightAdvanceDuration,
+      tickDelta / rightAdvanceTicks,
     );
   }
 
