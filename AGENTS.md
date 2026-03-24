@@ -76,6 +76,10 @@ You are a very smart model, and very capable, but you have a limited context win
 - Always ensure strict type safety.
   - Never use `any`, `as` casts, or non-null assertions (`!`) unless there is no viable alternative.
   - If unavoidable, include a short comment explaining why in code.
+- Always prefer assertions over unnecessary checks
+  - If a condition can be assumed given the context, use an assertion abstraction such as invariantQuery or invariant.
+  - Avoid "handling" a case that cannot happen. 
+  - If an edge case must be checked (i.e. x === undefined) then ensure there is a comment explaining why this case can happen and cannot be assumed to be handled earlier
 - Always use `src` as the source directory for apps/packages (never `lib` or `dist`).
 - When implementing an interface with a single unused argument, omit the argument entirely.
   - If there are multiple args and some are unused, use `_`, `__`, etc.
