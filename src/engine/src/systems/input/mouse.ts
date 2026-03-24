@@ -48,6 +48,10 @@ const canvasViewport = {
 
 let lastScreenUpdateTime = -1;
 let lastCanvasUpdateTime = -1;
+let lastScreenClientX = Number.NaN;
+let lastScreenClientY = Number.NaN;
+let lastCanvasClientX = Number.NaN;
+let lastCanvasClientY = Number.NaN;
 
 /**********************************************************************************************************
 *   CONSTS
@@ -56,12 +60,18 @@ export const mouseApi: Mouse = {
   get screen(): MousePoint {
     const engine = getContextEngine();
     const currentTime = engine.meta.lastUpdateTime;
+    const { data } = engine.systems["engine:input"];
     
-    if (lastScreenUpdateTime !== currentTime) {
-      const { data } = engine.systems["engine:input"];
+    if (
+      lastScreenUpdateTime !== currentTime
+      || lastScreenClientX !== data.mouseClientX
+      || lastScreenClientY !== data.mouseClientY
+    ) {
       screenPointer.x = data.mouseClientX;
       screenPointer.y = data.mouseClientY;
       lastScreenUpdateTime = currentTime;
+      lastScreenClientX = data.mouseClientX;
+      lastScreenClientY = data.mouseClientY;
     }
     
     return screenPointer;
@@ -69,10 +79,13 @@ export const mouseApi: Mouse = {
   get canvas(): MousePoint {
     const engine = getContextEngine();
     const currentTime = engine.meta.lastUpdateTime;
+    const { data } = engine.systems["engine:input"];
     
-    if (lastCanvasUpdateTime !== currentTime) {
-      const { data } = engine.systems["engine:input"];
-
+    if (
+      lastCanvasUpdateTime !== currentTime
+      || lastCanvasClientX !== data.mouseClientX
+      || lastCanvasClientY !== data.mouseClientY
+    ) {
       updateCanvasPointer(
         engine.canvas, 
         data.mouseClientX, 
@@ -80,6 +93,8 @@ export const mouseApi: Mouse = {
       );
       
       lastCanvasUpdateTime = currentTime;
+      lastCanvasClientX = data.mouseClientX;
+      lastCanvasClientY = data.mouseClientY;
     }
 
     return canvasPointer;
@@ -87,12 +102,15 @@ export const mouseApi: Mouse = {
   world(cameraOrX: MouseCameraView | number, y?: number, zoom?: number): MousePoint {
     const engine = getContextEngine();
     const currentTime = engine.meta.lastUpdateTime;
+    const { data } = engine.systems["engine:input"];
     
     // Note: We can't memoize world pointer based on just time since camera parameters change
     // However, we can still avoid re-computing canvas pointer if it was already computed this frame
-    if (lastCanvasUpdateTime !== currentTime) {
-      const { data } = engine.systems["engine:input"];
-      
+    if (
+      lastCanvasUpdateTime !== currentTime
+      || lastCanvasClientX !== data.mouseClientX
+      || lastCanvasClientY !== data.mouseClientY
+    ) {
       updateCanvasPointer(
         engine.canvas, 
         data.mouseClientX, 
@@ -100,6 +118,8 @@ export const mouseApi: Mouse = {
       );
       
       lastCanvasUpdateTime = currentTime;
+      lastCanvasClientX = data.mouseClientX;
+      lastCanvasClientY = data.mouseClientY;
     }
 
     let cameraX: number;

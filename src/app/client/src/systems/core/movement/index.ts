@@ -1,6 +1,6 @@
 import {
-    type PlayerAnimationState,
     PlayerComponent,
+    type PlayerAnimationState,
 } from "@client/components/player";
 import { PLAYER_GROUNDED_HITBOX_RADIUS } from "@client/entities/player";
 import {
@@ -8,6 +8,7 @@ import {
     resolvePlayerSpriteDepthSortY,
     resolvePlayerSpriteZOrder,
 } from "@client/entities/player/render/createPlayerSprite";
+import { ensurePlayerSprite } from "@client/entities/player/render/ensurePlayerSprite";
 import { resolveDirectionFromAxes } from "@client/systems/core/movement/utilities";
 import { createSystem, mutate } from "@engine";
 import { AnimatedSprite, Transform2D } from "@engine/components";
@@ -15,23 +16,15 @@ import { System as ContextSystem, Delta, fromContext, World } from "@engine/cont
 
 export const System = createSystem("main:player-movement-authority")({
   system() {
-    /***** CONTEXT *****/
     const world = fromContext(World);
     const { data } = fromContext(ContextSystem("main:local-player-movement-intent"));
     const [updateDelta] = fromContext(Delta);
 
-    /***** QUERIES *****/
     const [playerId] = world.invariantQuery(PlayerComponent);
     const player = world.require(playerId, PlayerComponent);
     const transform = world.require(playerId, Transform2D);
 
-    let animatedSprite = world.get(playerId, AnimatedSprite);
-
-    if (!animatedSprite) {
-      animatedSprite = createPlayerSprite(player.animationState, player.direction);
-      world.add(playerId, AnimatedSprite, animatedSprite);
-    }
-
+    const animatedSprite = ensurePlayerSprite(world, playerId, player.animationState, player.direction);
     const { x, y } = data;
     const speed = 100 * (updateDelta / 1000);
 
@@ -48,7 +41,6 @@ export const System = createSystem("main:player-movement-authority")({
     }
 
     const playerBottomY = transform.curr.pos.y + PLAYER_GROUNDED_HITBOX_RADIUS;
-
     animatedSprite.zOrder = resolvePlayerSpriteZOrder(resolvePlayerSpriteDepthSortY(playerBottomY));
 
     const nextAnimationState: PlayerAnimationState = x === 0 && y === 0 ? "idle" : "moving";

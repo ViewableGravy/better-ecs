@@ -29,6 +29,10 @@ export class Placement {
     PlacementQueries.deleteAt(world, worldPointer);
   }
 
+  public static deleteAtGrid(world: UserWorld, gridCoordinates: GridCoordinates): void {
+    PlacementQueries.deleteAtGrid(world, gridCoordinates);
+  }
+
   public static canPlaceItem(
     world: UserWorld,
     gridCoordinates: GridCoordinates,

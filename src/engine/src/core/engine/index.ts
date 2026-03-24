@@ -13,7 +13,13 @@ import {
     type EngineRenderCullingSettings,
 } from "@engine/core/engine/render-culling";
 import { SystemsManager } from "@engine/core/engine/systems";
-import type { AllSystems, ScenesTupleToRecord, StartEngineGenerator, StartEngineOpts } from "@engine/core/engine/types";
+import type {
+    AllSystems,
+    ScenesTupleToRecord,
+    StartEngineGenerator,
+    StartEngineOpts,
+    StepUpdateOptions,
+} from "@engine/core/engine/types";
 import type { EngineOverlay, EngineRenderCullingOptions } from "@engine/core/factory/types";
 import { EngineInput } from "@engine/core/input";
 import type { RenderPipeline } from "@engine/core/render-pipeline";
@@ -226,6 +232,34 @@ export class EngineClass<
 				}
 			}
 		}
+	}
+
+	public stepUpdate(options?: StepUpdateOptions): void {
+		if (!this.#init.initialized) {
+			throw new Error("Engine must be initialized before stepUpdate() is called.");
+		}
+
+		if (this.scene.isTransitioning) {
+			return;
+		}
+
+		const updateDelta = options?.updateDelta ?? 1000 / this.meta.ups;
+		const frameDelta = options?.frameDelta ?? updateDelta;
+		const updateTime = 1000 / this.meta.ups;
+		const now = options?.now ?? this.meta.lastUpdateTime + updateDelta;
+
+		this.meta.setDeltas(updateDelta, frameDelta, updateTime);
+
+		if (this.editor.runningState.paused) {
+			this.#delta.markUpdated(now);
+			this.meta.markUpdated(now);
+			return;
+		}
+
+		this.meta.incrementUpdateTick();
+		this.runUpdateSystems(true);
+		this.#delta.markUpdated(now);
+		this.meta.markUpdated(now);
 	}
 
 	private runRenderPipeline(shouldUpdate: boolean): void {

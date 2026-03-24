@@ -58,16 +58,31 @@ export class PlacementQueries {
       filter: PlacementQueries.placementFilter,
     });
 
-    if (!hit) {
+    PlacementQueries.deleteEntity(world, hit?.entityId);
+  }
+
+  public static deleteAtGrid(world: UserWorld, gridCoordinates: GridCoordinates): void {
+    const overlaps = PlacementQueries.queryPlacementOccupantsByGrid(world, gridCoordinates);
+
+    PlacementQueries.deleteEntity(
+      world,
+      overlaps.find((overlap) => world.has(overlap.entityId, ConveyorBeltComponent))?.entityId
+        ?? overlaps.find((overlap) => world.has(overlap.entityId, PlaceableWallComponent))?.entityId
+        ?? overlaps[0]?.entityId,
+    );
+  }
+
+  private static deleteEntity(world: UserWorld, entityId: EntityId | undefined): void {
+    if (entityId === undefined) {
       return;
     }
 
 
     /***** TRANSPORT BELTS *****/
-    if (world.has(hit.entityId, ConveyorBeltComponent)) {
-      const beltCoordinates = GridNeighborQuery.resolveEntityCoordinates(world, hit.entityId);
+    if (world.has(entityId, ConveyorBeltComponent)) {
+      const beltCoordinates = GridNeighborQuery.resolveEntityCoordinates(world, entityId);
 
-      destroyTransportBelt(world, hit.entityId);
+      destroyTransportBelt(world, entityId);
 
       TransportBeltAutoShapeManager.refreshBeltsNearCoordinates(world, beltCoordinates);
 
@@ -76,16 +91,16 @@ export class PlacementQueries {
 
 
     /***** PLACEABLE WALLS *****/
-    if (world.has(hit.entityId, PlaceableWallComponent)) {
-      const wallCoordinates = GridNeighborQuery.resolveEntityCoordinates(world, hit.entityId);
+    if (world.has(entityId, PlaceableWallComponent)) {
+      const wallCoordinates = GridNeighborQuery.resolveEntityCoordinates(world, entityId);
 
-      destroyPlaceableWall(world, hit.entityId);
+      destroyPlaceableWall(world, entityId);
       PlaceableWallAutoShapeManager.refreshWallsNearCoordinates(world, wallCoordinates);
 
       return;
     }
 
-    world.destroy(hit.entityId);
+    world.destroy(entityId);
   }
 
   public static replaceTransportBeltAt(world: UserWorld, x: number, y: number): void {

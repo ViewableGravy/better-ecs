@@ -17,11 +17,11 @@ export const System = createSystem("main:spatial-contexts-collision")({
     const candidateBodies = physicsWorld.collisionCandidates(playerBody);
 
     for (const otherBody of candidateBodies) {
-      if (
-        collides(playerBody.collider, playerBody.transform, otherBody.collider, otherBody.transform)
-      ) {
-        resolve(playerBody.collider, playerBody.transform, otherBody.collider, otherBody.transform);
+      if (!collides(playerBody.collider, playerBody.transform, otherBody.collider, otherBody.transform)) {
+        continue;
       }
+
+      resolve(playerBody.collider, playerBody.transform, otherBody.collider, otherBody.transform);
     }
   },
 });

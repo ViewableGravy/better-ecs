@@ -8,8 +8,10 @@ import { destroyTransportBelt, spawnTransportBelt } from "@client/entities/trans
 import { ConveyorUtils } from "@client/entities/transport-belt/ConveyorUtils";
 import type { TransportBeltEntityId } from "@client/entities/transport-belt/types";
 import { setupContextPlayer } from "@client/scenes/world/contexts/shared";
+import { System as CommandAllocatorReset } from "@client/systems/core/command-allocator-reset";
 import { System as MotionProbeSystem } from "@client/systems/e2e/motion-probe";
 import { System as BuildModeSystem } from "@client/systems/world/build-mode";
+import { System as BuildModePresentationSystem } from "@client/systems/world/build-mode-presentation";
 import { Placeable } from "@client/systems/world/build-mode/components";
 import { System as ConveyorEntityMotionSystem } from "@client/systems/world/conveyor-entity-motion";
 import { DebugOverlaySystem } from "@client/systems/world/debug-overlay";
@@ -81,10 +83,12 @@ declare global {
 
 export const Scene = createContextScene("E2EScene")({
   systems: [
+    CommandAllocatorReset,
     MotionProbeSystem,
     ConveyorEntityMotionSystem,
     PlayerOrbitSystem,
     BuildModeSystem,
+    BuildModePresentationSystem,
     DebugOverlaySystem,
   ],
   contexts: [

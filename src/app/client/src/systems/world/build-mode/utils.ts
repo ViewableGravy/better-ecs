@@ -26,6 +26,11 @@ type ActiveBuildModePlacement = {
   resolvedPlacement: RegisteredResolvedPlacement | null;
 };
 
+export type BuildModePlacementTarget = {
+  gridCoordinates: GridCoordinates;
+  placementTarget: PlacementTargetResolution;
+};
+
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
@@ -59,13 +64,22 @@ export function resolvePlacementRenderVisibilityRole(
   return HOUSE_INTERIOR;
 }
 
+export function resolveBuildModePlacementTarget(
+  engine: RegisteredEngine,
+  worldPointer: MousePoint,
+): BuildModePlacementTarget {
+  return {
+    gridCoordinates: GridSingleton.worldToGridCoordinates(worldPointer.x, worldPointer.y),
+    placementTarget: resolvePlacementWorld(engine, worldPointer),
+  };
+}
+
 export function resolveActivePlacement(
   engine: RegisteredEngine,
   worldPointer: MousePoint,
   buildModeState: BuildModeSystemData,
 ): ActiveBuildModePlacement {
-  const gridCoordinates = GridSingleton.worldToGridCoordinates(worldPointer.x, worldPointer.y);
-  const placementTarget = resolvePlacementWorld(engine, worldPointer);
+  const { gridCoordinates, placementTarget } = resolveBuildModePlacementTarget(engine, worldPointer);
   const resolvedPlacement = placementTarget.blocked || placementTarget.commitWorld === undefined
     ? null
     : Placement.resolveSelection(placementTarget, gridCoordinates, buildModeState);

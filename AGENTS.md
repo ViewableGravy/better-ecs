@@ -80,6 +80,7 @@ You are a very smart model, and very capable, but you have a limited context win
   - If a condition can be assumed given the context, use an assertion abstraction such as invariantQuery or invariant.
   - Avoid "handling" a case that cannot happen. 
   - If an edge case must be checked (i.e. x === undefined) then ensure there is a comment explaining why this case can happen and cannot be assumed to be handled earlier
+  - Do not convert an impossible state into nullable plumbing just to satisfy type flow. Assert the invariant at the boundary that establishes ownership, and keep the downstream path non-nullable.
 - Always use `src` as the source directory for apps/packages (never `lib` or `dist`).
 - When implementing an interface with a single unused argument, omit the argument entirely.
   - If there are multiple args and some are unused, use `_`, `__`, etc.
@@ -103,6 +104,9 @@ You are a very smart model, and very capable, but you have a limited context win
 - Prefer **colocation over hoisting** by default.
   - Keep behavior next to the feature/factory that owns it (scene behavior in scenes, asset behavior in asset loaders, runtime behavior in systems/plugins).
   - Hoist to engine-level/global scope only when truly cross-cutting and shared across most scenes/features.
+- Entity-owned queries, mutations, and actions should live with the entity or feature that owns that behavior.
+  - Prefer paths like `entities/<feature>/queries`, `entities/<feature>/mutations`, or `entities/<feature>/actions` over extracting small helpers into unrelated systems just to satisfy a test.
+  - If a utility only exists to support one concise system, keep the logic inline unless multiple real call sites justify extraction.
 - For React/userland adapters, prefer moving state and orchestration downward toward the smallest owning component/module that can safely manage it.
 - When introducing new lifecycle hooks/options, start at the lowest meaningful layer and only promote upward if repeated usage demonstrates global ownership.
 

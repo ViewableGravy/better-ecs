@@ -1,12 +1,18 @@
-import type { EngineSystemTypes } from "@engine/systems/engine-system-types";
 import type { SceneDefinition, SceneDefinitionTuple, SceneName } from "@engine/core/scene/scene.types";
 import type { SystemFactoryTuple } from "@engine/core/system/types";
 import type { EngineFrame, EngineUpdate } from "@engine/core/types";
+import type { EngineSystemTypes } from "@engine/systems/engine-system-types";
 
 export type StartEngineOpts = {
 	fps?: number;
 	ups?: number;
 	signal?: AbortSignal;
+};
+
+export type StepUpdateOptions = {
+	updateDelta?: number;
+	frameDelta?: number;
+	now?: number;
 };
 
 export type StartEngineGenerator = AsyncGenerator<readonly [EngineUpdate, EngineFrame], void, unknown>;
