@@ -47,6 +47,33 @@ describe("worldTransform2D", () => {
     expect(childWorldTransform?.curr.pos.y).toBe(43);
   });
 
+  it("settles cached interpolation history after movement stops", () => {
+    const world = new UserWorld(new World("scene"));
+
+    const entityId = world.create();
+    world.add(entityId, new Transform2D(0, 0));
+
+    syncWorldTransform2D(world);
+
+    const localTransform = world.require(entityId, Transform2D);
+
+    localTransform.prev.copyFrom(localTransform.curr);
+    localTransform.curr.pos.x = 10;
+    syncWorldTransform2D(world);
+
+    const movingWorldTransform = world.require(entityId, WorldTransform2D);
+    expect(movingWorldTransform.prev.pos.x).toBe(0);
+    expect(movingWorldTransform.curr.pos.x).toBe(10);
+
+    movingWorldTransform.prev.copyFrom(movingWorldTransform.curr);
+    localTransform.prev.copyFrom(localTransform.curr);
+    syncWorldTransform2D(world);
+
+    const settledWorldTransform = world.require(entityId, WorldTransform2D);
+    expect(settledWorldTransform.prev.pos.x).toBe(10);
+    expect(settledWorldTransform.curr.pos.x).toBe(10);
+  });
+
   it("removes stale cached transforms when local transforms are removed", () => {
     const world = new UserWorld(new World("scene"));
 
