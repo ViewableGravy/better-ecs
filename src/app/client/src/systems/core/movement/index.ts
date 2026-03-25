@@ -9,7 +9,10 @@ import {
     resolvePlayerSpriteZOrder,
 } from "@client/entities/player/render/createPlayerSprite";
 import { ensurePlayerSprite } from "@client/entities/player/render/ensurePlayerSprite";
-import { resolveDirectionFromAxes } from "@client/systems/core/movement/utilities";
+import {
+    resolveDirectionFromAxes,
+    resolveMovementAxesFromCommands,
+} from "@client/systems/core/movement/utilities";
 import { createSystem, mutate } from "@engine";
 import { AnimatedSprite, Transform2D } from "@engine/components";
 import { System as ContextSystem, Delta, fromContext, World } from "@engine/context";
@@ -17,7 +20,7 @@ import { System as ContextSystem, Delta, fromContext, World } from "@engine/cont
 export const System = createSystem("main:player-movement-authority")({
   system() {
     const world = fromContext(World);
-    const { data } = fromContext(ContextSystem("main:local-player-movement-intent"));
+  const { data: commandData } = fromContext(ContextSystem("main:local-player-movement-command"));
     const [updateDelta] = fromContext(Delta);
 
     const [playerId] = world.invariantQuery(PlayerComponent);
@@ -25,7 +28,7 @@ export const System = createSystem("main:player-movement-authority")({
     const transform = world.require(playerId, Transform2D);
 
     const animatedSprite = ensurePlayerSprite(world, playerId, player.animationState, player.direction);
-    const { x, y } = data;
+  const { x, y } = resolveMovementAxesFromCommands(commandData.commands);
     const speed = 100 * (updateDelta / 1000);
 
     if (x !== 0 || y !== 0) {

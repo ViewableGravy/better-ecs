@@ -14,7 +14,7 @@ const motionUtils = new ConveyorEntityMotionUtils();
 const deferredSideLoads: ConveyorSideLoadTransfer[] = [];
 const conveyorsToSync = new Set<EntityId>();
 
-export const System = createSystem("main:conveyor-entity-motion")({
+export const System = createSystem("main:conveyor-entity-motion-authority")({
   system() {
     const world = fromContext(World);
     const tickDelta = 1;

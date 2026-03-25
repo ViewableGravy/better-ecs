@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { resolveDirectionFromAxes, resolveMovementAxes } from "@client/systems/core/movement/utilities";
+import {
+    resolveDirectionFromAxes,
+    resolveMovementAxes,
+    resolveMovementAxesFromCommands,
+} from "@client/systems/core/movement/utilities";
 
 /**********************************************************************************************************
  *   COMPONENT START
@@ -18,5 +22,13 @@ describe("movement utilities", () => {
     expect(resolveDirectionFromAxes(1, 0)).toBe("e");
     expect(resolveDirectionFromAxes(-1, 1)).toBe("sw");
     expect(resolveDirectionFromAxes(0, 0)).toBeUndefined();
+  });
+
+  it("derives authoritative movement axes from explicit movement commands", () => {
+    expect(resolveMovementAxesFromCommands([])).toEqual({ x: 0, y: 0 });
+    expect(resolveMovementAxesFromCommands([
+      { type: "movement:move", x: -1, y: 0 },
+      { type: "movement:move", x: 1, y: -1 },
+    ])).toEqual({ x: 1, y: -1 });
   });
 });

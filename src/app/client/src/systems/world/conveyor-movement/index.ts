@@ -8,7 +8,7 @@ import { Transform2D } from "@engine/components";
 import { Delta, fromContext, World } from "@engine/context";
 import { COLLISION_LAYERS, RectangleCollider } from "@libs/physics";
 
-export const System = createSystem("main:conveyor-movement")({
+export const System = createSystem("main:conveyor-movement-authority")({
   system() {
     const world = fromContext(World);
     const [updateDelta] = fromContext(Delta);

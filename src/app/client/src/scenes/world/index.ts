@@ -8,6 +8,7 @@ import { defineOverworldContext } from "@client/scenes/world/contexts/define-ove
 import { System as CameraFollow } from "@client/systems/core/camera-follow";
 import { System as CameraZoom } from "@client/systems/core/camera-zoom";
 import { System as CommandAllocatorReset } from "@client/systems/core/command-allocator-reset";
+import { System as LocalPlayerMovementCommand } from "@client/systems/core/local-player-movement-command";
 import { System as LocalPlayerMovementIntent } from "@client/systems/core/local-player-movement-intent";
 import { System as MovementAuthority } from "@client/systems/core/movement";
 import { System as Persistence } from "@client/systems/core/persistence";
@@ -19,7 +20,7 @@ import { System as BuildModePresentationSystem } from "@client/systems/world/bui
 import { System as ConveyorEntityMotion } from "@client/systems/world/conveyor-entity-motion";
 import { System as ConveyorMovement } from "@client/systems/world/conveyor-movement";
 import { DebugOverlaySystem } from "@client/systems/world/debug-overlay";
-import { HouseContextSystem } from "@client/systems/world/house-transition";
+import { System as ContextFocusAuthority } from "@client/systems/world/house-transition";
 import { System as HouseVisualsSystem } from "@client/systems/world/house-visuals";
 import { PlayerOrbitSystem } from "@client/systems/world/player-orbit";
 import { System as PortalSystem } from "@client/systems/world/portal";
@@ -37,28 +38,34 @@ export const Scene = createContextScene("MainScene")({
     scope: "canvas-parent",
   }),
   systems: [
+    // Support Systems
     CommandAllocatorReset,
+    PhysicsWorldSync,
     FPSSystem,
 
     // Intent Systems
     LocalPlayerMovementIntent,
     BuildModeIntentSystem,
+
+    // Command Systems
+    LocalPlayerMovementCommand,
     BuildModeCommandSystem,
 
     // Authority Systems
     MovementAuthority,
-    PhysicsWorldSync,
     ConveyorEntityMotion,
     ConveyorMovement,
     Collision,
+    PortalSystem,
+    ContextFocusAuthority,
     BuildModeAuthoritySystem,
+
+    // Local Presentation Systems
     CameraFollow,
     CameraZoom,
     PhysicsDebugSystem,
     PlayerOrbitSystem,
-    HouseContextSystem,
     HouseVisualsSystem,
-    PortalSystem,
     BuildModePresentationSystem,
     DebugOverlaySystem,
     Persistence,

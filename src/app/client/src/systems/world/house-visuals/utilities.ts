@@ -90,6 +90,37 @@ export function syncContextTransitionVisuals(
   }
 
   contextFocusTransitionMutator.applyFade(resolveContextTransitionTarget(manager));
+  clearCompletedContextExit(manager);
+}
+
+function clearCompletedContextExit(manager: SpatialContextManager): void {
+  if (manager.focusedContextId !== manager.rootContextId) {
+    return;
+  }
+
+  const [playerId] = manager.rootWorld.query(PlayerComponent, Transform2D);
+
+  if (!playerId) {
+    return;
+  }
+
+  const playerTransform = manager.rootWorld.require(playerId, Transform2D);
+
+  if (findContainingContextRegion(manager.rootWorld, playerTransform)) {
+    return;
+  }
+
+  const insideContext = manager.rootWorld.get(playerId, InsideContext);
+
+  if (!insideContext) {
+    return;
+  }
+
+  if (!contextFocusTransitionMutator.isComplete(insideContext.contextId)) {
+    return;
+  }
+
+  manager.rootWorld.remove(playerId, InsideContext);
 }
 
 function applyPlayerAlpha(world: UserWorld, alpha: number): void {

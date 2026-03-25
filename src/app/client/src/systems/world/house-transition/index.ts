@@ -5,7 +5,6 @@ import {
     findRegionByContextId,
     isInsideContextRegion,
 } from "@client/scenes/world/utilities/context-collision";
-import { ContextFocusBlendTransitionMutator } from "@client/systems/world/house-transition/contextTransitionMutator";
 import {
     createSystem,
     type EntityId,
@@ -16,24 +15,15 @@ import { fromContext, World } from "@engine/context";
 import { ContextEntryRegion, type ContextId, useContextManager } from "@libs/spatial-contexts";
 
 /**********************************************************************************************************
-*   CONSTS
-**********************************************************************************************************/
-const transitionMutator = new ContextFocusBlendTransitionMutator();
-
-/**********************************************************************************************************
  *   SYSTEM START
  **********************************************************************************************************/
-export const HouseContextSystem = createSystem("main:context-focus")({
+export const System = createSystem("main:context-focus-authority")({
   system() {
     const manager = useContextManager();
     const world = fromContext(World);
     const [playerId] = world.invariantQuery(PlayerComponent);
     const playerTransform = world.require(playerId, Transform2D);
     const focused = manager.focusedContextId;
-
-    // ensure the mutator has the manager reference. Manager not available in
-    // initialize (yet)
-    transitionMutator.manager = manager;
     
     if (manager.isRootFocused) {
       const region = findContainingContextRegion(world, playerTransform);
@@ -42,15 +32,6 @@ export const HouseContextSystem = createSystem("main:context-focus")({
         setInsideContext(world, playerId, region.contextId, region.regionEntityId);
         switchContext(manager, world, playerId, region.contextId);
         return;
-      }
-
-      const insideContext = world.get(playerId, InsideContext);
-
-      // If the player is still marked as inside a context, but they aren't inside
-      // the region anymore (given that no region was found here), then when the roof
-      // blend is complete, remove the inside context component.
-      if (insideContext && transitionMutator.isComplete(insideContext.contextId)) {
-        world.remove(playerId, InsideContext);
       }
 
       return;

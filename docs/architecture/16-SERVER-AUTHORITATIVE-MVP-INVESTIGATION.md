@@ -125,54 +125,54 @@ Implementation: Complete the split one system at a time. Each item below should 
 	- Current status: already isolates local keyboard state into intent axes.
 	- Follow-up: keep this system input-only.
 
-- [ ] `main:local-player-movement-command`
+- [x] `main:local-player-movement-command`
 	- Current source: new system; extract from the current movement authority flow.
 	- Goal: translate local movement intent into explicit movement commands.
 	- Constraint: do not mutate `Transform2D`, animation state, or physics state here.
-	- Done when: movement command generation is separate from transform mutation.
+	- Current status: implemented in `src/app/client/src/systems/core/local-player-movement-command/index.ts` and emits shared `@libs/commands/movement` commands into a scratch command buffer.
 
-- [ ] `main:player-movement-authority`
+- [x] `main:player-movement-authority`
 	- Current source: `src/app/client/src/systems/core/movement/index.ts`
 	- Goal: consume movement commands and apply authoritative transform + animation updates.
 	- Move out: any local input reading.
 	- Constraint: keep deterministic update behavior and preserve current player animation output.
-	- Done when: the system can be moved to a server engine with no DOM or local-input dependency.
+	- Current status: now consumes `main:local-player-movement-command` output instead of reading local input directly.
 
-- [ ] `main:spatial-contexts-collision-authority`
+- [x] `main:spatial-contexts-collision-authority`
 	- Current source: `src/app/client/src/systems/world/scene-collision/index.ts`
 	- Goal: keep collision resolution in the authoritative band because it changes world transforms.
 	- Constraint: it must run after authoritative movement commands are applied and before portal/context checks.
-	- Done when: no local presentation system performs authoritative collision resolution.
+	- Current status: authoritative collision system kept in the authoritative band and renamed to `main:spatial-contexts-collision-authority`.
 
-- [ ] `main:conveyor-entity-motion-authority`
+- [x] `main:conveyor-entity-motion-authority`
 	- Current source: `src/app/client/src/systems/world/conveyor-entity-motion/index.ts`
 	- Goal: keep conveyor slot progression, transfers, and carried-item transform sync in the authoritative band.
 	- Constraint: do not fold local-only visuals back into serializable lane state.
-	- Done when: the system depends only on authoritative belt state, not local UI or preview state.
+	- Current status: authoritative-only conveyor item progression retained and renamed to `main:conveyor-entity-motion-authority`.
 
-- [ ] `main:conveyor-movement-authority`
+- [x] `main:conveyor-movement-authority`
 	- Current source: `src/app/client/src/systems/world/conveyor-movement/index.ts`
 	- Goal: keep belt-driven actor movement authoritative because it mutates player transforms.
 	- Constraint: order it after conveyor entity motion and before collision/portal resolution if the player can be pushed into new contacts.
-	- Done when: player conveyor push is no longer mixed with local input concerns.
+	- Current status: authoritative belt-driven player movement retained and renamed to `main:conveyor-movement-authority`, ordered ahead of collision/portal checks.
 
-- [ ] `main:spatial-contexts-portals-authority`
+- [x] `main:spatial-contexts-portals-authority`
 	- Current source: `src/app/client/src/systems/world/portal/index.ts`
 	- Goal: keep teleports authoritative because they mutate player location and world membership.
 	- Constraint: the future server port must be able to execute this without browser globals.
-	- Done when: portal activation depends only on authoritative world/query state.
+	- Current status: portal activation remains query-driven and the system is now named `main:spatial-contexts-portals-authority`.
 
-- [ ] `main:context-focus-authority`
+- [x] `main:context-focus-authority`
 	- Current source: `src/app/client/src/systems/world/house-transition/index.ts`
 	- Goal: keep context membership and player world moves authoritative.
 	- Constraint: split blend-only presentation from actual world switching if that is still mixed.
-	- Done when: entering or leaving a context is not driven by local-only visual code.
+	- Current status: authority now handles only context-region detection and world switching; roof-blend exit cleanup remains in house visuals.
 
-- [ ] `main:physics-world-sync`
+- [x] `main:physics-world-sync`
 	- Current source: `src/app/client/src/systems/core/physics-world-sync/index.ts`
 	- Goal: classify this as a support system and verify it is safe to run before authoritative collision/portal systems.
 	- Constraint: do not let it consume local-only UI state.
-	- Done when: its place in the final ordering is explicit and documented in the scene.
+	- Current status: kept as a support system and moved to the top of the world scene ordering ahead of authoritative collision and portal systems.
 
 - [x] `main:camera-follow`
 	- Current source: `src/app/client/src/systems/core/camera-follow/index.ts`

@@ -2,12 +2,14 @@ import { PlayerComponent } from "@client/components/player";
 import { setupContextPlayer } from "@client/scenes/world/contexts/shared";
 import { System as CameraFollow } from "@client/systems/core/camera-follow";
 import { System as CommandAllocatorReset } from "@client/systems/core/command-allocator-reset";
+import { System as LocalPlayerMovementCommand } from "@client/systems/core/local-player-movement-command";
 import { System as LocalPlayerMovementIntent } from "@client/systems/core/local-player-movement-intent";
 import { System as MovementAuthority } from "@client/systems/core/movement";
 import type { MovementAxes } from "@client/systems/core/movement/utilities";
 import { System as PhysicsWorldSync } from "@client/systems/core/physics-world-sync";
 import { System as BuildModeSystem } from "@client/systems/world/build-mode";
 import { System as BuildModeAuthoritySystem } from "@client/systems/world/build-mode-authority";
+import { System as BuildModeCommandSystem } from "@client/systems/world/build-mode-command";
 import type { BuildItemType } from "@client/systems/world/build-mode/build-items";
 import { supportsDragPlacement } from "@client/systems/world/build-mode/build-items";
 import { GridPosition } from "@client/systems/world/build-mode/components/grid-position";
@@ -73,13 +75,15 @@ export class WorldTestHarness {
     const TestScene = createContextScene("WorldTestScene")({
       systems: [
         CommandAllocatorReset,
-        LocalPlayerMovementIntent,
-        MovementAuthority,
         PhysicsWorldSync,
-        Collision,
-        CameraFollow,
+        LocalPlayerMovementIntent,
+        LocalPlayerMovementCommand,
         BuildModeSystem,
+        BuildModeCommandSystem,
+        MovementAuthority,
+        Collision,
         BuildModeAuthoritySystem,
+        CameraFollow,
       ],
       contexts: [],
       setup(world) {

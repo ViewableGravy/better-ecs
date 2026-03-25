@@ -4,7 +4,7 @@ import { createSystem } from "@engine";
 import { fromContext, World } from "@engine/context";
 import { collides, COLLISION_LAYERS, resolve } from "@libs/physics";
 
-export const System = createSystem("main:spatial-contexts-collision")({
+export const System = createSystem("main:spatial-contexts-collision-authority")({
   system() {
     const world = fromContext(World);
     const physicsWorld = PhysicsWorldManager.requireWorld(world);

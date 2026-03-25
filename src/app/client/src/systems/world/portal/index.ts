@@ -19,7 +19,7 @@ const portalActivationFilter = {
  *   COMPONENT SYSTEM START
  **********************************************************************************************************/
 export const System = createPortalSystem({
-  name: "main:spatial-contexts-portals",
+  name: "main:spatial-contexts-portals-authority",
   shouldActivate: shouldActivatePortal,
   onEnter({ nextWorld }) {
     ensurePlayer(nextWorld);

@@ -3,6 +3,7 @@ import { OUTSIDE } from "@client/components/render-visibility";
 import { spawnBox } from "@client/entities/box";
 import { PhysicsWorldManager } from "@client/scenes/world/physics/physics-world-manager";
 import { WorldTestHarness } from "@client/scenes/world/testing/WorldTestHarness";
+import type { LocalPlayerMovementCommandState } from "@client/systems/core/local-player-movement-command/const";
 import { GridSingleton } from "@client/systems/world/build-mode/grid-singleton";
 import { COLLISION_LAYERS, collides } from "@libs/physics";
 import { describe, expect, it } from "vitest";
@@ -23,6 +24,18 @@ describe("WorldTestHarness", () => {
 
     expect(player.animationState).toBe("moving");
     expect(player.direction).toBe("e");
+  });
+
+  it("emits explicit movement commands before movement authority applies them", async () => {
+    const harness = await WorldTestHarness.create();
+
+    harness.movePlayer({ x: -1, y: 1 }, 1000);
+
+    const commandState = harness.engine.systems["main:local-player-movement-command"].data as LocalPlayerMovementCommandState;
+
+    expect(commandState.commands).toEqual([
+      { type: "movement:move", x: -1, y: 1 },
+    ]);
   });
 
   it("commits and deletes placeables through real build mode command and authority systems", async () => {
