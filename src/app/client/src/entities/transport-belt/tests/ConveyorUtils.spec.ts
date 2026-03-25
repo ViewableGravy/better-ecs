@@ -23,4 +23,23 @@ describe("ConveyorUtils.addEntity", () => {
     expect(transform.curr.pos.x).toBe(-7.5);
     expect(transform.curr.pos.y).toBe(-4);
   });
+
+  it("serializes carried-item lane progress so refresh can resume belt motion correctly", () => {
+    const world = new UserWorld(new World("scene"));
+    const beltEntityId = spawnTransportBelt(world, { x: 0, y: 0, connectToNeighbors: false });
+    const entityId = world.create();
+
+    ConveyorUtils.addEntity(world, beltEntityId, entityId, "left", 2, 0.75);
+
+    const serializedBelt = world.serialize().entities
+      .find((entity) => entity.entityId === beltEntityId)
+      ?.components.find((component) => component.type === "ConveyorBeltComponent");
+
+    expect(serializedBelt?.type).toBe("ConveyorBeltComponent");
+    expect(serializedBelt?.data).toEqual(expect.objectContaining({
+        left: [null, null, entityId, null],
+        leftProgress: [0, 0, 0.75, 0],
+        rightProgress: [0, 0, 0, 0],
+    }));
+  });
 });

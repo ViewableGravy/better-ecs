@@ -5,9 +5,10 @@ import {
     type ConveyorSlotIndex,
 } from "@client/components/conveyor-belt";
 import {
-    getConveyorLaneProgress,
     getConveyorLaneSlots,
     getTransportBeltVariantDescriptor,
+    setConveyorLaneSlot,
+    setConveyorLaneStoredProgress,
 } from "@client/entities/transport-belt/core";
 import { BeltItemRailsUtility } from "@client/entities/transport-belt/motion/BeltItemRailsUtility";
 import type { TransportBeltEntityId } from "@client/entities/transport-belt/types";
@@ -31,7 +32,6 @@ export class ConveyorUtils {
   ): void {
     const conveyor = world.get(conveyorEntityId, ConveyorBeltComponent);
     const slots = getConveyorLaneSlots(conveyor, side);
-    const slotProgress = getConveyorLaneProgress(conveyor, side);
 
     invariant(
       canConveyorStoreEntities(conveyor.variant),
@@ -53,8 +53,8 @@ export class ConveyorUtils {
     world.add(entity, new Parent(conveyorEntityId));
     world.add(entity, new Transform2D(SHARED_ADD_ENTITY_POSITION.x, SHARED_ADD_ENTITY_POSITION.y, 0));
 
-    slots[index] = entity;
-    slotProgress[index] = progress;
+    setConveyorLaneSlot(conveyor, side, index, entity);
+    setConveyorLaneStoredProgress(conveyor, side, index, progress);
   }
 
   /**

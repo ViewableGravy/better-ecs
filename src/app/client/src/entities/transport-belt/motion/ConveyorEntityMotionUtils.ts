@@ -3,6 +3,8 @@ import {
     getConveyorLaneProgress,
     getConveyorLaneSlots,
     isConveyorLaneTailBlocked,
+    setConveyorLaneSlot,
+    setConveyorLaneStoredProgress,
     setConveyorLaneTailBlocked,
 } from "@client/entities/transport-belt/core";
 import { BeltItemRailsUtility } from "@client/entities/transport-belt/motion/BeltItemRailsUtility";
@@ -14,7 +16,7 @@ import {
     SHARED_SLOT_POSITION,
 } from "@client/entities/transport-belt/motion/constants";
 import type { ConveyorSideLoadTransfer } from "@client/entities/transport-belt/motion/types";
-import type { EntityId, UserWorld } from "@engine";
+import { mutate, type EntityId, type UserWorld } from "@engine";
 import { Parent, Transform2D } from "@engine/components";
 import { resolveWorldTransform2D } from "@engine/ecs/hierarchy";
 
@@ -198,7 +200,7 @@ export class ConveyorEntityMotionUtils {
     const entityId = slots[startIndex];
 
     if (entityId === null) {
-      progress[startIndex] = 0;
+      setConveyorLaneStoredProgress(conveyor, side, startIndex, 0);
 
       if (startIndex === 3) {
         setConveyorLaneTailBlocked(conveyor, side, false);
@@ -231,18 +233,18 @@ export class ConveyorEntityMotionUtils {
       const queuedDestinationIndex = this.computeIntraConveyorDestinationIndex(currentIndex);
 
       if (queuedDestinationIndex === undefined) {
-        progress[currentIndex] = 1;
+        setConveyorLaneStoredProgress(conveyor, side, currentIndex, 1);
         return;
       }
 
       if (slots[queuedDestinationIndex] !== null) {
-        progress[currentIndex] = 1;
+        setConveyorLaneStoredProgress(conveyor, side, currentIndex, 1);
         return;
       }
 
-      slots[queuedDestinationIndex] = entityId;
-      slots[currentIndex] = null;
-      progress[currentIndex] = 0;
+      setConveyorLaneSlot(conveyor, side, queuedDestinationIndex, entityId);
+      setConveyorLaneSlot(conveyor, side, currentIndex, null);
+      setConveyorLaneStoredProgress(conveyor, side, currentIndex, 0);
       currentIndex = queuedDestinationIndex;
     }
 
@@ -269,29 +271,34 @@ export class ConveyorEntityMotionUtils {
       const destinationIndex = this.computeIntraConveyorDestinationIndex(currentIndex);
 
       if (destinationIndex === undefined) {
-        progress[currentIndex] = 1;
+        setConveyorLaneStoredProgress(conveyor, side, currentIndex, 1);
         return;
       }
 
       if (slots[destinationIndex] !== null) {
-        progress[currentIndex] = 1;
+        setConveyorLaneStoredProgress(conveyor, side, currentIndex, 1);
         return;
       }
 
-      slots[destinationIndex] = entityId;
-      slots[currentIndex] = null;
-      progress[currentIndex] = 0;
+      setConveyorLaneSlot(conveyor, side, destinationIndex, entityId);
+      setConveyorLaneSlot(conveyor, side, currentIndex, null);
+      setConveyorLaneStoredProgress(conveyor, side, currentIndex, 0);
 
       remainingProgress -= 1;
       currentIndex = destinationIndex;
-      progress[currentIndex] = 0;
+      setConveyorLaneStoredProgress(conveyor, side, currentIndex, 0);
 
       if (currentIndex === 3) {
         setConveyorLaneTailBlocked(conveyor, side, false);
       }
     }
 
-    progress[currentIndex] = this.normalizeStoredProgress(remainingProgress);
+    setConveyorLaneStoredProgress(
+      conveyor,
+      side,
+      currentIndex,
+      this.normalizeStoredProgress(remainingProgress),
+    );
 
     if (currentIndex === 3) {
       setConveyorLaneTailBlocked(conveyor, side, false);
@@ -318,7 +325,7 @@ export class ConveyorEntityMotionUtils {
       const entityId = slots[index];
 
       if (entityId === null) {
-        progress[index] = 0;
+        setConveyorLaneStoredProgress(conveyor, side, index, 0);
         continue;
       }
 
@@ -336,8 +343,14 @@ export class ConveyorEntityMotionUtils {
         SHARED_SLOT_POSITION,
       );
 
-      transform.curr.pos.x = SHARED_SLOT_POSITION.x;
-      transform.curr.pos.y = SHARED_SLOT_POSITION.y;
+      if (transform.curr.pos.x === SHARED_SLOT_POSITION.x && transform.curr.pos.y === SHARED_SLOT_POSITION.y) {
+        continue;
+      }
+
+      mutate(transform, "curr", (curr) => {
+        curr.pos.x = SHARED_SLOT_POSITION.x;
+        curr.pos.y = SHARED_SLOT_POSITION.y;
+      });
     }
   }
 
@@ -376,7 +389,7 @@ export class ConveyorEntityMotionUtils {
       || nextSlots === null
       || nextProgress === null
       || nextSlots[0] !== null) {
-      progress[3] = 1;
+      setConveyorLaneStoredProgress(conveyor, side, 3, 1);
       setConveyorLaneTailBlocked(conveyor, side, true);
       return;
     }
@@ -386,10 +399,10 @@ export class ConveyorEntityMotionUtils {
       ? 0
       : this.normalizeStoredProgress(Math.min(remainingProgress - 1, 1));
 
-    nextSlots[0] = entityId;
-    nextProgress[0] = transferredProgress;
-    slots[3] = null;
-    progress[3] = 0;
+    setConveyorLaneSlot(nextConveyor, side, 0, entityId);
+    setConveyorLaneStoredProgress(nextConveyor, side, 0, transferredProgress);
+    setConveyorLaneSlot(conveyor, side, 3, null);
+    setConveyorLaneStoredProgress(conveyor, side, 3, 0);
     setConveyorLaneTailBlocked(conveyor, side, false);
     this.syncParent(world, entityId, nextConveyorEntityId);
   }
@@ -416,15 +429,15 @@ export class ConveyorEntityMotionUtils {
     const targetProgress = getConveyorLaneProgress(targetConveyor, targetLane);
 
     if (targetSlots[destinationIndex] !== null) {
-      sourceProgress[3] = 1;
+      setConveyorLaneStoredProgress(sourceConveyor, sourceLane, 3, 1);
       setConveyorLaneTailBlocked(sourceConveyor, sourceLane, true);
       return false;
     }
 
-    targetSlots[destinationIndex] = sourceEntityId;
-    targetProgress[destinationIndex] = 0.5;
-    sourceSlots[3] = null;
-    sourceProgress[3] = 0;
+    setConveyorLaneSlot(targetConveyor, targetLane, destinationIndex, sourceEntityId);
+    setConveyorLaneStoredProgress(targetConveyor, targetLane, destinationIndex, 0);
+    setConveyorLaneSlot(sourceConveyor, sourceLane, 3, null);
+    setConveyorLaneStoredProgress(sourceConveyor, sourceLane, 3, 0);
     setConveyorLaneTailBlocked(sourceConveyor, sourceLane, false);
     this.syncParent(world, sourceEntityId, targetConveyorEntityId);
 

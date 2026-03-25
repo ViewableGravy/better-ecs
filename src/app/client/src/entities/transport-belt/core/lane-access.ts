@@ -1,4 +1,5 @@
 import { ConveyorBeltComponent, type ConveyorSide } from "@client/components/conveyor-belt";
+import { mutate } from "@engine";
 
 /**********************************************************************************************************
  *   COMPONENT START
@@ -24,6 +25,56 @@ export function getConveyorLaneProgress(
   }
 
   return conveyor.rightProgress;
+}
+
+function getConveyorLaneSlotsFieldKey(side: ConveyorSide): "left" | "right" {
+  if (side === "left") {
+    return "left";
+  }
+
+  return "right";
+}
+
+function getConveyorLaneProgressFieldKey(side: ConveyorSide): "leftProgress" | "rightProgress" {
+  if (side === "left") {
+    return "leftProgress";
+  }
+
+  return "rightProgress";
+}
+
+export function setConveyorLaneSlot(
+  conveyor: ConveyorBeltComponent,
+  side: ConveyorSide,
+  index: number,
+  entityId: ConveyorBeltComponent["left"][number],
+): void {
+  const slots = getConveyorLaneSlots(conveyor, side);
+
+  if (slots[index] === entityId) {
+    return;
+  }
+
+  mutate(conveyor, getConveyorLaneSlotsFieldKey(side), (trackedSlots) => {
+    trackedSlots[index] = entityId;
+  });
+}
+
+export function setConveyorLaneStoredProgress(
+  conveyor: ConveyorBeltComponent,
+  side: ConveyorSide,
+  index: number,
+  value: number,
+): void {
+  const progress = getConveyorLaneProgress(conveyor, side);
+
+  if (progress[index] === value) {
+    return;
+  }
+
+  mutate(conveyor, getConveyorLaneProgressFieldKey(side), (trackedProgress) => {
+    trackedProgress[index] = value;
+  });
 }
 
 export function isConveyorLaneTailBlocked(

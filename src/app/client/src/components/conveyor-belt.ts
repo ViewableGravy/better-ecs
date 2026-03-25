@@ -27,8 +27,10 @@ export class ConveyorBeltComponent extends Component {
   declare public readonly right: ConveyorSlots;
 
   // Runtime-only interpolation state used for carried-item motion and visuals.
+  @state("json")
   declare public readonly leftProgress: ConveyorSlotProgress;
 
+  @state("json")
   declare public readonly rightProgress: ConveyorSlotProgress;
 
   declare public leftTailBlocked: boolean;

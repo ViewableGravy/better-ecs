@@ -977,6 +977,31 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
 });
 
 describe("ConveyorWorldMotionUtils.advanceWorld", () => {
+  it("starts a side-loaded item at the beginning of the target slot on its first tick", () => {
+    const world = new UserWorld(new World("scene"));
+    spawnTransportBelt(world, { x: 0, y: -20, variant: "vertical-down" });
+    const middleBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "vertical-down" });
+    spawnTransportBelt(world, { x: 0, y: 20, variant: "vertical-down" });
+    const sideBeltId = spawnTransportBelt(world, { x: -20, y: 0, variant: "horizontal-right" });
+    const sideItemId = world.create();
+
+    ConveyorUtils.addEntity(world, sideBeltId, sideItemId, "left", 3, 1);
+
+    ConveyorEntityMotionUtils.advanceWorld(world, SLOT_ADVANCE_TICKS);
+
+    const middleBelt = world.require(middleBeltId, ConveyorBeltComponent);
+
+    expect(middleBelt.right).toEqual([null, sideItemId, null, null]);
+    expect(middleBelt.rightProgress).toEqual([0, 0, 0, 0]);
+    expect(world.require(sideItemId, Parent).entityId).toBe(middleBeltId);
+
+    expect(resolveWorldTransform2D(world, sideItemId, SHARED_WORLD_TRANSFORM)).toBe(true);
+    expect(SHARED_WORLD_TRANSFORM.prev.pos.x).toBe(-10);
+    expect(SHARED_WORLD_TRANSFORM.prev.pos.y).toBe(-4);
+    expect(SHARED_WORLD_TRANSFORM.curr.pos.x).toBe(-4);
+    expect(SHARED_WORLD_TRANSFORM.curr.pos.y).toBe(-5);
+  });
+
   it("side-loads both source lanes into the faced target lane after normal belt motion and syncs transforms", () => {
     const world = new UserWorld(new World("scene"));
     spawnTransportBelt(world, { x: 0, y: -20, variant: "vertical-down" });

@@ -13,6 +13,8 @@ export {
     getConveyorLaneProgress,
     getConveyorLaneSlots,
     isConveyorLaneTailBlocked,
+    setConveyorLaneSlot,
+    setConveyorLaneStoredProgress,
     setConveyorLaneTailBlocked
 } from "@client/entities/transport-belt/core/lane-access";
 export {
