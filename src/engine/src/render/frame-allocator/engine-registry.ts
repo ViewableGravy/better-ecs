@@ -1,5 +1,6 @@
 import { Rgba } from "@engine/components/sprite/sprite";
 import { Transform2D } from "@engine/components/transform";
+import { createPoolFactory } from "@engine/core/allocator";
 import {
     SPRITE_RENDER_DIRTY_NONE,
     type SpriteRenderRecord,
@@ -21,8 +22,8 @@ export type EngineFrameAllocatorRegistry = {
 };
 
 export const engineFrameAllocatorRegistry: EngineFrameAllocatorRegistry = {
-  "engine:shape-command": {
-    create: () => ({
+  "engine:shape-command": createPoolFactory(
+    (): DenseShapeRenderData => ({
       type: "rectangle",
       x: 0,
       y: 0,
@@ -40,7 +41,7 @@ export const engineFrameAllocatorRegistry: EngineFrameAllocatorRegistry = {
       arcEnd: Math.PI * 2,
       cornerRadius: 0,
     }),
-    reset: (value) => {
+    (value) => {
       value.type = "rectangle";
       value.x = 0;
       value.y = 0;
@@ -61,15 +62,15 @@ export const engineFrameAllocatorRegistry: EngineFrameAllocatorRegistry = {
       value.arcEnd = Math.PI * 2;
       value.cornerRadius = 0;
     },
-  },
-  "engine:number-array": {
-    create: () => [],
-    reset: (value) => {
+  ),
+  "engine:number-array": createPoolFactory(
+    (): number[] => [],
+    (value) => {
       value.length = 0;
     },
-  },
-  "engine:render-command": {
-    create: () => ({
+  ),
+  "engine:render-command": createPoolFactory(
+    (): RenderCommand => ({
       type: "shape-entity",
       world: null,
       entityId: null,
@@ -82,7 +83,7 @@ export const engineFrameAllocatorRegistry: EngineFrameAllocatorRegistry = {
       sequence: 0,
       spriteRecordIndex: undefined,
     }),
-    reset: (value) => {
+    (value) => {
       value.type = "shape-entity";
       value.world = null;
       value.entityId = null;
@@ -95,9 +96,9 @@ export const engineFrameAllocatorRegistry: EngineFrameAllocatorRegistry = {
       value.sequence = 0;
       value.spriteRecordIndex = undefined;
     },
-  },
-  "engine:sprite-render-record": {
-    create: () => ({
+  ),
+  "engine:sprite-render-record": createPoolFactory(
+    (): SpriteRenderRecord => ({
       sprite: {
         assetId: "",
         width: 0,
@@ -117,7 +118,7 @@ export const engineFrameAllocatorRegistry: EngineFrameAllocatorRegistry = {
       dirtyMask: SPRITE_RENDER_DIRTY_NONE,
       isVisible: true,
     }),
-    reset: (value) => {
+    (value) => {
       value.sprite.assetId = "";
       value.sprite.width = 0;
       value.sprite.height = 0;
@@ -147,5 +148,5 @@ export const engineFrameAllocatorRegistry: EngineFrameAllocatorRegistry = {
       value.dirtyMask = SPRITE_RENDER_DIRTY_NONE;
       value.isVisible = true;
     },
-  },
+  ),
 };

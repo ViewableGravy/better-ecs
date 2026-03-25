@@ -32,6 +32,9 @@ You should use this skill when:
 - Inside `packages/engine/src`, always use aliased imports (for example `@core/...`, `@render/...`, `@components/...`, `@ui/...`, `@/...`).
 - Do not add relative imports like `./` or `../` in engine source files.
 - Keep this consistent so `tsc` + `tsc-alias` can rewrite internal aliases to relative paths in `packages/engine/dist` during build.
+- For editor resolution of engine spec files, treat `src/engine/tsconfig.json` as the solution-style source of truth for project references.
+  - If an engine spec file is missing alias resolution in the editor, add the relevant test-project reference there, for example `./src/tests/tsconfig.json`.
+  - This is durable across `bun install` / postinstall: `scripts/ts-extend-paths/extend-tsconfigs.mjs` only rewrites `compilerOptions.paths` for configured tsconfig files and does not remove `references` entries.
 
 ### 1. Ensure Type Safety
 

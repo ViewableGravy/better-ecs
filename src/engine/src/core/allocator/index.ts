@@ -1,4 +1,5 @@
 export { Allocator } from "@engine/core/allocator/Allocator";
+export { createPoolFactory } from "@engine/core/allocator/createPoolFactory";
 export type {
     ActivePool,
     AllocatorRegistry,

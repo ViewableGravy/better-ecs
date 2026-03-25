@@ -1,24 +1,34 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  InternalFrameAllocator,
-  type FrameAllocatorRegistry,
-} from "@engine/render";
+import { createPoolFactory } from "@engine";
+import { InternalFrameAllocator, type FrameAllocatorRegistry } from "@engine/render";
+
+/**********************************************************************************************************
+ *   TYPE DEFINITIONS
+ **********************************************************************************************************/
+
+type TestItem = {
+  value: number;
+};
+
+/**********************************************************************************************************
+ *   COMPONENT START
+ **********************************************************************************************************/
 
 describe("InternalFrameAllocator", () => {
   it("reuses dense allocated slots across frames", () => {
     let createdCount = 0;
 
     const allocator = new InternalFrameAllocator({
-      "test:item": {
-        create: () => {
+      "test:item": createPoolFactory(
+        (): TestItem => {
           createdCount += 1;
           return { value: -1 };
         },
-        reset: (value: { value: number }, nextValue: number) => {
+        (value: TestItem, nextValue: number) => {
           value.value = nextValue;
         },
-      },
+      ),
     } satisfies FrameAllocatorRegistry);
 
     const first = allocator.acquire("test:item", 1);
