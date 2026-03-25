@@ -8,11 +8,7 @@
     "dev": {
       "executor": "nx:run-commands",
       "options": {
-        "parallel": true,
-        "commands": [
-          "NX_DAEMON=false bun x nx run-many --target=build:watch --projects=$(bun x nx graph --print | jq -r '[.graph.dependencies[\"server\"][]?.target] | unique | join(\",\")') --outputStyle=static",
-          "node --watch src/main.ts"
-        ],
+        "command": "bun --watch src/main.ts",
         "cwd": "src/app/server"
       }
     },
@@ -49,7 +45,7 @@
     "start": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "node dist/main.js",
+        "command": "bun src/main.ts",
         "cwd": "src/app/server"
       }
     },

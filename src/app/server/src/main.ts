@@ -1,10 +1,25 @@
-// apps/server/src/main.ts
+import invariant from "tiny-invariant";
 
-// Authoritative game server will be implemented here
-// This is a placeholder for future multiplayer backend
+import { MultiplayerServerRuntime } from "./runtime/MultiplayerServerRuntime";
 
-export function main() {
-  console.log('Server placeholder - to be implemented');
+/**********************************************************************************************************
+ *   COMPONENT START
+ **********************************************************************************************************/
+
+export async function main(): Promise<void> {
+  const runtime = await MultiplayerServerRuntime.create();
+  const server = runtime.start();
+
+  console.log(`Authoritative server listening on http://${server.hostname}:${server.port}`);
+
+  const shutdown = () => {
+    runtime.stop();
+  };
+
+  process.once("SIGINT", shutdown);
+  process.once("SIGTERM", shutdown);
+
+  invariant(server, "Expected Bun server to start successfully.");
 }
 
-main();
+void main();

@@ -1,6 +1,7 @@
 {
   "base": "./tsconfig.base.json",
   "paths": {
+    "src/app/server/tsconfig.json": [],
     "src/engine/tsconfig.json": [
       {
         "@ui": ["./src/ui/index.tsx"]

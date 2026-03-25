@@ -23,6 +23,12 @@
       "@server/*": [
         "../app/server/src/*"
       ],
+      "@libs/commands": [
+        "../libs/commands/src/index.ts"
+      ],
+      "@libs/commands/*": [
+        "../libs/commands/src/*"
+      ],
       "@libs/fps": [
         "../libs/fps/src/index.ts"
       ],
@@ -40,6 +46,12 @@
       ],
       "@libs/spatial-contexts/*": [
         "../libs/spatial-contexts/src/*"
+      ],
+      "@libs/state-sync": [
+        "../libs/state-sync/src/index.ts"
+      ],
+      "@libs/state-sync/*": [
+        "../libs/state-sync/src/*"
       ],
       "@utils": [
         "../utils/src/index.ts"

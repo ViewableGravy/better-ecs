@@ -6,6 +6,9 @@ Implement the authoritative MVP in three phases: first split simulation from pre
 
 ## 1. Split Authoritative And Local Systems First
 
+Current status:
+- Complete. The client scene now runs in explicit support / intent / command / authoritative / local-presentation bands, and the split checklist below has been completed.
+
 Implementation: Before introducing networking, separate every mixed system into either authoritative simulation or local presentation. Authoritative systems should own gameplay mutation, collision decisions, placement commits, deletion, conveyor simulation, spawning, and any state that other clients must observe. Local systems should own input capture, camera follow, zoom, HUD, login UI, debug overlays, preview ghosts, and any render-only helpers. The current app should still behave the same after this split, but the boundaries should be explicit.
 
 Things to consider:
@@ -215,6 +218,9 @@ Implementation: Do the splits in the order below so each later step depends on a
 
 ## 2. Build The Test Harness Before Networking
 
+Current status:
+- Complete. The deterministic world harness and camera assertions are now implemented and covering placement, deletion, movement, collision, and camera-follow behavior.
+
 Implementation: Create a deterministic harness scene and shared test utilities before server work starts. Tests should be able to boot a known world, drive input, query entities and components, and assert placement, deletion, movement, collision, and camera behavior. This harness is required for the system split, and it must remain the foundation for later snapshot, diff, and multiplayer verification.
 
 Things to consider:
@@ -242,6 +248,9 @@ Things to consider:
 
 ## 5. Run The Backend In Bun Through One Dev Entry Point
 
+Current status:
+- In progress. The repository now boots a Bun-native authoritative server entry in `src/app/server`, exposes `/multiplayer`, `/health`, and `/snapshot`, and proxies those routes through the Vite dev server. The next server step is replacing the bootstrap snapshot/diff scaffold with real command ingestion and replication flow.
+
 Implementation: Run the server in `src/app/server` using Bun-native HTTP and websocket APIs. Frontend development should continue through Vite, but websocket traffic should be proxied through the same origin so the client connects to `/multiplayer`. The repository should start the full stack from one top-level `bun dev`, with Bun watch mode reloading the backend and Vite reloading the frontend.
 
 Things to consider:
@@ -251,6 +260,9 @@ Things to consider:
 
 ## 6. Move Authoritative Simulation To The Server
 
+Current status:
+- Not started yet. The Bun server entry point and websocket route are now in place, but the authoritative engine still needs to move behind that transport layer.
+
 Implementation: Boot a headless engine on the server and move authoritative systems there. The server must own player entities, transforms, placement results, deletion, collisions, and conveyor outcomes. The client must stop mutating authoritative components directly and instead render replicated state coming from the server.
 
 Things to consider:
@@ -259,6 +271,9 @@ Things to consider:
 - Treat the client as an adapter over server truth.
 
 ## 7. Convert Client Actions Into Commands
+
+Current status:
+- Complete. Movement and build-mode actions now flow through shared typed command schemas before reaching authority systems.
 
 Implementation: Replace direct client mutation with explicit typed commands for movement, placement, deletion, and future interactions. The client should capture local intent, batch commands, and send them to the server at a fixed rate. The server should validate and apply those commands into the authoritative world.
 
@@ -278,6 +293,9 @@ Things to consider:
 
 ## 9. Keep Presentation And Helpers Client-Only
 
+Current status:
+- Complete. Camera, build-mode presentation, overlays, HUD-oriented helpers, and persistence adapters remain outside the authoritative mutation path.
+
 Implementation: Camera follow, zoom, login UI, HUD, overlays, preview ghosts, debug tools, and later smoothing or interpolation should remain local-only. These features may create local entities or local state, but they must not be required for authoritative simulation and must not leak into replicated gameplay state.
 
 Things to consider:
@@ -286,6 +304,9 @@ Things to consider:
 - Keep camera ownership tied to the local player only.
 
 ## 10. Define Camera Centering Precisely
+
+Current status:
+- Complete. The harness uses one centering rule and asserts camera/player transform alignment directly.
 
 Implementation: Decide whether “centered” means the entity transform pivot or the rendered player body, and use that same rule everywhere. Anchored sprites can make these two definitions disagree visually even when numeric debug checks report success. Put the rule in a shared helper and use it for harness assertions, browser verification, and debugging tools.
 

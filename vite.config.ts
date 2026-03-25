@@ -25,6 +25,18 @@ export default defineConfig({
     },
     port: 3000,
     host: "127.0.0.1",
+    proxy: {
+      "/health": {
+        target: "http://127.0.0.1:3001",
+      },
+      "/snapshot": {
+        target: "http://127.0.0.1:3001",
+      },
+      "/multiplayer": {
+        target: "http://127.0.0.1:3001",
+        ws: true,
+      },
+    },
     headers: {
       "Cross-Origin-Opener-Policy": "same-origin",
       "Cross-Origin-Embedder-Policy": "require-corp",
