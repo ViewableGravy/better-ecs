@@ -35,14 +35,6 @@ function getConveyorLaneSlotsFieldKey(side: ConveyorSide): "left" | "right" {
   return "right";
 }
 
-function getConveyorLaneProgressFieldKey(side: ConveyorSide): "leftProgress" | "rightProgress" {
-  if (side === "left") {
-    return "leftProgress";
-  }
-
-  return "rightProgress";
-}
-
 export function setConveyorLaneSlot(
   conveyor: ConveyorBeltComponent,
   side: ConveyorSide,
@@ -72,9 +64,7 @@ export function setConveyorLaneStoredProgress(
     return;
   }
 
-  mutate(conveyor, getConveyorLaneProgressFieldKey(side), (trackedProgress) => {
-    trackedProgress[index] = value;
-  });
+  progress[index] = value;
 }
 
 export function isConveyorLaneTailBlocked(

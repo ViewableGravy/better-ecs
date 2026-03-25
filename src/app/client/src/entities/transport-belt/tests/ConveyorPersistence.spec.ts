@@ -1,15 +1,16 @@
-import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
+import { ConveyorBeltComponent, type ConveyorSide, type ConveyorSlotIndex } from "@client/components/conveyor-belt";
 import { ConveyorUtils, spawnTransportBelt } from "@client/entities/transport-belt";
+import { BeltItemRailsUtility } from "@client/entities/transport-belt/motion/BeltItemRailsUtility";
 import { ConveyorEntityMotionUtils } from "@client/entities/transport-belt/motion/ConveyorEntityMotionUtils";
 import { sceneConfig } from "@client/scenes/world/const";
 import { defineOverworldContext } from "@client/scenes/world/contexts/define-overworld-context";
 import { reconnectPersistedTransportBelts } from "@client/systems/core/persistence/utilities";
 import { System as ConveyorEntityMotion } from "@client/systems/world/conveyor-entity-motion";
-import { createEngine, EngineTestHarness, type EntityId, type UserWorld } from "@engine";
-import { Transform2D } from "@engine/components";
+import { createEngine, EngineTestHarness, Vec2, type EntityId, type UserWorld } from "@engine";
+import { Parent, Transform2D } from "@engine/components";
 import { registerEngine, unregisterEngine } from "@engine/core/global-engine";
-import { resolveWorldTransform2D } from "@engine/ecs/hierarchy";
 import { createContextScene } from "@libs/spatial-contexts";
+import type { SerializedSceneState } from "@libs/state-sync/scene-state";
 import { applySceneStateToEngine, serializeSceneState } from "@libs/state-sync/scene-state";
 import { describe, expect, it } from "vitest";
 
@@ -37,10 +38,12 @@ const CLOCKWISE_LOOP_BELT_POSITIONS: ReadonlyArray<WorldPoint> = [
   { x: -450, y: 446 },
 ];
 
-const SHARED_WORLD_TRANSFORM = new Transform2D();
+const CONVEYOR_SIDES: readonly ConveyorSide[] = ["left", "right"];
+const CONVEYOR_SLOT_INDICES: readonly ConveyorSlotIndex[] = [0, 1, 2, 3];
+const SHARED_SLOT_POSITION = new Vec2();
 
 describe("clockwise loop persistence", () => {
-  it("tracks belt lane and carried-item transform changes in the dirty queue", () => {
+  it("keeps lane progress out of persisted diffs while still tracking carried-item transforms", () => {
     const engine = createEngine({
       manualRegisterEngine: true,
       config: {
@@ -70,14 +73,17 @@ describe("clockwise loop persistence", () => {
       ConveyorEntityMotionUtils.advanceConveyor(world, conveyor, null, 1);
       ConveyorEntityMotionUtils.syncConveyorTransforms(world, conveyor);
 
-      expect(engine.serialization.peekDiffCommands()).toEqual(expect.arrayContaining([
+      const diffCommands = engine.serialization.peekDiffCommands();
+
+      expect(diffCommands).not.toEqual(expect.arrayContaining([
         expect.objectContaining({
-          entityId: beltEntityId,
           componentType: "ConveyorBeltComponent",
           changes: expect.objectContaining({
-            leftProgress: [0.0625, 0, 0, 0],
+            leftProgress: expect.anything(),
           }),
         }),
+      ]));
+      expect(diffCommands).toEqual(expect.arrayContaining([
         expect.objectContaining({
           entityId: itemEntityId,
           componentType: "Transform2D",
@@ -96,18 +102,15 @@ describe("clockwise loop persistence", () => {
     }
   });
 
-  it("matches continuous loop motion on the first update after a refresh", async () => {
+  it("rebuilds carried-item visuals from slot occupancy during hydration without serialized lane progress", async () => {
     const continuousHarness = await createClockwiseLoopHarness();
 
     continuousHarness.stepUpdates(64);
 
     const loopBeltIds = findClockwiseLoopBeltIds(continuousHarness.world);
-    const trackedItemIds = findLoopItemIds(continuousHarness.world, loopBeltIds);
-    const serializedState = serializeSceneState(continuousHarness.engine.scene.context);
-
-    continuousHarness.stepUpdate();
-
-    const continuedPositions = readWorldPositions(continuousHarness.world, trackedItemIds);
+    const serializedState = stripConveyorLaneProgress(
+      serializeSceneState(continuousHarness.engine.scene.context),
+    );
 
     const refreshedHarness = await createClockwiseLoopHarness();
 
@@ -130,11 +133,7 @@ describe("clockwise loop persistence", () => {
       drainDiffCommands: () => refreshedHarness.engine.serialization.drainDiffCommands(),
     });
 
-    refreshedHarness.stepUpdate();
-
-    const refreshedPositions = readWorldPositions(refreshedHarness.world, trackedItemIds);
-
-    expect(refreshedPositions).toEqual(continuedPositions);
+    expectHydratedLoopVisualState(refreshedHarness.world, loopBeltIds);
   });
 });
 
@@ -176,32 +175,66 @@ function findClockwiseLoopBeltIds(world: UserWorld): EntityId[] {
   });
 }
 
-function findLoopItemIds(world: UserWorld, beltIds: readonly EntityId[]): EntityId[] {
-  const itemIds = new Set<EntityId>();
+function stripConveyorLaneProgress(sceneState: SerializedSceneState): SerializedSceneState {
+  return {
+    ...sceneState,
+    worlds: sceneState.worlds.map((sceneWorld) => ({
+      ...sceneWorld,
+      world: {
+        ...sceneWorld.world,
+        entities: sceneWorld.world.entities.map((entity) => ({
+          ...entity,
+          components: entity.components.map((component) => {
+            if (component.type !== "ConveyorBeltComponent") {
+              return component;
+            }
 
+            const componentData = { ...component.data } as Record<string, unknown>;
+            delete componentData.leftProgress;
+            delete componentData.rightProgress;
+
+            return {
+              ...component,
+              data: componentData,
+            };
+          }),
+        })),
+      },
+    })),
+  };
+}
+
+function expectHydratedLoopVisualState(world: UserWorld, beltIds: readonly EntityId[]): void {
   for (const beltId of beltIds) {
     const conveyor = world.require(beltId, ConveyorBeltComponent);
 
-    for (const entityId of [...conveyor.left, ...conveyor.right]) {
-      if (entityId !== null) {
-        itemIds.add(entityId);
+    expect(conveyor.leftProgress).toEqual([0, 0, 0, 0]);
+    expect(conveyor.rightProgress).toEqual([0, 0, 0, 0]);
+
+    for (const side of CONVEYOR_SIDES) {
+      const slots = side === "left" ? conveyor.left : conveyor.right;
+
+      for (const index of CONVEYOR_SLOT_INDICES) {
+        const entityId = slots[index];
+
+        if (entityId === null) {
+          continue;
+        }
+
+        const parent = world.require(entityId, Parent);
+        const transform = world.require(entityId, Transform2D);
+
+        expect(parent.entityId).toBe(beltId);
+
+        BeltItemRailsUtility.resolvePositionInto(conveyor.variant, side, index, 0, SHARED_SLOT_POSITION);
+
+        expect(transform.curr.pos.x).toBe(SHARED_SLOT_POSITION.x);
+        expect(transform.curr.pos.y).toBe(SHARED_SLOT_POSITION.y);
+        expect(transform.prev.pos.x).toBe(SHARED_SLOT_POSITION.x);
+        expect(transform.prev.pos.y).toBe(SHARED_SLOT_POSITION.y);
       }
     }
   }
-
-  return [...itemIds].sort((left, right) => left - right);
-}
-
-function readWorldPositions(world: UserWorld, itemIds: readonly EntityId[]) {
-  return itemIds.map((entityId) => {
-    expect(resolveWorldTransform2D(world, entityId, SHARED_WORLD_TRANSFORM)).toBe(true);
-
-    return {
-      entityId,
-      x: SHARED_WORLD_TRANSFORM.curr.pos.x,
-      y: SHARED_WORLD_TRANSFORM.curr.pos.y,
-    };
-  });
 }
 
 function toPositionKey(x: number, y: number): string {
