@@ -102,7 +102,7 @@ You are a very smart model, and very capable, but you have a limited context win
 ## Architecture principles
 
 - Prefer **colocation over hoisting** by default.
-  - Keep behavior next to the feature/factory that owns it (scene behavior in scenes, asset behavior in asset loaders, runtime behavior in systems/plugins).
+  - Keep behavior next to the feature/factory that owns it (if scene behavior in scenes, asset behavior in asset loaders, runtime behavior in systems/plugins).
   - Hoist to engine-level/global scope only when truly cross-cutting and shared across most scenes/features.
 - Entity-owned queries, mutations, and actions should live with the entity or feature that owns that behavior.
   - Prefer paths like `entities/<feature>/queries`, `entities/<feature>/mutations`, or `entities/<feature>/actions` over extracting small helpers into unrelated systems just to satisfy a test.
