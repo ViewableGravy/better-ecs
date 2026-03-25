@@ -34,7 +34,7 @@ export class InputManager {
    * Checks for relevant keybinds and updates build mode stat accordingly.
    */
   public static match(): void {
-    const { data } = fromContext(System("main:build-mode"));
+    const { data } = fromContext(System("main:build-mode-intent"));
     const input = fromContext(System("engine:input"));
 
     if (input.matchKeybind(InputManager.selectBelt)) {

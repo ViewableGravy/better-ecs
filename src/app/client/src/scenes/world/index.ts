@@ -12,8 +12,9 @@ import { System as LocalPlayerMovementIntent } from "@client/systems/core/local-
 import { System as MovementAuthority } from "@client/systems/core/movement";
 import { System as Persistence } from "@client/systems/core/persistence";
 import { System as PhysicsWorldSync } from "@client/systems/core/physics-world-sync";
-import { System as BuildModeSystem } from "@client/systems/world/build-mode";
+import { System as BuildModeIntentSystem } from "@client/systems/world/build-mode";
 import { System as BuildModeAuthoritySystem } from "@client/systems/world/build-mode-authority";
+import { System as BuildModeCommandSystem } from "@client/systems/world/build-mode-command";
 import { System as BuildModePresentationSystem } from "@client/systems/world/build-mode-presentation";
 import { System as ConveyorEntityMotion } from "@client/systems/world/conveyor-entity-motion";
 import { System as ConveyorMovement } from "@client/systems/world/conveyor-movement";
@@ -38,12 +39,19 @@ export const Scene = createContextScene("MainScene")({
   systems: [
     CommandAllocatorReset,
     FPSSystem,
+
+    // Intent Systems
     LocalPlayerMovementIntent,
+    BuildModeIntentSystem,
+    BuildModeCommandSystem,
+
+    // Authority Systems
     MovementAuthority,
     PhysicsWorldSync,
     ConveyorEntityMotion,
     ConveyorMovement,
     Collision,
+    BuildModeAuthoritySystem,
     CameraFollow,
     CameraZoom,
     PhysicsDebugSystem,
@@ -51,9 +59,7 @@ export const Scene = createContextScene("MainScene")({
     HouseContextSystem,
     HouseVisualsSystem,
     PortalSystem,
-    BuildModeSystem,
     BuildModePresentationSystem,
-    BuildModeAuthoritySystem,
     DebugOverlaySystem,
     Persistence,
   ],

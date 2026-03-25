@@ -14,6 +14,9 @@
       "path": "./src/engine"
     },
     {
+      "path": "./src/libs/commands"
+    },
+    {
       "path": "./src/libs/physics"
     },
     {

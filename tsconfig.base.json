@@ -20,6 +20,8 @@
       "@client/*": ["./src/app/client/src/*"],
       "@server": ["./src/app/server/src/main.ts"],
       "@server/*": ["./src/app/server/src/*"],
+      "@libs/commands": ["./src/libs/commands/src/index.ts"],
+      "@libs/commands/*": ["./src/libs/commands/src/*"],
       "@libs/fps": ["./src/libs/fps/src/index.ts"],
       "@libs/fps/*": ["./src/libs/fps/src/*"],
       "@libs/physics": ["./src/libs/physics/src/index.ts"],

@@ -2,6 +2,7 @@ import {
     CARDINAL_GRID_OFFSETS,
     type CardinalSide,
 } from "@client/systems/world/build-mode/grid-neighbor-query";
+import type { BuildModePlacementEndSide } from "@libs/commands/build-mode";
 
 export { CONVEYOR_SLOT_POSITIONS } from "@client/entities/transport-belt/core/slots";
 
@@ -9,7 +10,7 @@ export { CONVEYOR_SLOT_POSITIONS } from "@client/entities/transport-belt/core/sl
  *   TYPE DEFINITIONS
  **********************************************************************************************************/
 
-export type TransportBeltSide = CardinalSide;
+export type TransportBeltSide = BuildModePlacementEndSide & CardinalSide;
 
 export type TransportBeltFlow = readonly [start: TransportBeltSide, end: TransportBeltSide];
 

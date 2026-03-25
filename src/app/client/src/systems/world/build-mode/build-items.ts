@@ -3,12 +3,13 @@ import { boxPlacementDefinition } from "@client/systems/world/build-mode/specs/b
 import { landClaimPlacementDefinition } from "@client/systems/world/build-mode/specs/land-claim";
 import { transportBeltPlacementDefinition } from "@client/systems/world/build-mode/specs/transport-belt";
 import { wallPlacementDefinition } from "@client/systems/world/build-mode/specs/wall";
+import type { BuildModeItemType } from "@libs/commands/build-mode";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
  **********************************************************************************************************/
 
-export type BuildItemType = keyof typeof buildItemDefinitions;
+export type BuildItemType = BuildModeItemType;
 export type BuildItemDefinition = (typeof buildItemDefinitions)[BuildItemType];
 
 /**********************************************************************************************************
@@ -20,7 +21,7 @@ const buildItemDefinitions = {
   "land-claim": landClaimPlacementDefinition,
   "transport-belt": transportBeltPlacementDefinition,
   wall: wallPlacementDefinition,
-} as const;
+} as const satisfies Record<BuildItemType, unknown>;
 
 
 

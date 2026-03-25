@@ -8,7 +8,7 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "bun x tsc -p tsconfig.lib.json --emitDeclarationOnly",
+        "command": "rm -rf .types tsconfig.lib.tsbuildinfo && bun x tsc -p tsconfig.lib.json --emitDeclarationOnly --outDir .types --declarationDir .types",
         "cwd": "src/libs/spatial-contexts"
       },
       "inputs": ["default", "^default"]
@@ -17,7 +17,7 @@
       "continuous": true,
       "executor": "nx:run-commands",
       "options": {
-        "command": "bun x tsc -p tsconfig.lib.json --watch",
+        "command": "rm -rf .types tsconfig.lib.tsbuildinfo && bun x tsc -p tsconfig.lib.json --emitDeclarationOnly --outDir .types --declarationDir .types --watch",
         "cwd": "src/libs/spatial-contexts"
       }
     },

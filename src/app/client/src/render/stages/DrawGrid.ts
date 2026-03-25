@@ -52,7 +52,7 @@ export function drawGrid(
   queue: RenderQueue,
   frameAllocator: InternalFrameAllocator<EngineFrameAllocatorRegistry>,
 ): void {
-  const buildMode = fromContext(ContextSystem("main:build-mode"));
+  const buildMode = fromContext(ContextSystem("main:build-mode-intent"));
 
   if (buildMode && !buildMode.data.gridVisible) {
     return;

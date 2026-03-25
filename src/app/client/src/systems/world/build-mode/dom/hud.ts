@@ -52,7 +52,7 @@ export class HUDManager {
   }
 
   public static update() {
-    const { data } = fromContext(System("main:build-mode"));
+    const { data } = fromContext(System("main:build-mode-intent"));
 
     if (data.selectedItem !== HUDManager.#previouslySelectedItem) {
       this.node.style.background = data.selectedItem ? "#5a125699" : "#00000066";

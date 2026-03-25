@@ -18,7 +18,7 @@ import { type ContextId, SpatialContexts } from "@libs/spatial-contexts";
  **********************************************************************************************************/
 
 type ResolvedPlacement = NonNullable<ReturnType<typeof Placement.resolveSelection>>;
-type BuildModeSystemData = RegisteredSystems["main:build-mode"]["data"];
+type BuildModeIntentSystemData = RegisteredSystems["main:build-mode-intent"]["data"];
 
 type ActiveBuildModePlacement = {
   gridCoordinates: GridCoordinates;
@@ -37,7 +37,7 @@ export type BuildModePlacementTarget = {
 
 export function commitResolvedPlacement(
   resolvedPlacement: ResolvedPlacement,
-  data: BuildModeSystemData,
+  data: BuildModeIntentSystemData,
   renderVisibilityRole: RenderVisibilityRole,
 ): void {
   resolvedPlacement.commit.execute(renderVisibilityRole);
@@ -77,7 +77,7 @@ export function resolveBuildModePlacementTarget(
 export function resolveActivePlacement(
   engine: RegisteredEngine,
   worldPointer: MousePoint,
-  buildModeState: BuildModeSystemData,
+  buildModeState: BuildModeIntentSystemData,
 ): ActiveBuildModePlacement {
   const { gridCoordinates, placementTarget } = resolveBuildModePlacementTarget(engine, worldPointer);
   const resolvedPlacement = placementTarget.blocked || placementTarget.commitWorld === undefined

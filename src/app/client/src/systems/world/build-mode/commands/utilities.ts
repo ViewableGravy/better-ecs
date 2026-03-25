@@ -1,17 +1,17 @@
-import type { ClientCommand } from "@client/commands/types";
 import { CommandAllocator } from "@client/singletons/commandAllocator";
 import { supportsDragPlacement } from "@client/systems/world/build-mode/build-items";
 import type { BuildModeState } from "@client/systems/world/build-mode/const";
 import { BuildModeDragPlacement } from "@client/systems/world/build-mode/drag-placement";
 import type { GridCoordinates } from "@client/systems/world/build-mode/grid-singleton";
 import type { PlacementTargetResolution } from "@client/systems/world/build-mode/placement-target";
+import type { BuildModeCommand } from "@libs/commands/build-mode";
 
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
 
 export function emitBuildModeCommands(
-  commands: ClientCommand[],
+  commands: BuildModeCommand[],
   data: BuildModeState,
   gridCoordinates: GridCoordinates,
   placementTarget: PlacementTargetResolution,

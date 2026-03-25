@@ -1,4 +1,3 @@
-import type { ClientCommand } from "@client/commands/types";
 import type { TransportBeltSide } from "@client/entities/transport-belt/consts";
 import {
     type BuildItemType,
@@ -35,7 +34,6 @@ export type PlacementDragAxis = "horizontal" | "vertical";
 export type BuildModeState = {
   selectedItem: BuildItemType | null;
   gridVisible: boolean;
-  commands: ClientCommand[];
   pendingPlace: boolean;
   pendingDelete: boolean;
   placePointerActive: boolean;
@@ -50,7 +48,6 @@ export type BuildModeState = {
 export const buildModeStateDefault: BuildModeState = {
   selectedItem: null,
   gridVisible: false,
-  commands: [],
   pendingPlace: false,
   pendingDelete: false,
   placePointerActive: false,

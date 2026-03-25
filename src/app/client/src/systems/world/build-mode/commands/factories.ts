@@ -1,8 +1,8 @@
-import type { BuildModeDeleteCommand, BuildModePlaceCommand } from "@client/commands/types";
 import type { TransportBeltSide } from "@client/entities/transport-belt/consts";
 import type { BuildItemType } from "@client/systems/world/build-mode/build-items";
 import type { GridCoordinate } from "@client/systems/world/build-mode/grid-singleton";
 import { createPoolFactory, type PoolFactory } from "@engine";
+import type { BuildModeDeleteCommand, BuildModePlaceCommand } from "@libs/commands/build-mode";
 import type { ContextId } from "@libs/spatial-contexts";
 
 /**********************************************************************************************************

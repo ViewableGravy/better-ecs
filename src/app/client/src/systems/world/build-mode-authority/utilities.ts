@@ -1,21 +1,20 @@
-import type { ClientCommand } from "@client/commands/types";
 import { buildModeStateDefault, type BuildModeState } from "@client/systems/world/build-mode/const";
 import { BuildModeDragPlacement } from "@client/systems/world/build-mode/drag-placement";
 import type { GridCoordinate } from "@client/systems/world/build-mode/grid-singleton";
 import { Placement } from "@client/systems/world/build-mode/placement";
 import { resolvePlacementRenderVisibilityRole } from "@client/systems/world/build-mode/utils";
 import type { RegisteredEngine } from "@engine";
+import type { BuildModeCommand } from "@libs/commands/build-mode";
 import type { ContextId } from "@libs/spatial-contexts";
 import { SpatialContexts } from "@libs/spatial-contexts";
 
 const commandBuildModeState: BuildModeState = {
   ...buildModeStateDefault,
-  commands: [],
 };
 
 export function executeBuildModeCommands(
   engine: RegisteredEngine,
-  commands: readonly ClientCommand[],
+  commands: readonly BuildModeCommand[],
   buildModeState: BuildModeState,
 ): void {
   for (const command of commands) {
@@ -46,7 +45,7 @@ function executeDeleteCommand(
 
 function executePlaceCommand(
   engine: RegisteredEngine,
-  command: Extract<ClientCommand, { type: "build-mode:place" }>,
+  command: Extract<BuildModeCommand, { type: "build-mode:place" }>,
   buildModeState: BuildModeState,
 ): void {
   const manager = SpatialContexts.requireManager(engine.scene.context);

@@ -151,12 +151,11 @@ export class WorldTestHarness {
     worldY: number,
     overrides: Partial<BuildModeState> = {},
   ): boolean {
-    const buildModeState = this.engine.systems["main:build-mode"].data as BuildModeState;
+    const buildModeState = this.engine.systems["main:build-mode-intent"].data as BuildModeState;
     const placeableCountBefore = this.placeableCount();
 
     Object.assign(buildModeState, buildModeStateDefault, overrides, {
       selectedItem: itemType,
-      commands: buildModeState.commands,
       ghostEntityId: buildModeState.ghostEntityId,
       dragPlacedGridKeys: buildModeState.dragPlacedGridKeys,
     });
@@ -176,7 +175,7 @@ export class WorldTestHarness {
   }
 
   public deleteAt(worldX: number, worldY: number): void {
-    const buildModeState = this.engine.systems["main:build-mode"].data as BuildModeState;
+    const buildModeState = this.engine.systems["main:build-mode-intent"].data as BuildModeState;
 
     this.setPointerWorld(worldX, worldY);
     buildModeState.pendingDelete = true;

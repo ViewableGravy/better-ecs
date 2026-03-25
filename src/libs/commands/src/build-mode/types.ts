@@ -1,19 +1,23 @@
-import type { TransportBeltSide } from "@client/entities/transport-belt/consts";
-import type { BuildItemType } from "@client/systems/world/build-mode/build-items";
-import type { GridCoordinate } from "@client/systems/world/build-mode/grid-singleton";
-import type { ContextId } from "@libs/spatial-contexts";
+import type { ContextId } from "@libs/spatial-contexts/context-id";
+import type { Tagged } from "type-fest";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
  **********************************************************************************************************/
 
+export type GridCoordinate = Tagged<number, "GridCoordinate">;
+
+export type BuildModeItemType = "box" | "land-claim" | "transport-belt" | "wall";
+
+export type BuildModePlacementEndSide = "top" | "right" | "bottom" | "left";
+
 export type BuildModePlaceCommand = {
   type: "build-mode:place";
-  itemType: BuildItemType;
+  itemType: BuildModeItemType;
   contextId: ContextId;
   gridX: GridCoordinate;
   gridY: GridCoordinate;
-  placementEndSide: TransportBeltSide;
+  placementEndSide: BuildModePlacementEndSide;
 };
 
 export type BuildModeDeleteCommand = {
@@ -23,4 +27,4 @@ export type BuildModeDeleteCommand = {
   gridY: GridCoordinate;
 };
 
-export type ClientCommand = BuildModePlaceCommand | BuildModeDeleteCommand;
+export type BuildModeCommand = BuildModePlaceCommand | BuildModeDeleteCommand;

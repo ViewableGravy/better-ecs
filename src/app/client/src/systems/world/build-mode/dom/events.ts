@@ -13,11 +13,11 @@ export class BuildModeDomEvents {
   static #instance: BuildModeDomEvents | null = null;
 
   private readonly canvas: HTMLCanvasElement;
-  private readonly data: RegisteredSystems['main:build-mode']["data"];
+  private readonly data: RegisteredSystems["main:build-mode-intent"]["data"];
 
   private constructor() {
     this.canvas = fromContext(Engine).canvas;
-    this.data = fromContext(System("main:build-mode")).data;
+    this.data = fromContext(System("main:build-mode-intent")).data;
   }
 
   public static create(): Destroy {

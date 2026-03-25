@@ -20,7 +20,7 @@ export const System = createSystem("main:build-mode-presentation")({
     };
   },
   system() {
-    const { data } = fromContext(ContextSystem("main:build-mode"));
+    const { data } = fromContext(ContextSystem("main:build-mode-intent"));
     const engine = fromContext(Engine);
     const mouse = fromContext(Mouse);
     const rootWorld = fromContext(FromEngine.World);

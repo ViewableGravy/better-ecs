@@ -61,6 +61,11 @@ Band rules:
 
 Implementation: Move gameplay command schemas out of the client app and into a shared workspace library before the networking stage. Keep folders organized by feature rather than putting all commands into a single file.
 
+Current status:
+- Shared command library initialized at `src/libs/commands`.
+- Build-mode place/delete commands now import from the shared library instead of `src/app/client/src/commands/types.ts`.
+- The next command families should follow the same pattern rather than adding new app-local command types.
+
 Suggested layout:
 
 ```text
@@ -92,24 +97,23 @@ Things to consider:
 
 Implementation: Complete the split one system at a time. Each item below should preserve current gameplay while isolating the logic into the target band structure. This checklist is the handoff plan for future implementation agents.
 
-- [ ] `main:build-mode-intent`
+- [x] `main:build-mode-intent`
 	- Current source: `src/app/client/src/systems/world/build-mode/index.ts`
 	- Goal: read build-mode input and hovered placement state, then write build intent state only.
 	- Move out: command allocation and command emission.
 	- Keep local: selected item, pending place/delete flags, drag session state.
-	- Done when: this system no longer pushes commands directly.
+	- Current status: now input-only and renamed to `main:build-mode-intent`.
 
-- [ ] `main:build-mode-command`
+- [x] `main:build-mode-command`
 	- Current source: `src/app/client/src/systems/world/build-mode/commands/utilities.ts`
 	- Goal: consume build intent state and emit typed build commands into a command buffer.
 	- Move in: `emitBuildModeCommands(...)` and command allocator usage.
 	- Constraint: no placement commits, deletions, or world mutation.
-	- Done when: build-mode command generation is isolated from input capture.
+	- Current status: implemented in `src/app/client/src/systems/world/build-mode-command/index.ts` and now owns the scratch command buffer.
 
 - [x] `main:build-mode-authority`
 	- Current source: `src/app/client/src/systems/world/build-mode-authority/index.ts`
-	- Current status: already executes commands separately from presentation.
-	- Follow-up: switch imports to the shared command library once it exists.
+	- Current status: consumes `main:build-mode-command` output and shared command types from `src/libs/commands`.
 
 - [x] `main:build-mode-presentation`
 	- Current source: `src/app/client/src/systems/world/build-mode-presentation/index.ts`
