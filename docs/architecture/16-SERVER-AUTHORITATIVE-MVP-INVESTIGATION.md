@@ -13,6 +13,202 @@ Things to consider:
 - Make client-only systems read authoritative state instead of writing it.
 - Keep preview entities and overlays out of replicated gameplay state.
 
+### Target Band Ordering Inside A Scene
+
+Implementation: The client should be organized into explicit execution bands so that the future network port is mostly a matter of moving the authoritative band to the server and replacing it with prediction on the client later.
+
+```ts
+systems: [
+	// support
+	CommandAllocatorReset,
+	PhysicsWorldSync,
+
+	// intent
+	BuildModeIntent,
+	LocalPlayerMovementIntent,
+
+	// command
+	BuildModeCommand,
+	LocalPlayerMovementCommand,
+
+	// authoritative
+	PlayerMovementAuthority,
+	SpatialContextCollisionAuthority,
+	ConveyorEntityMotionAuthority,
+	ConveyorMovementAuthority,
+	PortalAuthority,
+	ContextFocusAuthority,
+	BuildModeAuthority,
+
+	// local presentation / adapters
+	CameraFollow,
+	CameraZoom,
+	BuildModePresentation,
+	HouseVisuals,
+	DebugOverlay,
+	Persistence,
+]
+```
+
+Band rules:
+- `support` systems prepare deterministic runtime data for the current update and may run on client or server depending on the feature. They must not read local UI state.
+- `intent` systems read local input and local-only UI state, then write intent state only. They do not emit gameplay mutations.
+- `command` systems translate intent plus readable authoritative state into explicit typed command batches. They do not mutate gameplay state.
+- `authoritative` systems are the only systems allowed to mutate gameplay state that must later live on the server.
+- `local presentation / adapters` read authoritative state and local state to drive camera, ghost previews, HUD, overlays, debug tooling, and persistence adapters.
+
+### Shared Command Library Layout
+
+Implementation: Move gameplay command schemas out of the client app and into a shared workspace library before the networking stage. Keep folders organized by feature rather than putting all commands into a single file.
+
+Suggested layout:
+
+```text
+src/libs/commands/
+	src/
+		build-mode/
+			delete.ts
+			place.ts
+			index.ts
+		movement/
+			move.ts
+			index.ts
+		spatial-contexts/
+			portal-transition.ts
+			focus-change.ts
+			index.ts
+		conveyor/
+			index.ts
+		index.ts
+```
+
+Things to consider:
+- One file per logical command shape.
+- Each feature folder exports its command union and helper constructors/guards if needed.
+- Client intent/command systems and future server authoritative systems should both import from this shared library.
+- Avoid mixing transport schemas, input adapters, and server session code into the same files.
+
+### System Split Checklist
+
+Implementation: Complete the split one system at a time. Each item below should preserve current gameplay while isolating the logic into the target band structure. This checklist is the handoff plan for future implementation agents.
+
+- [ ] `main:build-mode-intent`
+	- Current source: `src/app/client/src/systems/world/build-mode/index.ts`
+	- Goal: read build-mode input and hovered placement state, then write build intent state only.
+	- Move out: command allocation and command emission.
+	- Keep local: selected item, pending place/delete flags, drag session state.
+	- Done when: this system no longer pushes commands directly.
+
+- [ ] `main:build-mode-command`
+	- Current source: `src/app/client/src/systems/world/build-mode/commands/utilities.ts`
+	- Goal: consume build intent state and emit typed build commands into a command buffer.
+	- Move in: `emitBuildModeCommands(...)` and command allocator usage.
+	- Constraint: no placement commits, deletions, or world mutation.
+	- Done when: build-mode command generation is isolated from input capture.
+
+- [x] `main:build-mode-authority`
+	- Current source: `src/app/client/src/systems/world/build-mode-authority/index.ts`
+	- Current status: already executes commands separately from presentation.
+	- Follow-up: switch imports to the shared command library once it exists.
+
+- [x] `main:build-mode-presentation`
+	- Current source: `src/app/client/src/systems/world/build-mode-presentation/index.ts`
+	- Current status: correctly local-only.
+	- Follow-up: keep ghost preview, HUD, and DOM wiring out of authoritative code.
+
+- [x] `main:local-player-movement-intent`
+	- Current source: `src/app/client/src/systems/core/local-player-movement-intent/index.ts`
+	- Current status: already isolates local keyboard state into intent axes.
+	- Follow-up: keep this system input-only.
+
+- [ ] `main:local-player-movement-command`
+	- Current source: new system; extract from the current movement authority flow.
+	- Goal: translate local movement intent into explicit movement commands.
+	- Constraint: do not mutate `Transform2D`, animation state, or physics state here.
+	- Done when: movement command generation is separate from transform mutation.
+
+- [ ] `main:player-movement-authority`
+	- Current source: `src/app/client/src/systems/core/movement/index.ts`
+	- Goal: consume movement commands and apply authoritative transform + animation updates.
+	- Move out: any local input reading.
+	- Constraint: keep deterministic update behavior and preserve current player animation output.
+	- Done when: the system can be moved to a server engine with no DOM or local-input dependency.
+
+- [ ] `main:spatial-contexts-collision-authority`
+	- Current source: `src/app/client/src/systems/world/scene-collision/index.ts`
+	- Goal: keep collision resolution in the authoritative band because it changes world transforms.
+	- Constraint: it must run after authoritative movement commands are applied and before portal/context checks.
+	- Done when: no local presentation system performs authoritative collision resolution.
+
+- [ ] `main:conveyor-entity-motion-authority`
+	- Current source: `src/app/client/src/systems/world/conveyor-entity-motion/index.ts`
+	- Goal: keep conveyor slot progression, transfers, and carried-item transform sync in the authoritative band.
+	- Constraint: do not fold local-only visuals back into serializable lane state.
+	- Done when: the system depends only on authoritative belt state, not local UI or preview state.
+
+- [ ] `main:conveyor-movement-authority`
+	- Current source: `src/app/client/src/systems/world/conveyor-movement/index.ts`
+	- Goal: keep belt-driven actor movement authoritative because it mutates player transforms.
+	- Constraint: order it after conveyor entity motion and before collision/portal resolution if the player can be pushed into new contacts.
+	- Done when: player conveyor push is no longer mixed with local input concerns.
+
+- [ ] `main:spatial-contexts-portals-authority`
+	- Current source: `src/app/client/src/systems/world/portal/index.ts`
+	- Goal: keep teleports authoritative because they mutate player location and world membership.
+	- Constraint: the future server port must be able to execute this without browser globals.
+	- Done when: portal activation depends only on authoritative world/query state.
+
+- [ ] `main:context-focus-authority`
+	- Current source: `src/app/client/src/systems/world/house-transition/index.ts`
+	- Goal: keep context membership and player world moves authoritative.
+	- Constraint: split blend-only presentation from actual world switching if that is still mixed.
+	- Done when: entering or leaving a context is not driven by local-only visual code.
+
+- [ ] `main:physics-world-sync`
+	- Current source: `src/app/client/src/systems/core/physics-world-sync/index.ts`
+	- Goal: classify this as a support system and verify it is safe to run before authoritative collision/portal systems.
+	- Constraint: do not let it consume local-only UI state.
+	- Done when: its place in the final ordering is explicit and documented in the scene.
+
+- [x] `main:camera-follow`
+	- Current source: `src/app/client/src/systems/core/camera-follow/index.ts`
+	- Current status: local-only presentation system.
+	- Follow-up: keep it after authoritative movement and context switching.
+
+- [x] `main:camera-zoom`
+	- Current source: `src/app/client/src/systems/core/camera-zoom/index.ts`
+	- Current status: local-only presentation system.
+	- Follow-up: keep it client-only.
+
+- [x] `main:house-visuals`
+	- Current source: `src/app/client/src/systems/world/house-visuals/index.ts`
+	- Current status: local-only presentation system.
+	- Follow-up: ensure it reads context state instead of mutating authoritative gameplay state.
+
+- [x] `main:debug-overlay`
+	- Current source: `src/app/client/src/systems/world/debug-overlay/index.ts`
+	- Current status: local-only presentation/debug system.
+	- Follow-up: keep debug entities out of replicated gameplay state.
+
+- [x] `sync:serialization`
+	- Current source: `src/libs/state-sync/src/system.ts`
+	- Current status: adapter layer, not gameplay authority.
+	- Follow-up: preserve this as an adapter band and later add a separate networking adapter rather than merging replication into gameplay systems.
+
+### Recommended Implementation Order
+
+Implementation: Do the splits in the order below so each later step depends on already-isolated behavior rather than forcing repeated rewrites.
+
+1. Build-mode intent/command separation.
+2. Movement command extraction.
+3. Movement authority isolation.
+4. Collision ordering around authoritative movement.
+5. Conveyor authority isolation.
+6. Conveyor-driven player movement ordering.
+7. Portal authority isolation.
+8. Context-focus authority isolation.
+9. Final scene ordering cleanup into explicit support / intent / command / authoritative / local bands.
+
 ## 2. Build The Test Harness Before Networking
 
 Implementation: Create a deterministic harness scene and shared test utilities before server work starts. Tests should be able to boot a known world, drive input, query entities and components, and assert placement, deletion, movement, collision, and camera behavior. This harness is required for the system split, and it must remain the foundation for later snapshot, diff, and multiplayer verification.

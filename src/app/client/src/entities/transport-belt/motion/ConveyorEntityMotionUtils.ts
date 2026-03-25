@@ -384,7 +384,8 @@ export class ConveyorEntityMotionUtils {
   ): void {
     const nextConveyorEntityId = nextConveyor?.attachedEntityId;
 
-    if (nextConveyorEntityId === null
+    if (nextConveyor === null
+      || nextConveyorEntityId === null
       || nextConveyorEntityId === undefined
       || nextSlots === null
       || nextProgress === null
@@ -426,7 +427,6 @@ export class ConveyorEntityMotionUtils {
     }
 
     const targetSlots = getConveyorLaneSlots(targetConveyor, targetLane);
-    const targetProgress = getConveyorLaneProgress(targetConveyor, targetLane);
 
     if (targetSlots[destinationIndex] !== null) {
       setConveyorLaneStoredProgress(sourceConveyor, sourceLane, 3, 1);

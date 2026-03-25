@@ -4,13 +4,26 @@ import { TransportBeltConnectionUtils } from "@client/entities/transport-belt";
 import { BeltItemRailsUtility } from "@client/entities/transport-belt/motion/BeltItemRailsUtility";
 import { Vec2, type EntityId, type UserWorld } from "@engine";
 import { Transform2D } from "@engine/components";
-import type { SceneStateSyncLoadContext } from "@libs/state-sync";
+
+/**********************************************************************************************************
+ *   TYPE DEFINITIONS
+ **********************************************************************************************************/
+
+type PersistedTransportBeltReconnectContext = {
+  engine: {
+    scene: {
+      context: {
+        worlds: Iterable<UserWorld>;
+      };
+    };
+  };
+};
 
 const CONVEYOR_SIDES: readonly ConveyorSide[] = ["left", "right"];
 const CONVEYOR_SLOT_INDICES: readonly ConveyorSlotIndex[] = [0, 1, 2, 3];
 const SHARED_BELT_SLOT_POSITION = new Vec2();
 
-export function reconnectPersistedTransportBelts(context: SceneStateSyncLoadContext): void {
+export function reconnectPersistedTransportBelts(context: PersistedTransportBeltReconnectContext): void {
   for (const world of context.engine.scene.context.worlds) {
     const beltEntityIds = [...world.query(ConveyorBeltComponent)];
 

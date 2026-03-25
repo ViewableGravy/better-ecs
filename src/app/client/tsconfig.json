@@ -14,22 +14,22 @@
   "exclude": ["e2e/**/*"],
   "references": [
     {
-      "path": "../../utils"
+      "path": "../../utils/tsconfig.lib.json"
     },
     {
-      "path": "../../libs/spatial-contexts"
+      "path": "../../libs/spatial-contexts/tsconfig.lib.json"
     },
     {
-      "path": "../../libs/physics"
+      "path": "../../libs/physics/tsconfig.lib.json"
     },
     {
-      "path": "../../../vite/engine-hmr"
+      "path": "../../../vite/engine-hmr/tsconfig.lib.json"
     },
     {
-      "path": "../../libs/fps"
+      "path": "../../libs/fps/tsconfig.lib.json"
     },
     {
-      "path": "../../engine"
+      "path": "../../engine/tsconfig.lib.json"
     }
   ]
 }

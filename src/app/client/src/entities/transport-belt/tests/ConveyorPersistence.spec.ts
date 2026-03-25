@@ -6,7 +6,7 @@ import { sceneConfig } from "@client/scenes/world/const";
 import { defineOverworldContext } from "@client/scenes/world/contexts/define-overworld-context";
 import { reconnectPersistedTransportBelts } from "@client/systems/core/persistence/utilities";
 import { System as ConveyorEntityMotion } from "@client/systems/world/conveyor-entity-motion";
-import { createEngine, EngineTestHarness, Vec2, type EntityId, type UserWorld } from "@engine";
+import { createEngine, EngineTestHarness, Vec2, type EntityId, type SerializedObject, type UserWorld } from "@engine";
 import { Parent, Transform2D } from "@engine/components";
 import { registerEngine, unregisterEngine } from "@engine/core/global-engine";
 import { createContextScene } from "@libs/spatial-contexts";
@@ -121,16 +121,6 @@ describe("clockwise loop persistence", () => {
     );
     reconnectPersistedTransportBelts({
       engine: refreshedHarness.engine,
-      scene: refreshedHarness.engine.scene.context,
-      serializeSceneState: () => serializeSceneState(refreshedHarness.engine.scene.context),
-      applySceneState: (sceneState) => {
-        applySceneStateToEngine(
-          refreshedHarness.engine.scene.context,
-          refreshedHarness.engine.serialization,
-          sceneState,
-        );
-      },
-      drainDiffCommands: () => refreshedHarness.engine.serialization.drainDiffCommands(),
     });
 
     expectHydratedLoopVisualState(refreshedHarness.world, loopBeltIds);
@@ -189,7 +179,7 @@ function stripConveyorLaneProgress(sceneState: SerializedSceneState): Serialized
               return component;
             }
 
-            const componentData = { ...component.data } as Record<string, unknown>;
+            const componentData: SerializedObject = { ...component.data };
             delete componentData.leftProgress;
             delete componentData.rightProgress;
 

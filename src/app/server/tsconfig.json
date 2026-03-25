@@ -12,7 +12,7 @@
   "references": [
     // UPDATED BY NX SYNC
     {
-      "path": "../../engine"
+        "path": "../../engine/tsconfig.lib.json"
     }
   ]
 }
