@@ -1,7 +1,9 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "./.types",
+    "outDir": "./dist/types",
+    "declarationDir": "./dist/types",
+    "tsBuildInfoFile": "./dist/tsconfig.lib.tsbuildinfo",
     "rootDir": "./src",
     "lib": ["DOM", "ES2022"],
     "jsx": "react-jsx",
@@ -10,13 +12,12 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "emitDeclarationOnly": false,
+    "emitDeclarationOnly": true,
     "noEmit": false,
     "typeRoots": ["../../node_modules/@types"]
   },
   "include": ["src/**/*"],
   "exclude": [
-    ".types",
     "dist",
     "node_modules",
     "**/*.spec.ts",

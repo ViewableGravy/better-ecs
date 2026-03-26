@@ -51,27 +51,36 @@ You are a very smart model, and very capable, but you have a limited context win
 
 ## Import and alias conventions
 
+- Always use top-level workspace aliases for imports. Relative imports are prohibited for both cross-project and same-project source code.
+- Prefer these aliases over `./` or `../`: `@client/*`, `@server/*`, `@engine/*`, `@utils/*`, `@libs/*`, `@repo/networking/*`, `@hmr/*`, and engine-local `@ui/*`.
+- If a needed alias does not exist yet, add it to the top-level TypeScript path configuration before writing the import.
+
 ### Workspace aliases (`tsconfig.base.json`)
 
-- `@repo/client` → `apps/client/src/main.ts`
-- `@repo/server` → `apps/server/src/main.ts`
-- `@repo/engine` → `packages/engine/src/index.ts`
-- `@repo/fps` → `packages/features/fps/src/index.ts`
-- `@repo/hmr` → `packages/tooling/hmr/src/index.ts`
-- `@repo/physics` → `packages/foundation/physics/src/index.ts`
-- `@repo/spatial-contexts` → `packages/foundation/spatial-contexts/src/index.ts`
-- `@repo/utils` → `packages/utils/src/index.ts`
+- `@client` / `@client/*` → `src/app/client/src`
+- `@server` / `@server/*` → `src/app/server/src`
+- `@engine` / `@engine/*` → `src/engine/src`
+- `@utils` / `@utils/*` → `src/utils/src`
+- `@libs/commands` / `@libs/commands/*` → `src/libs/commands/src`
+- `@libs/fps` / `@libs/fps/*` → `src/libs/fps/src`
+- `@libs/networking` / `@libs/networking/*` → `src/libs/networking/src`
+- `@libs/physics` / `@libs/physics/*` → `src/libs/physics/src`
+- `@libs/spatial-contexts` / `@libs/spatial-contexts/*` → `src/libs/spatial-contexts/src`
+- `@libs/state-sync` / `@libs/state-sync/*` → `src/libs/state-sync/src`
+- `@repo/networking` / `@repo/networking/*` → `src/libs/networking/src`
+- `@hmr` / `@hmr/*` → `vite/engine-hmr`
 
 ### App/package-local aliases
 
-- Client app TS alias: `@/*` → `apps/client/src/*`.
-- Engine package Vite aliases:
-  - `@ui` → `packages/engine/src/ui`
-  - `@/<path>` rewritten to `@repo/engine/<path>` in engine library build.
+- Engine package aliases:
+  - `@ui` / `@ui/*` → `src/engine/src/ui`
 
 ## Core coding standards
 
 - Always prefer guard clauses over nested/else statements.
+- Prefer returning the final expression directly instead of ending a block with a standalone `return` when no additional work follows.
+  - Prefer `return myFunc()` over `myFunc(); return;`
+  - If the function result should be discarded, prefer `return void myFunc()`
 - Prefer lines around 115 characters when readability stays good; do not wrap shorter lines just to satisfy a narrower limit.
 - Always ensure strict type safety.
   - Never use `any`, `as` casts, or non-null assertions (`!`) unless there is no viable alternative.
@@ -120,6 +129,9 @@ You are a very smart model, and very capable, but you have a limited context win
 
 - Assume dev server is already running on port `3000`; only start it if needed.
 - Always verify with tools (types/lint/tests), never assume correctness.
+- Never consider a change complete without a full workspace typecheck.
+  - Minimum bar: `bun x nx run-many -t typecheck --all --outputStyle=static --nxBail`
+  - This applies even when the touched code appears isolated, and it includes test/spec TypeScript projects.
 - Use `bun` for installs, scripts, and tests (unless package-local vitest workflow is required).
 - Use `nx` for task orchestration and package bootstrapping.
 - Do not write files outside this repository.
@@ -142,7 +154,7 @@ You are a very smart model, and very capable, but you have a limited context win
 1. Install: `bun install`
 2. Explore: `bun x nx show projects`
 3. Build: `bun run build` (or targeted `bun x nx run <project>:build`)
-4. Verify: `bun run lint`, `bun test`, `bun x nx run-many --target=typecheck`
+4. Verify: `bun run lint`, `bun test`, `bun x nx run-many --target=typecheck`, and before handoff run `bun x nx run-many -t typecheck --all --outputStyle=static --nxBail`
 
 ## Naming conventions (initial)
 

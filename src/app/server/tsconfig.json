@@ -13,6 +13,7 @@
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "noEmit": true,
+    "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
     "skipLibCheck": true,
     "composite": false,
     "strict": true,
@@ -45,6 +46,12 @@
       "@libs/fps/*": [
         "../../libs/fps/src/*"
       ],
+      "@libs/networking": [
+        "../../libs/networking/src/index.ts"
+      ],
+      "@libs/networking/*": [
+        "../../libs/networking/src/*"
+      ],
       "@libs/physics": [
         "../../libs/physics/src/index.ts"
       ],
@@ -74,6 +81,18 @@
       ],
       "@engine/*": [
         "../../engine/src/*"
+      ],
+      "@hmr": [
+        "../../../vite/engine-hmr/index.ts"
+      ],
+      "@hmr/*": [
+        "../../../vite/engine-hmr/*"
+      ],
+      "@repo/networking": [
+        "../../libs/networking/src/index.ts"
+      ],
+      "@repo/networking/*": [
+        "../../libs/networking/src/*"
       ]
     }
   },
@@ -83,6 +102,12 @@
     "src/**/*.d.ts"
   ],
   "references": [
+    {
+      "path": "../../engine/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/networking/tsconfig.lib.json"
+    },
     {
       "path": "../../utils/tsconfig.lib.json"
     }

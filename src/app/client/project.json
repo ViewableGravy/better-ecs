@@ -33,13 +33,13 @@
         "cwd": "."
       },
       "inputs": ["default", "^default"],
-      "outputs": ["{workspaceRoot}/dist"]
+      "outputs": ["{workspaceRoot}/src/app/client/dist"]
     },
     "clean": {
       "executor": "nx:run-commands",
       "options": {
         "command": "rm -rf dist",
-        "cwd": "."
+        "cwd": "src/app/client"
       }
     },
     "preview": {

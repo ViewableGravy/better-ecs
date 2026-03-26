@@ -8,6 +8,8 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "noPropertyAccessFromIndexSignature": true,
+    "noEmit": true,
+    "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
     "lib": ["DOM", "ESNext"]
   },
   "files": [],

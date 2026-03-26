@@ -1,6 +1,6 @@
 import invariant from "tiny-invariant";
 
-import { MultiplayerServerRuntime } from "./runtime/MultiplayerServerRuntime";
+import { MultiplayerServerRuntime } from "@server/runtime/MultiplayerServerRuntime";
 
 /**********************************************************************************************************
  *   COMPONENT START

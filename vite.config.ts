@@ -49,6 +49,6 @@ export default defineConfig({
   },
   build: {
     target: "es2022",
-    outDir: resolve(__dirname, "dist"),
+    outDir: resolve(__dirname, "src/app/client/dist"),
   },
 });

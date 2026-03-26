@@ -1,0 +1,28 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist/types",
+    "declarationDir": "./dist/types",
+    "tsBuildInfoFile": "./dist/tsconfig.lib.tsbuildinfo",
+    "rootDir": "./src",
+    "lib": ["DOM", "ESNext"],
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "emitDeclarationOnly": true,
+    "noEmit": false,
+    "skipLibCheck": true,
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["dist", "**/*.spec.ts", "**/*.test.ts"],
+  "references": [
+    {
+      "path": "../../engine/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/state-sync/tsconfig.lib.json"
+    }
+  ]
+}

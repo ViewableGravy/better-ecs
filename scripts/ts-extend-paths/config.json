@@ -1,6 +1,7 @@
 {
   "base": "./tsconfig.base.json",
   "paths": {
+    "tsconfig.json": [],
     "src/app/server/tsconfig.json": [],
     "src/engine/tsconfig.json": [
       {

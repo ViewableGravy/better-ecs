@@ -8,9 +8,10 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "bun x tsc -p tsconfig.lib.json --emitDeclarationOnly",
+        "command": "rm -rf dist && bun x tsc -p tsconfig.lib.json",
         "cwd": "src/libs/physics"
       },
+      "outputs": ["{projectRoot}/dist"],
       "inputs": ["default", "^default"]
     },
     "build:watch": {
@@ -24,7 +25,7 @@
     "clean": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "rm -rf .types dist tsconfig.lib.tsbuildinfo",
+        "command": "rm -rf dist",
         "cwd": "src/libs/physics"
       }
     },

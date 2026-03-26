@@ -8,23 +8,24 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "rm -rf .types tsconfig.lib.tsbuildinfo && bun x tsc -p tsconfig.lib.json --emitDeclarationOnly --outDir .types --declarationDir .types",
+        "command": "rm -rf dist && bun x tsc -p tsconfig.lib.json",
         "cwd": "src/libs/spatial-contexts"
       },
+      "outputs": ["{projectRoot}/dist"],
       "inputs": ["default", "^default"]
     },
     "build:watch": {
       "continuous": true,
       "executor": "nx:run-commands",
       "options": {
-        "command": "rm -rf .types tsconfig.lib.tsbuildinfo && bun x tsc -p tsconfig.lib.json --emitDeclarationOnly --outDir .types --declarationDir .types --watch",
+        "command": "bun x tsc -p tsconfig.lib.json --watch",
         "cwd": "src/libs/spatial-contexts"
       }
     },
     "clean": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "rm -rf .types dist tsconfig.lib.tsbuildinfo",
+        "command": "rm -rf dist",
         "cwd": "src/libs/spatial-contexts"
       }
     },

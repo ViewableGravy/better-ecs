@@ -1,0 +1,53 @@
+{
+  "name": "networking",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "src/libs/networking/src",
+  "projectType": "library",
+  "tags": ["type:foundation", "domain:networking"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rm -rf dist && bun x tsc -p tsconfig.lib.json",
+        "cwd": "src/libs/networking"
+      },
+      "outputs": ["{projectRoot}/dist"]
+    },
+    "build:watch": {
+      "continuous": true,
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun x tsc -p tsconfig.lib.json --watch",
+        "cwd": "src/libs/networking"
+      }
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rm -rf dist",
+        "cwd": "src/libs/networking"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun x eslint .",
+        "cwd": "src/libs/networking"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun x tsc --noEmit",
+        "cwd": "src/libs/networking"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun x vitest run",
+        "cwd": "src/libs/networking"
+      }
+    }
+  }
+}

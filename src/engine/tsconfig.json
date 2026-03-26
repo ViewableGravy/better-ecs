@@ -5,6 +5,8 @@
       "DOM",
       "ES2022"
     ],
+    "noEmit": true,
+    "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
     "jsx": "react-jsx",
     "skipLibCheck": true,
     "typeRoots": [
@@ -35,6 +37,12 @@
       "@libs/fps/*": [
         "../libs/fps/src/*"
       ],
+      "@libs/networking": [
+        "../libs/networking/src/index.ts"
+      ],
+      "@libs/networking/*": [
+        "../libs/networking/src/*"
+      ],
       "@libs/physics": [
         "../libs/physics/src/index.ts"
       ],
@@ -64,6 +72,18 @@
       ],
       "@engine/*": [
         "./src/*"
+      ],
+      "@hmr": [
+        "../../vite/engine-hmr/index.ts"
+      ],
+      "@hmr/*": [
+        "../../vite/engine-hmr/*"
+      ],
+      "@repo/networking": [
+        "../libs/networking/src/index.ts"
+      ],
+      "@repo/networking/*": [
+        "../libs/networking/src/*"
       ],
       "@ui": [
         "./src/ui/index.tsx"

@@ -1,7 +1,9 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "./.types",
+    "outDir": "./dist/types",
+    "declarationDir": "./dist/types",
+    "tsBuildInfoFile": "./dist/tsconfig.lib.tsbuildinfo",
     "rootDir": ".",
     "lib": ["DOM", "ESNext"],
     "allowImportingTsExtensions": true,
@@ -10,9 +12,10 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
+    "emitDeclarationOnly": true,
     "noEmit": false,
     "skipLibCheck": true
   },
   "include": ["**/*"],
-  "exclude": [".types", "**/*.spec.ts", "**/*.test.ts"]
+  "exclude": ["dist", "**/*.spec.ts", "**/*.test.ts"]
 }

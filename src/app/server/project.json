@@ -8,7 +8,7 @@
     "dev": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "bun --watch src/main.ts",
+        "command": "bun --tsconfig-override ../../../tsconfig.json --watch src/main.ts",
         "cwd": "src/app/server"
       }
     },
@@ -45,7 +45,7 @@
     "start": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "bun src/main.ts",
+        "command": "bun --tsconfig-override ../../../tsconfig.json src/main.ts",
         "cwd": "src/app/server"
       }
     },

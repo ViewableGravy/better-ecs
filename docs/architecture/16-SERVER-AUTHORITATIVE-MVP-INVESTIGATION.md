@@ -249,7 +249,7 @@ Things to consider:
 ## 5. Run The Backend In Bun Through One Dev Entry Point
 
 Current status:
-- In progress. The repository now boots a Bun-native authoritative server entry in `src/app/server`, exposes `/multiplayer`, `/health`, and `/snapshot`, and proxies those routes through the Vite dev server. The next server step is replacing the bootstrap snapshot/diff scaffold with real command ingestion and replication flow.
+- Complete for the MVP scaffold. The repository now boots a Bun-native authoritative server entry in `src/app/server`, proxies `/multiplayer`, `/health`, and `/snapshot` through Vite, and the websocket path is backed by a real networking adapter that sends scene snapshots, command acks, and live diff batches.
 
 Implementation: Run the server in `src/app/server` using Bun-native HTTP and websocket APIs. Frontend development should continue through Vite, but websocket traffic should be proxied through the same origin so the client connects to `/multiplayer`. The repository should start the full stack from one top-level `bun dev`, with Bun watch mode reloading the backend and Vite reloading the frontend.
 
@@ -261,7 +261,7 @@ Things to consider:
 ## 6. Move Authoritative Simulation To The Server
 
 Current status:
-- Not started yet. The Bun server entry point and websocket route are now in place, but the authoritative engine still needs to move behind that transport layer.
+- In progress. `src/app/server` now boots a headless authoritative engine in a dedicated network-demo scene, runs a scene-level networking system that drains the engine dirty queue, and accepts typed movement commands over Bun websockets. The remaining work is moving the actual world scene and client adapter flow onto this runtime instead of the demo scene.
 
 Implementation: Boot a headless engine on the server and move authoritative systems there. The server must own player entities, transforms, placement results, deletion, collisions, and conveyor outcomes. The client must stop mutating authoritative components directly and instead render replicated state coming from the server.
 
@@ -283,6 +283,9 @@ Things to consider:
 - Prevent replayed state application from generating new outgoing commands.
 
 ## 8. Hydrate A Snapshot Before Applying Live Diffs
+
+Current status:
+- In progress. The networking adapter now versions snapshots and diff batches and sends a full snapshot on connect before later live diffs. The remaining work is wiring that hydration queue into the real client app so the main world scene uses the same baseline-first flow.
 
 Implementation: On connection, the server should send a full snapshot and baseline version, then continue sending live diff batches. The client should queue diffs during hydration, apply the snapshot first, replay queued diffs in order, and only then switch to live replication. This flow should be correct before multiplayer is added.
 
