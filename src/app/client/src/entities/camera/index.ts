@@ -1,7 +1,7 @@
-import type { UserWorld } from "@engine";
+import type { EntityId, UserWorld } from "@engine";
 import { Camera, Debug, Transform2D } from "@engine/components";
 
-export function spawnCamera(world: UserWorld): number {
+export function spawnCamera(world: UserWorld): EntityId<Camera> {
   const cameraEntity = world.create();
   world.add(cameraEntity, new Transform2D(0, 0));
   const camera = new Camera("orthographic", 300); // orthoSize of 300 world units
@@ -9,5 +9,5 @@ export function spawnCamera(world: UserWorld): number {
   world.add(cameraEntity, camera);
   world.add(cameraEntity, new Debug("camera"));
 
-  return cameraEntity;
+  return cameraEntity as EntityId<Camera>;
 }

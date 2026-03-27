@@ -1,6 +1,7 @@
 import { Loader } from "@client/assets";
 import { createAppEngineLoadingOverlay } from "@client/overlays/create-app-engine-overlays";
 import { Render } from "@client/render";
+import { Scene as AuthoritativeNetworkingScene } from "@client/scenes/authoritative-networking";
 import { Scene as E2eScene } from "@client/scenes/e2e";
 import { Scene as MainScene } from "@client/scenes/world";
 import { System as Initialize } from "@client/systems/core/initialisation";
@@ -19,6 +20,7 @@ export const createAppEngine = () => {
     render: Render,
     scenes: [
       MainScene,
+      AuthoritativeNetworkingScene,
       E2eScene,
     ],
     config: {

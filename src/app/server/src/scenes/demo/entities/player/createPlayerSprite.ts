@@ -1,0 +1,63 @@
+import { AnimatedSprite } from "@engine/components";
+import type { PlayerAnimationState, PlayerDirection } from "@server/scenes/demo/components/PlayerComponent";
+
+type PlayerFrameIndex = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22;
+type PlayerSpriteSheetId = "player-idle" | "player-moving";
+type PlayerAnimationAssetId = `${PlayerSpriteSheetId}:${PlayerDirection}_${PlayerFrameIndex}`;
+
+const PLAYER_FRAME_INDICES: readonly PlayerFrameIndex[] = [
+  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+  12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
+];
+
+const PLAYER_SHEET_BY_STATE: Record<PlayerAnimationState, PlayerSpriteSheetId> = {
+  idle: "player-idle",
+  moving: "player-moving",
+};
+
+const PLAYER_PLAYBACK_RATE_BY_STATE: Record<PlayerAnimationState, number> = {
+  idle: 0.15,
+  moving: 0.5,
+};
+
+const PLAYER_SPRITE_WIDTH = 35;
+const PLAYER_SPRITE_HEIGHT = 35;
+const PLAYER_Z_BASE = 0.31;
+const PLAYER_Z_PER_WORLD_Y = 0.000001;
+const PLAYER_DEPTH_SORT_LEEWAY = 2;
+
+export function createPlayerSprite(
+  animationState: PlayerAnimationState,
+  direction: PlayerDirection,
+  previousSprite?: AnimatedSprite,
+): AnimatedSprite {
+  const sprite = new AnimatedSprite({
+    assets: getPlayerAnimationFrames(animationState, direction),
+    width: PLAYER_SPRITE_WIDTH,
+    height: PLAYER_SPRITE_HEIGHT,
+    anchorY: 0.8,
+  });
+
+  sprite.layer = previousSprite?.layer ?? 0;
+  sprite.zOrder = previousSprite?.zOrder ?? resolvePlayerSpriteZOrder(0);
+  sprite.playbackRate = PLAYER_PLAYBACK_RATE_BY_STATE[animationState];
+
+  return sprite;
+}
+
+export function resolvePlayerSpriteZOrder(worldY: number): number {
+  return PLAYER_Z_BASE + worldY * PLAYER_Z_PER_WORLD_Y;
+}
+
+export function resolvePlayerSpriteDepthSortY(playerBottomY: number): number {
+  return playerBottomY - PLAYER_DEPTH_SORT_LEEWAY;
+}
+
+function getPlayerAnimationFrames(
+  animationState: PlayerAnimationState,
+  direction: PlayerDirection,
+): readonly PlayerAnimationAssetId[] {
+  const sheetId = PLAYER_SHEET_BY_STATE[animationState];
+
+  return PLAYER_FRAME_INDICES.map((frame) => `${sheetId}:${direction}_${frame}` as PlayerAnimationAssetId);
+}

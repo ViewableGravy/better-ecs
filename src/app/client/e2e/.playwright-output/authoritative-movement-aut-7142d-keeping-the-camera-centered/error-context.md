@@ -1,0 +1,50 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - button "pause-engine" [ref=e7] [cursor=pointer]:
+        - img [ref=e8]
+      - button "toggle-quad-outlines" [ref=e11] [cursor=pointer]:
+        - img [ref=e12]
+      - button "toggle-culling-bounds" [ref=e14] [cursor=pointer]:
+        - img [ref=e15]
+      - button "Exit preview mode" [pressed] [ref=e18] [cursor=pointer]:
+        - img [ref=e19]
+      - button "save-world-state" [ref=e21] [cursor=pointer]:
+        - img [ref=e22]
+      - button "reset-scene-and-storage" [ref=e24] [cursor=pointer]:
+        - generic [ref=e25]: X
+      - button "reload-canvas-systems" [ref=e26] [cursor=pointer]:
+        - img [ref=e27]
+      - button "full-reload" [ref=e29] [cursor=pointer]:
+        - img [ref=e30]
+    - main [ref=e34]:
+      - generic [ref=e37]:
+        - button "Go to Main Scene" [ref=e38]
+        - button "Go to Authoritative Networking Scene" [active] [ref=e39]
+        - button "Go to E2E Scene" [ref=e40]
+  - generic: "Selected: none"
+  - generic [ref=e41]:
+    - generic [ref=e42]:
+      - generic [ref=e43]: Spatial Contexts Debug
+      - button "×" [ref=e44] [cursor=pointer]
+    - generic [ref=e45]:
+      - generic [ref=e46]: "focused:"
+      - generic [ref=e47]: default
+      - generic [ref=e48]: "stack:"
+      - generic [ref=e49]: default
+      - generic [ref=e50]: "visible:"
+      - generic [ref=e51]: default
+      - generic [ref=e52]: "player:"
+      - generic [ref=e53]: "-320.0, 0.0"
+      - generic [ref=e54]: "placeables:"
+      - generic [ref=e55]: default:0 | house_1:0 | dungeon_1:0
+      - generic [ref=e56]: "outsideAlpha:"
+      - generic [ref=e57]: "1.00"
+      - generic [ref=e58]: "roofAlpha:"
+      - generic [ref=e59]: "1.00"
+      - generic [ref=e60]: "interiorAlpha:"
+      - generic [ref=e61]: "1.00"
+```

@@ -74,6 +74,37 @@ describe("worldTransform2D", () => {
     expect(settledWorldTransform.curr.pos.x).toBe(10);
   });
 
+  it("refreshes cached world transforms when replicated updates keep curr and prev in sync", () => {
+    const world = new UserWorld(new World("scene"));
+
+    const root = world.create();
+    const child = world.create();
+
+    world.add(root, new Transform2D(10, 20));
+    world.add(child, new Transform2D(2, 3));
+    world.add(child, new Parent(root));
+
+    syncWorldTransform2D(world);
+
+    const rootTransform = world.require(root, Transform2D);
+    rootTransform.curr.pos.set(30, 40);
+    rootTransform.prev.pos.set(30, 40);
+
+    syncWorldTransform2D(world);
+
+    const rootWorldTransform = world.require(root, WorldTransform2D);
+    const childWorldTransform = world.require(child, WorldTransform2D);
+
+    expect(rootWorldTransform.curr.pos.x).toBe(30);
+    expect(rootWorldTransform.curr.pos.y).toBe(40);
+    expect(rootWorldTransform.prev.pos.x).toBe(30);
+    expect(rootWorldTransform.prev.pos.y).toBe(40);
+    expect(childWorldTransform.curr.pos.x).toBe(32);
+    expect(childWorldTransform.curr.pos.y).toBe(43);
+    expect(childWorldTransform.prev.pos.x).toBe(32);
+    expect(childWorldTransform.prev.pos.y).toBe(43);
+  });
+
   it("removes stale cached transforms when local transforms are removed", () => {
     const world = new UserWorld(new World("scene"));
 

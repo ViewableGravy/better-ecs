@@ -55,7 +55,7 @@ type AuthoritativeNetworkRuntimeOptions = {
   commandHandlers?: AuthoritativeCommandHandlers;
 };
 
-type AuthoritativeRuntimeEngine = Pick<AnyEngine, "scene" | "serialization">;
+type AuthoritativeRuntimeEngine = Pick<AnyEngine, "scene" | "serialization" | "systems">;
 
 /**********************************************************************************************************
  *   COMPONENT START

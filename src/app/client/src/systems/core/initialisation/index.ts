@@ -38,6 +38,7 @@ export const System = createInitializationSystem(() => {
   sceneSwitcherRoot.innerHTML = `
     <div style="position: absolute; top: 10px; left: 10px; z-index: 1000; display: flex; gap: 10px; flex-direction: column; align-items: flex-start;">
       <button id="to-main" style="padding: 4px 8px; font-size: 14px; background: white; border-radius: 5px; color: black;">Go to Main Scene</button>
+      <button id="to-authoritative-networking" style="padding: 4px 8px; font-size: 14px; background: white; border-radius: 5px; color: black;">Go to Authoritative Networking Scene</button>
       <button id="to-e2e" style="padding: 4px 8px; font-size: 14px; background: white; border-radius: 5px; color: black;">Go to E2E Scene</button>
     </div>
   `;
@@ -50,6 +51,10 @@ export const System = createInitializationSystem(() => {
 
   invariantById("to-main").onclick = () => {
     setScene("MainScene");
+  };
+
+  invariantById("to-authoritative-networking").onclick = () => {
+    setScene("AuthoritativeNetworkingScene");
   };
 
   return () => {

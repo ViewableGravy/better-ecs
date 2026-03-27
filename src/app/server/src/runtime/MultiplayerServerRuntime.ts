@@ -7,7 +7,7 @@ import {
     SERVER_UPDATE_DELTA_MS,
     SERVER_UPS,
 } from "@server/runtime/const";
-import { createNetworkDemoEngine } from "@server/scenes/network-demo/scene";
+import { createAuthoritativeDemoEngine } from "@server/scenes/demo/scene";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -34,20 +34,20 @@ type StatusPayload = {
 
 export class MultiplayerServerRuntime {
   readonly #startedAt = Date.now();
-  readonly #engine: Awaited<ReturnType<typeof createNetworkDemoEngine>>["engine"];
-  readonly #network: Awaited<ReturnType<typeof createNetworkDemoEngine>>["runtime"];
+  readonly #engine: Awaited<ReturnType<typeof createAuthoritativeDemoEngine>>["engine"];
+  readonly #network: Awaited<ReturnType<typeof createAuthoritativeDemoEngine>>["runtime"];
   readonly #sockets = new Map<string, Bun.ServerWebSocket<MultiplayerSocketData>>();
 
   #httpServer: Bun.Server<MultiplayerSocketData> | null = null;
   #tickInterval: ReturnType<typeof setInterval> | null = null;
 
-  private constructor(engine: Awaited<ReturnType<typeof createNetworkDemoEngine>>["engine"], network: Awaited<ReturnType<typeof createNetworkDemoEngine>>["runtime"]) {
+  private constructor(engine: Awaited<ReturnType<typeof createAuthoritativeDemoEngine>>["engine"], network: Awaited<ReturnType<typeof createAuthoritativeDemoEngine>>["runtime"]) {
     this.#engine = engine;
     this.#network = network;
   }
 
   public static async create(): Promise<MultiplayerServerRuntime> {
-    const { engine, runtime } = await createNetworkDemoEngine();
+    const { engine, runtime } = await createAuthoritativeDemoEngine();
     return new MultiplayerServerRuntime(engine, runtime);
   }
 

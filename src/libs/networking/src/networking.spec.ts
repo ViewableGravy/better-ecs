@@ -146,6 +146,7 @@ function createMockEngine(sceneName: string): {
   const defaultWorld = new World(sceneName);
   const scene = new SceneContext(sceneName, defaultWorld);
   const engine = {
+    systems: {},
     scene: {
       context: scene,
       activeSceneName: sceneName,

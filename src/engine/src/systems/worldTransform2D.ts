@@ -1,9 +1,9 @@
 import { Parent, Transform2D, WorldTransform2D } from "@engine/components";
 import { fromContext, Scene } from "@engine/context";
-import { composeWorldTransform2D, copyTransform2D } from "@engine/ecs/hierarchy";
-import type { EntityId } from "@engine/ecs/entity";
-import type { UserWorld } from "@engine/ecs/world";
 import { createSystem } from "@engine/core/system";
+import type { EntityId } from "@engine/ecs/entity";
+import { composeWorldTransform2D, copyTransform2D } from "@engine/ecs/hierarchy";
+import type { UserWorld } from "@engine/ecs/world";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -20,6 +20,7 @@ const DIRTY_ENTITY_IDS: EntityId[] = [];
 const DIRTY_ENTITY_SET = new Set<EntityId>();
 const COMPUTED_ENTITY_SET = new Set<EntityId>();
 const CHILDREN_BY_PARENT: ChildrenByParentMap = new Map();
+const EXPECTED_WORLD_TRANSFORM = new Transform2D();
 
 /**********************************************************************************************************
  *   COMPONENT START
@@ -136,7 +137,45 @@ function isWorldTransformDirty(world: UserWorld, entityId: EntityId): boolean {
     return true;
   }
 
+  if (isCachedWorldTransformStale(world, entityId, localTransform, worldTransform, currentParentId)) {
+    return true;
+  }
+
   return isLocalTransformDirty(localTransform);
+}
+
+function isCachedWorldTransformStale(
+  world: UserWorld,
+  entityId: EntityId,
+  localTransform: Transform2D,
+  worldTransform: WorldTransform2D,
+  parentEntityId: EntityId | null,
+): boolean {
+  if (parentEntityId === null) {
+    return !transformsMatch(worldTransform, localTransform);
+  }
+
+  const parentWorldTransform = world.get(parentEntityId, WorldTransform2D);
+  if (!parentWorldTransform) {
+    return true;
+  }
+
+  composeWorldTransform2D(EXPECTED_WORLD_TRANSFORM, parentWorldTransform, localTransform);
+
+  return !transformsMatch(worldTransform, EXPECTED_WORLD_TRANSFORM);
+}
+
+function transformsMatch(left: Transform2D, right: Transform2D): boolean {
+  return left.curr.pos.x === right.curr.pos.x
+    && left.curr.pos.y === right.curr.pos.y
+    && left.curr.rotation === right.curr.rotation
+    && left.curr.scale.x === right.curr.scale.x
+    && left.curr.scale.y === right.curr.scale.y
+    && left.prev.pos.x === right.prev.pos.x
+    && left.prev.pos.y === right.prev.pos.y
+    && left.prev.rotation === right.prev.rotation
+    && left.prev.scale.x === right.prev.scale.x
+    && left.prev.scale.y === right.prev.scale.y;
 }
 
 function isLocalTransformDirty(transform: Transform2D): boolean {

@@ -39,6 +39,13 @@ const overlayState = {
 };
 
 export const DebugOverlaySystem = createSystem("main:spatial-contexts-debug")({
+  initialize() {
+    removeOverlayWindow();
+
+    return () => {
+      removeOverlayWindow();
+    };
+  },
   system() {
     if (overlayClosed) {
       return;
@@ -209,6 +216,28 @@ function getOrCreateOverlayWindow() {
   };
 
   return overlayRefs;
+}
+
+function removeOverlayWindow() {
+  if (overlayRefs?.node.isConnected) {
+    overlayRefs.node.remove();
+  }
+
+  overlayRefs = undefined;
+  resetOverlayState();
+}
+
+function resetOverlayState() {
+  overlayState.focused = "";
+  overlayState.stack.length = 0;
+  overlayState.visible.length = 0;
+  overlayState.playerMissing = true;
+  overlayState.playerX = Number.NaN;
+  overlayState.playerY = Number.NaN;
+  overlayState.placeables = "";
+  overlayState.outsideAlpha = Number.NaN;
+  overlayState.roofAlpha = Number.NaN;
+  overlayState.interiorAlpha = Number.NaN;
 }
 
 function createOverlayRow(container: HTMLElement, label: string): HTMLSpanElement {
