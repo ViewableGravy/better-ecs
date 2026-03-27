@@ -2,19 +2,22 @@
 
 ## Goal
 
-After the server-authoritative MVP is stable, move toward deterministic mirrored simulation for isolated gameplay partitions. The server remains authoritative, while clients run the same deterministic simulation for the partitions they currently need. This reduces bandwidth, keeps rendering decoupled from simulation, and preserves a recovery path when a client diverges.
+After the server-authoritative MVP is stable, move toward deterministic mirrored simulation for isolated gameplay partitions on top of the shared command adapter. The server remains authoritative, while clients run the same deterministic simulation for the partitions they currently need. This reduces bandwidth, keeps rendering decoupled from simulation, and preserves a recovery path when a client diverges.
 
-This is not a replacement for the MVP in [16-SERVER-AUTHORITATIVE-MVP-INVESTIGATION.md](/workspaces/better-ecs/docs/architecture/16-SERVER-AUTHORITATIVE-MVP-INVESTIGATION.md). It is the intended follow-up once the single-client authoritative path is complete and verified.
+This is not a replacement for the MVP in [16-SERVER-AUTHORITATIVE-MVP-INVESTIGATION.md](/workspaces/better-ecs/docs/architecture/16-SERVER-AUTHORITATIVE-MVP-INVESTIGATION.md). It is the intended follow-up once the single-client authoritative path is complete and verified. The concrete protocol split lives in [18-HYBRID-COMMAND-NETWORKING-PROTOCOL.md](/workspaces/better-ecs/docs/architecture/18-HYBRID-COMMAND-NETWORKING-PROTOCOL.md).
 
 ## Core decisions
 
+- One shared command adapter is the networking foundation for both replicated actors and deterministic partitions.
 - The server remains the source of truth for all gameplay state.
 - Clients may mirror authoritative simulation, but they do not become authoritative.
+- Low-churn actor replication remains allowed for entities such as players and NPCs when deterministic replay is unnecessary.
 - Deterministic simulation should be scoped to explicit partitions such as a land claim or tightly-coupled set of touching claims.
 - Cross-partition interaction must happen through explicit IO boundaries, not through arbitrary hidden reads into neighboring simulation.
 - The simulation should be runnable in a worker on the client so the main thread stays focused on rendering and UI.
 - Whole-world snapshots are acceptable during bootstrap, but the long-term protocol should be partition-scoped.
 - Full-world lockstep is not the target. Per-partition scheduling, desync detection, and recovery are the target.
+- Partition-local readiness barriers are the preferred mechanism for verifying that mirrored participants execute a given scheduled input on the same logical cycle.
 
 ## Why partitioned deterministic simulation fits this game
 
@@ -39,14 +42,20 @@ That lets the game treat each partition as an independent simulation cell:
 - The client can run the same deterministic simulation locally for those partitions.
 - The client renders local results, but authoritative correction still comes from the server.
 
+This deterministic path coexists with low-churn authoritative replication for other actor categories. Not every entity in the game needs to be mirrored deterministically.
+
 ### 2. Scheduled command application
 
 - Clients send intent or typed commands, not mutated gameplay state.
 - The server validates commands and assigns them to an exact authoritative tick.
 - The server broadcasts the command plus scheduled tick to relevant clients.
+- Relevant clients confirm readiness for that partition tick.
+- The server issues a commit or run signal for the partition tick once readiness policy is satisfied.
 - Clients apply the command on the scheduled tick.
 
 This avoids immediate apply-on-receipt behavior and keeps all deterministic participants on the same command timeline.
+
+The readiness barrier must stay partition-local. Do not freeze the whole world because one client cannot advance one partition.
 
 ### 3. Partition-scoped sync and recovery
 
@@ -54,6 +63,8 @@ This avoids immediate apply-on-receipt behavior and keeps all deterministic part
 - After hydration, the client consumes scheduled commands for that partition.
 - The server and client compare periodic deterministic hashes.
 - On mismatch, the client must resync from a fresh authoritative snapshot or replay baseline.
+
+Snapshot and resync traffic remain required even in a command-driven architecture. A command stream alone is not enough for late join, reconnect, or recovery.
 
 ### 4. Worker-first client execution
 
@@ -68,6 +79,7 @@ This avoids immediate apply-on-receipt behavior and keeps all deterministic part
 - Not a trust-the-client architecture.
 - Not a removal of snapshots or diffs from the toolbox.
 - Not a reason to stall all world simulation because one client is slow.
+- Not a reason to force low-churn actor replication into the deterministic path.
 
 ## Requirements before implementation
 
@@ -120,6 +132,7 @@ Do not freeze the whole world while waiting for every client to acknowledge a co
 Preferred direction:
 
 - the server schedules commands on future ticks,
+- readiness is checked per partition for clients that are expected to mirror that partition,
 - partitions continue under server authority,
 - lagging clients catch up or resync,
 - only the affected partition should ever risk local interruption.
@@ -165,6 +178,7 @@ Complete the work in [16-SERVER-AUTHORITATIVE-MVP-INVESTIGATION.md](/workspaces/
 
 - Define partition ids and authoritative ticks.
 - Schedule validated commands against future ticks.
+- Introduce the ready or commit barrier for mirrored participants.
 - Ensure replay order is exact and testable.
 
 ### Phase 4. Move client simulation into a worker
@@ -192,6 +206,8 @@ Even before phase 17 begins, current implementation should avoid backing into a 
 - keep authoritative systems deterministic where practical,
 - keep rendering and simulation separate,
 - keep commands explicit and small,
+- keep one shared command adapter at the center of the networking runtime,
+- allow low-churn actor replication to remain a separate concern from deterministic simulation,
 - preserve snapshot-plus-diff infrastructure because it will still be needed for hydration and recovery,
 - avoid gameplay systems that depend on implicit global reads when a partition boundary would be more appropriate.
 
@@ -202,6 +218,7 @@ This direction is considered viable when the repository can demonstrate all of t
 - deterministic replay from the same command sequence,
 - worker-hosted client simulation,
 - scheduled command application by authoritative tick,
+- partition-local readiness verification before deterministic tick execution,
 - periodic client or server hash comparison,
 - successful resync after intentional divergence,
 - no gameplay dependence on hidden state outside the partition boundary.

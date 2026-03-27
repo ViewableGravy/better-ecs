@@ -5,9 +5,11 @@ This directory should stay focused on active implementation plans and durable ar
 ## Current execution path
 
 - [16-SERVER-AUTHORITATIVE-MVP-INVESTIGATION.md](/workspaces/better-ecs/docs/architecture/16-SERVER-AUTHORITATIVE-MVP-INVESTIGATION.md)
-  - Remaining work to finish the current authoritative multiplayer MVP.
+  - Remaining work to finish the current authoritative multiplayer MVP around a shared command transport, hydration, and low-churn replication.
 - [17-DETERMINISTIC-PARTITIONED-SIMULATION-ROADMAP.md](/workspaces/better-ecs/docs/architecture/17-DETERMINISTIC-PARTITIONED-SIMULATION-ROADMAP.md)
-  - Follow-up architecture for deterministic mirrored simulation, worker execution, partition ownership, and resync.
+  - Follow-up architecture for deterministic mirrored simulation, partition-local readiness barriers, worker execution, and resync.
+- [18-HYBRID-COMMAND-NETWORKING-PROTOCOL.md](/workspaces/better-ecs/docs/architecture/18-HYBRID-COMMAND-NETWORKING-PROTOCOL.md)
+  - Concrete protocol split for shared commands, selective replication, deterministic partitions, and resync.
 
 ## Spatial-contexts references
 

@@ -5,9 +5,11 @@ This folder should stay focused on active work and durable reference material.
 ## Current execution path
 
 - [architecture/16-SERVER-AUTHORITATIVE-MVP-INVESTIGATION.md](/workspaces/better-ecs/docs/architecture/16-SERVER-AUTHORITATIVE-MVP-INVESTIGATION.md)
-  - Current implementation target for finishing the authoritative MVP.
+  - Current implementation target for finishing the authoritative MVP around a shared command transport, hydration, and low-churn replication.
 - [architecture/17-DETERMINISTIC-PARTITIONED-SIMULATION-ROADMAP.md](/workspaces/better-ecs/docs/architecture/17-DETERMINISTIC-PARTITIONED-SIMULATION-ROADMAP.md)
-  - Planned follow-up after the authoritative MVP: deterministic mirrored simulation, worker execution, partition ownership, and resync rules.
+  - Planned follow-up after the authoritative MVP: deterministic partition simulation, readiness barriers, worker execution, and resync rules.
+- [architecture/18-HYBRID-COMMAND-NETWORKING-PROTOCOL.md](/workspaces/better-ecs/docs/architecture/18-HYBRID-COMMAND-NETWORKING-PROTOCOL.md)
+  - Concrete protocol split: one command adapter, selective low-churn replication, deterministic partition scheduling, and resync control.
 - [NETWORK_DIRTY_TRACKING_IMPLEMENTATION_STATUS.md](/workspaces/better-ecs/docs/NETWORK_DIRTY_TRACKING_IMPLEMENTATION_STATUS.md)
   - Status tracker for engine diff and dirty-tracking work that networking depends on.
 - [RENDERING_50K_120FPS_ROADMAP.md](/workspaces/better-ecs/docs/RENDERING_50K_120FPS_ROADMAP.md)
