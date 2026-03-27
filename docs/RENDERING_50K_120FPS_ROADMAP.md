@@ -383,7 +383,7 @@ Outcome:
 Status update (post Stage C):
 
 - The previous "What to do next (highest ROI)" recommendation list has been executed as far as Stage C scope allowed and is now considered superseded by the Stage D queue-hotspot plan.
-- Active planning and implementation tracking now lives in `docs/QUEUE_PERFORMANCE_STAGE_D_PLAN.md`.
+- Stage D queue-hotspot work has been folded into this roadmap so rendering performance remains tracked in one place.
 
 ### Gate A: after Phase 1
 
