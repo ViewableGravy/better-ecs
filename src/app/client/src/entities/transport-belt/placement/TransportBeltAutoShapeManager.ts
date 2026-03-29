@@ -1,5 +1,6 @@
-import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
+import { ConveyorBeltComponent, syncConveyorBeltDirectionsFromVariant } from "@client/components/conveyor-belt";
 import {
+    TRANSPORT_BELT_DIRECTIONS,
     TransportBeltConnectionUtils,
     updateTransportBeltVariant,
 } from "@client/entities/transport-belt";
@@ -41,6 +42,12 @@ export class TransportBeltAutoShapeManager {
       let didChangeVariant = false;
 
       for (const beltEntityId of affectedBeltEntityIds) {
+        const resolvedFlow = TransportBeltRotationVariantManager.deriveBeltFlow(world, { beltEntityId });
+
+        if (!resolvedFlow) {
+          continue;
+        }
+
         const resolvedVariant = TransportBeltRotationVariantManager.deriveBeltVariant(world, { beltEntityId });
 
         if (!resolvedVariant) {
@@ -49,10 +56,16 @@ export class TransportBeltAutoShapeManager {
 
         const belt = world.require(beltEntityId, ConveyorBeltComponent);
 
-        if (belt.variant === resolvedVariant) {
+        if (
+          belt.variant === resolvedVariant
+          && belt.tailDirection === resolvedFlow[0]
+          && belt.headDirection === resolvedFlow[1]
+        ) {
           continue;
         }
 
+        belt.tailDirection = resolvedFlow[0];
+        belt.headDirection = resolvedFlow[1];
         updateTransportBeltVariant(world, beltEntityId, resolvedVariant);
         didChangeVariant = true;
       }
@@ -74,8 +87,31 @@ export class TransportBeltAutoShapeManager {
     placedBeltEntityId: TransportBeltEntityId,
   ): TransportBeltEntityId[] {
     const placedCoordinates = TransportBeltGridQuery.resolveBeltCoordinates(world, placedBeltEntityId);
+    const placedBelt = world.require(placedBeltEntityId, ConveyorBeltComponent);
 
-    return this.resolveBeltEntityIdsAroundCoordinates(world, placedCoordinates, placedBeltEntityId);
+    syncConveyorBeltDirectionsFromVariant(placedBelt);
+
+    const affected = new Set<TransportBeltEntityId>([placedBeltEntityId]);
+    const headNeighborEntityId = TransportBeltGridQuery.resolveNeighborEntityIdInDirection(
+      world,
+      placedCoordinates,
+      placedBelt.headDirection,
+    );
+    const tailNeighborEntityId = TransportBeltGridQuery.resolveNeighborEntityIdInDirection(
+      world,
+      placedCoordinates,
+      placedBelt.tailDirection,
+    );
+
+    if (headNeighborEntityId !== null) {
+      affected.add(headNeighborEntityId as TransportBeltEntityId);
+    }
+
+    if (tailNeighborEntityId !== null) {
+      affected.add(tailNeighborEntityId as TransportBeltEntityId);
+    }
+
+    return [...affected];
   }
 
   private static resolveBeltEntityIdsAroundCoordinates(
@@ -95,8 +131,8 @@ export class TransportBeltAutoShapeManager {
       affected.add(centerBeltEntityIdAtCoordinates as TransportBeltEntityId);
     }
 
-    for (const side of ["top", "right", "bottom", "left"] as const) {
-      const neighborEntityId = TransportBeltGridQuery.resolveNeighborEntityId(world, coordinates, side);
+    for (const direction of TRANSPORT_BELT_DIRECTIONS) {
+      const neighborEntityId = TransportBeltGridQuery.resolveNeighborEntityIdInDirection(world, coordinates, direction);
 
       if (neighborEntityId === null) {
         continue;

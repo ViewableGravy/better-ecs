@@ -1,5 +1,5 @@
 import type { ConveyorSide, ConveyorSlotIndex } from "@client/components/conveyor-belt";
-import { TRANSPORT_BELT_HALF_SIZE, type TransportBeltFlow, type TransportBeltSide } from "@client/entities/transport-belt/consts";
+import { TRANSPORT_BELT_HALF_SIZE, type TransportBeltDirection, type TransportBeltFlow } from "@client/entities/transport-belt/consts";
 import {
     getTransportBeltVariantDescriptor,
     resolveConveyorSlotLocalPosition,
@@ -60,7 +60,7 @@ export class BeltItemRailsUtility {
     const [start, end] = flow;
     const [slotX, slotY] = resolveConveyorSlotLocalPosition(variant, side, 0);
 
-    if (start === "left" || start === "right") {
+    if (start === "west" || start === "east") {
       const startX = this.resolveStraightEdgeCoordinate(start);
       const endX = this.resolveStraightEdgeCoordinate(end);
 
@@ -104,10 +104,10 @@ export class BeltItemRailsUtility {
 
   private static resolveCurveCenter(flow: TransportBeltFlow): RailPoint {
     const [start, end] = flow;
-    const centerX = start === "left" || start === "right"
+    const centerX = start === "west" || start === "east"
       ? this.resolveStraightEdgeCoordinate(start)
       : this.resolveStraightEdgeCoordinate(end);
-    const centerY = start === "top" || start === "bottom"
+    const centerY = start === "north" || start === "south"
       ? this.resolveStraightEdgeCoordinate(start)
       : this.resolveStraightEdgeCoordinate(end);
 
@@ -115,20 +115,20 @@ export class BeltItemRailsUtility {
   }
 
   private static resolveCurveEndpoint(
-    side: TransportBeltSide,
+    side: TransportBeltDirection,
     centerX: number,
     centerY: number,
     radius: number,
   ): RailPoint {
-    if (side === "left") {
+    if (side === "west") {
       return [-TRANSPORT_BELT_HALF_SIZE, centerY > 0 ? centerY - radius : centerY + radius];
     }
 
-    if (side === "right") {
+    if (side === "east") {
       return [TRANSPORT_BELT_HALF_SIZE, centerY > 0 ? centerY - radius : centerY + radius];
     }
 
-    if (side === "top") {
+    if (side === "north") {
       return [centerX > 0 ? centerX - radius : centerX + radius, -TRANSPORT_BELT_HALF_SIZE];
     }
 
@@ -154,8 +154,8 @@ export class BeltItemRailsUtility {
     return Math.abs(signedDistance);
   }
 
-  private static resolveStraightEdgeCoordinate(side: TransportBeltSide): number {
-    if (side === "left" || side === "top") {
+  private static resolveStraightEdgeCoordinate(side: TransportBeltDirection): number {
+    if (side === "west" || side === "north") {
       return -TRANSPORT_BELT_HALF_SIZE;
     }
 

@@ -1,4 +1,4 @@
-import type { TransportBeltFlow, TransportBeltSide } from "@client/entities/transport-belt/consts";
+import type { TransportBeltDirection, TransportBeltFlow } from "@client/entities/transport-belt/consts";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -10,52 +10,52 @@ export type SideVector = readonly [x: number, y: number];
  *   CONSTANTS
  **********************************************************************************************************/
 
-export const TRANSPORT_BELT_OPPOSITE_SIDE: Readonly<Record<TransportBeltSide, TransportBeltSide>> = {
-  left: "right",
-  right: "left",
-  top: "bottom",
-  bottom: "top",
+export const TRANSPORT_BELT_OPPOSITE_DIRECTION: Readonly<Record<TransportBeltDirection, TransportBeltDirection>> = {
+  north: "south",
+  east: "west",
+  south: "north",
+  west: "east",
 };
 
-export const TRANSPORT_BELT_SIDE_VECTORS: Readonly<Record<TransportBeltSide, SideVector>> = {
-  left: [-1, 0],
-  right: [1, 0],
-  top: [0, -1],
-  bottom: [0, 1],
+export const TRANSPORT_BELT_DIRECTION_VECTORS: Readonly<Record<TransportBeltDirection, SideVector>> = {
+  north: [0, -1],
+  east: [1, 0],
+  south: [0, 1],
+  west: [-1, 0],
 };
 
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
 
-export function getOppositeTransportBeltSide(side: TransportBeltSide): TransportBeltSide {
-  return TRANSPORT_BELT_OPPOSITE_SIDE[side];
+export function getOppositeTransportBeltDirection(direction: TransportBeltDirection): TransportBeltDirection {
+  return TRANSPORT_BELT_OPPOSITE_DIRECTION[direction];
 }
 
-export function getTransportBeltSideVector(side: TransportBeltSide): SideVector {
-  return TRANSPORT_BELT_SIDE_VECTORS[side];
+export function getTransportBeltDirectionVector(direction: TransportBeltDirection): SideVector {
+  return TRANSPORT_BELT_DIRECTION_VECTORS[direction];
 }
 
-export function getTransportBeltInwardNormal(side: TransportBeltSide): SideVector {
-  return getTransportBeltSideVector(getOppositeTransportBeltSide(side));
+export function getTransportBeltInwardNormal(direction: TransportBeltDirection): SideVector {
+  return getTransportBeltDirectionVector(getOppositeTransportBeltDirection(direction));
 }
 
-export function getTransportBeltOutwardNormal(side: TransportBeltSide): SideVector {
-  return getTransportBeltSideVector(side);
+export function getTransportBeltOutwardNormal(direction: TransportBeltDirection): SideVector {
+  return getTransportBeltDirectionVector(direction);
 }
 
 export function isHorizontalTransportBeltFlow(flow: TransportBeltFlow): boolean {
   const [start, end] = flow;
 
-  return (start === "left" || start === "right")
-    && (end === "left" || end === "right");
+  return (start === "west" || start === "east")
+    && (end === "west" || end === "east");
 }
 
 export function isVerticalTransportBeltFlow(flow: TransportBeltFlow): boolean {
   const [start, end] = flow;
 
-  return (start === "top" || start === "bottom")
-    && (end === "top" || end === "bottom");
+  return (start === "north" || start === "south")
+    && (end === "north" || end === "south");
 }
 
 export function isStraightTransportBeltFlow(flow: TransportBeltFlow): boolean {
@@ -64,8 +64,8 @@ export function isStraightTransportBeltFlow(flow: TransportBeltFlow): boolean {
 
 export function getTransportBeltFlowVector(flow: TransportBeltFlow): SideVector {
   const [start, end] = flow;
-  const [startX, startY] = getTransportBeltSideVector(start);
-  const [endX, endY] = getTransportBeltSideVector(end);
+  const [startX, startY] = getTransportBeltDirectionVector(start);
+  const [endX, endY] = getTransportBeltDirectionVector(end);
 
   return [endX - startX, endY - startY];
 }

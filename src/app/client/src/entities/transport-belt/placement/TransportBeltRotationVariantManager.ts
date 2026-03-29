@@ -1,14 +1,18 @@
-import { canConveyorStoreEntities, ConveyorBeltComponent } from "@client/components/conveyor-belt";
+import {
+    canConveyorStoreEntities,
+    ConveyorBeltComponent,
+    syncConveyorBeltDirectionsFromVariant,
+} from "@client/components/conveyor-belt";
 import {
     getTransportBeltVariantByFlow,
-    type TransportBeltSide,
+    type TransportBeltDirection,
+    type TransportBeltFlow,
     type TransportBeltVariant,
 } from "@client/entities/transport-belt/consts";
 import {
-    getOppositeTransportBeltSide,
-    getTransportBeltVariantDescriptor,
+    getOppositeTransportBeltDirection,
+    isStraightTransportBeltFlow,
     TransportBeltGridQuery,
-    type TransportBeltVariantDescriptor,
 } from "@client/entities/transport-belt/core";
 import type { TransportBeltEntityId } from "@client/entities/transport-belt/types";
 import type { GridCoordinates } from "@client/systems/world/build-mode/grid-singleton";
@@ -18,11 +22,11 @@ import type { UserWorld } from "@engine";
  *   TYPE DEFINITIONS
  **********************************************************************************************************/
 
-type NeighborCandidate = readonly [sideA: TransportBeltSide, sideB: TransportBeltSide];
+type NeighborCandidate = readonly [directionA: TransportBeltDirection, directionB: TransportBeltDirection];
 
 type PreviewBeltVariantDerivationTarget = {
   coordinates: GridCoordinates;
-  endSide: TransportBeltSide;
+  headDirection: TransportBeltDirection;
 };
 
 type ExistingBeltVariantDerivationTarget = {
@@ -35,173 +39,184 @@ export type TransportBeltVariantDerivationTarget =
 
 type BeltVariantDerivationState = {
   coordinates: GridCoordinates;
-  endSide: TransportBeltSide;
-  currentStartSide: TransportBeltSide | null;
+  headDirection: TransportBeltDirection;
+  currentTailDirection: TransportBeltDirection | null;
 };
 
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
 
-const STRAIGHT_VARIANT_BY_END_SIDE: Readonly<Record<TransportBeltSide, TransportBeltVariant>> = {
-  top: "vertical-up",
-  right: "horizontal-right",
-  bottom: "vertical-down",
-  left: "horizontal-left",
+const STRAIGHT_VARIANT_BY_HEAD_DIRECTION: Readonly<Record<TransportBeltDirection, TransportBeltVariant>> = {
+  north: "vertical-up",
+  east: "horizontal-right",
+  south: "vertical-down",
+  west: "horizontal-left",
 };
 
-const PERPENDICULAR_INCOMING_SIDES_BY_END_SIDE: Readonly<Record<TransportBeltSide, NeighborCandidate>> = {
-  top: ["left", "right"],
-  right: ["top", "bottom"],
-  bottom: ["left", "right"],
-  left: ["top", "bottom"],
+const PERPENDICULAR_INCOMING_DIRECTIONS_BY_HEAD_DIRECTION: Readonly<Record<TransportBeltDirection, NeighborCandidate>> = {
+  north: ["west", "east"],
+  east: ["north", "south"],
+  south: ["west", "east"],
+  west: ["north", "south"],
 };
 
 export class TransportBeltRotationVariantManager {
-  public static deriveBeltVariant(world: UserWorld, target: PreviewBeltVariantDerivationTarget): TransportBeltVariant;
-  public static deriveBeltVariant(world: UserWorld, target: ExistingBeltVariantDerivationTarget): TransportBeltVariant | null;
-  public static deriveBeltVariant(world: UserWorld, target: TransportBeltVariantDerivationTarget): TransportBeltVariant | null {
+  public static deriveBeltFlow(world: UserWorld, target: PreviewBeltVariantDerivationTarget): TransportBeltFlow;
+  public static deriveBeltFlow(world: UserWorld, target: ExistingBeltVariantDerivationTarget): TransportBeltFlow | null;
+  public static deriveBeltFlow(world: UserWorld, target: TransportBeltVariantDerivationTarget): TransportBeltFlow | null;
+  public static deriveBeltFlow(world: UserWorld, target: TransportBeltVariantDerivationTarget): TransportBeltFlow | null {
     const state = this.resolveDerivationState(world, target);
 
     if (state === null) {
       return null;
     }
 
-    const startSide = this.deriveTailSide(world, state);
+    const tailDirection = this.deriveTailDirection(world, state);
 
-    return this.resolveVariantFromFlow(startSide, state.endSide);
+    return [tailDirection, state.headDirection];
   }
 
-  private static resolveVariantFromFlow(startSide: TransportBeltSide, endSide: TransportBeltSide): TransportBeltVariant {
-    if (startSide === getOppositeTransportBeltSide(endSide)) {
-      return STRAIGHT_VARIANT_BY_END_SIDE[endSide];
+  public static deriveBeltVariant(world: UserWorld, target: PreviewBeltVariantDerivationTarget): TransportBeltVariant;
+  public static deriveBeltVariant(world: UserWorld, target: ExistingBeltVariantDerivationTarget): TransportBeltVariant | null;
+  public static deriveBeltVariant(world: UserWorld, target: TransportBeltVariantDerivationTarget): TransportBeltVariant | null {
+    const flow = this.deriveBeltFlow(world, target);
+
+    if (flow === null) {
+      return null;
     }
 
-    return getTransportBeltVariantByFlow(startSide, endSide) ?? STRAIGHT_VARIANT_BY_END_SIDE[endSide];
+    return this.resolveVariantFromFlow(flow[0], flow[1]);
+  }
+
+  private static resolveVariantFromFlow(tailDirection: TransportBeltDirection, headDirection: TransportBeltDirection): TransportBeltVariant {
+    if (tailDirection === getOppositeTransportBeltDirection(headDirection)) {
+      return STRAIGHT_VARIANT_BY_HEAD_DIRECTION[headDirection];
+    }
+
+    return getTransportBeltVariantByFlow(tailDirection, headDirection) ?? STRAIGHT_VARIANT_BY_HEAD_DIRECTION[headDirection];
   }
 
   private static resolveDerivationState(world: UserWorld, target: TransportBeltVariantDerivationTarget): BeltVariantDerivationState | null {
     if ("beltEntityId" in target) {
       const belt = world.get(target.beltEntityId, ConveyorBeltComponent);
 
-      if (!canConveyorStoreEntities(belt.variant)) {
+      if (!belt || !canConveyorStoreEntities(belt.variant)) {
         return null;
       }
 
-      const descriptor = getTransportBeltVariantDescriptor(belt.variant);
-
-      if (!descriptor) {
-        return null;
-      }
-
-      const [currentStartSide, endSide] = descriptor.flow;
+      syncConveyorBeltDirectionsFromVariant(belt);
 
       return {
         coordinates: TransportBeltGridQuery.resolveBeltCoordinates(world, target.beltEntityId),
-        endSide,
-        currentStartSide,
+        headDirection: belt.headDirection,
+        currentTailDirection: belt.tailDirection,
       };
     }
 
     return {
       coordinates: target.coordinates,
-      endSide: target.endSide,
-      currentStartSide: null,
+      headDirection: target.headDirection,
+      currentTailDirection: null,
     };
   }
 
-  private static deriveTailSide(world: UserWorld, state: BeltVariantDerivationState): TransportBeltSide {
-    const defaultTailSide = getOppositeTransportBeltSide(state.endSide);
+  private static deriveTailDirection(world: UserWorld, state: BeltVariantDerivationState): TransportBeltDirection {
+    const defaultTailDirection = getOppositeTransportBeltDirection(state.headDirection);
 
-    if (this.shouldStayStraight(world, state, defaultTailSide)) {
-      return defaultTailSide;
+    if (this.shouldStayStraight(world, state, defaultTailDirection)) {
+      return defaultTailDirection;
     }
 
-    if (state.currentStartSide !== null && this.isIncomingFromSide(world, state.coordinates, state.currentStartSide)) {
-      return state.currentStartSide;
+    if (state.currentTailDirection !== null && this.isIncomingFromDirection(world, state.coordinates, state.currentTailDirection)) {
+      return state.currentTailDirection;
     }
 
-    const uniqueIncomingSide = this.resolveUniqueIncomingSide(world, state.coordinates, state.endSide);
+    const uniqueIncomingDirection = this.resolveUniqueIncomingDirection(world, state.coordinates, state.headDirection);
 
-    if (uniqueIncomingSide !== null) {
-      return uniqueIncomingSide;
+    if (uniqueIncomingDirection !== null) {
+      return uniqueIncomingDirection;
     }
 
-    return defaultTailSide;
+    return defaultTailDirection;
   }
 
-  private static shouldStayStraight(world: UserWorld, state: BeltVariantDerivationState, defaultTailSide: TransportBeltSide): boolean {
-    return this.isIncomingFromSide(world, state.coordinates, defaultTailSide)
-      && this.doesHeadConsumeOutput(world, state.coordinates, state.endSide);
+  private static shouldStayStraight(
+    world: UserWorld,
+    state: BeltVariantDerivationState,
+    defaultTailDirection: TransportBeltDirection,
+  ): boolean {
+    return this.isIncomingFromDirection(world, state.coordinates, defaultTailDirection)
+      && this.doesHeadConsumeOutput(world, state.coordinates, state.headDirection);
   }
 
   private static doesHeadConsumeOutput(
     world: UserWorld,
     coordinates: GridCoordinates,
-    side: TransportBeltSide,
+    direction: TransportBeltDirection,
   ): boolean {
-    const neighborDescriptor = this.resolveNeighborDescriptor(world, coordinates, side);
+    const neighborFlow = this.resolveNeighborFlow(world, coordinates, direction);
 
-    if (!neighborDescriptor || !neighborDescriptor.isStraight) {
+    if (!neighborFlow || !isStraightTransportBeltFlow(neighborFlow)) {
       return false;
     }
 
-    const [neighborStartSide] = neighborDescriptor.flow;
+    const [neighborTailDirection] = neighborFlow;
 
-    return neighborStartSide === getOppositeTransportBeltSide(side);
+    return neighborTailDirection === getOppositeTransportBeltDirection(direction);
   }
 
-  private static resolveUniqueIncomingSide(
+  private static resolveUniqueIncomingDirection(
     world: UserWorld,
     coordinates: GridCoordinates,
-    endSide: TransportBeltSide,
-  ): TransportBeltSide | null {
-    const defaultTailSide = getOppositeTransportBeltSide(endSide);
+    headDirection: TransportBeltDirection,
+  ): TransportBeltDirection | null {
+    const defaultTailDirection = getOppositeTransportBeltDirection(headDirection);
 
-    if (this.isIncomingFromSide(world, coordinates, defaultTailSide)) {
+    if (this.isIncomingFromDirection(world, coordinates, defaultTailDirection)) {
       return null;
     }
 
-    const [candidateA, candidateB] = PERPENDICULAR_INCOMING_SIDES_BY_END_SIDE[endSide];
-    const contributingSides: TransportBeltSide[] = [];
+    const [candidateA, candidateB] = PERPENDICULAR_INCOMING_DIRECTIONS_BY_HEAD_DIRECTION[headDirection];
+    const contributingDirections: TransportBeltDirection[] = [];
 
-    if (this.isIncomingFromSide(world, coordinates, candidateA)) {
-      contributingSides.push(candidateA);
+    if (this.isIncomingFromDirection(world, coordinates, candidateA)) {
+      contributingDirections.push(candidateA);
     }
 
-    if (this.isIncomingFromSide(world, coordinates, candidateB)) {
-      contributingSides.push(candidateB);
+    if (this.isIncomingFromDirection(world, coordinates, candidateB)) {
+      contributingDirections.push(candidateB);
     }
 
-    if (contributingSides.length !== 1) {
+    if (contributingDirections.length !== 1) {
       return null;
     }
 
-    return contributingSides[0];
+    return contributingDirections[0];
   }
 
-  private static isIncomingFromSide(
+  private static isIncomingFromDirection(
     world: UserWorld,
     coordinates: GridCoordinates,
-    side: TransportBeltSide,
+    direction: TransportBeltDirection,
   ): boolean {
-    const neighborDescriptor = this.resolveNeighborDescriptor(world, coordinates, side);
+    const neighborFlow = this.resolveNeighborFlow(world, coordinates, direction);
 
-    if (!neighborDescriptor) {
+    if (!neighborFlow) {
       return false;
     }
 
-    const [, neighborEndSide] = neighborDescriptor.flow;
+    const [, neighborHeadDirection] = neighborFlow;
 
-    return neighborEndSide === getOppositeTransportBeltSide(side);
+    return neighborHeadDirection === getOppositeTransportBeltDirection(direction);
   }
 
-  private static resolveNeighborDescriptor(
+  private static resolveNeighborFlow(
     world: UserWorld,
     coordinates: GridCoordinates,
-    side: TransportBeltSide,
-  ): TransportBeltVariantDescriptor | null {
-    const neighborEntityId = TransportBeltGridQuery.resolveNeighborEntityId(world, coordinates, side);
+    direction: TransportBeltDirection,
+  ): TransportBeltFlow | null {
+    const neighborEntityId = TransportBeltGridQuery.resolveNeighborEntityIdInDirection(world, coordinates, direction);
 
     if (neighborEntityId === null) {
       return null;
@@ -209,6 +224,8 @@ export class TransportBeltRotationVariantManager {
 
     const neighborBelt = world.require(neighborEntityId, ConveyorBeltComponent);
 
-    return getTransportBeltVariantDescriptor(neighborBelt.variant) ?? null;
+    syncConveyorBeltDirectionsFromVariant(neighborBelt);
+
+    return [neighborBelt.tailDirection, neighborBelt.headDirection];
   }
 }

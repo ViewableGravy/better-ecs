@@ -1,5 +1,7 @@
+import { getTransportBeltFlow, type TransportBeltDirection } from "@client/entities/transport-belt/consts";
 import type { EntityId } from "@engine";
 import { Component, StateComponent, state } from "@engine";
+import invariant from "tiny-invariant";
 
 export const DEFAULT_CONVEYOR_BELT_SPEED = 19;
 
@@ -15,6 +17,15 @@ export type ConveyorSlotProgress = [number, number, number, number];
 
 export function canConveyorStoreEntities(variant: string): boolean {
   return !variant.startsWith("start-") && !variant.startsWith("end-");
+}
+
+export function syncConveyorBeltDirectionsFromVariant(conveyor: ConveyorBeltComponent): void {
+  const flow = getTransportBeltFlow(conveyor.variant);
+
+  invariant(flow, `No transport belt flow found for variant ${conveyor.variant}`);
+
+  conveyor.tailDirection = flow[0];
+  conveyor.headDirection = flow[1];
 }
 
 @StateComponent
@@ -56,10 +67,16 @@ export class ConveyorBeltComponent extends Component {
   @state("string")
   declare public variant: string;
 
+  @state("string")
+  declare public tailDirection: TransportBeltDirection;
+
+  @state("string")
+  declare public headDirection: TransportBeltDirection;
+
   @state("float")
   declare public speed: number;
 
-  constructor(variant: string, speed = DEFAULT_CONVEYOR_BELT_SPEED) {
+  constructor(variant = "horizontal-right", speed = DEFAULT_CONVEYOR_BELT_SPEED) {
     super();
     this.left = [null, null, null, null];
     this.right = [null, null, null, null];
@@ -71,6 +88,9 @@ export class ConveyorBeltComponent extends Component {
     this.nextEntityId = null;
     this.isLeaf = false;
     this.variant = variant;
+    this.tailDirection = "west";
+    this.headDirection = "east";
+    syncConveyorBeltDirectionsFromVariant(this);
     this.speed = speed;
   }
 }

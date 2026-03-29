@@ -1,4 +1,4 @@
-import type { TransportBeltSide } from "@client/entities/transport-belt/consts";
+import type { TransportBeltDirection } from "@client/entities/transport-belt/consts";
 import { Transform2D } from "@engine/components";
 import { RectangleCollider } from "@libs/physics";
 
@@ -17,29 +17,29 @@ export class ConveyorGeometryUtils {
     return pointX >= beltLeft && pointX <= beltRight && pointY >= beltTop && pointY <= beltBottom;
   }
 
-  public static sideMidpointX(side: TransportBeltSide, halfSize: number): number {
+  public static sideMidpointX(side: TransportBeltDirection, halfSize: number): number {
     switch (side) {
-      case "left":
-        return -halfSize;
-      case "right":
+      case "north":
+        return 0;
+      case "east":
         return halfSize;
-      case "top":
+      case "south":
         return 0;
-      case "bottom":
-        return 0;
+      case "west":
+        return -halfSize;
     }
   }
 
-  public static sideMidpointY(side: TransportBeltSide, halfSize: number): number {
+  public static sideMidpointY(side: TransportBeltDirection, halfSize: number): number {
     switch (side) {
-      case "left":
-        return 0;
-      case "right":
-        return 0;
-      case "top":
+      case "north":
         return -halfSize;
-      case "bottom":
+      case "east":
+        return 0;
+      case "south":
         return halfSize;
+      case "west":
+        return 0;
     }
   }
 }

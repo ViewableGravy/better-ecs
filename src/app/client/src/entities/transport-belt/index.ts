@@ -1,6 +1,9 @@
 import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import { OUTSIDE, RenderVisibility } from "@client/components/render-visibility";
-import type { TransportBeltVariant } from "@client/entities/transport-belt/consts";
+import {
+    getTransportBeltFlow,
+    type TransportBeltVariant,
+} from "@client/entities/transport-belt/consts";
 import { createTransportBeltSprite } from "@client/entities/transport-belt/render/createTransportBeltSprite";
 import { TransportBeltConnectionUtils } from "@client/entities/transport-belt/topology/TransportBeltConnectionUtils";
 import {
@@ -12,6 +15,7 @@ import { TRANSPORT_BELT_COLLIDER_SIZE } from "@client/systems/world/build-mode/m
 import { Vec2, type EntityId, type UserWorld } from "@engine";
 import { AnimatedSprite, Debug, Transform2D } from "@engine/components";
 import { RectangleCollider } from "@libs/physics";
+import invariant from "tiny-invariant";
 const HALF_TRANSPORT_BELT_COLLIDER_SIZE = TRANSPORT_BELT_COLLIDER_SIZE * 0.5;
 
 type TransportBeltSpawnProfile = "placed" | "preview";
@@ -80,7 +84,15 @@ export function updateTransportBeltVariant(
   const currentSprite = world.get(beltEntityId, AnimatedSprite);
 
   if (belt) {
+    const flow = getTransportBeltFlow(variant);
+
+    invariant(flow, `No transport belt flow found for variant ${variant}`);
+
+    const [tailDirection, headDirection] = flow;
+
     belt.variant = variant;
+    belt.tailDirection = tailDirection;
+    belt.headDirection = headDirection;
   }
 
   world.add(
@@ -89,17 +101,24 @@ export function updateTransportBeltVariant(
   );
 }
 
-export { TRANSPORT_BELT_VARIANTS } from "@client/entities/transport-belt/consts";
-export type { TransportBeltVariant } from "@client/entities/transport-belt/consts";
+export {
+    getTransportBeltDirectionFromPlacementSide,
+    TRANSPORT_BELT_DIRECTIONS,
+    TRANSPORT_BELT_VARIANTS
+} from "@client/entities/transport-belt/consts";
+export type {
+    TransportBeltDirection,
+    TransportBeltVariant
+} from "@client/entities/transport-belt/consts";
 export { ConveyorUtils } from "@client/entities/transport-belt/ConveyorUtils";
 export {
     getConveyorLaneProgress,
     getConveyorLaneSlots,
-    getOppositeTransportBeltSide,
+    getOppositeTransportBeltDirection,
+    getTransportBeltDirectionVector,
     getTransportBeltFlowVector,
     getTransportBeltInwardNormal,
     getTransportBeltOutwardNormal,
-    getTransportBeltSideVector,
     getTransportBeltVariantDescriptor,
     isConveyorLaneTailBlocked,
     isHorizontalTransportBeltFlow,

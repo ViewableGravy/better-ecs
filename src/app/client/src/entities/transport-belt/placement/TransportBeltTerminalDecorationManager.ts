@@ -1,14 +1,20 @@
-import { canConveyorStoreEntities, ConveyorBeltComponent } from "@client/components/conveyor-belt";
-import { OUTSIDE, RenderVisibility } from "@client/components/render-visibility";
-import type { TransportBeltSide, TransportBeltVariant } from "@client/entities/transport-belt/consts";
 import {
-  getTransportBeltSideVector,
-  getTransportBeltVariantDescriptor,
-  TransportBeltGridQuery,
+    canConveyorStoreEntities,
+    ConveyorBeltComponent,
+    syncConveyorBeltDirectionsFromVariant,
+} from "@client/components/conveyor-belt";
+import { OUTSIDE, RenderVisibility } from "@client/components/render-visibility";
+import type {
+    TransportBeltDirection,
+    TransportBeltVariant,
+} from "@client/entities/transport-belt/consts";
+import {
+    getTransportBeltDirectionVector,
+    TransportBeltGridQuery,
 } from "@client/entities/transport-belt/core";
 import {
-  TransportBeltTerminalDecoration,
-  type TransportBeltTerminalDecorationRole,
+    TransportBeltTerminalDecoration,
+    type TransportBeltTerminalDecorationRole,
 } from "@client/entities/transport-belt/placement/TransportBeltTerminalDecoration";
 import { createTransportBeltSprite } from "@client/entities/transport-belt/render/createTransportBeltSprite";
 import { GRID_CELL_SIZE } from "@client/systems/world/build-mode/const";
@@ -37,17 +43,10 @@ export class TransportBeltTerminalDecorationManager {
       return;
     }
 
-    const descriptor = getTransportBeltVariantDescriptor(belt.variant);
+    syncConveyorBeltDirectionsFromVariant(belt);
 
-    if (!descriptor) {
-      this.destroyOwnedDecorations(world, beltEntityId);
-      return;
-    }
-
-    const [startSide, endSide] = descriptor.flow;
-
-    this.syncTerminal(world, beltEntityId, "start", startSide, belt.previousEntityId === null);
-    this.syncTerminal(world, beltEntityId, "end", endSide, belt.nextEntityId === null);
+    this.syncTerminal(world, beltEntityId, "start", belt.tailDirection, belt.previousEntityId === null);
+    this.syncTerminal(world, beltEntityId, "end", belt.headDirection, belt.nextEntityId === null);
   }
 
   public static destroyOwnedDecorations(world: UserWorld, beltEntityId: EntityId): void {
@@ -60,12 +59,12 @@ export class TransportBeltTerminalDecorationManager {
     world: UserWorld,
     beltEntityId: EntityId,
     role: TransportBeltTerminalDecorationRole,
-    side: TransportBeltSide,
+    direction: TransportBeltDirection,
     shouldExist: boolean,
   ): void {
     const existingDecorationEntityId = this.findOwnedDecorationEntityId(world, beltEntityId, role);
 
-    if (!shouldExist || this.isTerminalTileOccupied(world, beltEntityId, side)) {
+    if (!shouldExist || this.isTerminalTileOccupied(world, beltEntityId, direction)) {
       if (existingDecorationEntityId !== null) {
         world.destroy(existingDecorationEntityId);
       }
@@ -83,13 +82,13 @@ export class TransportBeltTerminalDecorationManager {
       return;
     }
 
-    const [offsetX, offsetY] = getTransportBeltSideVector(side);
+    const [offsetX, offsetY] = getTransportBeltDirectionVector(direction);
     const localX = offsetX * GRID_CELL_SIZE;
     const localY = offsetY * GRID_CELL_SIZE;
     const absoluteWorldY = ownerTransform.curr.pos.y + localY;
     const ownerSprite = world.get(beltEntityId, AnimatedSprite);
     const renderVisibility = world.get(beltEntityId, RenderVisibility);
-    const variant = this.resolveTerminalVariant(role, side);
+    const variant = this.resolveTerminalVariant(role, direction);
 
     if (existingDecorationEntityId === null) {
       const decorationEntityId = world.create();
@@ -131,10 +130,10 @@ export class TransportBeltTerminalDecorationManager {
   private static isTerminalTileOccupied(
     world: UserWorld,
     beltEntityId: EntityId,
-    side: TransportBeltSide,
+    direction: TransportBeltDirection,
   ): boolean {
     const coordinates = TransportBeltGridQuery.resolveBeltCoordinates(world, beltEntityId);
-    const targetCoordinates = TransportBeltGridQuery.resolveNeighborCoordinates(coordinates, side);
+    const targetCoordinates = TransportBeltGridQuery.resolveNeighborCoordinatesInDirection(coordinates, direction);
 
     return TransportBeltGridQuery.findBeltEntityAtCoordinates(world, targetCoordinates, {
       excludeEntityId: beltEntityId,
@@ -179,29 +178,29 @@ export class TransportBeltTerminalDecorationManager {
 
   private static resolveTerminalVariant(
     role: TransportBeltTerminalDecorationRole,
-    side: TransportBeltSide,
+    direction: TransportBeltDirection,
   ): TransportBeltVariant {
     if (role === "start") {
-      switch (side) {
-        case "bottom":
+      switch (direction) {
+        case "south":
           return "start-bottom";
-        case "left":
+        case "west":
           return "start-left";
-        case "top":
+        case "north":
           return "start-top";
-        case "right":
+        case "east":
           return "start-right";
       }
     }
 
-    switch (side) {
-      case "bottom":
+    switch (direction) {
+      case "south":
         return "end-bottom";
-      case "left":
+      case "west":
         return "end-left";
-      case "top":
+      case "north":
         return "end-top";
-      case "right":
+      case "east":
         return "end-right";
     }
   }

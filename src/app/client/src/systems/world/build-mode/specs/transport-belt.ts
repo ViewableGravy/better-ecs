@@ -1,5 +1,6 @@
 import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import {
+    getTransportBeltDirectionFromPlacementSide,
     spawnTransportBelt,
     type TransportBeltVariant,
 } from "@client/entities/transport-belt";
@@ -39,7 +40,7 @@ export const transportBeltPlacementDefinition = createBuildItemSpec<TransportBel
   resolvePayload({ world, gridCoordinates, buildModeState }) {
     return TransportBeltRotationVariantManager.deriveBeltVariant(world, {
       coordinates: gridCoordinates,
-      endSide: buildModeState.placementEndSide,
+      headDirection: getTransportBeltDirectionFromPlacementSide(buildModeState.placementEndSide),
     });
   },
   lifecycle: {

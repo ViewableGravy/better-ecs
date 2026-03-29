@@ -1,8 +1,12 @@
-import { canConveyorStoreEntities, ConveyorBeltComponent } from "@client/components/conveyor-belt";
+import {
+    canConveyorStoreEntities,
+    ConveyorBeltComponent,
+    syncConveyorBeltDirectionsFromVariant,
+} from "@client/components/conveyor-belt";
 import { TransportBeltLeaf } from "@client/components/transport-belt-leaf";
+import { TRANSPORT_BELT_DIRECTIONS } from "@client/entities/transport-belt/consts";
 import {
     getConveyorLaneSlots,
-    getTransportBeltVariantDescriptor,
     setConveyorLaneTailBlocked,
     TransportBeltGridQuery,
 } from "@client/entities/transport-belt/core";
@@ -38,23 +42,25 @@ export class TransportBeltConnectionUtils {
   public static connectSpawnedBelt(world: UserWorld, beltEntityId: TransportBeltEntityId): void {
     const belt = world.get(beltEntityId, ConveyorBeltComponent);
 
-    if (!this.isConnectableVariant(belt.variant)) {
+    if (!belt || !this.isConnectableBelt(belt)) {
       return;
     }
+
+    syncConveyorBeltDirectionsFromVariant(belt);
 
     const coordinates = TransportBeltGridQuery.resolveBeltCoordinates(world, beltEntityId);
 
     const previousEntityId = this.findAdjacentBeltEntityId(
       world,
       beltEntityId,
-      belt.variant,
+      belt,
       coordinates,
       "previous",
     );
     const nextEntityId = this.findAdjacentBeltEntityId(
       world,
       beltEntityId,
-      belt.variant,
+      belt,
       coordinates,
       "next",
     );
@@ -138,23 +144,25 @@ export class TransportBeltConnectionUtils {
   public static reconnectBelt(world: UserWorld, beltEntityId: TransportBeltEntityId): void {
     const belt = world.get(beltEntityId, ConveyorBeltComponent);
 
-    if (!this.isConnectableVariant(belt.variant)) {
+    if (!belt || !this.isConnectableBelt(belt)) {
       return;
     }
+
+    syncConveyorBeltDirectionsFromVariant(belt);
 
     const coordinates = TransportBeltGridQuery.resolveBeltCoordinates(world, beltEntityId);
 
     const previousEntityId = this.findAdjacentBeltEntityId(
       world,
       beltEntityId,
-      belt.variant,
+      belt,
       coordinates,
       "previous",
     );
     const nextEntityId = this.findAdjacentBeltEntityId(
       world,
       beltEntityId,
-      belt.variant,
+      belt,
       coordinates,
       "next",
     );
@@ -229,9 +237,11 @@ export class TransportBeltConnectionUtils {
     for (const beltEntityId of beltEntityIds) {
       const belt = world.get(beltEntityId, ConveyorBeltComponent);
 
-      if (!belt || !this.isConnectableVariant(belt.variant)) {
+      if (!belt || !this.isConnectableBelt(belt)) {
         continue;
       }
+
+      syncConveyorBeltDirectionsFromVariant(belt);
 
       belt.previousEntityId = null;
       belt.nextEntityId = null;
@@ -241,7 +251,7 @@ export class TransportBeltConnectionUtils {
     for (const beltEntityId of beltEntityIds) {
       const belt = world.get(beltEntityId, ConveyorBeltComponent);
 
-      if (!belt || !this.isConnectableVariant(belt.variant)) {
+      if (!belt || !this.isConnectableBelt(belt)) {
         continue;
       }
 
@@ -252,31 +262,26 @@ export class TransportBeltConnectionUtils {
   private static findAdjacentBeltEntityId(
     world: UserWorld,
     beltEntityId: EntityId,
-    variant: string,
+    belt: ConveyorBeltComponent,
     coordinates: GridCoordinates,
     relation: BeltRelation,
   ): EntityId | null {
-    const descriptor = getTransportBeltVariantDescriptor(variant);
-
-    if (!descriptor) {
-      return null;
-    }
-
-    const [start, end] = descriptor.flow;
-    const targetSide = relation === "previous" ? start : end;
-    const targetCoordinates = TransportBeltGridQuery.resolveNeighborCoordinates(coordinates, targetSide);
+    const targetDirection = relation === "previous" ? belt.tailDirection : belt.headDirection;
+    const targetCoordinates = TransportBeltGridQuery.resolveNeighborCoordinatesInDirection(coordinates, targetDirection);
 
     return TransportBeltGridQuery.findBeltEntityAtCoordinates(world, targetCoordinates, {
       excludeEntityId: beltEntityId,
       predicate: (candidateEntityId, candidateBelt) => {
-        if (!this.isConnectableVariant(candidateBelt.variant)) {
+        if (!this.isConnectableBelt(candidateBelt)) {
           return false;
         }
+
+        syncConveyorBeltDirectionsFromVariant(candidateBelt);
 
         return this.isFacingCurrentCoordinates(
           world,
           candidateEntityId,
-          candidateBelt.variant,
+          candidateBelt,
           coordinates,
           relation,
         );
@@ -287,22 +292,15 @@ export class TransportBeltConnectionUtils {
   private static isFacingCurrentCoordinates(
     world: UserWorld,
     candidateEntityId: EntityId,
-    candidateVariant: string,
+    candidateBelt: ConveyorBeltComponent,
     currentCoordinates: GridCoordinates,
     relation: BeltRelation,
   ): boolean {
-    const descriptor = getTransportBeltVariantDescriptor(candidateVariant);
-
-    if (!descriptor) {
-      return false;
-    }
-
-    const [candidateStart, candidateEnd] = descriptor.flow;
-    const requiredSide = relation === "previous" ? candidateEnd : candidateStart;
+    const requiredDirection = relation === "previous" ? candidateBelt.headDirection : candidateBelt.tailDirection;
     const candidateCoordinates = TransportBeltGridQuery.resolveBeltCoordinates(world, candidateEntityId);
-    const candidateConnectedCoordinates = TransportBeltGridQuery.resolveNeighborCoordinates(
+    const candidateConnectedCoordinates = TransportBeltGridQuery.resolveNeighborCoordinatesInDirection(
       candidateCoordinates,
-      requiredSide,
+      requiredDirection,
     );
 
     return candidateConnectedCoordinates[0] === currentCoordinates[0]
@@ -313,7 +311,7 @@ export class TransportBeltConnectionUtils {
     world: UserWorld,
     beltEntityId: EntityId,
     belt: ConveyorBeltComponent,
-    shouldBeLeaf: boolean = this.isConnectableVariant(belt.variant) && belt.nextEntityId === null,
+    shouldBeLeaf: boolean = this.isConnectableBelt(belt) && belt.nextEntityId === null,
   ): void {
     belt.isLeaf = shouldBeLeaf;
 
@@ -330,8 +328,8 @@ export class TransportBeltConnectionUtils {
     }
   }
 
-  private static isConnectableVariant(variant: string): boolean {
-    return canConveyorStoreEntities(variant) && getTransportBeltVariantDescriptor(variant) !== undefined;
+  private static isConnectableBelt(belt: ConveyorBeltComponent): boolean {
+    return canConveyorStoreEntities(belt.variant);
   }
 
   private static blockTailTransfers(
@@ -481,8 +479,8 @@ export class TransportBeltConnectionUtils {
       nearbyBeltEntityIds.push(centerBeltEntityId);
     }
 
-    for (const side of ["top", "right", "bottom", "left"] as const) {
-      const neighborEntityId = TransportBeltGridQuery.resolveNeighborEntityId(world, coordinates, side);
+    for (const direction of TRANSPORT_BELT_DIRECTIONS) {
+      const neighborEntityId = TransportBeltGridQuery.resolveNeighborEntityIdInDirection(world, coordinates, direction);
 
       if (neighborEntityId === null) {
         continue;

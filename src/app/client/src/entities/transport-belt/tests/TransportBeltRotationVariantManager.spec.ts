@@ -12,7 +12,7 @@ describe("TransportBeltRotationVariantManager", () => {
     expect(
       TransportBeltRotationVariantManager.deriveBeltVariant(world, {
         coordinates: GridSingleton.worldToGridCoordinates(0, 0),
-        endSide: "right",
+        headDirection: "east",
       }),
     ).toBe("horizontal-right");
   });
@@ -25,7 +25,7 @@ describe("TransportBeltRotationVariantManager", () => {
     expect(
       TransportBeltRotationVariantManager.deriveBeltVariant(world, {
         coordinates: GridSingleton.worldToGridCoordinates(0, 0),
-        endSide: "top",
+        headDirection: "north",
       }),
     ).toBe("angled-left-up");
   });
@@ -39,7 +39,7 @@ describe("TransportBeltRotationVariantManager", () => {
     expect(
       TransportBeltRotationVariantManager.deriveBeltVariant(world, {
         coordinates: GridSingleton.worldToGridCoordinates(0, 0),
-        endSide: "right",
+        headDirection: "east",
       }),
     ).toBe("horizontal-right");
   });

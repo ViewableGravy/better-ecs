@@ -1,5 +1,9 @@
 import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
-import { type TransportBeltVariant } from "@client/entities/transport-belt/consts";
+import {
+    getTransportBeltGridSide,
+    type TransportBeltDirection,
+    type TransportBeltVariant,
+} from "@client/entities/transport-belt/consts";
 import {
     GridNeighborQuery,
     type CardinalSide,
@@ -51,6 +55,13 @@ export class TransportBeltGridQuery {
     return GridNeighborQuery.resolveNeighborCoordinates(coordinates, side);
   }
 
+  public static resolveNeighborCoordinatesInDirection(
+    coordinates: GridCoordinates,
+    direction: TransportBeltDirection,
+  ): GridCoordinates {
+    return this.resolveNeighborCoordinates(coordinates, getTransportBeltGridSide(direction));
+  }
+
   public static findBeltEntityAtCoordinates(
     world: UserWorld,
     coordinates: GridCoordinates,
@@ -79,6 +90,15 @@ export class TransportBeltGridQuery {
       side,
       options,
     );
+  }
+
+  public static resolveNeighborEntityIdInDirection(
+    world: UserWorld,
+    coordinates: GridCoordinates,
+    direction: TransportBeltDirection,
+    options: FindBeltEntityAtCoordinatesOptions = {},
+  ): EntityId | null {
+    return this.resolveNeighborEntityId(world, coordinates, getTransportBeltGridSide(direction), options);
   }
 
   public static buildNeighborMatrix(

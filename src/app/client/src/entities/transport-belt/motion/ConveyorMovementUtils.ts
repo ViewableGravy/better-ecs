@@ -1,4 +1,4 @@
-import type { TransportBeltSide } from "@client/entities/transport-belt/consts";
+import type { TransportBeltDirection } from "@client/entities/transport-belt/consts";
 import {
     getTransportBeltInwardNormal,
     getTransportBeltOutwardNormal,
@@ -44,8 +44,8 @@ export class ConveyorMovementUtils {
   }
 
   private static resolveCurveMotion(
-    from: TransportBeltSide,
-    to: TransportBeltSide,
+    from: TransportBeltDirection,
+    to: TransportBeltDirection,
     playerX: number,
     playerY: number,
     beltTransform: Transform2D,

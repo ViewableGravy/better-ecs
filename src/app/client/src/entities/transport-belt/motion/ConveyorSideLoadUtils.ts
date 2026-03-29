@@ -1,13 +1,13 @@
 import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import { ConveyorUtils } from "@client/entities/transport-belt/ConveyorUtils";
-import type { TransportBeltFlow, TransportBeltSide } from "@client/entities/transport-belt/consts";
+import type { TransportBeltDirection, TransportBeltFlow } from "@client/entities/transport-belt/consts";
 import {
-  getOppositeTransportBeltSide,
-  getTransportBeltFlowVector,
-  getTransportBeltSideVector,
-  getTransportBeltVariantDescriptor,
-  isStraightTransportBeltFlow,
-  TransportBeltGridQuery,
+    getOppositeTransportBeltDirection,
+    getTransportBeltDirectionVector,
+    getTransportBeltFlowVector,
+    getTransportBeltVariantDescriptor,
+    isStraightTransportBeltFlow,
+    TransportBeltGridQuery,
 } from "@client/entities/transport-belt/core";
 import type { EntityId, UserWorld } from "@engine";
 import type { ConveyorSideLoadTransfer } from "./types";
@@ -34,9 +34,9 @@ export class ConveyorSideLoadUtils {
       return null;
     }
 
-    const [, sourceEndSide] = sourceDescriptor.flow;
+    const [, sourceEndDirection] = sourceDescriptor.flow;
     const sourceCoordinates = TransportBeltGridQuery.resolveBeltCoordinates(world, sourceEntityId);
-    const targetCoordinates = TransportBeltGridQuery.resolveNeighborCoordinates(sourceCoordinates, sourceEndSide);
+    const targetCoordinates = TransportBeltGridQuery.resolveNeighborCoordinatesInDirection(sourceCoordinates, sourceEndDirection);
     const targetEntityId = this.findStraightTargetEntityId(world, sourceEntityId, targetCoordinates);
 
     if (targetEntityId === null) {
@@ -50,16 +50,16 @@ export class ConveyorSideLoadUtils {
     }
 
     const targetDescriptor = getTransportBeltVariantDescriptor(targetConveyor.variant);
-    const approachedSide = getOppositeTransportBeltSide(sourceEndSide);
+    const approachedDirection = getOppositeTransportBeltDirection(sourceEndDirection);
 
-    if (!targetDescriptor || !this.isSideApproach(targetDescriptor.flow, approachedSide)) {
+    if (!targetDescriptor || !this.isSideApproach(targetDescriptor.flow, approachedDirection)) {
       return null;
     }
 
     return {
       sourceEntityId,
       targetEntityId,
-      targetLane: this.resolveTargetLane(targetDescriptor.flow, approachedSide),
+      targetLane: this.resolveTargetLane(targetDescriptor.flow, approachedDirection),
     };
   }
 
@@ -84,15 +84,15 @@ export class ConveyorSideLoadUtils {
     return isStraightTransportBeltFlow(descriptor.flow);
   }
 
-  private static isSideApproach(flow: TransportBeltFlow, approachedSide: TransportBeltSide): boolean {
+  private static isSideApproach(flow: TransportBeltFlow, approachedDirection: TransportBeltDirection): boolean {
     const [start, end] = flow;
 
-    return approachedSide !== start && approachedSide !== end;
+    return approachedDirection !== start && approachedDirection !== end;
   }
 
-  private static resolveTargetLane(flow: TransportBeltFlow, approachedSide: TransportBeltSide) {
+  private static resolveTargetLane(flow: TransportBeltFlow, approachedDirection: TransportBeltDirection) {
     const targetVector = getTransportBeltFlowVector(flow);
-    const approachVector = getTransportBeltSideVector(approachedSide);
+    const approachVector = getTransportBeltDirectionVector(approachedDirection);
     const cross = targetVector[0] * approachVector[1] - targetVector[1] * approachVector[0];
 
     if (cross < 0) {

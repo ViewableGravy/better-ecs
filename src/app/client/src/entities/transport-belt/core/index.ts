@@ -1,10 +1,11 @@
 export {
-    TRANSPORT_BELT_OPPOSITE_SIDE,
-    TRANSPORT_BELT_SIDE_VECTORS, getOppositeTransportBeltSide,
+    TRANSPORT_BELT_DIRECTION_VECTORS,
+    TRANSPORT_BELT_OPPOSITE_DIRECTION,
+    getOppositeTransportBeltDirection,
+    getTransportBeltDirectionVector,
     getTransportBeltFlowVector,
     getTransportBeltInwardNormal,
     getTransportBeltOutwardNormal,
-    getTransportBeltSideVector,
     isHorizontalTransportBeltFlow,
     isStraightTransportBeltFlow,
     isVerticalTransportBeltFlow, type SideVector
