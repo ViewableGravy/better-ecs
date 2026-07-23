@@ -1,6 +1,7 @@
 import { PlayerComponent } from "@client/components/player";
 import { PhysicsWorldManager } from "@client/scenes/world/physics/physics-world-manager";
 import { createSystem } from "@engine";
+import { Transform2D } from "@engine/components";
 import { fromContext, World } from "@engine/context";
 import { collides, COLLISION_LAYERS, resolve } from "@libs/physics";
 
@@ -21,7 +22,11 @@ export const System = createSystem("main:spatial-contexts-collision-authority")(
         continue;
       }
 
-      resolve(playerBody.collider, playerBody.transform, otherBody.collider, otherBody.transform);
+      world.patch(playerBody.entityId, Transform2D, (playerTransform) => {
+        world.patch(otherBody.entityId, Transform2D, (otherTransform) => {
+          resolve(playerBody.collider, playerTransform, otherBody.collider, otherTransform);
+        });
+      });
     }
   },
 });

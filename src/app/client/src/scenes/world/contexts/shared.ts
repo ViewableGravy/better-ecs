@@ -12,11 +12,8 @@ export function setupContextPlayer(world: UserWorld, x: number, y: number): void
 
   const playerId = ensurePlayer(world);
 
-  const playerTransform = world.get(playerId, Transform2D);
-  if (!playerTransform) {
-    return;
-  }
-
-  playerTransform.curr.pos.set(x, y);
-  playerTransform.prev.pos.set(x, y);
+  world.patch(playerId, Transform2D, (playerTransform) => {
+    playerTransform.curr.pos.set(x, y);
+    playerTransform.prev.pos.set(x, y);
+  });
 }

@@ -16,7 +16,6 @@ export const System = createSystem("main:conveyor-movement-authority")({
     const physicsWorld = PhysicsWorldManager.requireWorld(world);
 
     const [playerId] = world.invariantQuery(PlayerComponent);
-    const playerTransform = world.require(playerId, Transform2D);
     const playerBody = physicsWorld.queryFirstLayer(COLLISION_LAYERS.ACTOR, PlayerComponent);
 
     if (!playerBody) {
@@ -95,7 +94,9 @@ export const System = createSystem("main:conveyor-movement-authority")({
 
     // apply the motion to the player's transform
     const step = belt.speed * seconds;
-    playerTransform.curr.pos.x += SHARED_MOTION.x * step;
-    playerTransform.curr.pos.y += SHARED_MOTION.y * step;
+    world.patch(playerId, Transform2D, (transform) => {
+      transform.curr.pos.x += SHARED_MOTION.x * step;
+      transform.curr.pos.y += SHARED_MOTION.y * step;
+    });
   },
 });

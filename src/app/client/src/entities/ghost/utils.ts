@@ -12,7 +12,7 @@ import {
     VALID_GHOST_TINT,
 } from "@client/systems/world/build-mode/const";
 import type { EntityId, UserWorld } from "@engine";
-import { AnimatedSprite, FillColor, Parent, Rgba, Shape, Sprite, StrokeColor, Tint, Transform2D } from "@engine/components";
+import { AnimatedSprite, FillColor, Rgba, Shape, Sprite, StrokeColor, Tint, Transform2D } from "@engine/components";
 
 /**********************************************************************************************************
  *   COMPONENT START
@@ -43,9 +43,9 @@ export class GhostUtils {
     ghostEntityId: EntityId,
     isPlaceable: boolean,
   ): void {
-    const ghostPreview = world.require(ghostEntityId, GhostPreviewComponent);
-
-    ghostPreview.isPlaceable = isPlaceable;
+    const ghostPreview = world.patch(ghostEntityId, GhostPreviewComponent, (component) => {
+      component.isPlaceable = isPlaceable;
+    });
     this.applyAppearance(world, ghostEntityId, isPlaceable);
     this.syncInvalidPlacementIndicator(world, ghostEntityId, ghostPreview, isPlaceable);
   }
@@ -60,25 +60,29 @@ export class GhostUtils {
       const nextStroke = this.cloneColor(isPlaceable ? GHOST_STROKE : INVALID_GHOST_STROKE);
 
       if (fillColor) {
-        fillColor.value.copyFrom(nextFill);
+        world.patch(ghostEntityId, FillColor, (component) => component.value.copyFrom(nextFill));
       } else {
         world.add(ghostEntityId, new FillColor(nextFill));
       }
 
       if (strokeColor) {
-        strokeColor.value.copyFrom(nextStroke);
+        world.patch(ghostEntityId, StrokeColor, (component) => component.value.copyFrom(nextStroke));
       } else {
         world.add(ghostEntityId, new StrokeColor(nextStroke));
       }
 
-      shape.zOrder = Number.MAX_SAFE_INTEGER;
+      world.patch(ghostEntityId, Shape, (component) => {
+        component.zOrder = Number.MAX_SAFE_INTEGER;
+      });
     }
 
     const animatedSprite = world.get(ghostEntityId, AnimatedSprite);
 
     if (animatedSprite) {
       this.syncTint(world, ghostEntityId, isPlaceable ? VALID_GHOST_TINT : INVALID_GHOST_TINT);
-      animatedSprite.zOrder = Number.MAX_SAFE_INTEGER;
+      world.patch(ghostEntityId, AnimatedSprite, (component) => {
+        component.zOrder = Number.MAX_SAFE_INTEGER;
+      });
       return;
     }
 
@@ -86,7 +90,9 @@ export class GhostUtils {
 
     if (sprite) {
       this.syncTint(world, ghostEntityId, isPlaceable ? VALID_GHOST_TINT : INVALID_GHOST_TINT);
-      sprite.zOrder = Number.MAX_SAFE_INTEGER;
+      world.patch(ghostEntityId, Sprite, (component) => {
+        component.zOrder = Number.MAX_SAFE_INTEGER;
+      });
     }
   }
 
@@ -94,7 +100,7 @@ export class GhostUtils {
     const tint = world.get(entityId, Tint);
 
     if (tint) {
-      tint.value.copyFrom(color);
+      world.patch(entityId, Tint, (component) => component.value.copyFrom(color));
       return;
     }
 
@@ -143,7 +149,7 @@ export class GhostUtils {
       RENDER_LAYERS.world,
     );
 
-    world.add(indicatorEntityId, new Parent(ghostEntityId));
+    world.setParent(indicatorEntityId, ghostEntityId);
     world.add(indicatorEntityId, new Transform2D(7, -7));
     world.add(indicatorEntityId, indicatorShape);
     world.add(indicatorEntityId, new FillColor(circleFill));
@@ -171,7 +177,7 @@ export class GhostUtils {
       RENDER_LAYERS.world,
     );
 
-    world.add(slashEntityId, new Parent(parentEntityId));
+    world.setParent(slashEntityId, parentEntityId);
     world.add(slashEntityId, new Transform2D(0, 0, rotation));
     world.add(slashEntityId, slashShape);
     world.add(slashEntityId, new FillColor(new Rgba(0, 0, 0, 0)));

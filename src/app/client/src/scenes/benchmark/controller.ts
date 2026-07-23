@@ -30,10 +30,12 @@ export class BenchmarkController {
   readonly #world: UserWorld;
   readonly #engine: AnyEngine;
   readonly #entityIds: EntityId[] = [];
-  readonly #transforms: Transform2D[] = [];
-  readonly #movingTransforms: Transform2D[] = [];
+  readonly #movingEntityIds: EntityId[] = [];
   readonly #queryBenchmark: QueryBenchmark;
   #movingBaseX = new Float32Array(0);
+  #nextMovingX = 0;
+  #nextLayoutX = 0;
+  #nextLayoutY = 0;
   #phase: BenchmarkStatus["phase"] = "idle";
   #requestedCount: BenchmarkEntityCount = BENCHMARK_ENTITY_COUNTS[0];
   #constructionCpuMs = 0;
@@ -62,7 +64,7 @@ export class BenchmarkController {
       requestedCount: this.#requestedCount,
       createdCount: this.#entityIds.length,
       lastEntityId: this.#entityIds.at(-1) ?? null,
-      animatedCount: this.#movingTransforms.length,
+      animatedCount: this.#movingEntityIds.length,
       constructionCpuMs: this.#constructionCpuMs,
       constructionWallMs: this.#constructionWallMs,
       error: this.#error,
@@ -172,7 +174,7 @@ export class BenchmarkController {
       profileId: BENCHMARK_PROFILE_ID,
       targetCount,
       createdCount: this.#entityIds.length,
-      animatedCount: this.#movingTransforms.length,
+      animatedCount: this.#movingEntityIds.length,
       constructionCpuMs: this.#constructionCpuMs,
       constructionWallMs: this.#constructionWallMs,
       updateTicks: this.#engine.meta.updateTick - tickBefore,
@@ -193,24 +195,25 @@ export class BenchmarkController {
     const angle = (updateTick % MOVE_TICKS_PER_CYCLE) / MOVE_TICKS_PER_CYCLE * Math.PI * 2;
     const offset = Math.sin(angle) * MOVE_AMPLITUDE;
 
-    for (let index = 0; index < this.#movingTransforms.length; index += 1) {
-      const transform = this.#movingTransforms[index];
-      transform.curr.pos.x = this.#movingBaseX[index] + offset;
+    for (let index = 0; index < this.#movingEntityIds.length; index += 1) {
+      const entityId = this.#movingEntityIds[index];
+      this.#nextMovingX = this.#movingBaseX[index] + offset;
+      this.#world.patch(entityId, Transform2D, this.#patchMovingTransform);
     }
     this.#motionUpdates += 1;
   }
 
   public checksum(): number {
-    const count = this.#movingTransforms.length;
+    const count = this.#movingEntityIds.length;
     if (count === 0) {
       return 0;
     }
 
     const middle = Math.floor(count / 2);
     return (
-      this.#movingTransforms[0].curr.pos.x
-      + this.#movingTransforms[middle].curr.pos.x
-      + this.#movingTransforms[count - 1].curr.pos.x
+      this.#world.require(this.#movingEntityIds[0], Transform2D).curr.pos.x
+      + this.#world.require(this.#movingEntityIds[middle], Transform2D).curr.pos.x
+      + this.#world.require(this.#movingEntityIds[count - 1], Transform2D).curr.pos.x
     );
   }
 
@@ -233,9 +236,9 @@ export class BenchmarkController {
     }
 
     const expectedAnimatedCount = Math.ceil(targetCount / MOVING_ENTITY_STRIDE);
-    if (this.#movingTransforms.length !== expectedAnimatedCount) {
+    if (this.#movingEntityIds.length !== expectedAnimatedCount) {
       throw new Error(
-        `Expected ${expectedAnimatedCount} animated entities, found ${this.#movingTransforms.length}.`,
+        `Expected ${expectedAnimatedCount} animated entities, found ${this.#movingEntityIds.length}.`,
       );
     }
   }
@@ -278,14 +281,13 @@ export class BenchmarkController {
     this.#world.add(entityId, transform);
     this.#world.add(entityId, sprite);
     this.#entityIds.push(entityId);
-    this.#transforms.push(transform);
 
     if (!isMoving) {
       return;
     }
 
-    const movingIndex = this.#movingTransforms.length;
-    this.#movingTransforms.push(transform);
+    const movingIndex = this.#movingEntityIds.length;
+    this.#movingEntityIds.push(entityId);
     this.#movingBaseX[movingIndex] = x;
   }
 
@@ -296,28 +298,37 @@ export class BenchmarkController {
         throw new Error("Benchmark entity list became inconsistent while shrinking.");
       }
       this.#world.destroy(entityId);
-      this.#transforms.pop();
     }
 
-    this.#movingTransforms.length = Math.ceil(targetCount / MOVING_ENTITY_STRIDE);
+    this.#movingEntityIds.length = Math.ceil(targetCount / MOVING_ENTITY_STRIDE);
   }
 
   #applyLayout(layout: GridLayout): void {
-    for (let index = 0; index < this.#transforms.length; index += 1) {
-      const transform = this.#transforms[index];
+    for (let index = 0; index < this.#entityIds.length; index += 1) {
+      const entityId = this.#entityIds[index];
       const column = index % layout.columns;
       const row = Math.floor(index / layout.columns);
       const x = layout.startX + column * layout.stepX;
       const y = layout.startY + row * layout.stepY;
 
-      transform.curr.pos.set(x, y);
-      transform.prev.pos.set(x, y);
+      this.#nextLayoutX = x;
+      this.#nextLayoutY = y;
+      this.#world.patch(entityId, Transform2D, this.#patchLayoutTransform);
 
       if (index % MOVING_ENTITY_STRIDE === 0) {
         this.#movingBaseX[Math.floor(index / MOVING_ENTITY_STRIDE)] = x;
       }
     }
   }
+
+  readonly #patchMovingTransform = (transform: Transform2D): void => {
+    transform.curr.pos.x = this.#nextMovingX;
+  };
+
+  readonly #patchLayoutTransform = (transform: Transform2D): void => {
+    transform.curr.pos.set(this.#nextLayoutX, this.#nextLayoutY);
+    transform.prev.pos.set(this.#nextLayoutX, this.#nextLayoutY);
+  };
 
   #ensureMovingBaseCapacity(required: number): void {
     if (this.#movingBaseX.length >= required) {

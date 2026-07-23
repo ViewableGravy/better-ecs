@@ -98,11 +98,13 @@ describe("SpritePipe", () => {
     expect(renderer.upsertRetainedSprite.mock.calls[0]?.[2].assetId).toBe("frame-b");
   });
 
-  it("upserts once after a direct Sprite field mutation", () => {
+  it("upserts once after a Sprite patch", () => {
     registry.syncAndQueue(world, new RenderQueue(), 0, 0);
     renderer.upsertRetainedSprite.mockClear();
 
-    sprite.width = 32;
+    world.patch(entityId, Sprite, (patchedSprite) => {
+      patchedSprite.width = 32;
+    });
     registry.syncAndQueue(world, new RenderQueue(), 1, 1);
 
     expect(renderer.upsertRetainedSprite).toHaveBeenCalledOnce();
@@ -118,7 +120,9 @@ describe("SpritePipe", () => {
     registry.syncAndQueue(world, new RenderQueue(), 0, 0);
     renderer.upsertRetainedSprite.mockClear();
 
-    sprite.isDynamic = false;
+    world.patch(entityId, Sprite, (patchedSprite) => {
+      patchedSprite.isDynamic = false;
+    });
     const queue = new RenderQueue();
     registry.syncAndQueue(world, queue, 1, 1);
 
@@ -141,8 +145,9 @@ describe("SpritePipe", () => {
     registry.syncAndQueue(world, new RenderQueue(), 0, 0);
     renderer.upsertRetainedSprite.mockClear();
 
-    worldTransform.curr.pos.x = 24;
-    world.notifyEntityChanged(entityId);
+    world.patch(entityId, WorldTransform2D, (patchedTransform) => {
+      patchedTransform.curr.pos.x = 24;
+    });
     registry.syncAndQueue(world, new RenderQueue(), 1, 1);
 
     expect(renderer.upsertRetainedSprite).toHaveBeenCalledOnce();
@@ -171,7 +176,7 @@ describe("SpritePipe", () => {
     expect(queue.commands).toHaveLength(0);
   });
 
-  it("retains direct Parent mutation through the derived world-transform update", () => {
+  it("retains reparenting through the hierarchy API and derived world-transform update", () => {
     const firstRoot = world.create();
     const secondRoot = world.create();
     world.add(firstRoot, new Transform2D(10, 0));
@@ -182,7 +187,7 @@ describe("SpritePipe", () => {
     registry.syncAndQueue(world, new RenderQueue(), 0, 0);
     renderer.upsertRetainedSprite.mockClear();
 
-    world.require(entityId, Parent).entityId = secondRoot;
+    world.setParent(entityId, secondRoot);
     syncWorldTransform2D(world);
     registry.syncAndQueue(world, new RenderQueue(), 1, 1);
 

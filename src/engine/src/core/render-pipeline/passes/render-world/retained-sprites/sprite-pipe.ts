@@ -1,15 +1,19 @@
 import {
     AnimatedSprite,
     EditorHoverHighlight,
+    Parent,
     resolveEntityTint,
     Sprite,
+    Transform2D,
     WorldTransform2D,
-    type Transform2D,
 } from "@engine/components";
 import { getFrameAssetIdAtTime } from "@engine/components/sprite/animated";
 import { Rgba } from "@engine/components/sprite/sprite";
 import type { EntityId } from "@engine/ecs/entity";
-import type { UserWorld, WorldMutationObserver } from "@engine/ecs/world";
+import type {
+  UserWorld,
+  WorldMutationObserver,
+} from "@engine/ecs/world";
 import type { RenderCommand, RenderQueue } from "@engine/render/queue/render-queue";
 import type { SpriteRenderState } from "@engine/render/types/renderer";
 
@@ -129,6 +133,18 @@ export class SpritePipe implements WorldMutationObserver {
     }
 
     state.dirtyEntityIds.add(entityId);
+  }
+
+  componentChanged(
+    world: UserWorld,
+    entityId: EntityId,
+    componentType: Function,
+  ): void {
+    if (componentType === Transform2D || componentType === Parent) {
+      return;
+    }
+
+    this.entityChanged(world, entityId);
   }
 
   worldReset(world: UserWorld): void {

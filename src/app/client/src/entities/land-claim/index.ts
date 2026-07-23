@@ -13,7 +13,6 @@ import { Vec2, type EntityId, type UserWorld } from "@engine";
 import {
     Debug,
     FillColor,
-    Parent,
     Rgba,
     Shape,
     Sprite,
@@ -189,7 +188,7 @@ function spawnClaimOverlay(
   const overlayEntityId = world.create();
   const overlayFill = new Rgba(fill.r, fill.g, fill.b, fill.a);
 
-  world.add(overlayEntityId, new Parent(parentEntityId));
+  world.setParent(overlayEntityId, parentEntityId);
   world.add(overlayEntityId, new Transform2D(0, 0));
   world.add(
     overlayEntityId,
@@ -217,7 +216,7 @@ function spawnFlagCloth(
 ): void {
   const flagEntityId = world.create();
 
-  world.add(flagEntityId, new Parent(parentEntityId));
+  world.setParent(flagEntityId, parentEntityId);
   world.add(flagEntityId, new Transform2D(LAND_CLAIM_FLAG_OFFSET_X, LAND_CLAIM_FLAG_OFFSET_Y));
   world.add(
     flagEntityId,
@@ -255,7 +254,7 @@ function spawnNameplate(
   sprite.zOrder = 0.55;
   sprite.isDynamic = false;
 
-  world.add(nameplateEntityId, new Parent(parentEntityId));
+  world.setParent(nameplateEntityId, parentEntityId);
   world.add(nameplateEntityId, new Transform2D(0, LAND_CLAIM_NAMEPLATE_OFFSET_Y));
   world.add(nameplateEntityId, sprite);
   if (renderVisibilityRole !== undefined) {
@@ -270,4 +269,3 @@ function cloneColor(color: Rgba): Rgba {
 
 export { LandClaim } from "@client/entities/land-claim/component";
 export { LandClaimQuery } from "@client/entities/land-claim/LandClaimQuery";
-

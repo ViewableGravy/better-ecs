@@ -7,7 +7,6 @@ import {
     AnimatedSprite,
     Debug,
     FillColor,
-    Parent,
     Rgba,
     Shape,
     StrokeColor,
@@ -41,14 +40,14 @@ export function spawnPlayer(world: UserWorld): EntityId<PlayerComponent> {
 
   // create an anchor for orbiting objects
   const orbitAnchor = world.create();
-  world.add(orbitAnchor, new Parent(player));
+  world.setParent(orbitAnchor, player);
   world.add(orbitAnchor, new Transform2D(0, 0));
   world.add(orbitAnchor, new Debug("player-orbit-anchor"));
 
   // create an orbiting circle for visual flair
   const orbitingCircle = world.create();
   const orbitingCircleShape = new Shape("circle", 10, 10, 1, 5, 1);
-  world.add(orbitingCircle, new Parent(orbitAnchor));
+  world.setParent(orbitingCircle, orbitAnchor);
   world.add(orbitingCircle, new Transform2D(36, 0));
   world.add(orbitingCircle, new OrbitMotion(36, Math.PI));
   world.add(orbitingCircle, new Debug("player-orbit-circle"));

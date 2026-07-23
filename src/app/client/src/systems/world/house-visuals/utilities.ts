@@ -128,7 +128,9 @@ function applyPlayerAlpha(world: UserWorld, alpha: number): void {
     const tint = world.get(entityId, Tint);
 
     if (tint) {
-      tint.value.a = alpha;
+      world.patch(entityId, Tint, (component) => {
+        component.value.a = alpha;
+      });
     } else {
       const nextTint = new Tint();
       nextTint.value.a = alpha;
@@ -140,7 +142,9 @@ function applyPlayerAlpha(world: UserWorld, alpha: number): void {
     const tint = world.get(entityId, Tint);
 
     if (tint) {
-      tint.value.a = alpha;
+      world.patch(entityId, Tint, (component) => {
+        component.value.a = alpha;
+      });
     } else {
       const nextTint = new Tint();
       nextTint.value.a = alpha;
@@ -181,11 +185,15 @@ function applyShapeAlpha(
     const strokeColor = world.get(entityId, StrokeColor);
 
     if (fillColor) {
-      fillColor.value.a = nextAlpha;
+      world.patch(entityId, FillColor, (component) => {
+        component.value.a = nextAlpha;
+      });
     }
 
     if (strokeColor) {
-      strokeColor.value.a = nextAlpha;
+      world.patch(entityId, StrokeColor, (component) => {
+        component.value.a = nextAlpha;
+      });
     }
   }
 }

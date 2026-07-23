@@ -5,10 +5,19 @@ import type { EntityId } from "@engine/ecs/entity";
  * Marks an entity as a child of another entity.
  */
 export class Parent extends Component {
-  declare public entityId: EntityId;
+  #entityId: EntityId;
+
+  public get entityId(): EntityId {
+    return this.#entityId;
+  }
 
   constructor(entityId: EntityId) {
     super();
-    this.entityId = entityId;
+    this.#entityId = entityId;
+  }
+
+  /** @internal Parent topology is mutated exclusively by World.setParent. */
+  public __setEntityId(entityId: EntityId): void {
+    this.#entityId = entityId;
   }
 }

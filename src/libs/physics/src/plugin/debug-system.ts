@@ -69,12 +69,9 @@ function syncColliderDebugWorld(world: UserWorld): void {
       continue;
     }
 
-    const targetTransform = world.get(targetId, Transform2D);
     const targetCollider = getEntityCollider(world, targetId);
-    const debugTransform = world.get(debugEntityId, Transform2D);
-    const debugShape = world.get(debugEntityId, Shape);
 
-    if (!targetTransform || !targetCollider || !debugTransform || !debugShape) {
+    if (!targetCollider || !world.has(debugEntityId, Transform2D) || !world.has(debugEntityId, Shape)) {
       world.destroy(debugEntityId);
       debugByTarget.delete(targetId);
       continue;
@@ -84,9 +81,6 @@ function syncColliderDebugWorld(world: UserWorld): void {
       world,
       targetId,
       debugEntityId,
-      debugShape,
-      debugTransform,
-      targetTransform,
       targetCollider,
     );
   }
@@ -123,7 +117,7 @@ function syncColliderDebugWorld(world: UserWorld): void {
     world.add(debugEntityId, new StrokeColor(new Rgba(1, 1, 1, 1)));
     world.add(debugEntityId, new ColliderDebugProxy(targetId));
 
-    syncDebugShapeFromTarget(world, targetId, debugEntityId, debugShape, debugTransform, targetTransform, targetCollider);
+    syncDebugShapeFromTarget(world, targetId, debugEntityId, targetCollider);
     debugByTarget.set(targetId, debugEntityId);
   }
 }
@@ -132,9 +126,6 @@ function syncDebugShapeFromTarget(
   world: UserWorld,
   targetId: EntityId,
   debugEntityId: EntityId,
-  debugShape: Shape,
-  debugTransform: Transform2D,
-  targetTransform: Transform2D,
   targetCollider: ReturnType<typeof getEntityCollider>,
 ): void {
   const primitive = targetCollider instanceof CompoundCollider ? targetCollider.collider : targetCollider;
@@ -143,8 +134,30 @@ function syncDebugShapeFromTarget(
   }
 
   const { layer, zOrder } = getTargetRenderOrder(world, targetId);
-  debugShape.layer = layer;
-  debugShape.zOrder = zOrder;
+  world.patch(debugEntityId, Shape, (debugShape) => {
+    debugShape.layer = layer;
+    debugShape.zOrder = zOrder;
+
+    if (primitive instanceof CircleCollider) {
+      debugShape.type = "circle";
+      debugShape.width = primitive.radius * 2;
+      debugShape.height = primitive.radius * 2;
+      return;
+    }
+
+    if (primitive instanceof PointCollider) {
+      debugShape.type = "circle";
+      debugShape.width = POINT_DEBUG_SIZE;
+      debugShape.height = POINT_DEBUG_SIZE;
+      return;
+    }
+
+    if (primitive instanceof RectangleCollider) {
+      debugShape.type = "rectangle";
+      debugShape.width = primitive.bounds.size.x;
+      debugShape.height = primitive.bounds.size.y;
+    }
+  });
 
   applyLayerDebugStyle(world, targetId, debugEntityId);
 
@@ -152,21 +165,11 @@ function syncDebugShapeFromTarget(
     return;
   }
 
-  if (primitive instanceof CircleCollider) {
-    debugShape.type = "circle";
-    debugShape.width = primitive.radius * 2;
-    debugShape.height = primitive.radius * 2;
-    debugTransform.curr.pos.set(SHARED_WORLD_TRANSFORM.curr.pos);
-    debugTransform.prev.pos.set(SHARED_WORLD_TRANSFORM.prev.pos);
-    return;
-  }
-
-  if (primitive instanceof PointCollider) {
-    debugShape.type = "circle";
-    debugShape.width = POINT_DEBUG_SIZE;
-    debugShape.height = POINT_DEBUG_SIZE;
-    debugTransform.curr.pos.set(SHARED_WORLD_TRANSFORM.curr.pos);
-    debugTransform.prev.pos.set(SHARED_WORLD_TRANSFORM.prev.pos);
+  if (primitive instanceof CircleCollider || primitive instanceof PointCollider) {
+    world.patch(debugEntityId, Transform2D, (debugTransform) => {
+      debugTransform.curr.pos.set(SHARED_WORLD_TRANSFORM.curr.pos);
+      debugTransform.prev.pos.set(SHARED_WORLD_TRANSFORM.prev.pos);
+    });
     return;
   }
 
@@ -174,65 +177,53 @@ function syncDebugShapeFromTarget(
     return;
   }
 
-  debugShape.type = "rectangle";
-  debugShape.width = primitive.bounds.size.x;
-  debugShape.height = primitive.bounds.size.y;
-
   const offsetX = primitive.bounds.left + primitive.bounds.size.x / 2;
   const offsetY = primitive.bounds.top + primitive.bounds.size.y / 2;
 
-  debugTransform.curr.pos.set(
-    SHARED_WORLD_TRANSFORM.curr.pos.x + offsetX,
-    SHARED_WORLD_TRANSFORM.curr.pos.y + offsetY,
-  );
-  debugTransform.prev.pos.set(
-    SHARED_WORLD_TRANSFORM.prev.pos.x + offsetX,
-    SHARED_WORLD_TRANSFORM.prev.pos.y + offsetY,
-  );
+  world.patch(debugEntityId, Transform2D, (debugTransform) => {
+    debugTransform.curr.pos.set(
+      SHARED_WORLD_TRANSFORM.curr.pos.x + offsetX,
+      SHARED_WORLD_TRANSFORM.curr.pos.y + offsetY,
+    );
+    debugTransform.prev.pos.set(
+      SHARED_WORLD_TRANSFORM.prev.pos.x + offsetX,
+      SHARED_WORLD_TRANSFORM.prev.pos.y + offsetY,
+    );
+  });
 }
 
 function applyLayerDebugStyle(world: UserWorld, targetId: EntityId, debugEntityId: EntityId): void {
-  const fillColor = world.require(debugEntityId, FillColor);
-  const strokeColor = world.require(debugEntityId, StrokeColor);
   const participation = world.get(targetId, CollisionParticipation);
   const layers = participation?.layers ?? 0n;
 
   if ((layers & COLLISION_LAYERS.CONVEYOR) !== 0n) {
-    strokeColor.value.set(0.1, 0.95, 0.95, 1);
-    fillColor.value.set(0.1, 0.95, 0.95, 0.08);
-    return;
+    return setDebugColors(world, debugEntityId, 0.1, 0.95, 0.95);
   }
 
   if ((layers & COLLISION_LAYERS.ACTOR) !== 0n) {
-    strokeColor.value.set(0.2, 1, 0.25, 1);
-    fillColor.value.set(0.2, 1, 0.25, 0.08);
-    return;
+    return setDebugColors(world, debugEntityId, 0.2, 1, 0.25);
   }
 
   if ((layers & COLLISION_LAYERS.SOLID) !== 0n) {
-    strokeColor.value.set(1, 0.35, 0.25, 1);
-    fillColor.value.set(1, 0.35, 0.25, 0.08);
-    return;
+    return setDebugColors(world, debugEntityId, 1, 0.35, 0.25);
   }
 
   if ((layers & COLLISION_LAYERS.GHOST) !== 0n) {
-    strokeColor.value.set(1, 1, 0.25, 1);
-    fillColor.value.set(1, 1, 0.25, 0.08);
-    return;
+    return setDebugColors(world, debugEntityId, 1, 1, 0.25);
   }
 
-  strokeColor.value.set(
+  setDebugColors(
+    world,
+    debugEntityId,
     COLLIDER_DEBUG_STYLE.stroke.r,
     COLLIDER_DEBUG_STYLE.stroke.g,
     COLLIDER_DEBUG_STYLE.stroke.b,
-    COLLIDER_DEBUG_STYLE.stroke.a,
   );
-  fillColor.value.set(
-    COLLIDER_DEBUG_STYLE.fill.r,
-    COLLIDER_DEBUG_STYLE.fill.g,
-    COLLIDER_DEBUG_STYLE.fill.b,
-    COLLIDER_DEBUG_STYLE.fill.a,
-  );
+}
+
+function setDebugColors(world: UserWorld, entityId: EntityId, r: number, g: number, b: number): void {
+  world.patch(entityId, StrokeColor, (strokeColor) => strokeColor.value.set(r, g, b, 1));
+  world.patch(entityId, FillColor, (fillColor) => fillColor.value.set(r, g, b, 0.08));
 }
 
 function getTargetRenderOrder(world: UserWorld, targetId: EntityId): { layer: number; zOrder: number } {

@@ -31,7 +31,8 @@ export const PlaceableWallGhost = createGhostPreset<PlaceableWallVisualVariant>(
 
 		updatePlaceableWallVisual(world, ghostEntityId, derivedVariant);
 
-		const ghostPreview = world.require(ghostEntityId, GhostPreviewComponent);
-		ghostPreview.previewVariant = derivedVariant;
+		world.patch(ghostEntityId, GhostPreviewComponent, (ghostPreview) => {
+			ghostPreview.previewVariant = derivedVariant;
+		});
 	},
 });

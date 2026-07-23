@@ -1,7 +1,7 @@
-import { Rgba, type RgbaChangeObserver } from "@engine/components/sprite/sprite";
+import { Rgba } from "@engine/components/sprite/sprite";
 import { Component } from "@engine/ecs/component";
 
-class RgbaVisualComponent extends Component implements RgbaChangeObserver {
+class RgbaVisualComponent extends Component {
   readonly #value: Rgba;
 
   get value(): Rgba {
@@ -14,11 +14,7 @@ class RgbaVisualComponent extends Component implements RgbaChangeObserver {
 
   constructor(value: Rgba = new Rgba()) {
     super();
-    this.#value = new Rgba(value.r, value.g, value.b, value.a, this);
-  }
-
-  notifyRgbaChanged(): void {
-    this.__markChanged();
+    this.#value = new Rgba(value.r, value.g, value.b, value.a);
   }
 }
 
@@ -30,9 +26,7 @@ export class Opacity extends Component {
 
   get value(): number { return this.#value; }
   set value(value: number) {
-    if (this.#value === value) return;
     this.#value = value;
-    this.__markChanged();
   }
 
   constructor(value: number = 1) {
@@ -50,9 +44,7 @@ export class OpacityTrack extends Component {
 
   get value(): number { return this.#value; }
   set value(value: number) {
-    if (this.#value === value) return;
     this.#value = value;
-    this.__markChanged();
   }
 
   constructor(value: number = 1) {

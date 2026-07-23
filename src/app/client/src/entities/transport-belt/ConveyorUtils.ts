@@ -13,7 +13,7 @@ import {
 import { BeltItemRailsUtility } from "@client/entities/transport-belt/motion/BeltItemRailsUtility";
 import type { TransportBeltEntityId } from "@client/entities/transport-belt/types";
 import { Vec2, type EntityId, type UserWorld } from "@engine";
-import { Parent, Transform2D } from "@engine/components";
+import { Transform2D } from "@engine/components";
 import invariant from "tiny-invariant";
 
 const SHARED_ADD_ENTITY_POSITION = new Vec2();
@@ -50,7 +50,7 @@ export class ConveyorUtils {
       SHARED_ADD_ENTITY_POSITION,
     );
 
-    world.add(entity, new Parent(conveyorEntityId));
+    world.setParent(entity, conveyorEntityId);
     world.add(entity, new Transform2D(SHARED_ADD_ENTITY_POSITION.x, SHARED_ADD_ENTITY_POSITION.y, 0));
 
     setConveyorLaneSlot(conveyor, side, index, entity);

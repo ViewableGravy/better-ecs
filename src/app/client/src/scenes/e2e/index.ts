@@ -131,11 +131,10 @@ export const Scene = createContextScene("E2EScene")({
       },
       resetPlayer() {
         const playerId = ensurePlayer(rootWorld);
-        const playerTransform = rootWorld.get(playerId, Transform2D);
-        if (playerTransform) {
+        rootWorld.patch(playerId, Transform2D, (playerTransform) => {
           playerTransform.curr.pos.set(PLAYER_START_X, PLAYER_START_Y);
           playerTransform.prev.pos.set(PLAYER_START_X, PLAYER_START_Y);
-        }
+        });
       },
       ghostPosition() {
         const [ghostEntityId] = rootWorld.query(GhostPreviewComponent, Transform2D);
@@ -286,37 +285,27 @@ function configureHarnessBeltSprites(
   startTick: number,
 ): void {
   for (const beltEntityId of beltEntityIds) {
-    const sprite = world.get(beltEntityId, AnimatedSprite);
-
-    if (!sprite) {
-      continue;
-    }
-
-    sprite.playbackMode = "tick";
-    sprite.playbackRate = BELT_PLAYBACK_RATE_PER_TICK;
-    sprite.useGlobalOffset = false;
-    sprite.startTick = startTick;
+    world.tryPatch(beltEntityId, AnimatedSprite, (sprite) => {
+      sprite.playbackMode = "tick";
+      sprite.playbackRate = BELT_PLAYBACK_RATE_PER_TICK;
+      sprite.useGlobalOffset = false;
+      sprite.startTick = startTick;
+    });
   }
 }
 
 function resetMotionProbe(world: UserWorld, entityId: EntityId, startTick: number): void {
-  const transform = world.get(entityId, Transform2D);
-
-  if (transform) {
+  world.tryPatch(entityId, Transform2D, (transform) => {
     transform.curr.pos.set(MOTION_PROBE_START_X, MOTION_PROBE_Y);
     transform.prev.pos.set(MOTION_PROBE_START_X, MOTION_PROBE_Y);
-  }
+  });
 
-  const sprite = world.get(entityId, AnimatedSprite);
-
-  if (!sprite) {
-    return;
-  }
-
-  sprite.playbackMode = "tick";
-  sprite.playbackRate = PROBE_PLAYBACK_RATE_PER_TICK;
-  sprite.useGlobalOffset = false;
-  sprite.startTick = startTick;
+  world.tryPatch(entityId, AnimatedSprite, (sprite) => {
+    sprite.playbackMode = "tick";
+    sprite.playbackRate = PROBE_PLAYBACK_RATE_PER_TICK;
+    sprite.useGlobalOffset = false;
+    sprite.startTick = startTick;
+  });
 }
 
 function readTrackedBeltState(
@@ -379,14 +368,10 @@ function readMotionProbeState(world: UserWorld, entityId: EntityId | null): Moti
 
 function setPrimaryCameraPosition(world: UserWorld, x: number, y: number): void {
   for (const cameraEntityId of world.query(Camera, Transform2D)) {
-    const transform = world.get(cameraEntityId, Transform2D);
-
-    if (!transform) {
-      continue;
-    }
-
-    transform.curr.pos.set(x, y);
-    transform.prev.pos.set(x, y);
+    world.patch(cameraEntityId, Transform2D, (transform) => {
+      transform.curr.pos.set(x, y);
+      transform.prev.pos.set(x, y);
+    });
   }
 }
 
@@ -398,11 +383,8 @@ function resetPlacementScene(world: UserWorld, manager: { setFocusedContextId: (
   manager.setFocusedContextId(ROOT_CONTEXT_ID);
 
   const playerId = ensurePlayer(world);
-  const playerTransform = world.get(playerId, Transform2D);
-
-  if (playerTransform) {
+  world.patch(playerId, Transform2D, (playerTransform) => {
     playerTransform.curr.pos.set(PLAYER_START_X, PLAYER_START_Y);
     playerTransform.prev.pos.set(PLAYER_START_X, PLAYER_START_Y);
-  }
+  });
 }
-

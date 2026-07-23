@@ -198,8 +198,10 @@ export class GizmoInputManager {
       const nextX = this.#dragState.startEntityLocalX + this.#dragState.axisX * projected;
       const nextY = this.#dragState.startEntityLocalY + this.#dragState.axisY * projected;
 
-      transform.curr.pos.set(nextX, nextY);
-      transform.prev.pos.set(nextX, nextY);
+      world.patch(this.#dragState.entityId, Transform2D, (patchedTransform) => {
+        patchedTransform.curr.pos.set(nextX, nextY);
+        patchedTransform.prev.pos.set(nextX, nextY);
+      });
       syncWorldTransform2DSubtree(world, this.#dragState.entityId);
       this.#updateHoveredHandle(event);
       return;
@@ -212,8 +214,10 @@ export class GizmoInputManager {
       const nextX = this.#dragState.startEntityLocalX + deltaX;
       const nextY = this.#dragState.startEntityLocalY + deltaY;
 
-      transform.curr.pos.set(nextX, nextY);
-      transform.prev.pos.set(nextX, nextY);
+      world.patch(this.#dragState.entityId, Transform2D, (patchedTransform) => {
+        patchedTransform.curr.pos.set(nextX, nextY);
+        patchedTransform.prev.pos.set(nextX, nextY);
+      });
       this.#updateHoveredHandle(event);
       syncWorldTransform2DSubtree(world, this.#dragState.entityId);
       return;
@@ -231,8 +235,10 @@ export class GizmoInputManager {
       const rotationDelta = angle - this.#dragState.startPointerAngle;
       const nextRotation = this.#dragState.startRotation + rotationDelta;
 
-      transform.curr.rotation = nextRotation;
-      transform.prev.rotation = nextRotation;
+      world.patch(this.#dragState.entityId, Transform2D, (patchedTransform) => {
+        patchedTransform.curr.rotation = nextRotation;
+        patchedTransform.prev.rotation = nextRotation;
+      });
       syncWorldTransform2DSubtree(world, this.#dragState.entityId);
 
       const gizmo = world.get(this.#dragState.entityId, Gizmo);
@@ -255,8 +261,10 @@ export class GizmoInputManager {
     const nextScaleX = this.#dragState.startScaleX * scaleFactor;
     const nextScaleY = this.#dragState.startScaleY * scaleFactor;
 
-    transform.curr.scale.set(nextScaleX, nextScaleY);
-    transform.prev.scale.set(nextScaleX, nextScaleY);
+    world.patch(this.#dragState.entityId, Transform2D, (patchedTransform) => {
+      patchedTransform.curr.scale.set(nextScaleX, nextScaleY);
+      patchedTransform.prev.scale.set(nextScaleX, nextScaleY);
+    });
     syncWorldTransform2DSubtree(world, this.#dragState.entityId);
 
     const gizmo = world.get(this.#dragState.entityId, Gizmo);

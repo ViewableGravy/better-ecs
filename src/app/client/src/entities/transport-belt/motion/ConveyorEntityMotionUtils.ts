@@ -347,8 +347,10 @@ export class ConveyorEntityMotionUtils {
         continue;
       }
 
-      transform.curr.pos.x = SHARED_SLOT_POSITION.x;
-      transform.curr.pos.y = SHARED_SLOT_POSITION.y;
+      world.patch(entityId, Transform2D, (patchedTransform) => {
+        patchedTransform.curr.pos.x = SHARED_SLOT_POSITION.x;
+        patchedTransform.curr.pos.y = SHARED_SLOT_POSITION.y;
+      });
     }
   }
 
@@ -447,15 +449,12 @@ export class ConveyorEntityMotionUtils {
     const parent = world.get(entityId, Parent);
 
     if (transform && parent && parent.entityId !== parentEntityId) {
-      this.preservePreviousWorldPosition(world, transform, parent.entityId, parentEntityId);
+      world.patch(entityId, Transform2D, (patchedTransform) => {
+        this.preservePreviousWorldPosition(world, patchedTransform, parent.entityId, parentEntityId);
+      });
     }
 
-    if (!parent) {
-      world.add(entityId, new Parent(parentEntityId));
-      return;
-    }
-
-    parent.entityId = parentEntityId;
+    world.setParent(entityId, parentEntityId);
   }
 
   private static preservePreviousWorldPosition(

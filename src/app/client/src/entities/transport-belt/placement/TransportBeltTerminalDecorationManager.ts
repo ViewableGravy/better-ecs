@@ -19,7 +19,7 @@ import {
 import { createTransportBeltSprite } from "@client/entities/transport-belt/render/createTransportBeltSprite";
 import { GRID_CELL_SIZE } from "@client/systems/world/build-mode/const";
 import type { EntityId, UserWorld } from "@engine";
-import { AnimatedSprite, Debug, Parent, Transform2D } from "@engine/components";
+import { AnimatedSprite, Debug, Transform2D } from "@engine/components";
 
 export class TransportBeltTerminalDecorationManager {
   public static syncBelts(world: UserWorld, beltEntityIds: readonly (EntityId | null)[]): void {
@@ -94,7 +94,7 @@ export class TransportBeltTerminalDecorationManager {
       const decorationEntityId = world.create();
 
       world.add(decorationEntityId, new TransportBeltTerminalDecoration(beltEntityId, role));
-      world.add(decorationEntityId, new Parent(beltEntityId));
+      world.setParent(decorationEntityId, beltEntityId);
       world.add(decorationEntityId, new Transform2D(localX, localY));
       world.add(
         decorationEntityId,
@@ -111,8 +111,10 @@ export class TransportBeltTerminalDecorationManager {
     const decorationTransform = world.get(existingDecorationEntityId, Transform2D);
 
     if (decorationTransform) {
-      decorationTransform.curr.pos.set(localX, localY);
-      decorationTransform.prev.pos.set(localX, localY);
+      world.patch(existingDecorationEntityId, Transform2D, (transform) => {
+        transform.curr.pos.set(localX, localY);
+        transform.prev.pos.set(localX, localY);
+      });
     } else {
       world.add(existingDecorationEntityId, new Transform2D(localX, localY));
     }

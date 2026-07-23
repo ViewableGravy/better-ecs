@@ -11,14 +11,10 @@ export const System = createSystem("camera-follow")({
 
     for (const world of engine.scene.context.worlds) {
       for (const cameraId of world.query(Camera, Transform2D)) {
-        const cameraTransform = world.get(cameraId, Transform2D);
-
-        if (!cameraTransform) {
-          continue;
-        }
-
-        cameraTransform.curr.copyFrom(sourceTransform.curr);
-        cameraTransform.prev.copyFrom(sourceTransform.prev);
+        world.patch(cameraId, Transform2D, (cameraTransform) => {
+          cameraTransform.curr.copyFrom(sourceTransform.curr);
+          cameraTransform.prev.copyFrom(sourceTransform.prev);
+        });
       }
     }
   },

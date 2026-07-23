@@ -42,10 +42,10 @@ export class GhostPreviewManager {
   }
 
   private static syncPosition(world: UserWorld, ghostEntityId: EntityId, x: number, y: number): void {
-    const transform = world.require(ghostEntityId, Transform2D);
-
-    transform.curr.pos.set(x + HALF_BOX_SIZE, y + HALF_BOX_SIZE);
-    transform.prev.pos.set(x + HALF_BOX_SIZE, y + HALF_BOX_SIZE);
+    world.patch(ghostEntityId, Transform2D, (transform) => {
+      transform.curr.pos.set(x + HALF_BOX_SIZE, y + HALF_BOX_SIZE);
+      transform.prev.pos.set(x + HALF_BOX_SIZE, y + HALF_BOX_SIZE);
+    });
   }
 
   private static destroyGhost(world: UserWorld, ghostEntityId: EntityId | null): void {
@@ -61,9 +61,9 @@ export class GhostPreviewManager {
     ghostEntityId: EntityId,
     previewVariant: string | null,
   ): void {
-    const ghostPreview = world.require(ghostEntityId, GhostPreviewComponent);
-
-    ghostPreview.previewVariant = previewVariant;
+    world.patch(ghostEntityId, GhostPreviewComponent, (ghostPreview) => {
+      ghostPreview.previewVariant = previewVariant;
+    });
   }
 
   private static matchesGhost(

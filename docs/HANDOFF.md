@@ -56,7 +56,9 @@ Removed:
 - replication-only components and persistence-only repair helpers;
 - stale aliases, project references, proxy routes, scripts, dependencies, tests, and lockfiles.
 
-Ordinary component mutations now write directly to component data.
+Component data remains plain mutable state. In-place writes are deliberately untracked unless they
+are performed through `world.patch(...)` or `world.tryPatch(...)`; structural add/replace/remove
+operations publish automatically.
 
 The following similarly named mechanisms remain intentionally because they are live rendering
 optimizations rather than replication state:
@@ -127,11 +129,12 @@ need to be a full object-based ECS entity.
 The engine ECS sprite path now uses retained render buckets:
 
 - each rendered world is scanned once when it first becomes visible;
-- subsequent sprite synchronization is driven by one engine-owned entity-dirtiness event;
-- direct `Sprite` and visual color/opacity writes publish dirtiness, hierarchy changes publish from
+- subsequent sprite synchronization is driven by engine-owned component/entity dirtiness events;
+- `Sprite` and visual color/opacity patches publish dirtiness, hierarchy changes publish from
   world-transform synchronization, and structural hover add/remove is observed automatically;
-- transform changes are published once from the existing `WorldTransform2D` synchronization
-  boundary, avoiding observable accessors in the hot `Vec2` read path;
+- transform patches queue exact entity IDs and publish derived changes from the
+  `WorldTransform2D` synchronization boundary, avoiding observable accessors in the hot `Vec2`
+  read path;
 - `SpritePipe` owns only ECS projection, entity dirtiness, animation sampling, logical buckets, and
   queue markers;
 - animated sprites have a dedicated candidate index, so ordinary retained sprites are never scanned
@@ -180,8 +183,7 @@ handler. The direct manual path remains:
 The cleanup also removed an entirely unused second `RenderCommandRenderer`, unused render-queue
 trace instrumentation, an unused number-array pool, and unused command sequence/queue compatibility
 methods. The live `renderCommands()` dispatcher is 78 lines rather than 257. Transform snapshot
-loops now use allocation-free `world.forEach(...)` traversal instead of materializing full query
-arrays and then looking every component up again.
+work is now driven by changed-only interpolation settle queues rather than full component traversal.
 
 After this pass, engine production code is 1,280 lines smaller than the first retained
 implementation and 552 lines smaller than the pre-retained engine, while retained ECS rendering
@@ -193,6 +195,64 @@ original retained checkpoint on average throughput at both scales: 83.68 ms at 1
 and 636.99 ms at 500k (4.1% faster), with 95 rather than 90 captured 500k frames. The 100k tail
 percentiles were equal; 500k p95/p99 were 2–4% slower, so this is an average-throughput result rather
 than a universal frame-tail improvement. JavaScript heap readings remain GC-sensitive.
+
+## Explicit ECS mutation and dirty transform continuation
+
+In-place component publication now follows an EnTT-style contract:
+
+```ts
+world.patch(entityId, Transform2D, (transform) => {
+  transform.curr.pos.x += deltaX;
+});
+```
+
+- `get` and `require` return ordinary component references; direct writes remain possible but are
+  intentionally invisible to retained/dirty consumers;
+- `patch` requires an existing component and publishes once after its callback, including when a
+  callback throws after partially mutating state;
+- `tryPatch` is the optional equivalent and does nothing when the component is absent;
+- component-aware `added`/`patched`/`removed` events avoid waking transform tracking for unrelated
+  sprite or gameplay changes and carry the affected component so sparse consumers retain direct
+  references rather than repeating entity-to-component lookups;
+- the former Sprite/Rgba per-field observer and component-owner notification plumbing has been
+  removed.
+
+Hierarchy topology is owned by `World`:
+
+- `world.setParent(child, parent)` and `world.removeParent(child)` are the public mutation boundary;
+- `Parent.entityId` is read-only to userland and generic Parent add/remove routes through the same
+  invariant;
+- the world maintains cached `parent -> children` and `child -> parent` adjacency;
+- reparenting preserves the existing Parent component, is non-structural, validates cycles, and
+  publishes once;
+- destroy and cross-world subtree moves use cached adjacency rather than rebuilding it by scanning
+  every Parent.
+
+Transform finalization is now changed-only:
+
+- explicit Transform2D patches append to allocation-free per-world change buffers; a membership set
+  is built only for worlds with Parent relationships that need ancestor/root collapse;
+- sparse updates collapse dirty descendants under dirty ancestors and traverse only affected cached
+  subtrees;
+- hierarchy-dense, heavily dirty worlds can fall back to one root traversal;
+- local and derived interpolation histories use direct-component settle queues, so a stopped entity
+  receives its final `prev = curr` publication without scanning every transform or performing sparse
+  `world.get(...)` lookups;
+- initialization/reset may scan once, while clean steady-state frames perform no transform
+  traversal or publication;
+- snapshot and finalization process every loaded world, not only the focused world.
+
+Focused coverage includes explicit/untracked writes, optional and throwing patches, clean frames,
+sparse subtrees, stopped interpolation, reparenting, transform removal/re-addition, recursive
+destroy, cross-world hierarchy movement, cycle rejection, and multiple loaded worlds.
+
+The final RTX 4090 report is
+`benchmark-results/stress-2026-07-23T12-44-22.105Z.json`. With the same Chromium 145, 1280×720,
+60-frame warmup, and 50% moving profile, it measured 77.57 ms at 100k and 593.28 ms at 500k:
+7.3% and 6.9% faster than the cleanup baseline. The 100k run completed 240/240 frames; 500k still
+exceeded the sampling deadline but captured 102 frames versus the baseline's 95. This result came
+after profiling showed that dirty finalization was already faster while per-patch Set insertion and
+sparse snapshot lookups were giving the improvement back.
 
 ## Query cursor continuation
 

@@ -35,7 +35,8 @@ export const TransportBeltGhost = createGhostPreset<TransportBeltVariant>({
 
     updateTransportBeltVariant(world, ghostEntityId, resolvedVariant);
 
-    const ghostPreview = world.require(ghostEntityId, GhostPreviewComponent);
-    ghostPreview.previewVariant = resolvedVariant;
+    world.patch(ghostEntityId, GhostPreviewComponent, (ghostPreview) => {
+      ghostPreview.previewVariant = resolvedVariant;
+    });
   },
 });

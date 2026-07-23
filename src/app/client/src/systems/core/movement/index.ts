@@ -20,7 +20,7 @@ import { System as ContextSystem, Delta, fromContext, World } from "@engine/cont
 export const System = createSystem("main:player-movement-authority")({
   system() {
     const world = fromContext(World);
-  const { data: commandData } = fromContext(ContextSystem("main:local-player-movement-command"));
+    const { data: commandData } = fromContext(ContextSystem("main:local-player-movement-command"));
     const [updateDelta] = fromContext(Delta);
 
     const [playerId] = world.invariantQuery(PlayerComponent);
@@ -28,21 +28,25 @@ export const System = createSystem("main:player-movement-authority")({
     const transform = world.require(playerId, Transform2D);
 
     const animatedSprite = ensurePlayerSprite(world, playerId, player.animationState, player.direction);
-  const { x, y } = resolveMovementAxesFromCommands(commandData.commands);
+    const { x, y } = resolveMovementAxesFromCommands(commandData.commands);
     const speed = 100 * (updateDelta / 1000);
 
     if (x !== 0 || y !== 0) {
-      if (x !== 0) {
-        transform.curr.pos.x += x * speed;
-      }
+      world.patch(playerId, Transform2D, (patchedTransform) => {
+        if (x !== 0) {
+          patchedTransform.curr.pos.x += x * speed;
+        }
 
-      if (y !== 0) {
-        transform.curr.pos.y += y * speed;
-      }
+        if (y !== 0) {
+          patchedTransform.curr.pos.y += y * speed;
+        }
+      });
     }
 
     const playerBottomY = transform.curr.pos.y + PLAYER_GROUNDED_HITBOX_RADIUS;
-    animatedSprite.zOrder = resolvePlayerSpriteZOrder(resolvePlayerSpriteDepthSortY(playerBottomY));
+    world.patch(playerId, AnimatedSprite, (sprite) => {
+      sprite.zOrder = resolvePlayerSpriteZOrder(resolvePlayerSpriteDepthSortY(playerBottomY));
+    });
 
     const nextAnimationState: PlayerAnimationState = x === 0 && y === 0 ? "idle" : "moving";
     const nextDirection = resolveDirectionFromAxes(x, y) ?? player.direction;

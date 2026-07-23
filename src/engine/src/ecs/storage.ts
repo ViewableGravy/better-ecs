@@ -7,13 +7,13 @@ import type { EntityId } from "@engine/ecs/entity";
  */
 export class ComponentStore<T> {
   private denseComponents: T[] = [];
-  private denseEntities: EntityId<T>[] = [];
+  private denseEntities: EntityId[] = [];
   private sparse = new Map<EntityId, number>();
 
   /**
    * Adds or replaces a component for an entity
    */
-  add(entityId: EntityId<T>, component: T): void {
+  add(entityId: EntityId, component: T): void {
     if (this.sparse.has(entityId)) {
       // Replace existing component
       const denseIndex = this.sparse.get(entityId);
@@ -35,7 +35,7 @@ export class ComponentStore<T> {
   /**
    * Gets a component for an entity, or undefined if not present
    */
-  get(entityId: EntityId<T>): T | undefined {
+  get(entityId: EntityId): T | undefined {
     const denseIndex = this.sparse.get(entityId);
 
     if (denseIndex === undefined) return undefined;
@@ -45,7 +45,7 @@ export class ComponentStore<T> {
   /**
    * Checks if an entity has this component
    */
-  has(entityId: EntityId<T>): boolean {
+  has(entityId: EntityId): boolean {
     return this.sparse.has(entityId);
   }
 
@@ -78,7 +78,7 @@ export class ComponentStore<T> {
   /**
    * Removes a component from an entity
    */
-  remove(entityId: EntityId<T>): void {
+  remove(entityId: EntityId): void {
     const denseIndex = this.sparse.get(entityId);
 
     if (denseIndex === undefined) return;
@@ -108,7 +108,7 @@ export class ComponentStore<T> {
     this.sparse.delete(entityId);
   }
 
-  *[Symbol.iterator](): IterableIterator<[EntityId<T>, T]> {
+  *[Symbol.iterator](): IterableIterator<[EntityId, T]> {
     for (let i = 0; i < this.denseComponents.length; i += 1) {
       const component = this.denseComponents[i];
       const entityId = this.denseEntities[i];

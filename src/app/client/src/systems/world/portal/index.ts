@@ -28,11 +28,10 @@ export const System = createPortalSystem({
     const spawn = portal.spawn;
 
     const playerId = ensurePlayer(nextWorld);
-    const transform = nextWorld.get(playerId, Transform2D);
-    if (!transform) return;
-
-    transform.curr.pos.set(spawn.x, spawn.y);
-    transform.prev.pos.set(spawn.x, spawn.y);
+    nextWorld.patch(playerId, Transform2D, (transform) => {
+      transform.curr.pos.set(spawn.x, spawn.y);
+      transform.prev.pos.set(spawn.x, spawn.y);
+    });
   },
 });
 

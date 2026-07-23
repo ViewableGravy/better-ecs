@@ -11,15 +11,15 @@ export const PlayerOrbitSystem = createSystem("main:player-orbit")({
 
     for (const entityId of world.query(OrbitMotion, Parent, Transform2D)) {
       const orbit = world.get(entityId, OrbitMotion);
-      const localTransform = world.get(entityId, Transform2D);
-
-      if (!orbit || !localTransform) {
+      if (!orbit) {
         continue;
       }
 
       orbit.angleRadians += orbit.speedRadiansPerSecond * seconds;
-      localTransform.curr.pos.x = Math.cos(orbit.angleRadians) * orbit.radius;
-      localTransform.curr.pos.y = Math.sin(orbit.angleRadians) * orbit.radius;
+      world.patch(entityId, Transform2D, (localTransform) => {
+        localTransform.curr.pos.x = Math.cos(orbit.angleRadians) * orbit.radius;
+        localTransform.curr.pos.y = Math.sin(orbit.angleRadians) * orbit.radius;
+      });
     }
   },
 });

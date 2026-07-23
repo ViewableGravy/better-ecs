@@ -421,15 +421,15 @@ Conveyors are not an edge case. If they dominate real gameplay, the engine archi
 
 ## Current Phase
 
-**Current active phase target:** Retained GPU instance storage and changed-only ECS extraction
+**Current active phase target:** Explicit ECS mutation and changed-only hierarchy transforms
 
 Rationale:
 
-- bucketed submission and cached world transforms are in place;
-- the retained path now removes per-frame ECS sprite traversal and full instance reconstruction for
-  unchanged entities;
-- remaining work is upload-policy tuning, render-thread profiling, and determining which instance
-  fields can move into shared GPU-side group data.
+- retained GPU instance storage already removes unchanged sprite extraction and reconstruction;
+- explicit `patch` publication now gives the engine a reliable boundary for component dirtiness;
+- cached parent adjacency and dirty-root traversal remove hierarchy-wide work from clean frames;
+- target-hardware profiling moved sparse snapshot queues to direct component references and removed
+  flat-world hash-set bookkeeping; the final run beats the cleanup baseline at both tested scales.
 
 ## Current Implementation Status Summary
 
@@ -518,6 +518,41 @@ Performance interpretation:
   checkpoint, with 95 rather than 90 captured 500k frames;
 - 100k tail percentiles were equal/better, while 500k p95/p99 were 2–4% slower; treat this as an
   average-throughput win, not a universal tail-latency win.
+
+### 2026-07-23 — Explicit patch and dirty-subtree transform checkpoint
+
+- made `world.patch(...)` and `world.tryPatch(...)` the normal publication boundary for component
+  mutation; raw mutable component access remains deliberately untracked and uses no Proxy;
+- removed Sprite/Rgba field observers and Component-owner callbacks in favor of one typed ECS
+  mutation stream;
+- restricted Parent mutation to `setParent(...)` and `removeParent(...)`, with cached reverse
+  adjacency and cycle validation owned by World;
+- changed hierarchy destruction and cross-world subtree moves to use cached children rather than
+  rebuilding Parent indexes;
+- replaced full Transform2D comparison scans with published dirty entities, dirty-root collapse,
+  cached-child traversal, and direct-component interpolation-settle queues;
+- kept flat worlds on append-only change buffers and deferred dirty-set construction to hierarchy
+  worlds that actually need ancestor membership checks;
+- retained a dense traversal only when both the hierarchy and the published mutation set are dense,
+  so flat sprite worlds continue through the sparse path;
+- snapshot and world-transform finalization now cover every loaded scene world;
+- migrated engine, physics, benchmark, and application mutation sites to the explicit boundary while
+  preserving immediate gizmo synchronization and the manual renderer escape hatch;
+- focused correctness checks cover raw-untracked writes, patch publication, thrown callbacks,
+  hierarchy invariants, subtree propagation, clean frames, interpolation settling, reparenting,
+  removal/re-addition, destruction, and multiple worlds;
+- the first RTX 4090 result improved construction CPU time but regressed steady-state pacing:
+  `benchmark-results/stress-2026-07-23T12-25-30.343Z.json` measured 90.90 ms at 100k and
+  755.46 ms at 500k versus 83.68 ms and 636.99 ms at the cleanup baseline;
+- CPU profiling attributed the regression to per-patch Set insertion and sparse ID-to-component
+  snapshot lookups, while dirty transform finalization itself was 8.84 ms/frame faster;
+- direct-component settle buffers, a single-lookup `tryPatch`, and append-only flat-world change
+  buffers removed those costs;
+- final report `benchmark-results/stress-2026-07-23T12-44-22.105Z.json` measured 77.57 ms at 100k
+  and 593.28 ms at 500k: 7.3% and 6.9% faster than the cleanup baseline on average;
+- 100k p95/p99 were 99.99/100.00 ms, while 500k p95/p99 were 633.31/666.64 ms, beating the cleanup
+  baseline tails in this run; 500k still exceeded the sampling deadline but captured 102 frames
+  versus the baseline's 95.
 
 ### 2026-03-06 — Phase 1 bucketed submission checkpoint
 

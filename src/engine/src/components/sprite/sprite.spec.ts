@@ -17,7 +17,7 @@ describe("Rgba", () => {
     expect(copy).toMatchObject({ r: 0.1, g: 0.2, b: 0.3, a: 0.4 });
   });
 
-  it("invalidates an owning visual component once after a complete color update", () => {
+  it("publishes an owning visual component once after a complete color patch", () => {
     const world = new UserWorld(new World("scene"));
     const entityChanged = vi.fn<NonNullable<WorldMutationObserver["entityChanged"]>>();
     world.observeMutations({ entityChanged });
@@ -26,7 +26,9 @@ describe("Rgba", () => {
     world.add(entityId, tint);
     entityChanged.mockClear();
 
-    tint.value.set(0.1, 0.2, 0.3, 0.4);
+    world.patch(entityId, Tint, (patchedTint) => {
+      patchedTint.value.set(0.1, 0.2, 0.3, 0.4);
+    });
 
     expect(entityChanged).toHaveBeenCalledOnce();
     expect(entityChanged).toHaveBeenCalledWith(world, entityId);
@@ -60,7 +62,9 @@ describe("Rgba", () => {
     entityChanged.mockClear();
 
     const replacement = new Rgba(0.25, 0.5, 0.75, 0.9);
-    tint.value = replacement;
+    world.patch(entityId, Tint, (patchedTint) => {
+      patchedTint.value = replacement;
+    });
 
     expect(tint.value).toBe(ownedColor);
     expect(tint.value).not.toBe(replacement);

@@ -13,16 +13,16 @@ export const System = createSystem("e2e:motion-probe")({
 
     for (const entityId of world.query(Debug, Transform2D)) {
       const debug = world.get(entityId, Debug);
-      const transform = world.get(entityId, Transform2D);
-
-      if (!debug || !transform || debug.name !== "e2e-motion-probe") {
+      if (!debug || debug.name !== "e2e-motion-probe") {
         continue;
       }
 
-      transform.curr.pos.x = Math.min(
-        PROBE_END_X,
-        transform.curr.pos.x + PROBE_SPEED_UNITS_PER_SECOND * seconds,
-      );
+      world.patch(entityId, Transform2D, (transform) => {
+        transform.curr.pos.x = Math.min(
+          PROBE_END_X,
+          transform.curr.pos.x + PROBE_SPEED_UNITS_PER_SECOND * seconds,
+        );
+      });
     }
   },
 });
