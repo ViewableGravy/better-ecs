@@ -4,6 +4,7 @@ export type BenchmarkPhase =
   | "idle"
   | "constructing"
   | "ready"
+  | "benchmarking-queries"
   | "warming-up"
   | "sampling"
   | "failed";
@@ -42,6 +43,30 @@ export type BenchmarkRafStats = {
   timedOut: boolean;
 };
 
+export type BenchmarkQueryStrategyResult = {
+  durationMs: number;
+  nanosecondsPerMatch: number;
+  checksum: number;
+};
+
+export type BenchmarkQueryLayoutResult = {
+  layout: "dense" | "selective-10";
+  matchedCount: number;
+  iterations: number;
+  strategies: {
+    forEach: BenchmarkQueryStrategyResult;
+    cursor: BenchmarkQueryStrategyResult;
+    queryGet: BenchmarkQueryStrategyResult;
+    tupleIterator: BenchmarkQueryStrategyResult;
+  };
+};
+
+export type BenchmarkQueryResult = {
+  targetMatchVisits: number;
+  dense: BenchmarkQueryLayoutResult;
+  selective: BenchmarkQueryLayoutResult;
+};
+
 export type BenchmarkRunResult = {
   profileId: typeof BENCHMARK_PROFILE_ID;
   targetCount: BenchmarkEntityCount;
@@ -53,6 +78,7 @@ export type BenchmarkRunResult = {
   motionUpdates: number;
   checksumBefore: number;
   checksumAfter: number;
+  queries: BenchmarkQueryResult;
   raf: BenchmarkRafStats;
 };
 

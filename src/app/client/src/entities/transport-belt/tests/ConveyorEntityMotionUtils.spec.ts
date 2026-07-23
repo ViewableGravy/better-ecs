@@ -48,7 +48,7 @@ const ConveyorEntityMotionUtils = {
     SHARED_DEFERRED_SIDE_LOADS.length = 0;
     SHARED_CONVEYORS_TO_SYNC.clear();
 
-    world.forEach2(TransportBeltLeaf, ConveyorBeltComponent, (conveyorEntityId, _, conveyor) => {
+    world.forEach(TransportBeltLeaf, ConveyorBeltComponent, (conveyorEntityId, _, conveyor) => {
       if (!ConveyorUtils.supportsItemAnimation(conveyor.variant)) {
         return;
       }

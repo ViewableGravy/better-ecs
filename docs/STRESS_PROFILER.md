@@ -4,6 +4,13 @@ The `BenchmarkScene` provides the `sprite-dynamic-50` baseline. Every requested 
 `Transform2D` and `Sprite`; every second transform moves from the deterministic engine update tick.
 All sprites share one texture and are laid out inside the active camera.
 
+Before RAF sampling, each run compares two-component traversal strategies over the dense
+`Transform2D + Sprite` layout and a 10%-selective `Transform2D + BenchmarkQueryMarker` layout. The
+comparison records duration, nanoseconds per match, and equivalent-work checksums for overloaded
+`forEach`, the reusable cursor prototype, `query + get`, and a tuple-yielding iterator. The selective
+marker uses one shared read-only value and is removed before frame sampling, so the established
+`sprite-dynamic-50` component membership is restored before the RAF comparison.
+
 Open the application and choose **Go to Stress Profiler**, or enter it directly:
 
 ```text

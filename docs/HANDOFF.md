@@ -122,6 +122,34 @@ At multi-million scale, packed/procedural conveyor-item storage and persistent G
 likely more important than changing query syntax. A visually independent item does not necessarily
 need to be a full object-based ECS entity.
 
+## Query cursor continuation
+
+The cursor task is implemented in the current worktree and passed its browser retention gate:
+
+- public userland calls use overloaded `world.forEach(...)`; numbered methods remain internal fast
+  paths only;
+- active callback and cursor traversals reject create, destroy, add/replace, remove, move, allocator
+  replacement, and clear operations while allowing component-data mutation and nested read-only
+  traversal;
+- `world.createQueryCursor(A, B)` creates a reusable two-component sparse-set descriptor whose
+  `for...of` traversal reuses its row and iterator-result objects;
+- engine tests cover cursor reuse, selective joins, structural mutation, nesting, early exit,
+  re-entry, and callback-error cleanup;
+- the stress profiler compares `forEach`, cursor, `query + get`, and tuple iteration for dense and
+  10%-selective layouts, with equivalent-work checksums and nanoseconds-per-match metrics.
+
+The 10k production Chromium smoke report
+`benchmark-results/stress-2026-07-23T07-11-06.519Z.json` passed all checks with exact strategy
+checksum agreement:
+
+| Layout | `forEach` | Cursor | Cursor difference |
+| --- | ---: | ---: | ---: |
+| Dense, 10k matches | 26.80 ns/match | 22.37 ns/match | 16.6% faster |
+| Selective, 1k matches | 34.64 ns/match | 30.86 ns/match | 10.9% faster |
+
+The cursor is therefore retained. `query + get` measured 62.06 ns/match in both layouts, while the
+tuple iterator measured 49.42 ns/match dense and 65.36 ns/match selective.
+
 ## Reference material
 
 - [Docs index](README.md)

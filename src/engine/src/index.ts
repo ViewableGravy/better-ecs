@@ -6,6 +6,7 @@ export * from "@engine/core";
 export * from "@engine/ecs/component";
 export * from "@engine/ecs/entity";
 export * from "@engine/ecs/hierarchy";
+export * from "@engine/ecs/query-cursor";
 export * from "@engine/ecs/storage";
 export * from "@engine/ecs/world";
 export * from "@engine/math";

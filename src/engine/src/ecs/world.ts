@@ -8,6 +8,7 @@ import type {
     QueryResult,
 } from "@engine/ecs/entity";
 import { EntityIdAllocator } from "@engine/ecs/entity";
+import { QueryCursor2, type QueryCursorSource } from "@engine/ecs/query-cursor";
 import { ComponentStore } from "@engine/ecs/storage";
 import type { Class } from "type-fest";
 
@@ -44,6 +45,16 @@ export interface IUserWorld {
     ...componentTypes: TComponentTypes
   ): QueryResult<TComponentTypes>;
 
+  /** Creates a two-component query cursor that can be reused across `for...of` traversals. */
+  createQueryCursor<TA, TB>(
+    componentTypeA: Class<TA>,
+    componentTypeB: Class<TB>,
+  ): QueryCursor2<TA, TB>;
+
+  /**
+   * Traverses matching entities without allocating result rows.
+   * Structural world mutation throws until the traversal completes.
+   */
   forEach<TA>(
     componentTypeA: Class<TA>,
     callback: ForEach1Callback<TA>,
@@ -60,18 +71,6 @@ export interface IUserWorld {
     callback: ForEach3Callback<TA, TB, TC>,
   ): void;
 
-  forEach1<TA>(componentTypeA: Class<TA>, callback: ForEach1Callback<TA>): void;
-  forEach2<TA, TB>(
-    componentTypeA: Class<TA>,
-    componentTypeB: Class<TB>,
-    callback: ForEach2Callback<TA, TB>,
-  ): void;
-  forEach3<TA, TB, TC>(
-    componentTypeA: Class<TA>,
-    componentTypeB: Class<TB>,
-    componentTypeC: Class<TC>,
-    callback: ForEach3Callback<TA, TB, TC>,
-  ): void;
 }
 
 export class UserWorld implements IUserWorld {
@@ -157,6 +156,13 @@ export class UserWorld implements IUserWorld {
     return this.world.query(...componentTypes);
   }
 
+  createQueryCursor<TA, TB>(
+    componentTypeA: Class<TA>,
+    componentTypeB: Class<TB>,
+  ): QueryCursor2<TA, TB> {
+    return new QueryCursor2(this.world, componentTypeA, componentTypeB);
+  }
+
   forEach<TA>(
     componentTypeA: Class<TA>,
     callback: ForEach1Callback<TA>,
@@ -203,27 +209,6 @@ export class UserWorld implements IUserWorld {
     );
   }
 
-  forEach1<TA>(componentTypeA: Class<TA>, callback: ForEach1Callback<TA>): void {
-    this.world.forEach1(componentTypeA, callback);
-  }
-
-  forEach2<TA, TB>(
-    componentTypeA: Class<TA>,
-    componentTypeB: Class<TB>,
-    callback: ForEach2Callback<TA, TB>,
-  ): void {
-    this.world.forEach2(componentTypeA, componentTypeB, callback);
-  }
-
-  forEach3<TA, TB, TC>(
-    componentTypeA: Class<TA>,
-    componentTypeB: Class<TB>,
-    componentTypeC: Class<TC>,
-    callback: ForEach3Callback<TA, TB, TC>,
-  ): void {
-    this.world.forEach3(componentTypeA, componentTypeB, componentTypeC, callback);
-  }
-
   invariantQuery<const TComponentTypes extends readonly Class<unknown>[]>(
     ...componentTypes: TComponentTypes
   ): InvariantQueryResult<TComponentTypes> {
@@ -238,11 +223,12 @@ export class UserWorld implements IUserWorld {
   }
 }
 
-export class World {
+export class World implements QueryCursorSource {
   private entities = new Set<EntityId>();
   private componentStores = new Map<Function, ComponentStore<any>>();
   private entityIds: EntityIdAllocator;
   private assertEntityIdAvailable = ALLOW_ENTITY_ID;
+  private activeQueryTraversals = 0;
 
   /** Optional scene identifier for debugging */
   public sceneId?: string;
@@ -257,6 +243,8 @@ export class World {
     entityIds: EntityIdAllocator,
     assertEntityIdAvailable: AssertEntityIdAvailable = ALLOW_ENTITY_ID,
   ): this {
+    this.assertStructuralMutationAllowed("change the entity ID allocator");
+
     for (const entityId of this.entities) {
       assertEntityIdAvailable(entityId);
     }
@@ -271,6 +259,7 @@ export class World {
    * Creates a new entity
    */
   createEntity(): EntityId {
+    this.assertStructuralMutationAllowed("create an entity");
     const entityId = this.entityIds.create();
     this.entities.add(entityId);
     return entityId;
@@ -280,6 +269,7 @@ export class World {
    * Destroys an entity and removes all its components
    */
   destroyEntity(entityId: EntityId): void {
+    this.assertStructuralMutationAllowed("destroy an entity");
     if (!this.entities.has(entityId)) return;
 
     const descendants = this.collectDescendants(entityId);
@@ -364,6 +354,8 @@ export class World {
   addComponent<T>(entityId: EntityId<T>, componentType: Function, component: T): void;
   addComponent<T>(entityId: EntityId<T>, component: T): void;
   addComponent<T>(entityId: EntityId<T>, componentTypeOrComponent: Function | T, component?: T): void {
+    this.assertStructuralMutationAllowed("add or replace a component");
+
     if (!this.entities.has(entityId)) {
       throw new Error(`Entity ${entityId} does not exist`);
     }
@@ -409,6 +401,7 @@ export class World {
    * Removes a component from an entity
    */
   removeComponent<T>(entityId: EntityId<T>, componentType: Function): void {
+    this.assertStructuralMutationAllowed("remove a component");
     const store = this.componentStores.get(componentType);
     if (store) {
       const component = (store as ComponentStore<T>).get(entityId);
@@ -424,6 +417,9 @@ export class World {
    * Moves an entity and all of its descendants to another world.
    */
   moveEntityTo(entityId: EntityId, targetWorld: World): void {
+    this.assertStructuralMutationAllowed("move an entity");
+    targetWorld.assertStructuralMutationAllowed("receive a moved entity");
+
     if (this === targetWorld) {
       return;
     }
@@ -573,15 +569,20 @@ export class World {
     const entities = storeA.entityIds();
     const components = storeA.components();
 
-    for (let i = 0; i < entities.length; i += 1) {
-      const entityId = entities[i];
-      const componentA = components[i];
+    this.beginQueryTraversal();
+    try {
+      for (let i = 0; i < entities.length; i += 1) {
+        const entityId = entities[i];
+        const componentA = components[i];
 
-      if (entityId === undefined || componentA === undefined) {
-        continue;
+        if (entityId === undefined || componentA === undefined) {
+          continue;
+        }
+
+        callback(entityId, componentA);
       }
-
-      callback(entityId, componentA);
+    } finally {
+      this.endQueryTraversal();
     }
   }
 
@@ -599,19 +600,44 @@ export class World {
 
     const iterateAFirst = storeA.count() <= storeB.count();
 
-    if (iterateAFirst) {
-      const entityIds = storeA.entityIds();
-      const componentsA = storeA.components();
+    this.beginQueryTraversal();
+    try {
+      if (iterateAFirst) {
+        const entityIds = storeA.entityIds();
+        const componentsA = storeA.components();
+
+        for (let i = 0; i < entityIds.length; i += 1) {
+          const entityId = entityIds[i];
+          const componentA = componentsA[i];
+          if (entityId === undefined || componentA === undefined) {
+            continue;
+          }
+
+          const componentB = storeB.getByEntityId(entityId);
+          if (componentB === undefined) {
+            continue;
+          }
+
+          // The sparse-set membership check above proves this entity has both components.
+          const intersectedEntityId = entityId as EntityId<TA & TB>;
+          callback(intersectedEntityId, componentA, componentB);
+        }
+
+        return;
+      }
+
+      const entityIds = storeB.entityIds();
+      const componentsB = storeB.components();
 
       for (let i = 0; i < entityIds.length; i += 1) {
         const entityId = entityIds[i];
-        const componentA = componentsA[i];
-        if (entityId === undefined || componentA === undefined) {
+        const componentB = componentsB[i];
+        if (entityId === undefined || componentB === undefined) {
           continue;
         }
 
-        const componentB = storeB.getByEntityId(entityId);
-        if (componentB === undefined) {
+        const componentA = storeA.getByEntityId(entityId);
+        if (componentA === undefined) {
           continue;
         }
 
@@ -619,28 +645,8 @@ export class World {
         const intersectedEntityId = entityId as EntityId<TA & TB>;
         callback(intersectedEntityId, componentA, componentB);
       }
-
-      return;
-    }
-
-    const entityIds = storeB.entityIds();
-    const componentsB = storeB.components();
-
-    for (let i = 0; i < entityIds.length; i += 1) {
-      const entityId = entityIds[i];
-      const componentB = componentsB[i];
-      if (entityId === undefined || componentB === undefined) {
-        continue;
-      }
-
-      const componentA = storeA.getByEntityId(entityId);
-      if (componentA === undefined) {
-        continue;
-      }
-
-      // The sparse-set membership check above proves this entity has both components.
-      const intersectedEntityId = entityId as EntityId<TA & TB>;
-      callback(intersectedEntityId, componentA, componentB);
+    } finally {
+      this.endQueryTraversal();
     }
   }
 
@@ -673,40 +679,60 @@ export class World {
 
     const entityIds = smallestStore.entityIds();
 
-    for (let i = 0; i < entityIds.length; i += 1) {
-      const entityId = entityIds[i];
-      if (entityId === undefined) {
-        continue;
-      }
+    this.beginQueryTraversal();
+    try {
+      for (let i = 0; i < entityIds.length; i += 1) {
+        const entityId = entityIds[i];
+        if (entityId === undefined) {
+          continue;
+        }
 
-      const componentA =
-        smallestKey === "A"
-          ? storeA.components()[i]
-          : storeA.getByEntityId(entityId);
-      if (componentA === undefined) {
-        continue;
-      }
+        const componentA =
+          smallestKey === "A"
+            ? storeA.components()[i]
+            : storeA.getByEntityId(entityId);
+        if (componentA === undefined) {
+          continue;
+        }
 
-      const componentB =
-        smallestKey === "B"
-          ? storeB.components()[i]
-          : storeB.getByEntityId(entityId);
-      if (componentB === undefined) {
-        continue;
-      }
+        const componentB =
+          smallestKey === "B"
+            ? storeB.components()[i]
+            : storeB.getByEntityId(entityId);
+        if (componentB === undefined) {
+          continue;
+        }
 
-      const componentC =
-        smallestKey === "C"
-          ? storeC.components()[i]
-          : storeC.getByEntityId(entityId);
-      if (componentC === undefined) {
-        continue;
-      }
+        const componentC =
+          smallestKey === "C"
+            ? storeC.components()[i]
+            : storeC.getByEntityId(entityId);
+        if (componentC === undefined) {
+          continue;
+        }
 
-      // The sparse-set membership checks above prove this entity has all requested components.
-      const intersectedEntityId = entityId as EntityId<TA & TB & TC>;
-      callback(intersectedEntityId, componentA, componentB, componentC);
+        // The sparse-set membership checks above prove this entity has all requested components.
+        const intersectedEntityId = entityId as EntityId<TA & TB & TC>;
+        callback(intersectedEntityId, componentA, componentB, componentC);
+      }
+    } finally {
+      this.endQueryTraversal();
     }
+  }
+
+  /** @internal Resolves a component store when a reusable query cursor begins traversal. */
+  getQueryCursorStore<T>(componentType: Class<T>): ComponentStore<T> | undefined {
+    return this.componentStores.get(componentType) as ComponentStore<T> | undefined;
+  }
+
+  /** @internal Begins a reusable cursor traversal. */
+  beginQueryCursorTraversal(): void {
+    this.beginQueryTraversal();
+  }
+
+  /** @internal Ends a reusable cursor traversal. */
+  endQueryCursorTraversal(): void {
+    this.endQueryTraversal();
   }
 
   /**
@@ -746,7 +772,28 @@ export class World {
    * Clears all entities and components
    */
   clear(): void {
+    this.assertStructuralMutationAllowed("clear the world");
     this.entities.clear();
     this.componentStores.clear();
+  }
+
+  private beginQueryTraversal(): void {
+    this.activeQueryTraversals += 1;
+  }
+
+  private endQueryTraversal(): void {
+    if (this.activeQueryTraversals === 0) {
+      throw new Error("World query traversal invariant violated: no active traversal to end");
+    }
+
+    this.activeQueryTraversals -= 1;
+  }
+
+  private assertStructuralMutationAllowed(operation: string): void {
+    if (this.activeQueryTraversals === 0) {
+      return;
+    }
+
+    throw new Error(`Cannot ${operation} during active query traversal`);
   }
 }

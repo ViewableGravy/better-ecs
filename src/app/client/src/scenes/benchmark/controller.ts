@@ -9,7 +9,9 @@ import {
   requireBenchmarkEntityCount,
 } from "@client/scenes/benchmark/config";
 import { deriveFrameStats } from "@client/scenes/benchmark/metrics";
+import { QueryBenchmark } from "@client/scenes/benchmark/query-benchmark";
 import type {
+  BenchmarkQueryResult,
   BenchmarkRunOptions,
   BenchmarkRunResult,
   BenchmarkStatus,
@@ -30,6 +32,7 @@ export class BenchmarkController {
   readonly #entityIds: EntityId[] = [];
   readonly #transforms: Transform2D[] = [];
   readonly #movingTransforms: Transform2D[] = [];
+  readonly #queryBenchmark: QueryBenchmark;
   #movingBaseX = new Float32Array(0);
   #phase: BenchmarkStatus["phase"] = "idle";
   #requestedCount: BenchmarkEntityCount = BENCHMARK_ENTITY_COUNTS[0];
@@ -44,6 +47,7 @@ export class BenchmarkController {
   public constructor(world: UserWorld, engine: AnyEngine) {
     this.#world = world;
     this.#engine = engine;
+    this.#queryBenchmark = new QueryBenchmark(world);
   }
 
   public setStatusListener(listener: StatusListener): void {
@@ -76,7 +80,12 @@ export class BenchmarkController {
   public async configure(value: number): Promise<BenchmarkStatus> {
     const targetCount = requireBenchmarkEntityCount(value);
 
-    if (this.#phase === "constructing" || this.#phase === "warming-up" || this.#phase === "sampling") {
+    if (
+      this.#phase === "constructing"
+      || this.#phase === "benchmarking-queries"
+      || this.#phase === "warming-up"
+      || this.#phase === "sampling"
+    ) {
       throw new Error(`Cannot configure the benchmark while it is ${this.#phase}.`);
     }
 
@@ -131,6 +140,10 @@ export class BenchmarkController {
     }
 
     this.#assertReady(targetCount);
+    this.#phase = "benchmarking-queries";
+    this.#emitStatus();
+    await nextAnimationFrame(this.#abortController.signal);
+    const queries = this.#measureQueries(targetCount);
     this.#phase = "warming-up";
     this.#emitStatus();
     const warmup = await captureFrameDurations(
@@ -166,6 +179,7 @@ export class BenchmarkController {
       motionUpdates: this.#motionUpdates - motionUpdatesBefore,
       checksumBefore,
       checksumAfter,
+      queries,
       raf: deriveFrameStats(capture.durations, sampleFrames, capture.timedOut),
     };
 
@@ -198,6 +212,15 @@ export class BenchmarkController {
       + this.#movingTransforms[middle].curr.pos.x
       + this.#movingTransforms[count - 1].curr.pos.x
     );
+  }
+
+  #measureQueries(targetCount: number): BenchmarkQueryResult {
+    this.#queryBenchmark.prepareSelectiveLayout(this.#entityIds);
+    try {
+      return this.#queryBenchmark.measure(targetCount);
+    } finally {
+      this.#queryBenchmark.clearSelectiveLayout(this.#entityIds);
+    }
   }
 
   #assertReady(targetCount: BenchmarkEntityCount): void {

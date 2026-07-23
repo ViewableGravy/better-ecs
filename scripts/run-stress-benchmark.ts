@@ -4,6 +4,7 @@ import { chromium, type Browser, type Page } from "@playwright/test";
 import { build, preview, type PreviewServer } from "vite";
 import {
   BENCHMARK_ENTITY_COUNTS,
+  BENCHMARK_QUERY_SELECTIVE_STRIDE,
   DEFAULT_BENCHMARK_SAMPLE_FRAMES,
   DEFAULT_BENCHMARK_TIMEOUT_MS,
   DEFAULT_BENCHMARK_WARMUP_FRAMES,
@@ -223,6 +224,24 @@ function checkResult(result: BenchmarkRunResult): string[] {
     errors.push(`Animated count ${result.animatedCount} does not match the dynamic-50 profile.`);
   }
 
+  const expectedSelectiveCount = Math.ceil(result.targetCount / BENCHMARK_QUERY_SELECTIVE_STRIDE);
+  if (result.queries.dense.matchedCount !== result.targetCount) {
+    errors.push(`Dense query matched ${result.queries.dense.matchedCount} of ${result.targetCount} entities.`);
+  }
+  if (result.queries.selective.matchedCount !== expectedSelectiveCount) {
+    errors.push(
+      `Selective query matched ${result.queries.selective.matchedCount} of ${expectedSelectiveCount} entities.`,
+    );
+  }
+
+  for (const layout of [result.queries.dense, result.queries.selective]) {
+    const strategies = Object.values(layout.strategies);
+    const baselineChecksum = layout.strategies.forEach.checksum;
+    if (strategies.some((strategy) => strategy.checksum !== baselineChecksum)) {
+      errors.push(`${layout.layout} query strategy checksums do not match.`);
+    }
+  }
+
   if (result.updateTicks < 1) {
     errors.push("No update tick completed during the sample.");
   }
@@ -250,6 +269,16 @@ function checkResult(result: BenchmarkRunResult): string[] {
     result.constructionWallMs,
     result.checksumBefore,
     result.checksumAfter,
+    ...Object.values(result.queries.dense.strategies).flatMap((strategy) => [
+      strategy.durationMs,
+      strategy.nanosecondsPerMatch,
+      strategy.checksum,
+    ]),
+    ...Object.values(result.queries.selective.strategies).flatMap((strategy) => [
+      strategy.durationMs,
+      strategy.nanosecondsPerMatch,
+      strategy.checksum,
+    ]),
   ];
 
   if (metrics.some((value) => !Number.isFinite(value))) {

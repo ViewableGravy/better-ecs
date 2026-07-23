@@ -23,7 +23,7 @@ export const System = createSystem("main:conveyor-entity-motion-authority")({
     conveyorsToSync.clear();
 
     // Iterate through leaf nodes, and then iterate through the tree from there, processing belts and deferring side loads.
-    world.forEach2(TransportBeltLeaf, ConveyorBeltComponent, (conveyorEntityId, _, conveyor) => {
+    world.forEach(TransportBeltLeaf, ConveyorBeltComponent, (conveyorEntityId, _, conveyor) => {
       if (!ConveyorUtils.supportsItemAnimation(conveyor.variant)) {
         return;
       }

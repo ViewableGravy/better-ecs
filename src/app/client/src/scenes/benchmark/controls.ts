@@ -71,6 +71,7 @@ export function mountBenchmarkControls(
 
   function renderStatus(status: BenchmarkStatus): void {
     const busy = status.phase === "constructing"
+      || status.phase === "benchmarking-queries"
       || status.phase === "warming-up"
       || status.phase === "sampling";
 
@@ -107,6 +108,8 @@ export function mountBenchmarkControls(
       `update ticks: ${result.updateTicks}`,
       `motion updates: ${result.motionUpdates}`,
       `checksum: ${result.checksumBefore.toFixed(2)} -> ${result.checksumAfter.toFixed(2)}`,
+      `query dense ns/match (forEach/cursor/query+get/tuple): ${formatQueryStrategies(result.queries.dense)}`,
+      `query selective ns/match (forEach/cursor/query+get/tuple): ${formatQueryStrategies(result.queries.selective)}`,
       `timed out: ${String(result.raf.timedOut)}`,
     ].join("\n");
   }
@@ -114,6 +117,16 @@ export function mountBenchmarkControls(
   return () => {
     root.remove();
   };
+}
+
+function formatQueryStrategies(layout: BenchmarkRunResult["queries"]["dense"]): string {
+  const strategies = layout.strategies;
+  return [
+    strategies.forEach.nanosecondsPerMatch,
+    strategies.cursor.nanosecondsPerMatch,
+    strategies.queryGet.nanosecondsPerMatch,
+    strategies.tupleIterator.nanosecondsPerMatch,
+  ].map((value) => value.toFixed(1)).join("/");
 }
 
 function requireElement(parent: ParentNode, id: string): HTMLElement {
