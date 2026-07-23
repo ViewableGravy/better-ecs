@@ -5,7 +5,12 @@ import type { ShapeRenderInput } from "@engine/render/types/low-level";
 /**
  * The kind of render command stored in {@link RenderQueue}.
  */
-export type RenderCommandType = "sprite-entity" | "shader-entity" | "shape-entity" | "shape-draw";
+export type RenderCommandType =
+  | "retained-sprite-bucket"
+  | "sprite-entity"
+  | "shader-entity"
+  | "shape-entity"
+  | "shape-draw";
 
 export type RenderCommandScope = "gameplay" | "overlay";
 
@@ -61,6 +66,7 @@ export type RenderCommand = {
   entityId: EntityId | null;
   shape: ShapeRenderInput | null;
   spriteRecordIndex?: number;
+  retainedSpriteBucketId?: number;
   scope: RenderCommandScope;
   bucketKind: RenderCommandBucketKind;
   bucketKey: string;

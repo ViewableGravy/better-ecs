@@ -2,6 +2,7 @@ import type { LooseAssetManager } from "@engine/asset/AssetManager";
 import type { Rgba } from "@engine/components/sprite/sprite";
 import type { TextureSourceData } from "@engine/components/texture";
 import type { ShapeRenderInput, SpriteRenderData, TexturedQuadRenderData } from "@engine/render/types/low-level";
+import type { RetainedSpriteRenderData } from "@engine/render/retained/retained-sprite-store";
 import type { RendererAPI } from "@engine/render/types/renderer-api";
 
 export class RenderCommand {
@@ -53,6 +54,22 @@ export class RenderCommand {
 
   drawSprite(data: SpriteRenderData): void {
     this.#rendererApi.drawSprite(data);
+  }
+
+  upsertRetainedSprite(bucketId: number, instanceId: number, data: RetainedSpriteRenderData): void {
+    this.#rendererApi.upsertRetainedSprite(bucketId, instanceId, data);
+  }
+
+  removeRetainedSprite(bucketId: number, instanceId: number): void {
+    this.#rendererApi.removeRetainedSprite(bucketId, instanceId);
+  }
+
+  drawRetainedSpriteBucket(bucketId: number, interpolationAlpha: number): void {
+    this.#rendererApi.drawRetainedSpriteBucket(bucketId, interpolationAlpha);
+  }
+
+  releaseRetainedSpriteBucket(bucketId: number): void {
+    this.#rendererApi.releaseRetainedSpriteBucket(bucketId);
   }
 
   drawTexturedQuad(data: TexturedQuadRenderData): void {

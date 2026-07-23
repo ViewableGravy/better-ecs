@@ -1,10 +1,7 @@
 import { Rgba } from "@engine/components/sprite/sprite";
 import { Transform2D } from "@engine/components/transform";
 import { createPoolFactory } from "@engine/core/allocator";
-import {
-    SPRITE_RENDER_DIRTY_NONE,
-    type SpriteRenderRecord,
-} from "@engine/core/render-pipeline/passes/render-world/sprite-render-record";
+import type { SpriteRenderRecord } from "@engine/core/render-pipeline/passes/render-world/sprite-render-record";
 import type { FramePoolFactory } from "@engine/render/frame-allocator/types";
 import type { RenderCommand } from "@engine/render/queue/render-queue";
 import type { DenseShapeRenderData } from "@engine/render/types/low-level";
@@ -113,10 +110,6 @@ export const engineFrameAllocatorRegistry: EngineFrameAllocatorRegistry = {
         tint: new Rgba(),
       },
       worldTransform: new Transform2D(),
-      spriteVersion: 0,
-      transformVersion: 0,
-      dirtyMask: SPRITE_RENDER_DIRTY_NONE,
-      isVisible: true,
     }),
     (value) => {
       value.sprite.assetId = "";
@@ -143,10 +136,6 @@ export const engineFrameAllocatorRegistry: EngineFrameAllocatorRegistry = {
       value.worldTransform.prev.rotation = 0;
       value.worldTransform.prev.scale.x = 1;
       value.worldTransform.prev.scale.y = 1;
-      value.spriteVersion = 0;
-      value.transformVersion = 0;
-      value.dirtyMask = SPRITE_RENDER_DIRTY_NONE;
-      value.isVisible = true;
     },
   ),
 };

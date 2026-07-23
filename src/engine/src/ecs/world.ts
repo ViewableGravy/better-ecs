@@ -1,6 +1,6 @@
 // packages/engine/src/ecs/world.ts
 import { Parent } from "@engine/components";
-import { Component } from "@engine/ecs/component";
+import { Component, type ComponentOwner } from "@engine/ecs/component";
 import type {
     EntityComponentLookupResult,
     EntityId,
@@ -23,6 +23,13 @@ type ForEach3Callback<TA, TB, TC> = (
 type AssertEntityIdAvailable = (entityId: EntityId) => void;
 
 const ALLOW_ENTITY_ID: AssertEntityIdAvailable = () => undefined;
+
+export interface WorldMutationObserver {
+  componentAdded?(world: UserWorld, entityId: EntityId, component: unknown): void;
+  componentChanged?(world: UserWorld, entityId: EntityId, component: Component): void;
+  componentRemoved?(world: UserWorld, entityId: EntityId, component: unknown): void;
+  worldReset?(world: UserWorld): void;
+}
 
 export interface IUserWorld {
   create(): EntityId;
@@ -74,11 +81,46 @@ export interface IUserWorld {
 }
 
 export class UserWorld implements IUserWorld {
+  readonly #mutationObservers = new Set<WorldMutationObserver>();
+  #unsubscribeFromWorld: (() => void) | null = null;
+
   constructor(private world: World) {}
 
   /** @internal Update the wrapped world without reallocating the wrapper. */
   setWorld(world: World): void {
+    this.#unsubscribeFromWorld?.();
+    this.#unsubscribeFromWorld = null;
     this.world = world;
+    if (this.#mutationObservers.size > 0) {
+      this.#subscribeToWorld();
+    }
+
+    for (const observer of this.#mutationObservers) {
+      observer.worldReset?.(this);
+    }
+  }
+
+  /** @internal Observe component lifecycle and field changes without exposing renderer state to the ECS. */
+  observeMutations(observer: WorldMutationObserver): () => void {
+    this.#mutationObservers.add(observer);
+    if (!this.#unsubscribeFromWorld) {
+      this.#subscribeToWorld();
+    }
+
+    return () => {
+      this.#mutationObservers.delete(observer);
+      if (this.#mutationObservers.size > 0) {
+        return;
+      }
+
+      this.#unsubscribeFromWorld?.();
+      this.#unsubscribeFromWorld = null;
+    };
+  }
+
+  /** @internal Publish a derived component update from an engine-owned synchronization boundary. */
+  notifyComponentChanged(entityId: EntityId, component: Component): void {
+    this.world.notifyComponentChanged(entityId, component);
   }
 
   create(): EntityId {
@@ -221,14 +263,47 @@ export class UserWorld implements IUserWorld {
     // Query metadata is compile-time only, so the runtime array can be reused as-is.
     return results as InvariantQueryResult<TComponentTypes>;
   }
+
+  #subscribeToWorld(): void {
+    this.#unsubscribeFromWorld = this.world.observeMutations({
+      componentAdded: (_, entityId, component) => {
+        for (const observer of this.#mutationObservers) {
+          observer.componentAdded?.(this, entityId, component);
+        }
+      },
+      componentChanged: (_, entityId, component) => {
+        for (const observer of this.#mutationObservers) {
+          observer.componentChanged?.(this, entityId, component);
+        }
+      },
+      componentRemoved: (_, entityId, component) => {
+        for (const observer of this.#mutationObservers) {
+          observer.componentRemoved?.(this, entityId, component);
+        }
+      },
+      worldReset: () => {
+        for (const observer of this.#mutationObservers) {
+          observer.worldReset?.(this);
+        }
+      },
+    });
+  }
 }
 
-export class World implements QueryCursorSource {
+type InternalWorldMutationObserver = {
+  componentAdded?(world: World, entityId: EntityId, component: unknown): void;
+  componentChanged?(world: World, entityId: EntityId, component: Component): void;
+  componentRemoved?(world: World, entityId: EntityId, component: unknown): void;
+  worldReset?(world: World): void;
+};
+
+export class World implements QueryCursorSource, ComponentOwner {
   private entities = new Set<EntityId>();
   private componentStores = new Map<Function, ComponentStore<any>>();
   private entityIds: EntityIdAllocator;
   private assertEntityIdAvailable = ALLOW_ENTITY_ID;
   private activeQueryTraversals = 0;
+  private readonly mutationObservers = new Set<InternalWorldMutationObserver>();
 
   /** Optional scene identifier for debugging */
   public sceneId?: string;
@@ -292,6 +367,9 @@ export class World implements QueryCursorSource {
       }
 
       store.remove(entityId);
+      if (component !== undefined) {
+        this.notifyComponentRemoved(entityId, component);
+      }
     }
 
     this.entities.delete(entityId);
@@ -372,11 +450,22 @@ export class World implements QueryCursorSource {
       this.componentStores.set(componentType, store);
     }
 
+    const replaced = store.get(entityId);
+    if (replaced instanceof Component && replaced !== comp) {
+      replaced.__detach();
+    }
+
     store.add(entityId, comp);
 
     if (comp instanceof Component) {
-      comp.__attach(entityId);
+      comp.__attach(entityId, this);
     }
+
+    if (replaced !== undefined && replaced !== comp) {
+      this.notifyComponentRemoved(entityId, replaced);
+    }
+
+    this.notifyComponentAdded(entityId, comp);
   }
 
   /**
@@ -410,6 +499,9 @@ export class World implements QueryCursorSource {
       }
 
       store.remove(entityId);
+      if (component !== undefined) {
+        this.notifyComponentRemoved(entityId, component);
+      }
     }
   }
 
@@ -471,6 +563,11 @@ export class World implements QueryCursorSource {
 
       targetStore.add(entityId, component);
       sourceStore.remove(entityId);
+      if (component instanceof Component) {
+        component.__attach(entityId, targetWorld);
+      }
+      this.notifyComponentRemoved(entityId, component);
+      targetWorld.notifyComponentAdded(entityId, component);
     }
 
     this.entities.delete(entityId);
@@ -773,8 +870,45 @@ export class World implements QueryCursorSource {
    */
   clear(): void {
     this.assertStructuralMutationAllowed("clear the world");
+
+    for (const store of this.componentStores.values()) {
+      for (const [entityId, component] of store) {
+        if (component instanceof Component) {
+          component.__detach();
+        }
+        this.notifyComponentRemoved(entityId, component);
+      }
+    }
+
     this.entities.clear();
     this.componentStores.clear();
+    for (const observer of this.mutationObservers) {
+      observer.worldReset?.(this);
+    }
+  }
+
+  /** @internal Subscribe to mutation events used by retained engine integrations. */
+  observeMutations(observer: InternalWorldMutationObserver): () => void {
+    this.mutationObservers.add(observer);
+    return () => void this.mutationObservers.delete(observer);
+  }
+
+  notifyComponentChanged(entityId: EntityId, component: Component): void {
+    for (const observer of this.mutationObservers) {
+      observer.componentChanged?.(this, entityId, component);
+    }
+  }
+
+  private notifyComponentAdded(entityId: EntityId, component: unknown): void {
+    for (const observer of this.mutationObservers) {
+      observer.componentAdded?.(this, entityId, component);
+    }
+  }
+
+  private notifyComponentRemoved(entityId: EntityId, component: unknown): void {
+    for (const observer of this.mutationObservers) {
+      observer.componentRemoved?.(this, entityId, component);
+    }
   }
 
   private beginQueryTraversal(): void {

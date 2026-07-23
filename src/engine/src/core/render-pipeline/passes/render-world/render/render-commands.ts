@@ -2,11 +2,11 @@ import { Transform2D } from "@engine/components/transform";
 import { fromContext, FromEngine, FromRender } from "@engine/context";
 import { drawCullingBoundsOverlay } from "@engine/core/render-pipeline/passes/render-world/render/culling/overlay";
 import {
-  CullingBounds,
-  isCommandWithinCullingBounds,
-  isEntityRenderCommand,
-  isShapeDrawRenderCommand,
-  type EntityRenderCommand,
+    CullingBounds,
+    isCommandWithinCullingBounds,
+    isEntityRenderCommand,
+    isShapeDrawRenderCommand,
+    type EntityRenderCommand,
 } from "@engine/core/render-pipeline/passes/render-world/render/culling/utils";
 import { handleShaderEntityCommand } from "@engine/core/render-pipeline/passes/render-world/render/handlers/shader-entity";
 import { handleShapeDrawCommand } from "@engine/core/render-pipeline/passes/render-world/render/handlers/shape-draw";
@@ -44,8 +44,7 @@ type RenderQueueTraversalMeasurement = {
   commandCount: number;
 };
 
-export function renderCommands(
-): void {
+export function renderCommands(): void {
   const queue: RenderQueue = fromContext(FromRender.Queue);
   const renderer = fromContext(FromRender.Renderer);
   const frameAllocator = fromContext(FromRender.FrameAllocator);
@@ -73,6 +72,14 @@ export function renderCommands(
     for (let commandIndex = 0; commandIndex < commands.length; commandIndex += 1) {
       const command = commands[commandIndex];
       if (!command) {
+        continue;
+      }
+
+      if (command.type === "retained-sprite-bucket") {
+        const bucketId = command.retainedSpriteBucketId;
+        if (bucketId !== undefined) {
+          renderer.drawRetainedSpriteBucket(bucketId, interpolationAlpha);
+        }
         continue;
       }
 
@@ -248,4 +255,3 @@ function recordRenderQueueTraceSample(
   existing.averageCommandCount = existing.totalCommandCount / existing.frames;
   existing.lastCommandCount = measurement.commandCount;
 }
-

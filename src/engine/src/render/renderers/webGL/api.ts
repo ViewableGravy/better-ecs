@@ -7,6 +7,11 @@ import { ShaderCompiler } from "@engine/render/renderers/webGL/compiler";
 import { shapeDrawers, type ShapeDrawerContext, type Vec2 } from "@engine/render/renderers/webGL/drawers";
 import { GPUTextureManager } from "@engine/render/renderers/webGL/gpu-texture-manager";
 import { registry } from "@engine/render/renderers/webGL/registry";
+import {
+  RETAINED_SPRITE_INSTANCE_FLOATS,
+  RetainedSpriteStore,
+  type RetainedSpriteRenderData,
+} from "@engine/render/retained/retained-sprite-store";
 import type { ShapeRenderInput, SpriteRenderData, TexturedQuadRenderData } from "@engine/render/types/low-level";
 import type { RendererAPI } from "@engine/render/types/renderer-api";
 import invariant from "tiny-invariant";
@@ -20,6 +25,14 @@ interface TexturedShaderProgram {
   samplerLocation: WebGLUniformLocation | null;
   timeLocation?: WebGLUniformLocation | null;
 }
+
+type RetainedWebGLSpriteBucket = {
+  readonly store: RetainedSpriteStore;
+  readonly texture: WebGLTexture;
+  readonly buffer: WebGLBuffer;
+  readonly vertexArray: WebGLVertexArrayObject;
+  allocatedCapacity: number;
+};
 
 const SPRITE_INSTANCE_FLOATS = 17;
 const INITIAL_SPRITE_BATCH_CAPACITY = 1024;
@@ -40,6 +53,7 @@ export class WebGLRenderAPI implements RendererAPI {
   #spriteBatchData = new Float32Array(INITIAL_SPRITE_BATCH_CAPACITY * SPRITE_INSTANCE_FLOATS);
   #spriteBatchCount = 0;
   #spriteBatchTexture: WebGLTexture | null = null;
+  readonly #retainedSpriteBuckets = new Map<number, RetainedWebGLSpriteBucket>();
 
   static readonly #MESH_OVERLAY_COLOR = new Rgba(1, 1, 1, 0.5);
 
@@ -143,6 +157,96 @@ export class WebGLRenderAPI implements RendererAPI {
     this.#queueSprite(data);
   }
 
+  upsertRetainedSprite(bucketId: number, instanceId: number, data: RetainedSpriteRenderData): void {
+    const bucket = this.#resolveRetainedSpriteBucket(bucketId, data.image);
+    bucket.store.upsert(instanceId, data);
+  }
+
+  removeRetainedSprite(bucketId: number, instanceId: number): void {
+    this.#retainedSpriteBuckets.get(bucketId)?.store.remove(instanceId);
+  }
+
+  drawRetainedSpriteBucket(bucketId: number, interpolationAlpha: number): void {
+    this.#flushSpriteBatch();
+
+    const gl = this.#gl;
+    const canvas = this.#canvas;
+    const bucket = this.#retainedSpriteBuckets.get(bucketId);
+    if (!gl || !canvas || !bucket || bucket.store.count === 0) {
+      return;
+    }
+
+    const spriteProgram = registry.get("retainedSprite");
+    gl.useProgram(spriteProgram.program);
+    gl.bindVertexArray(bucket.vertexArray);
+    gl.bindBuffer(gl.ARRAY_BUFFER, bucket.buffer);
+
+    const dirtyRange = bucket.store.consumeDirtyRange();
+    if (dirtyRange?.storageResized || bucket.allocatedCapacity !== bucket.store.capacity) {
+      gl.bufferData(
+        gl.ARRAY_BUFFER,
+        bucket.store.capacity * RETAINED_SPRITE_INSTANCE_FLOATS * Float32Array.BYTES_PER_ELEMENT,
+        gl.DYNAMIC_DRAW,
+      );
+      bucket.allocatedCapacity = bucket.store.capacity;
+
+      if (bucket.store.count > 0) {
+        gl.bufferSubData(
+          gl.ARRAY_BUFFER,
+          0,
+          bucket.store.data,
+          0,
+          bucket.store.count * RETAINED_SPRITE_INSTANCE_FLOATS,
+        );
+      }
+    } else if (dirtyRange && dirtyRange.slotCount > 0) {
+      const dirtyRatio = dirtyRange.slotCount / bucket.store.count;
+      const uploadStartSlot = dirtyRatio >= 0.5 ? 0 : dirtyRange.startSlot;
+      const uploadSlotCount = dirtyRatio >= 0.5 ? bucket.store.count : dirtyRange.slotCount;
+      gl.bufferSubData(
+        gl.ARRAY_BUFFER,
+        uploadStartSlot * RETAINED_SPRITE_INSTANCE_FLOATS * Float32Array.BYTES_PER_ELEMENT,
+        bucket.store.data,
+        uploadStartSlot * RETAINED_SPRITE_INSTANCE_FLOATS,
+        uploadSlotCount * RETAINED_SPRITE_INSTANCE_FLOATS,
+      );
+    }
+
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, bucket.texture);
+
+    if (spriteProgram.samplerLocation) {
+      gl.uniform1i(spriteProgram.samplerLocation, 0);
+    }
+    if (spriteProgram.viewportLocation) {
+      gl.uniform2f(spriteProgram.viewportLocation, canvas.width, canvas.height);
+    }
+    if (spriteProgram.cameraPositionLocation) {
+      gl.uniform2f(spriteProgram.cameraPositionLocation, this.#cameraX, this.#cameraY);
+    }
+    if (spriteProgram.cameraZoomLocation) {
+      gl.uniform1f(spriteProgram.cameraZoomLocation, this.#cameraZoom);
+    }
+    if (spriteProgram.interpolationAlphaLocation) {
+      gl.uniform1f(spriteProgram.interpolationAlphaLocation, interpolationAlpha);
+    }
+
+    gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, bucket.store.count);
+    gl.bindVertexArray(null);
+  }
+
+  releaseRetainedSpriteBucket(bucketId: number): void {
+    const gl = this.#gl;
+    const bucket = this.#retainedSpriteBuckets.get(bucketId);
+    if (!gl || !bucket) {
+      return;
+    }
+
+    gl.deleteVertexArray(bucket.vertexArray);
+    gl.deleteBuffer(bucket.buffer);
+    this.#retainedSpriteBuckets.delete(bucketId);
+  }
+
   drawTexturedQuad(data: TexturedQuadRenderData): void {
     this.#flushSpriteBatch();
 
@@ -218,6 +322,56 @@ export class WebGLRenderAPI implements RendererAPI {
     this.#spriteBatchData[base + 16] = data.tint.a;
 
     this.#spriteBatchCount += 1;
+  }
+
+  #resolveRetainedSpriteBucket(
+    bucketId: number,
+    image: HTMLImageElement | ImageBitmap | HTMLCanvasElement,
+  ): RetainedWebGLSpriteBucket {
+    const existing = this.#retainedSpriteBuckets.get(bucketId);
+    if (existing) {
+      return existing;
+    }
+
+    const gl = this.#gl;
+    const gpuTextureManager = this.#gpuTextureManager;
+    invariant(gl, "WebGL context is not initialized");
+    invariant(gpuTextureManager, "GPU texture manager is not initialized");
+
+    const texture = gpuTextureManager.getOrCreateTexture(image);
+    const buffer = gl.createBuffer();
+    const vertexArray = gl.createVertexArray();
+    invariant(texture, "Failed to create retained sprite texture");
+    invariant(buffer, "Failed to create retained sprite buffer");
+    invariant(vertexArray, "Failed to create retained sprite vertex array");
+
+    const spriteProgram = registry.get("retainedSprite");
+    const stride = RETAINED_SPRITE_INSTANCE_FLOATS * Float32Array.BYTES_PER_ELEMENT;
+    gl.bindVertexArray(vertexArray);
+    gl.bindBuffer(gl.ARRAY_BUFFER, spriteProgram.cornerBuffer);
+    gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+
+    configureRetainedSpriteAttribute(gl, 1, 2, stride, 0);
+    configureRetainedSpriteAttribute(gl, 2, 2, stride, 2);
+    configureRetainedSpriteAttribute(gl, 3, 2, stride, 4);
+    configureRetainedSpriteAttribute(gl, 4, 1, stride, 6);
+    configureRetainedSpriteAttribute(gl, 5, 2, stride, 7);
+    configureRetainedSpriteAttribute(gl, 6, 2, stride, 9);
+    configureRetainedSpriteAttribute(gl, 7, 4, stride, 11);
+    configureRetainedSpriteAttribute(gl, 8, 4, stride, 15);
+    gl.bindVertexArray(null);
+
+    const created: RetainedWebGLSpriteBucket = {
+      store: new RetainedSpriteStore(),
+      texture,
+      buffer,
+      vertexArray,
+      allocatedCapacity: 0,
+    };
+    this.#retainedSpriteBuckets.set(bucketId, created);
+    return created;
   }
 
   #flushSpriteBatch(): void {
@@ -681,4 +835,23 @@ export class WebGLRenderAPI implements RendererAPI {
     ]);
   }
 
+}
+
+function configureRetainedSpriteAttribute(
+  gl: WebGL2RenderingContext,
+  location: number,
+  size: number,
+  stride: number,
+  floatOffset: number,
+): void {
+  gl.enableVertexAttribArray(location);
+  gl.vertexAttribPointer(
+    location,
+    size,
+    gl.FLOAT,
+    false,
+    stride,
+    floatOffset * Float32Array.BYTES_PER_ELEMENT,
+  );
+  gl.vertexAttribDivisor(location, 1);
 }

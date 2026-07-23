@@ -78,6 +78,15 @@ export interface Renderer {
 
   render(renderable: Renderable, transform: Transform2D, alpha: number): void;
   renderSprite(sprite: SpriteRenderState, transform: Transform2D, alpha: number): void;
+  upsertRetainedSprite(
+    bucketId: number,
+    instanceId: number,
+    sprite: SpriteRenderState,
+    transform: Transform2D,
+  ): boolean;
+  removeRetainedSprite(bucketId: number, instanceId: number): void;
+  drawRetainedSpriteBucket(bucketId: number, interpolationAlpha: number): void;
+  releaseRetainedSpriteBucket(bucketId: number): void;
   set(value: Settable, transform: Transform2D, alpha: number): void;
 
   drawShape(data: ShapeRenderInput): void;

@@ -21,6 +21,7 @@ import type {
     TexturedQuadRenderData,
 } from "@engine/render/types/renderer";
 import type { RendererAPI } from "@engine/render/types/renderer-api";
+import type { RetainedSpriteRenderData } from "@engine/render/retained/retained-sprite-store";
 
 const FALLBACK_PENDING_COLOR = new Rgba(1, 0, 1, 0.4);
 const FALLBACK_ERROR_COLOR = new Rgba(1, 0, 0, 0.6);
@@ -72,6 +73,7 @@ export class Renderer2D implements Renderer {
   #assets: LooseAssetManager | null = null;
 
   #sharedSpriteData: SpriteRenderData | undefined;
+  #sharedRetainedSpriteData: RetainedSpriteRenderData | undefined;
   #sharedTexturedQuadData: TexturedQuadRenderData | undefined;
 
   public readonly config: RendererConfig;
@@ -162,6 +164,76 @@ export class Renderer2D implements Renderer {
 
   renderSprite(sprite: SpriteRenderState, transform: Transform2D, alpha: number): void {
     this.#renderSpriteWithTint(sprite, sprite.tint, transform, alpha);
+  }
+
+  upsertRetainedSprite(
+    bucketId: number,
+    instanceId: number,
+    sprite: SpriteRenderState,
+    transform: Transform2D,
+  ): boolean {
+    const textureInfo = this.cache.get(sprite.assetId);
+    if (!textureInfo) {
+      return false;
+    }
+
+    const image = this.cache.getImage(textureInfo.handle);
+    if (!image) {
+      return false;
+    }
+
+    const data = this.#sharedRetainedSpriteData ?? (this.#sharedRetainedSpriteData = {
+      image,
+      previousX: 0,
+      previousY: 0,
+      currentX: 0,
+      currentY: 0,
+      width: 0,
+      height: 0,
+      rotation: 0,
+      anchorX: 0.5,
+      anchorY: 0.5,
+      flipScaleX: 1,
+      flipScaleY: 1,
+      sourceX: 0,
+      sourceY: 0,
+      sourceWidth: 0,
+      sourceHeight: 0,
+      tint: new Rgba(),
+    });
+
+    data.image = image;
+    data.previousX = transform.prev.pos.x;
+    data.previousY = transform.prev.pos.y;
+    data.currentX = transform.curr.pos.x;
+    data.currentY = transform.curr.pos.y;
+    data.width = (sprite.width || textureInfo.width) * Math.abs(transform.curr.scale.x);
+    data.height = (sprite.height || textureInfo.height) * Math.abs(transform.curr.scale.y);
+    data.rotation = transform.curr.rotation;
+    data.anchorX = sprite.anchorX;
+    data.anchorY = sprite.anchorY;
+    data.flipScaleX = (sprite.flipX ? -1 : 1) * (transform.curr.scale.x < 0 ? -1 : 1);
+    data.flipScaleY = (sprite.flipY ? -1 : 1) * (transform.curr.scale.y < 0 ? -1 : 1);
+    data.sourceX = textureInfo.frameX;
+    data.sourceY = textureInfo.frameY;
+    data.sourceWidth = textureInfo.frameWidth;
+    data.sourceHeight = textureInfo.frameHeight;
+    data.tint = sprite.tint;
+
+    this.#command.upsertRetainedSprite(bucketId, instanceId, data);
+    return true;
+  }
+
+  removeRetainedSprite(bucketId: number, instanceId: number): void {
+    this.#command.removeRetainedSprite(bucketId, instanceId);
+  }
+
+  drawRetainedSpriteBucket(bucketId: number, interpolationAlpha: number): void {
+    this.#command.drawRetainedSpriteBucket(bucketId, interpolationAlpha);
+  }
+
+  releaseRetainedSpriteBucket(bucketId: number): void {
+    this.#command.releaseRetainedSpriteBucket(bucketId);
   }
 
   set(value: Settable, transform: Transform2D, alpha: number): void {

@@ -1,60 +1,71 @@
-import { Rgba } from "@engine/components/sprite/sprite";
+import { Rgba, type RgbaChangeObserver } from "@engine/components/sprite/sprite";
 import { Component } from "@engine/ecs/component";
 
-export class Color extends Component {
-  declare public value: Rgba;
+class RgbaVisualComponent extends Component implements RgbaChangeObserver {
+  #value: Rgba;
+
+  get value(): Rgba {
+    return this.#value;
+  }
+
+  set value(value: Rgba) {
+    if (this.#value === value) {
+      return;
+    }
+
+    this.#value.setChangeObserver();
+    this.#value = value;
+    value.setChangeObserver(this);
+    this.__markChanged();
+  }
 
   constructor(value: Rgba = new Rgba()) {
     super();
-    this.value = value;
+    this.#value = value;
+    value.setChangeObserver(this);
   }
-}
-export class Tint extends Component {
-  declare public value: Rgba;
 
-  constructor(value: Rgba = new Rgba()) {
-    super();
-    this.value = value;
+  notifyRgbaChanged(): void {
+    this.__markChanged();
   }
 }
+
+export class Color extends RgbaVisualComponent {}
+export class Tint extends RgbaVisualComponent {}
+
 export class Opacity extends Component {
-  declare public value: number;
+  #value: number;
+
+  get value(): number { return this.#value; }
+  set value(value: number) {
+    if (this.#value === value) return;
+    this.#value = value;
+    this.__markChanged();
+  }
 
   constructor(value: number = 1) {
     super();
-    this.value = value;
+    this.#value = value;
   }
 }
-export class FillColor extends Component {
-  declare public value: Rgba;
 
-  constructor(value: Rgba = new Rgba()) {
-    super();
-    this.value = value;
-  }
-}
-export class StrokeColor extends Component {
-  declare public value: Rgba;
+export class FillColor extends RgbaVisualComponent {}
+export class StrokeColor extends RgbaVisualComponent {}
+export class TintTrack extends RgbaVisualComponent {}
 
-  constructor(value: Rgba = new Rgba()) {
-    super();
-    this.value = value;
-  }
-}
-export class TintTrack extends Component {
-  declare public value: Rgba;
-
-  constructor(value: Rgba = new Rgba()) {
-    super();
-    this.value = value;
-  }
-}
 export class OpacityTrack extends Component {
-  declare public value: number;
+  #value: number;
+
+  get value(): number { return this.#value; }
+  set value(value: number) {
+    if (this.#value === value) return;
+    this.#value = value;
+    this.__markChanged();
+  }
 
   constructor(value: number = 1) {
     super();
-    this.value = value;
+    this.#value = value;
   }
 }
 export class OpacityTransition extends Component {

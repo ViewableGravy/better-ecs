@@ -421,15 +421,60 @@ Conveyors are not an edge case. If they dominate real gameplay, the engine archi
 
 ## Current Phase
 
-**Current active phase target:** Phase 2 — Add precomputed transform pipeline
+**Current active phase target:** Retained GPU instance storage and changed-only ECS extraction
 
 Rationale:
 
-- Phase 1 bucketed submission is now in place and the hot render traversal path no longer depends on callback-driven queue walking
-- transform resolution is still an architectural hotspot unless render, input, and editor paths can read cached world-space values directly
-- Phase 3+ work depends on world-space data becoming a maintained engine invariant rather than an on-demand hierarchy walk
+- bucketed submission and cached world transforms are in place;
+- the retained path now removes per-frame ECS sprite traversal and full instance reconstruction for
+  unchanged entities;
+- remaining work is physical-GPU validation, upload-policy tuning, and deciding whether split
+  stable/dynamic streams outperform the current retained interleaved record.
 
 ## Current Implementation Status Summary
+
+### 2026-07-23 — Retained ECS sprite and persistent WebGL buffer checkpoint
+
+Status:
+
+- added engine-owned world/component mutation observation with no application changes;
+- replaced automatic per-entity ECS sprite commands with retained sprite buckets;
+- retained logical instance identity while keeping physical GPU slots dense through swap-remove;
+- added persistent WebGL buffers with partial dirty-range uploads and a dense-update fallback;
+- moved camera transformation and render interpolation into a retained sprite vertex shader;
+- separated static and dynamic sprite cohorts;
+- preserved the existing immediate `drawSprite` and manual render-command path;
+- removed the superseded sprite record cache, queue manager, comparison dirty mask, and queue helper.
+
+Verification:
+
+- 118 engine tests pass, including 14 retained-store/registry/mutation tests;
+- 107 client tests pass;
+- engine lint passes;
+- production client build passes;
+- full workspace typecheck passes for all 8 projects;
+- the 100k production Chromium hardware benchmark passes its entity, update, deterministic
+  checksum, query checksum, frame-capture, and runtime-error gates;
+- the 500k hardware scenario constructs and runs without page errors, but both retained and
+  immediate paths exceed the current sampling deadline.
+
+Performance interpretation:
+
+- a controlled RTX 4090 comparison used the same Chromium 145 build, 1280×720 viewport, 60-frame
+  warmup, 240-frame sample, and 50% dynamic sprite profile for both implementations;
+- at 100k, retained rendering reduced average frame time from 123.19 ms to 89.65 ms (27.2%), raised
+  average FPS from 8.12 to 11.16, and reduced p95 from 133.33 ms to 100.00 ms (25.0%);
+- at 500k, retained rendering captured 90/240 frames before the deadline versus 73/240 for the
+  immediate baseline, reduced measured average frame time from 823.71 ms to 664.42 ms (19.3%), and
+  reduced p95 from 899.96 ms to 733.31 ms (18.5%);
+- retained heap readings were substantially lower in both scenarios, but CDP heap snapshots remain
+  GC/context-sensitive and should be treated as directional;
+- reports: `benchmark-results/stress-2026-07-23T09-41-05.117Z.json` (retained) and
+  `benchmark-results/stress-2026-07-23T09-44-08.775Z.json` (immediate baseline);
+- focused tests establish that an unchanged retained instance performs no CPU slot rewrite and
+  produces no dirty upload range;
+- target-hardware tests at 0/1/10/90/100% dirtiness remain required to tune the partial/full upload
+  crossover beyond the current 50% dynamic profile.
 
 ### 2026-03-06 — Phase 1 bucketed submission checkpoint
 

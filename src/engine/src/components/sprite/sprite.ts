@@ -2,12 +2,114 @@ import type { RegisteredAssets } from "@engine/core";
 import { Component } from "@engine/ecs/component";
 
 export class Rgba {
+  private _r: number;
+  private _g: number;
+  private _b: number;
+  private _a: number;
+  private _changeObserver: RgbaChangeObserver | undefined;
+
   constructor(
-    public r: number = 1,
-    public g: number = 1,
-    public b: number = 1,
-    public a: number = 1,
-  ) {}
+    r: number = 1,
+    g: number = 1,
+    b: number = 1,
+    a: number = 1,
+    changeObserver?: RgbaChangeObserver,
+  ) {
+    this._r = r;
+    this._g = g;
+    this._b = b;
+    this._a = a;
+    this._changeObserver = changeObserver;
+    Object.defineProperties(this, {
+      _r: { enumerable: false },
+      _g: { enumerable: false },
+      _b: { enumerable: false },
+      _a: { enumerable: false },
+      _changeObserver: { enumerable: false },
+      r: {
+        enumerable: true,
+        configurable: true,
+        get: Rgba.#getR,
+        set: Rgba.#setR,
+      },
+      g: {
+        enumerable: true,
+        configurable: true,
+        get: Rgba.#getG,
+        set: Rgba.#setG,
+      },
+      b: {
+        enumerable: true,
+        configurable: true,
+        get: Rgba.#getB,
+        set: Rgba.#setB,
+      },
+      a: {
+        enumerable: true,
+        configurable: true,
+        get: Rgba.#getA,
+        set: Rgba.#setA,
+      },
+    });
+  }
+
+  get r(): number { return this._r; }
+  set r(value: number) {
+    if (this._r === value) return;
+    this._r = value;
+    this._changeObserver?.notifyRgbaChanged();
+  }
+
+  get g(): number { return this._g; }
+  set g(value: number) {
+    if (this._g === value) return;
+    this._g = value;
+    this._changeObserver?.notifyRgbaChanged();
+  }
+
+  get b(): number { return this._b; }
+  set b(value: number) {
+    if (this._b === value) return;
+    this._b = value;
+    this._changeObserver?.notifyRgbaChanged();
+  }
+
+  get a(): number { return this._a; }
+  set a(value: number) {
+    if (this._a === value) return;
+    this._a = value;
+    this._changeObserver?.notifyRgbaChanged();
+  }
+
+  /** @internal Bind nested color writes to an owning visual component. */
+  setChangeObserver(changeObserver?: RgbaChangeObserver): void {
+    this._changeObserver = changeObserver;
+  }
+
+  static #getR(this: Rgba): number { return this._r; }
+  static #setR(this: Rgba, value: number): void {
+    if (this._r === value) return;
+    this._r = value;
+    this._changeObserver?.notifyRgbaChanged();
+  }
+  static #getG(this: Rgba): number { return this._g; }
+  static #setG(this: Rgba, value: number): void {
+    if (this._g === value) return;
+    this._g = value;
+    this._changeObserver?.notifyRgbaChanged();
+  }
+  static #getB(this: Rgba): number { return this._b; }
+  static #setB(this: Rgba, value: number): void {
+    if (this._b === value) return;
+    this._b = value;
+    this._changeObserver?.notifyRgbaChanged();
+  }
+  static #getA(this: Rgba): number { return this._a; }
+  static #setA(this: Rgba, value: number): void {
+    if (this._a === value) return;
+    this._a = value;
+    this._changeObserver?.notifyRgbaChanged();
+  }
 
   public set(r: number, g: number, b: number, a: number = 1): this {
     this.r = r;
@@ -59,6 +161,10 @@ export class Rgba {
   }
 }
 
+export interface RgbaChangeObserver {
+  notifyRgbaChanged(): void;
+}
+
 /**
  * Sprite component — a textured quad attached to an entity.
  *
@@ -69,39 +175,100 @@ export class Rgba {
  * the entity on screen.
  */
 export class Sprite extends Component {
+  #assetId: Exclude<keyof RegisteredAssets, number | symbol>;
+  #width: number;
+  #height: number;
+  #anchorX: number;
+  #anchorY: number;
+  #flipX: boolean;
+  #flipY: boolean;
+  #zOrder: number;
+  #layer: number;
+  #isDynamic: boolean;
+
   /** The asset ID of the texture to display. */
-  declare public assetId: Exclude<keyof RegisteredAssets, number | symbol>;
+  get assetId(): Exclude<keyof RegisteredAssets, number | symbol> { return this.#assetId; }
+  set assetId(value: Exclude<keyof RegisteredAssets, number | symbol>) {
+    if (this.#assetId === value) return;
+    this.#assetId = value;
+    this.__markChanged();
+  }
 
   /** Display width in world units (0 = derive from texture). */
-  declare public width: number;
+  get width(): number { return this.#width; }
+  set width(value: number) {
+    if (this.#width === value) return;
+    this.#width = value;
+    this.__markChanged();
+  }
 
   /** Display height in world units (0 = derive from texture). */
-  declare public height: number;
+  get height(): number { return this.#height; }
+  set height(value: number) {
+    if (this.#height === value) return;
+    this.#height = value;
+    this.__markChanged();
+  }
 
   /** Anchor / pivot X (0-1, origin for rotation/scaling). */
-  declare public anchorX: number;
+  get anchorX(): number { return this.#anchorX; }
+  set anchorX(value: number) {
+    if (this.#anchorX === value) return;
+    this.#anchorX = value;
+    this.__markChanged();
+  }
 
   /** Anchor / pivot Y (0-1, origin for rotation/scaling). */
-  declare public anchorY: number;
+  get anchorY(): number { return this.#anchorY; }
+  set anchorY(value: number) {
+    if (this.#anchorY === value) return;
+    this.#anchorY = value;
+    this.__markChanged();
+  }
 
   /** Horizontal flip. */
-  declare public flipX: boolean;
+  get flipX(): boolean { return this.#flipX; }
+  set flipX(value: boolean) {
+    if (this.#flipX === value) return;
+    this.#flipX = value;
+    this.__markChanged();
+  }
 
   /** Vertical flip. */
-  declare public flipY: boolean;
+  get flipY(): boolean { return this.#flipY; }
+  set flipY(value: boolean) {
+    if (this.#flipY === value) return;
+    this.#flipY = value;
+    this.__markChanged();
+  }
 
   /** Z-order for sorting within a layer. */
-  declare public zOrder: number;
+  get zOrder(): number { return this.#zOrder; }
+  set zOrder(value: number) {
+    if (this.#zOrder === value) return;
+    this.#zOrder = value;
+    this.__markChanged();
+  }
 
   /** Render layer for multi-pass rendering. */
-  declare public layer: number;
+  get layer(): number { return this.#layer; }
+  set layer(value: number) {
+    if (this.#layer === value) return;
+    this.#layer = value;
+    this.__markChanged();
+  }
 
   /**
    * Queue update policy.
    * - true: always evaluate this sprite in the queue hot path (default)
    * - false: eligible for static cohort reuse
    */
-  declare public isDynamic: boolean;
+  get isDynamic(): boolean { return this.#isDynamic; }
+  set isDynamic(value: boolean) {
+    if (this.#isDynamic === value) return;
+    this.#isDynamic = value;
+    this.__markChanged();
+  }
 
   constructor(
     assetId: Exclude<keyof RegisteredAssets, number | symbol>,
@@ -116,15 +283,15 @@ export class Sprite extends Component {
     isDynamic: boolean = true,
   ) {
     super();
-    this.assetId = assetId;
-    this.width = width;
-    this.height = height;
-    this.anchorX = anchorX;
-    this.anchorY = anchorY;
-    this.flipX = flipX;
-    this.flipY = flipY;
-    this.zOrder = zOrder;
-    this.layer = layer;
-    this.isDynamic = isDynamic;
+    this.#assetId = assetId;
+    this.#width = width;
+    this.#height = height;
+    this.#anchorX = anchorX;
+    this.#anchorY = anchorY;
+    this.#flipX = flipX;
+    this.#flipY = flipY;
+    this.#zOrder = zOrder;
+    this.#layer = layer;
+    this.#isDynamic = isDynamic;
   }
 }

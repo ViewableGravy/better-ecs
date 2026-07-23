@@ -24,7 +24,7 @@ update ticks, motion-system executions, and a deterministic simulation checksum.
 end-to-end responsiveness measure; internal update/render/GPU phase timings are a later profiler
 instrumentation step.
 
-Run the automated matrix:
+Run the automated 100k and 500k matrix:
 
 ```bash
 bun run benchmark:stress
@@ -39,7 +39,15 @@ bun run benchmark:stress:smoke
 The runner builds the production client, starts a local preview, uses a fresh browser context for
 every target, captures JavaScript heap and GPU/browser metadata through Chromium, checks the fixture
 and sample, and writes an incremental JSON report to `benchmark-results/`. It exits non-zero when
-any scenario fails. Set `BENCHMARK_URL` to use an already-running server instead.
+any scenario fails. Hardware-backed WebGL is required by default; the runner fails if Chromium
+selects SwiftShader or another known software renderer. Use `--software-gpu` for an intentional
+software-renderer comparison:
+
+```bash
+bun scripts/run-stress-benchmark.ts --smoke --software-gpu
+```
+
+Set `BENCHMARK_URL` to use an already-running server instead.
 
 ## Current expected ceiling
 

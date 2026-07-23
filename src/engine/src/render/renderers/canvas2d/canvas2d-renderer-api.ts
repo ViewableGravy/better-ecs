@@ -7,6 +7,7 @@ import type {
     TexturedQuadRenderData,
 } from "@engine/render/types/low-level";
 import type { RendererAPI } from "@engine/render/types/renderer-api";
+import type { RetainedSpriteRenderData } from "@engine/render/retained/retained-sprite-store";
 
 /**
  * Canvas 2D implementation of the low-level renderer.
@@ -22,6 +23,7 @@ export class Canvas2DRenderAPI implements RendererAPI {
   private cameraX: number = 0;
   private cameraY: number = 0;
   private cameraZoom: number = 1;
+  private readonly retainedBuckets = new Map<number, Map<number, RetainedSpriteRenderData>>();
 
   initialize(canvas: HTMLCanvasElement): void {
     this.canvas = canvas;
@@ -127,6 +129,53 @@ export class Canvas2DRenderAPI implements RendererAPI {
     );
 
     this.ctx.restore();
+  }
+
+  upsertRetainedSprite(bucketId: number, instanceId: number, data: RetainedSpriteRenderData): void {
+    let bucket = this.retainedBuckets.get(bucketId);
+    if (!bucket) {
+      bucket = new Map();
+      this.retainedBuckets.set(bucketId, bucket);
+    }
+
+    bucket.set(instanceId, cloneRetainedSpriteData(data));
+  }
+
+  removeRetainedSprite(bucketId: number, instanceId: number): void {
+    this.retainedBuckets.get(bucketId)?.delete(instanceId);
+  }
+
+  drawRetainedSpriteBucket(bucketId: number, interpolationAlpha: number): void {
+    const bucket = this.retainedBuckets.get(bucketId);
+    if (!bucket) {
+      return;
+    }
+
+    for (const data of bucket.values()) {
+      this.drawSprite({
+        image: data.image,
+        x: lerp(data.previousX, data.currentX, interpolationAlpha),
+        y: lerp(data.previousY, data.currentY, interpolationAlpha),
+        width: data.width,
+        height: data.height,
+        rotation: data.rotation,
+        scaleX: data.flipScaleX,
+        scaleY: data.flipScaleY,
+        anchorX: data.anchorX,
+        anchorY: data.anchorY,
+        sourceX: data.sourceX,
+        sourceY: data.sourceY,
+        sourceWidth: data.sourceWidth,
+        sourceHeight: data.sourceHeight,
+        flipX: false,
+        flipY: false,
+        tint: data.tint,
+      });
+    }
+  }
+
+  releaseRetainedSpriteBucket(bucketId: number): void {
+    this.retainedBuckets.delete(bucketId);
   }
 
   drawTexturedQuad(data: TexturedQuadRenderData): void {
@@ -264,6 +313,32 @@ export class Canvas2DRenderAPI implements RendererAPI {
   getHeight(): number {
     return this.canvas?.height ?? 0;
   }
+}
+
+function cloneRetainedSpriteData(data: RetainedSpriteRenderData): RetainedSpriteRenderData {
+  return {
+    image: data.image,
+    previousX: data.previousX,
+    previousY: data.previousY,
+    currentX: data.currentX,
+    currentY: data.currentY,
+    width: data.width,
+    height: data.height,
+    rotation: data.rotation,
+    anchorX: data.anchorX,
+    anchorY: data.anchorY,
+    flipScaleX: data.flipScaleX,
+    flipScaleY: data.flipScaleY,
+    sourceX: data.sourceX,
+    sourceY: data.sourceY,
+    sourceWidth: data.sourceWidth,
+    sourceHeight: data.sourceHeight,
+    tint: new Rgba(data.tint.r, data.tint.g, data.tint.b, data.tint.a),
+  };
+}
+
+function lerp(previous: number, current: number, alpha: number): number {
+  return previous + (current - previous) * alpha;
 }
 
 function isCircleShapeData(data: ShapeRenderInput): data is CircleShapeRenderData | DenseShapeRenderData {

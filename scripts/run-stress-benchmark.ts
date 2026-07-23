@@ -3,7 +3,6 @@ import process from "node:process";
 import { chromium, type Browser, type Page } from "@playwright/test";
 import { build, preview, type PreviewServer } from "vite";
 import {
-  BENCHMARK_ENTITY_COUNTS,
   BENCHMARK_QUERY_SELECTIVE_STRIDE,
   DEFAULT_BENCHMARK_SAMPLE_FRAMES,
   DEFAULT_BENCHMARK_TIMEOUT_MS,
@@ -19,8 +18,10 @@ const OUTPUT_DIRECTORY = "benchmark-results";
 const EXTERNAL_BENCHMARK_URL = process.env.BENCHMARK_URL;
 const PREVIEW_URL = "http://127.0.0.1:4173";
 const SMOKE_TARGETS: readonly BenchmarkEntityCount[] = [10_000];
+const BENCHMARK_TARGETS: readonly BenchmarkEntityCount[] = [100_000, 500_000];
 const smoke = process.argv.includes("--smoke");
-const targets = smoke ? SMOKE_TARGETS : BENCHMARK_ENTITY_COUNTS;
+const softwareGpu = process.argv.includes("--software-gpu");
+const targets = smoke ? SMOKE_TARGETS : BENCHMARK_TARGETS;
 const warmupFrames = smoke ? 5 : DEFAULT_BENCHMARK_WARMUP_FRAMES;
 const sampleFrames = smoke ? 10 : DEFAULT_BENCHMARK_SAMPLE_FRAMES;
 const timeoutMs = smoke ? 15_000 : DEFAULT_BENCHMARK_TIMEOUT_MS;
@@ -58,6 +59,7 @@ type StressReport = {
   finishedAt: string | null;
   baseUrl: string;
   browserVersion: string;
+  gpuMode: "hardware" | "software";
   warmupFrames: number;
   sampleFrames: number;
   timeoutMs: number;
@@ -71,6 +73,7 @@ const report: StressReport = {
   finishedAt: null,
   baseUrl,
   browserVersion: "",
+  gpuMode: softwareGpu ? "software" : "hardware",
   warmupFrames,
   sampleFrames,
   timeoutMs,
@@ -85,7 +88,12 @@ let browser: Browser | null = null;
 try {
   browser = await chromium.launch({
     headless: true,
-    args: ["--enable-precise-memory-info"],
+    args: [
+      "--enable-precise-memory-info",
+      ...(softwareGpu
+        ? ["--enable-unsafe-swiftshader", "--use-angle=swiftshader"]
+        : ["--use-gl=angle", "--use-angle=gl"]),
+    ],
   });
   report.browserVersion = browser.version();
 
@@ -135,6 +143,7 @@ async function runScenario(browserInstance: Browser, target: BenchmarkEntityCoun
     const status = await readStatus(page);
     const metadata = await readMetadata(page);
     const heapBefore = await readHeapUsage(page);
+    const gpuError = validateGpu(metadata);
 
     if (status.phase === "failed") {
       return {
@@ -142,6 +151,20 @@ async function runScenario(browserInstance: Browser, target: BenchmarkEntityCoun
         outcome: "failed",
         checks: [],
         errors: [status.error ?? "Benchmark construction failed without an error message.", ...pageErrors],
+        status,
+        result: null,
+        heapBefore,
+        heapAfter: await readHeapUsage(page),
+        metadata,
+      };
+    }
+
+    if (gpuError) {
+      return {
+        target,
+        outcome: "failed",
+        checks: [],
+        errors: [gpuError, ...pageErrors],
         status,
         result: null,
         heapBefore,
@@ -211,6 +234,22 @@ async function runScenario(browserInstance: Browser, target: BenchmarkEntityCoun
   } finally {
     await context.close();
   }
+}
+
+function validateGpu(metadata: BrowserMetadata): string | null {
+  if (!metadata.webgl2) {
+    return "WebGL2 is unavailable.";
+  }
+
+  const usesSoftwareRenderer = /swiftshader|llvmpipe|software rasterizer/i.test(metadata.renderer);
+  if (softwareGpu && !usesSoftwareRenderer) {
+    return `Software-GPU mode requested, but Chromium selected ${metadata.renderer}.`;
+  }
+  if (!softwareGpu && usesSoftwareRenderer) {
+    return `Hardware-GPU mode requested, but Chromium selected ${metadata.renderer}.`;
+  }
+
+  return null;
 }
 
 function checkResult(result: BenchmarkRunResult): string[] {

@@ -61,7 +61,7 @@ Ordinary component mutations now write directly to component data.
 The following similarly named mechanisms remain intentionally because they are live rendering
 optimizations rather than replication state:
 
-- sprite render `dirtyMask`;
+- retained sprite dirty entity/range tracking;
 - render queue `commandsDirty`;
 - world-transform change detection.
 
@@ -121,6 +121,36 @@ Suggested sequence:
 At multi-million scale, packed/procedural conveyor-item storage and persistent GPU instance data are
 likely more important than changing query syntax. A visually independent item does not necessarily
 need to be a full object-based ECS entity.
+
+## Retained ECS sprite rendering continuation
+
+The engine ECS sprite path now uses retained render buckets:
+
+- each rendered world is scanned once when it first becomes visible;
+- subsequent sprite synchronization is driven by engine-owned component lifecycle/change events;
+- direct `Sprite`, visual color/opacity, hierarchy, and hover mutations publish changes without
+  application-layer integration;
+- transform changes are published once from the existing `WorldTransform2D` synchronization
+  boundary, avoiding observable accessors in the hot `Vec2` read path;
+- ECS sprites queue one retained command per layer/z-order/asset/cohort bucket rather than one
+  command per entity;
+- WebGL keeps dense per-bucket CPU/GPU instance storage, uses generation-independent logical
+  instance IDs, swap-removes physical slots, and uploads only dirty ranges with a dense-update
+  fallback;
+- camera conversion and previous/current position interpolation run in the retained vertex shader,
+  so camera or interpolation-alpha changes do not rebuild instance data;
+- static and dynamic sprites use separate retained cohorts;
+- `RendererAPI.drawSprite` and manual render commands remain immediate-mode escape hatches.
+
+The retained store and ECS integration have focused coverage for unchanged frames, dirty ranges,
+growth, swap-removal, mutation publication, bucket release, and coexistence with manual commands.
+The controlled RTX 4090 comparison uses Chromium 145 at 1280×720 with identical 60-frame warmup and
+240-frame sample settings. At 100k sprites, retained rendering reduced average frame time from
+123.19 ms to 89.65 ms (27.2%) and p95 from 133.33 ms to 100.00 ms. At 500k, both paths exceeded the
+sampling deadline, but retained rendering captured 90 frames versus 73 and reduced measured average
+frame time from 823.71 ms to 664.42 ms (19.3%). Reports:
+`benchmark-results/stress-2026-07-23T09-41-05.117Z.json` (retained) and
+`benchmark-results/stress-2026-07-23T09-44-08.775Z.json` (immediate baseline).
 
 ## Query cursor continuation
 
