@@ -1,0 +1,388 @@
+{
+  "recordedAt": "2026-07-23T03:27:51.198Z",
+  "chromiumExecutable": "/home/gravy/.cache/ms-playwright/chromium-1217/chrome-linux64/chrome",
+  "launchArguments": [
+    "--enable-precise-memory-info",
+    "--enable-unsafe-swiftshader",
+    "--use-angle=swiftshader",
+    "--disable-background-timer-throttling",
+    "--disable-renderer-backgrounding"
+  ],
+  "result": {
+    "gpu": {
+      "vendor": "WebKit",
+      "renderer": "WebKit WebGL",
+      "unmaskedVendor": "Google Inc. (Google)",
+      "unmaskedRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+      "shadingLanguageVersion": "WebGL GLSL ES 3.00 (OpenGL ES GLSL ES 3.0 Chromium)",
+      "maxTextureSize": 8192,
+      "timerQueryExtension": true
+    },
+    "canvas": {
+      "width": 1280,
+      "height": 720
+    },
+    "layout": {
+      "floatsPerInstance": 17,
+      "bytesPerInstance": 68,
+      "note": "Matches the engine sprite instance stride; benchmark shader consumes position only"
+    },
+    "results": [
+      {
+        "count": 100000,
+        "bytes": 6800000,
+        "rebuildOnlyMs": {
+          "samples": 2,
+          "min": 3.899999976158142,
+          "median": 3.900000035762787,
+          "mean": 3.9000000059604645,
+          "p95": 3.900000035762787,
+          "max": 3.900000035762787,
+          "standardDeviation": 2.9802322387695312e-8
+        },
+        "fullUploadIssueMs": {
+          "samples": 2,
+          "min": 3.699999988079071,
+          "median": 16.900000035762787,
+          "mean": 10.300000011920929,
+          "p95": 16.900000035762787,
+          "max": 16.900000035762787,
+          "standardDeviation": 6.600000023841858
+        },
+        "fullUploadAndFinishMs": {
+          "samples": 1,
+          "min": 7.300000011920929,
+          "median": 7.300000011920929,
+          "mean": 7.300000011920929,
+          "p95": 7.300000011920929,
+          "max": 7.300000011920929,
+          "standardDeviation": 0
+        },
+        "onePercentUploadAndFinishMs": {
+          "samples": 2,
+          "min": 0,
+          "median": 0.10000002384185791,
+          "mean": 0.050000011920928955,
+          "p95": 0.10000002384185791,
+          "max": 0.10000002384185791,
+          "standardDeviation": 0.050000011920928955
+        },
+        "ninetyPercentUploadAndFinishMs": {
+          "samples": 2,
+          "min": 0.5,
+          "median": 8.799999952316284,
+          "mean": 4.649999976158142,
+          "p95": 8.799999952316284,
+          "max": 8.799999952316284,
+          "standardDeviation": 4.149999976158142
+        },
+        "fixedBufferDrawIssueMs": null,
+        "fixedBufferDrawAndFinishMs": null,
+        "shaderDerivedDrawAndFinishMs": null,
+        "cpuPositionCalculationOnlyMs": {
+          "samples": 2,
+          "min": 2,
+          "median": 2.100000023841858,
+          "mean": 2.050000011920929,
+          "p95": 2.100000023841858,
+          "max": 2.100000023841858,
+          "standardDeviation": 0.050000011920928955
+        },
+        "cullingOnePercentVisible": {
+          "visibleCount": 1000,
+          "scanAllThenPackVisibleMs": {
+            "samples": 2,
+            "min": 0.19999998807907104,
+            "median": 0.30000001192092896,
+            "mean": 0.25,
+            "p95": 0.30000001192092896,
+            "max": 0.30000001192092896,
+            "standardDeviation": 0.050000011920928955
+          },
+          "preculledCandidatePackMs": {
+            "samples": 2,
+            "min": 0,
+            "median": 0,
+            "mean": 0,
+            "p95": 0,
+            "max": 0,
+            "standardDeviation": 0
+          }
+        }
+      },
+      {
+        "count": 250000,
+        "bytes": 17000000,
+        "rebuildOnlyMs": {
+          "samples": 2,
+          "min": 8.799999952316284,
+          "median": 8.800000011920929,
+          "mean": 8.799999982118607,
+          "p95": 8.800000011920929,
+          "max": 8.800000011920929,
+          "standardDeviation": 2.9802322387695312e-8
+        },
+        "fullUploadIssueMs": {
+          "samples": 2,
+          "min": 13.800000011920929,
+          "median": 14,
+          "mean": 13.900000005960464,
+          "p95": 14,
+          "max": 14,
+          "standardDeviation": 0.09999999403953552
+        },
+        "fullUploadAndFinishMs": {
+          "samples": 1,
+          "min": 13.900000035762787,
+          "median": 13.900000035762787,
+          "mean": 13.900000035762787,
+          "p95": 13.900000035762787,
+          "max": 13.900000035762787,
+          "standardDeviation": 0
+        },
+        "onePercentUploadAndFinishMs": {
+          "samples": 2,
+          "min": 0,
+          "median": 0,
+          "mean": 0,
+          "p95": 0,
+          "max": 0,
+          "standardDeviation": 0
+        },
+        "ninetyPercentUploadAndFinishMs": {
+          "samples": 2,
+          "min": 9.099999964237213,
+          "median": 9.900000035762787,
+          "mean": 9.5,
+          "p95": 9.900000035762787,
+          "max": 9.900000035762787,
+          "standardDeviation": 0.40000003576278687
+        },
+        "fixedBufferDrawIssueMs": null,
+        "fixedBufferDrawAndFinishMs": null,
+        "shaderDerivedDrawAndFinishMs": null,
+        "cpuPositionCalculationOnlyMs": {
+          "samples": 2,
+          "min": 4.699999988079071,
+          "median": 5,
+          "mean": 4.8499999940395355,
+          "p95": 5,
+          "max": 5,
+          "standardDeviation": 0.15000000596046448
+        },
+        "cullingOnePercentVisible": {
+          "visibleCount": 2500,
+          "scanAllThenPackVisibleMs": {
+            "samples": 2,
+            "min": 0.7000000476837158,
+            "median": 0.7999999523162842,
+            "mean": 0.75,
+            "p95": 0.7999999523162842,
+            "max": 0.7999999523162842,
+            "standardDeviation": 0.04999995231628418
+          },
+          "preculledCandidatePackMs": {
+            "samples": 2,
+            "min": 0.19999998807907104,
+            "median": 0.19999998807907104,
+            "mean": 0.19999998807907104,
+            "p95": 0.19999998807907104,
+            "max": 0.19999998807907104,
+            "standardDeviation": 0
+          }
+        }
+      },
+      {
+        "count": 500000,
+        "bytes": 34000000,
+        "rebuildOnlyMs": {
+          "samples": 2,
+          "min": 17.099999964237213,
+          "median": 17.30000001192093,
+          "mean": 17.19999998807907,
+          "p95": 17.30000001192093,
+          "max": 17.30000001192093,
+          "standardDeviation": 0.10000002384185791
+        },
+        "fullUploadIssueMs": {
+          "samples": 2,
+          "min": 25,
+          "median": 26,
+          "mean": 25.5,
+          "p95": 26,
+          "max": 26,
+          "standardDeviation": 0.5
+        },
+        "fullUploadAndFinishMs": {
+          "samples": 1,
+          "min": 24.900000035762787,
+          "median": 24.900000035762787,
+          "mean": 24.900000035762787,
+          "p95": 24.900000035762787,
+          "max": 24.900000035762787,
+          "standardDeviation": 0
+        },
+        "onePercentUploadAndFinishMs": {
+          "samples": 2,
+          "min": 0,
+          "median": 0.10000002384185791,
+          "mean": 0.050000011920928955,
+          "p95": 0.10000002384185791,
+          "max": 0.10000002384185791,
+          "standardDeviation": 0.050000011920928955
+        },
+        "ninetyPercentUploadAndFinishMs": {
+          "samples": 2,
+          "min": 16,
+          "median": 17.19999998807907,
+          "mean": 16.599999994039536,
+          "p95": 17.19999998807907,
+          "max": 17.19999998807907,
+          "standardDeviation": 0.5999999940395355
+        },
+        "fixedBufferDrawIssueMs": {
+          "samples": 1,
+          "min": 0.09999996423721313,
+          "median": 0.09999996423721313,
+          "mean": 0.09999996423721313,
+          "p95": 0.09999996423721313,
+          "max": 0.09999996423721313,
+          "standardDeviation": 0
+        },
+        "fixedBufferDrawAndFinishMs": {
+          "samples": 1,
+          "min": 0,
+          "median": 0,
+          "mean": 0,
+          "p95": 0,
+          "max": 0,
+          "standardDeviation": 0
+        },
+        "shaderDerivedDrawAndFinishMs": {
+          "samples": 1,
+          "min": 0.10000002384185791,
+          "median": 0.10000002384185791,
+          "mean": 0.10000002384185791,
+          "p95": 0.10000002384185791,
+          "max": 0.10000002384185791,
+          "standardDeviation": 0
+        },
+        "cpuPositionCalculationOnlyMs": {
+          "samples": 2,
+          "min": 8.600000023841858,
+          "median": 8.899999976158142,
+          "mean": 8.75,
+          "p95": 8.899999976158142,
+          "max": 8.899999976158142,
+          "standardDeviation": 0.1499999761581421
+        },
+        "cullingOnePercentVisible": {
+          "visibleCount": 5000,
+          "scanAllThenPackVisibleMs": {
+            "samples": 2,
+            "min": 1.5,
+            "median": 1.7999999523162842,
+            "mean": 1.649999976158142,
+            "p95": 1.7999999523162842,
+            "max": 1.7999999523162842,
+            "standardDeviation": 0.1499999761581421
+          },
+          "preculledCandidatePackMs": {
+            "samples": 2,
+            "min": 0.30000001192092896,
+            "median": 0.3999999761581421,
+            "mean": 0.3499999940395355,
+            "p95": 0.3999999761581421,
+            "max": 0.3999999761581421,
+            "standardDeviation": 0.04999998211860657
+          }
+        }
+      },
+      {
+        "count": 1000000,
+        "bytes": 68000000,
+        "rebuildOnlyMs": {
+          "samples": 2,
+          "min": 34.10000002384186,
+          "median": 35.39999997615814,
+          "mean": 34.75,
+          "p95": 35.39999997615814,
+          "max": 35.39999997615814,
+          "standardDeviation": 0.6499999761581421
+        },
+        "fullUploadIssueMs": {
+          "samples": 2,
+          "min": 46.09999996423721,
+          "median": 46.5,
+          "mean": 46.29999998211861,
+          "p95": 46.5,
+          "max": 46.5,
+          "standardDeviation": 0.20000001788139343
+        },
+        "fullUploadAndFinishMs": {
+          "samples": 1,
+          "min": 45.40000003576279,
+          "median": 45.40000003576279,
+          "mean": 45.40000003576279,
+          "p95": 45.40000003576279,
+          "max": 45.40000003576279,
+          "standardDeviation": 0
+        },
+        "onePercentUploadAndFinishMs": {
+          "samples": 2,
+          "min": 0,
+          "median": 0.10000002384185791,
+          "mean": 0.050000011920928955,
+          "p95": 0.10000002384185791,
+          "max": 0.10000002384185791,
+          "standardDeviation": 0.050000011920928955
+        },
+        "ninetyPercentUploadAndFinishMs": {
+          "samples": 2,
+          "min": 30.5,
+          "median": 31,
+          "mean": 30.75,
+          "p95": 31,
+          "max": 31,
+          "standardDeviation": 0.25
+        },
+        "fixedBufferDrawIssueMs": null,
+        "fixedBufferDrawAndFinishMs": null,
+        "shaderDerivedDrawAndFinishMs": null,
+        "cpuPositionCalculationOnlyMs": {
+          "samples": 2,
+          "min": 20,
+          "median": 21.5,
+          "mean": 20.75,
+          "p95": 21.5,
+          "max": 21.5,
+          "standardDeviation": 0.75
+        },
+        "cullingOnePercentVisible": {
+          "visibleCount": 10000,
+          "scanAllThenPackVisibleMs": {
+            "samples": 2,
+            "min": 3.199999988079071,
+            "median": 3.399999976158142,
+            "mean": 3.2999999821186066,
+            "p95": 3.399999976158142,
+            "max": 3.399999976158142,
+            "standardDeviation": 0.09999999403953552
+          },
+          "preculledCandidatePackMs": {
+            "samples": 2,
+            "min": 1.0999999642372131,
+            "median": 1.4000000357627869,
+            "mean": 1.25,
+            "p95": 1.4000000357627869,
+            "max": 1.4000000357627869,
+            "standardDeviation": 0.15000003576278687
+          }
+        }
+      }
+    ],
+    "fixed500kAnimationFrameIntervalsMs": null,
+    "fixed500kAnimationFrameNote": "Omitted after the synchronized SwiftShader run exceeded the investigation time cap"
+  }
+}

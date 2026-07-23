@@ -1,0 +1,30 @@
+Static scan date: 2026-07-23
+
+Command:
+rg -n "world\.query\(|\.query\(" src/engine/src src/app/client/src src/libs/physics/src \
+  src/libs/spatial-contexts/src --glob '!**/*.spec.*' --glob '!**/*.test.*' | wc -l
+Result: 68 production query expressions.
+
+Command:
+rg -n "world\.forEach|\.forEach[123]?\(" src/engine/src src/app/client/src src/libs/physics/src \
+  src/libs/spatial-contexts/src --glob '!**/*.spec.*' --glob '!**/*.test.*' | wc -l
+Result: 15 production forEach expressions.
+
+Source-derived allocation counts:
+
+- World.query(A) creates a result array containing exactly count(A) entity IDs
+  (src/engine/src/ecs/world.ts:569-573).
+- World.query(A, B, ...) creates a result array containing exactly the intersection size,
+  plus temporary `stores` and `otherStores` arrays
+  (src/engine/src/ecs/world.ts:543-605).
+- transformSnapshotSystem performs three query calls per update. Its result arrays contain
+  count(Transform2D) + count(WorldTransform2D) + count(Transform3D) total entity-ID slots
+  per update (src/engine/src/systems/transformSnapshot.ts:9-30).
+- ConveyorBeltChainIterator.next() returns a newly constructed IteratorResult object for
+  every yielded belt and each termination (ConveyorBeltChainIterator.ts:38-65). The motion
+  system traverses each chain twice (conveyor-entity-motion/index.ts:34-40), so a chain of
+  N belts exposes 2N + 2 source-level IteratorResult allocations per update. A JIT may
+  eliminate some non-escaping objects; no heap profiler measurement was made.
+- worldTransform2DSystem clears CHILDREN_BY_PARENT every sync and creates `[entityId]` for
+  each distinct parent encountered (worldTransform2D.ts:56-78). This is one source-level
+  child-array allocation per distinct parent with a Transform2D child, per sync.
