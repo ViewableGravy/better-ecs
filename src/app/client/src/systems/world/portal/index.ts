@@ -1,7 +1,6 @@
 import { PlayerComponent } from "@client/components/player";
 import { ensurePlayer } from "@client/entities/player";
 import { PhysicsWorldManager } from "@client/scenes/world/physics/physics-world-manager";
-import { mutate } from "@engine";
 import { Transform2D } from "@engine/components";
 import { COLLISION_LAYERS } from "@libs/physics";
 import { createPortalSystem, type PortalActivationArgs } from "@libs/spatial-contexts";
@@ -32,9 +31,7 @@ export const System = createPortalSystem({
     const transform = nextWorld.get(playerId, Transform2D);
     if (!transform) return;
 
-    mutate(transform, "curr", (curr) => {
-      curr.pos.set(spawn.x, spawn.y);
-    });
+    transform.curr.pos.set(spawn.x, spawn.y);
     transform.prev.pos.set(spawn.x, spawn.y);
   },
 });

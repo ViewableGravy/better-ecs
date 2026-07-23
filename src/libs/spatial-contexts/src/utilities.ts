@@ -1,4 +1,4 @@
-import { Rectangle, Vec2, type MousePoint } from "@engine";
+import { Vec2, type MousePoint } from "@engine";
 import { ContextEntryRegion } from "@libs/spatial-contexts/components/context-entry-region";
 import type { ContextId } from "@libs/spatial-contexts/context-id";
 import type { SpatialContextManager } from "@libs/spatial-contexts/manager";
@@ -6,16 +6,6 @@ import type { SpatialContextManager } from "@libs/spatial-contexts/manager";
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
  **********************************************************************************************************/
-
-type SerializedVec2 = {
-  x: number;
-  y: number;
-};
-
-type SerializedRectangle = {
-  position: SerializedVec2;
-  size: SerializedVec2;
-};
 
 /**
  * Resolves the deepest (most nested) spatial context at a given point in world space.
@@ -93,20 +83,5 @@ function pointInsideRegion(region: ContextEntryRegion, worldPointer: MousePoint)
 }
 
 export function contextEntryRegionContainsPoint(region: ContextEntryRegion, point: Vec2): boolean {
-  const bounds = resolveContextEntryRegionBounds(region);
-
-  return bounds.containsPoint(point);
-}
-
-function resolveContextEntryRegionBounds(region: ContextEntryRegion): Rectangle {
-  if (region.bounds instanceof Rectangle) {
-    return region.bounds;
-  }
-
-  const serializedBounds = region.bounds as SerializedRectangle;
-
-  return new Rectangle(
-    new Vec2(serializedBounds.position.x, serializedBounds.position.y),
-    new Vec2(serializedBounds.size.x, serializedBounds.size.y),
-  );
+  return region.bounds.containsPoint(point);
 }

@@ -16,7 +16,6 @@ import type {
 } from "@client/scenes/benchmark/types";
 import type { AnyEngine, EntityId, UserWorld } from "@engine";
 import { Sprite, Transform2D } from "@engine/components";
-import { getEntityIndex } from "@engine/ecs/entity";
 
 const CONSTRUCTION_CHUNK_SIZE = 5_000;
 const MOVING_ENTITY_STRIDE = 2;
@@ -58,9 +57,7 @@ export class BenchmarkController {
       phase: this.#phase,
       requestedCount: this.#requestedCount,
       createdCount: this.#entityIds.length,
-      lastEntityIndex: this.#entityIds.length === 0
-        ? null
-        : getEntityIndex(this.#entityIds[this.#entityIds.length - 1]),
+      lastEntityId: this.#entityIds.at(-1) ?? null,
       animatedCount: this.#movingTransforms.length,
       constructionCpuMs: this.#constructionCpuMs,
       constructionWallMs: this.#constructionWallMs,
@@ -182,12 +179,10 @@ export class BenchmarkController {
     const angle = (updateTick % MOVE_TICKS_PER_CYCLE) / MOVE_TICKS_PER_CYCLE * Math.PI * 2;
     const offset = Math.sin(angle) * MOVE_AMPLITUDE;
 
-    this.#engine.serialization.suspendTracking(() => {
-      for (let index = 0; index < this.#movingTransforms.length; index += 1) {
-        const transform = this.#movingTransforms[index];
-        transform.curr.pos.x = this.#movingBaseX[index] + offset;
-      }
-    });
+    for (let index = 0; index < this.#movingTransforms.length; index += 1) {
+      const transform = this.#movingTransforms[index];
+      transform.curr.pos.x = this.#movingBaseX[index] + offset;
+    }
     this.#motionUpdates += 1;
   }
 
@@ -230,11 +225,11 @@ export class BenchmarkController {
     while (this.#entityIds.length < targetCount) {
       const chunkEnd = Math.min(this.#entityIds.length + CONSTRUCTION_CHUNK_SIZE, targetCount);
 
-      this.#constructionCpuMs += measureDuration(() => this.#engine.serialization.suspendTracking(() => {
+      this.#constructionCpuMs += measureDuration(() => {
         while (this.#entityIds.length < chunkEnd) {
           this.#spawnEntity(this.#entityIds.length, layout);
         }
-      }));
+      });
 
       this.#emitStatus();
       if (this.#entityIds.length < targetCount) {
@@ -272,16 +267,14 @@ export class BenchmarkController {
   }
 
   #shrinkTo(targetCount: BenchmarkEntityCount): void {
-    this.#engine.serialization.suspendTracking(() => {
-      while (this.#entityIds.length > targetCount) {
-        const entityId = this.#entityIds.pop();
-        if (entityId === undefined) {
-          throw new Error("Benchmark entity list became inconsistent while shrinking.");
-        }
-        this.#world.destroy(entityId);
-        this.#transforms.pop();
+    while (this.#entityIds.length > targetCount) {
+      const entityId = this.#entityIds.pop();
+      if (entityId === undefined) {
+        throw new Error("Benchmark entity list became inconsistent while shrinking.");
       }
-    });
+      this.#world.destroy(entityId);
+      this.#transforms.pop();
+    }
 
     this.#movingTransforms.length = Math.ceil(targetCount / MOVING_ENTITY_STRIDE);
   }

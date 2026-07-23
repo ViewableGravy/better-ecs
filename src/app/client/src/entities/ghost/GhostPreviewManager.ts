@@ -1,5 +1,5 @@
 import { HALF_BOX_SIZE } from "@client/systems/world/build-mode/metrics";
-import { mutate, type EntityId, type UserWorld } from "@engine";
+import type { EntityId, UserWorld } from "@engine";
 import { Transform2D } from "@engine/components";
 
 import { GhostPreviewComponent } from "@client/entities/ghost/component";
@@ -44,9 +44,7 @@ export class GhostPreviewManager {
   private static syncPosition(world: UserWorld, ghostEntityId: EntityId, x: number, y: number): void {
     const transform = world.require(ghostEntityId, Transform2D);
 
-    mutate(transform, "curr", (curr) => {
-      curr.pos.set(x + HALF_BOX_SIZE, y + HALF_BOX_SIZE);
-    });
+    transform.curr.pos.set(x + HALF_BOX_SIZE, y + HALF_BOX_SIZE);
     transform.prev.pos.set(x + HALF_BOX_SIZE, y + HALF_BOX_SIZE);
   }
 

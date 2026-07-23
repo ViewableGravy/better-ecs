@@ -2,15 +2,6 @@
 
 This directory should stay focused on active implementation plans and durable architecture references.
 
-## Current execution path
-
-- [16-SERVER-AUTHORITATIVE-MVP-INVESTIGATION.md](/workspaces/better-ecs/docs/architecture/16-SERVER-AUTHORITATIVE-MVP-INVESTIGATION.md)
-  - Remaining work to finish the current authoritative multiplayer MVP around a shared command transport, hydration, and low-churn replication.
-- [17-DETERMINISTIC-PARTITIONED-SIMULATION-ROADMAP.md](/workspaces/better-ecs/docs/architecture/17-DETERMINISTIC-PARTITIONED-SIMULATION-ROADMAP.md)
-  - Follow-up architecture for deterministic mirrored simulation, partition-local readiness barriers, worker execution, and resync.
-- [18-HYBRID-COMMAND-NETWORKING-PROTOCOL.md](/workspaces/better-ecs/docs/architecture/18-HYBRID-COMMAND-NETWORKING-PROTOCOL.md)
-  - Concrete protocol split for shared commands, selective replication, deterministic partitions, and resync.
-
 ## Spatial-contexts references
 
 - [00-SPATIAL-CONTEXTS-ARCHITECTURE.md](/workspaces/better-ecs/docs/architecture/00-SPATIAL-CONTEXTS-ARCHITECTURE.md)
@@ -31,8 +22,15 @@ This directory should stay focused on active implementation plans and durable ar
 - [11-FEATURE-ENGINE-PLACEMENT-UI.md](/workspaces/better-ecs/docs/architecture/11-FEATURE-ENGINE-PLACEMENT-UI.md)
 - [12-ROADMAP-ENGINE-GAME-PLACEMENT-AND-WORLD-IO.md](/workspaces/better-ecs/docs/architecture/12-ROADMAP-ENGINE-GAME-PLACEMENT-AND-WORLD-IO.md)
 - [13-EDITOR-ENGINE-FIRST-MIGRATION.md](/workspaces/better-ecs/docs/architecture/13-EDITOR-ENGINE-FIRST-MIGRATION.md)
-- [14-NETWORK-DIFF-AND-DIRTY-TRACKING.md](/workspaces/better-ecs/docs/architecture/14-NETWORK-DIFF-AND-DIRTY-TRACKING.md)
-- [15-VISUAL-STATE-COMPONENTS-EXAMPLE.md](/workspaces/better-ecs/docs/architecture/15-VISUAL-STATE-COMPONENTS-EXAMPLE.md)
+
+## Deferred multiplayer research
+
+There is currently no server, networking, replication, or generic ECS serialization implementation.
+These documents remain research inputs for a later multiplayer phase:
+
+- [16-SERVER-AUTHORITATIVE-MVP-INVESTIGATION.md](/workspaces/better-ecs/docs/architecture/16-SERVER-AUTHORITATIVE-MVP-INVESTIGATION.md)
+- [17-DETERMINISTIC-PARTITIONED-SIMULATION-ROADMAP.md](/workspaces/better-ecs/docs/architecture/17-DETERMINISTIC-PARTITIONED-SIMULATION-ROADMAP.md)
+- [18-HYBRID-COMMAND-NETWORKING-PROTOCOL.md](/workspaces/better-ecs/docs/architecture/18-HYBRID-COMMAND-NETWORKING-PROTOCOL.md)
 
 Completed implementation details should stay in code and tests where possible. Temporary summaries, redirects, and historical scratch plans should be removed instead of kept beside the active path.
 | 5-6   | Transitions & Rendering | 2-3   | `packages/foundation/spatial-contexts/src/` + demo scene code                  |

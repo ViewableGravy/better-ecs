@@ -1,6 +1,6 @@
 import { getTransportBeltFlow, type TransportBeltDirection } from "@client/entities/transport-belt/consts";
 import type { EntityId } from "@engine";
-import { Component, StateComponent, state } from "@engine";
+import { Component } from "@engine";
 import invariant from "tiny-invariant";
 
 export const DEFAULT_CONVEYOR_BELT_SPEED = 19;
@@ -27,14 +27,9 @@ export function syncConveyorBeltDirectionsFromVariant(conveyor: ConveyorBeltComp
   conveyor.tailDirection = flow[0];
   conveyor.headDirection = flow[1];
 }
-
-@StateComponent
 export class ConveyorBeltComponent extends Component {
   // Slots for physical entities on this belt, separated into left and right lanes based on belt flow direction
-  @state("json")
   declare public readonly left: ConveyorSlots;
-
-  @state("json")
   declare public readonly right: ConveyorSlots;
 
   // Runtime-only interpolation state used for carried-item motion and visuals.
@@ -47,10 +42,7 @@ export class ConveyorBeltComponent extends Component {
   declare public rightTailBlocked: boolean;
 
   // Doubly Linked List style pointers
-  @state("json")
   declare public previousEntityId: EntityId | null;
-
-  @state("json")
   declare public nextEntityId: EntityId | null;
 
   /**
@@ -61,19 +53,10 @@ export class ConveyorBeltComponent extends Component {
    * leafs in the network to perform initial belt iteration, while isLeaf exists for querying during iteration, which would
    * otherwise be an expensive operation for large networks.
    */
-  @state("boolean")
   declare public isLeaf: boolean;
-
-  @state("string")
   declare public variant: string;
-
-  @state("string")
   declare public tailDirection: TransportBeltDirection;
-
-  @state("string")
   declare public headDirection: TransportBeltDirection;
-
-  @state("float")
   declare public speed: number;
 
   constructor(variant = "horizontal-right", speed = DEFAULT_CONVEYOR_BELT_SPEED) {

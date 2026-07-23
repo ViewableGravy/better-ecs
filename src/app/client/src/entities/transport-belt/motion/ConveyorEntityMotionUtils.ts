@@ -16,7 +16,7 @@ import {
     SHARED_SLOT_POSITION,
 } from "@client/entities/transport-belt/motion/constants";
 import type { ConveyorSideLoadTransfer } from "@client/entities/transport-belt/motion/types";
-import { mutate, type EntityId, type UserWorld } from "@engine";
+import type { EntityId, UserWorld } from "@engine";
 import { Parent, Transform2D } from "@engine/components";
 import { resolveWorldTransform2D } from "@engine/ecs/hierarchy";
 
@@ -347,10 +347,8 @@ export class ConveyorEntityMotionUtils {
         continue;
       }
 
-      mutate(transform, "curr", (curr) => {
-        curr.pos.x = SHARED_SLOT_POSITION.x;
-        curr.pos.y = SHARED_SLOT_POSITION.y;
-      });
+      transform.curr.pos.x = SHARED_SLOT_POSITION.x;
+      transform.curr.pos.y = SHARED_SLOT_POSITION.y;
     }
   }
 

@@ -1,4 +1,4 @@
-import { createSystem, mutate } from "@engine";
+import { createSystem } from "@engine";
 import { Debug, Transform2D } from "@engine/components";
 import { Delta, fromContext, World } from "@engine/context";
 
@@ -19,9 +19,10 @@ export const System = createSystem("e2e:motion-probe")({
         continue;
       }
 
-      mutate(transform, "curr", (curr) => {
-        curr.pos.x = Math.min(PROBE_END_X, curr.pos.x + PROBE_SPEED_UNITS_PER_SECOND * seconds);
-      });
+      transform.curr.pos.x = Math.min(
+        PROBE_END_X,
+        transform.curr.pos.x + PROBE_SPEED_UNITS_PER_SECOND * seconds,
+      );
     }
   },
 });

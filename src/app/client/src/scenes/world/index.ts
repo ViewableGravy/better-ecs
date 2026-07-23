@@ -11,7 +11,6 @@ import { System as CommandAllocatorReset } from "@client/systems/core/command-al
 import { System as LocalPlayerMovementCommand } from "@client/systems/core/local-player-movement-command";
 import { System as LocalPlayerMovementIntent } from "@client/systems/core/local-player-movement-intent";
 import { System as MovementAuthority } from "@client/systems/core/movement";
-import { System as Persistence } from "@client/systems/core/persistence";
 import { System as PhysicsWorldSync } from "@client/systems/core/physics-world-sync";
 import { System as BuildModeIntentSystem } from "@client/systems/world/build-mode";
 import { System as BuildModeAuthoritySystem } from "@client/systems/world/build-mode-authority";
@@ -68,7 +67,6 @@ export const Scene = createContextScene("MainScene")({
     HouseVisualsSystem,
     BuildModePresentationSystem,
     DebugOverlaySystem,
-    Persistence,
   ],
   contexts: [
     defineOverworldContext({

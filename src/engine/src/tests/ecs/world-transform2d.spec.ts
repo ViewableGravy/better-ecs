@@ -74,7 +74,7 @@ describe("worldTransform2D", () => {
     expect(settledWorldTransform.curr.pos.x).toBe(10);
   });
 
-  it("refreshes cached world transforms when replicated updates keep curr and prev in sync", () => {
+  it("refreshes cached world transforms when direct updates keep curr and prev in sync", () => {
     const world = new UserWorld(new World("scene"));
 
     const root = world.create();

@@ -1,4 +1,3 @@
-import { mutate } from "@engine";
 import type { Transform2D } from "@engine/components";
 
 export function translateWithoutInterpolation(
@@ -6,10 +5,8 @@ export function translateWithoutInterpolation(
   deltaX: number,
   deltaY: number,
 ): void {
-  mutate(subjectTransform, "curr", (curr) => {
-    curr.pos.x += deltaX;
-    curr.pos.y += deltaY;
-  });
+  subjectTransform.curr.pos.x += deltaX;
+  subjectTransform.curr.pos.y += deltaY;
 
   subjectTransform.prev.pos.x += deltaX;
   subjectTransform.prev.pos.y += deltaY;
@@ -20,10 +17,8 @@ export function setPositionWithoutInterpolation(
   nextX: number,
   nextY: number,
 ): void {
-  mutate(subjectTransform, "curr", (curr) => {
-    curr.pos.x = nextX;
-    curr.pos.y = nextY;
-  });
+  subjectTransform.curr.pos.x = nextX;
+  subjectTransform.curr.pos.y = nextY;
 
   subjectTransform.prev.pos.x = nextX;
   subjectTransform.prev.pos.y = nextY;

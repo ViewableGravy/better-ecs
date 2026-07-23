@@ -1,6 +1,5 @@
 // packages/engine/src/ecs/world.ts
 import { Parent } from "@engine/components";
-import { fromEngine, registeredEngine } from "@engine/core/global-engine";
 import { Component } from "@engine/ecs/component";
 import type {
     EntityComponentLookupResult,
@@ -8,9 +7,8 @@ import type {
     InvariantQueryResult,
     QueryResult,
 } from "@engine/ecs/entity";
-import { createEntityId, getEntityIndex, invalidateEntity, registerEntityId } from "@engine/ecs/entity";
+import { EntityIdAllocator } from "@engine/ecs/entity";
 import { ComponentStore } from "@engine/ecs/storage";
-import { isSerializableComponentInstance, type SerializedObject } from "@engine/serialization";
 import type { Class } from "type-fest";
 
 type ForEach1Callback<TA> = (entityId: EntityId<TA>, componentA: TA) => void;
@@ -21,25 +19,12 @@ type ForEach3Callback<TA, TB, TC> = (
   componentB: TB,
   componentC: TC,
 ) => void;
+type AssertEntityIdAvailable = (entityId: EntityId) => void;
 
-export type SerializedWorldComponent = {
-  type: string;
-  data: SerializedObject;
-};
-
-export type SerializedWorldEntity = {
-  entityId: EntityId;
-  components: SerializedWorldComponent[];
-};
-
-export type SerializedWorld = {
-  sceneId: string | null;
-  entities: SerializedWorldEntity[];
-};
+const ALLOW_ENTITY_ID: AssertEntityIdAvailable = () => undefined;
 
 export interface IUserWorld {
   create(): EntityId;
-  createWithId(entityId: EntityId): EntityId;
 
   destroy(...componentTypes: Function[]): void;
   destroy(entityId: EntityId): void;
@@ -53,8 +38,6 @@ export interface IUserWorld {
   getComponentTypes(entityId: EntityId): Function[];
   has<T>(entityId: EntityId<T>, componentType: Class<T>): boolean;
   remove<T>(entityId: EntityId<T>, componentType: Class<T>): void;
-  serialize(): SerializedWorld;
-
   move(entityId: EntityId, world: UserWorld): void;
 
   query<const TComponentTypes extends readonly Class<unknown>[]>(
@@ -101,10 +84,6 @@ export class UserWorld implements IUserWorld {
 
   create(): EntityId {
     return this.world.createEntity();
-  }
-
-  createWithId(entityId: EntityId): EntityId {
-    return this.world.createEntityWithId(entityId);
   }
 
   destroy(...componentTypes: Function[]): void;
@@ -166,10 +145,6 @@ export class UserWorld implements IUserWorld {
 
   remove(entityId: EntityId, componentType: Class<any>): void {
     this.world.removeComponent(entityId, componentType);
-  }
-
-  serialize(): SerializedWorld {
-    return this.world.serialize();
   }
 
   move(entityId: EntityId, world: UserWorld): void {
@@ -266,46 +241,38 @@ export class UserWorld implements IUserWorld {
 export class World {
   private entities = new Set<EntityId>();
   private componentStores = new Map<Function, ComponentStore<any>>();
+  private entityIds: EntityIdAllocator;
+  private assertEntityIdAvailable = ALLOW_ENTITY_ID;
 
   /** Optional scene identifier for debugging */
   public sceneId?: string;
-  public worldId?: string;
 
-  constructor(sceneId?: string) {
+  constructor(sceneId?: string, entityIds: EntityIdAllocator = new EntityIdAllocator()) {
     this.sceneId = sceneId;
+    this.entityIds = entityIds;
   }
 
-  setWorldId(worldId: string): this {
-    this.worldId = worldId;
+  /** @internal Attach this world to the allocator owned by its scene. */
+  setEntityIdAllocator(
+    entityIds: EntityIdAllocator,
+    assertEntityIdAvailable: AssertEntityIdAvailable = ALLOW_ENTITY_ID,
+  ): this {
+    for (const entityId of this.entities) {
+      assertEntityIdAvailable(entityId);
+    }
+
+    entityIds.advanceTo(this.entityIds.nextEntityId);
+    this.entityIds = entityIds;
+    this.assertEntityIdAvailable = assertEntityIdAvailable;
     return this;
-  }
-
-  private resolveWorldId(): string {
-    return this.worldId ?? this.sceneId ?? "default";
   }
 
   /**
    * Creates a new entity
    */
   createEntity(): EntityId {
-    const entityId = createEntityId();
+    const entityId = this.entityIds.create();
     this.entities.add(entityId);
-    if (registeredEngine) {
-      fromEngine((engine) => engine.serialization.recordEntityCreated(this.resolveWorldId(), entityId));
-    }
-    return entityId;
-  }
-
-  createEntityWithId(entityId: EntityId): EntityId {
-    if (this.entities.has(entityId)) {
-      throw new Error(`Entity ${entityId} already exists`);
-    }
-
-    registerEntityId(entityId);
-    this.entities.add(entityId);
-    if (registeredEngine) {
-      fromEngine((engine) => engine.serialization.recordEntityCreated(this.resolveWorldId(), entityId));
-    }
     return entityId;
   }
 
@@ -337,10 +304,6 @@ export class World {
       store.remove(entityId);
     }
 
-    if (registeredEngine) {
-      fromEngine((engine) => engine.serialization.recordEntityDestroyed(this.resolveWorldId(), entityId));
-    }
-    invalidateEntity(entityId);
     this.entities.delete(entityId);
   }
 
@@ -420,10 +383,7 @@ export class World {
     store.add(entityId, comp);
 
     if (comp instanceof Component) {
-      comp.__attach(entityId, this.resolveWorldId());
-      if (registeredEngine) {
-        fromEngine((engine) => engine.serialization.recordComponentAdded(comp));
-      }
+      comp.__attach(entityId);
     }
   }
 
@@ -453,9 +413,6 @@ export class World {
     if (store) {
       const component = (store as ComponentStore<T>).get(entityId);
       if (component instanceof Component) {
-        if (registeredEngine) {
-          fromEngine((engine) => engine.serialization.recordComponentRemoved(component));
-        }
         component.__detach();
       }
 
@@ -469,6 +426,10 @@ export class World {
   moveEntityTo(entityId: EntityId, targetWorld: World): void {
     if (this === targetWorld) {
       return;
+    }
+
+    if (this.entityIds !== targetWorld.entityIds) {
+      throw new Error("Cannot move entities between worlds with different entity ID allocators");
     }
 
     if (!this.entities.has(entityId)) {
@@ -529,7 +490,7 @@ export class World {
    *
    * Why this shape:
    * - Intersecting from the smallest store minimizes entities we need to test.
-   * - Membership checks run by entity index (sparse-set key) to avoid extra map lookups.
+   * - Membership checks use the full entity ID, so stale IDs cannot alias later entities.
    */
   query<const TComponentTypes extends readonly Class<unknown>[]>(
     ...componentTypes: TComponentTypes
@@ -585,12 +546,10 @@ export class World {
 
     // Iterate dense entities from the smallest store, then verify presence in every other store.
     for (const entityId of smallestStore.entityIds()) {
-      // Sparse sets are keyed by entity index, not full entity id.
-      const entityIndex = getEntityIndex(entityId);
       let matchesAll = true;
 
       for (const store of otherStores) {
-        if (!store.hasEntityIndex(entityIndex)) {
+        if (!store.hasEntityId(entityId)) {
           matchesAll = false;
           break;
         }
@@ -651,7 +610,7 @@ export class World {
           continue;
         }
 
-        const componentB = storeB.getByEntityIndex(getEntityIndex(entityId));
+        const componentB = storeB.getByEntityId(entityId);
         if (componentB === undefined) {
           continue;
         }
@@ -674,7 +633,7 @@ export class World {
         continue;
       }
 
-      const componentA = storeA.getByEntityIndex(getEntityIndex(entityId));
+      const componentA = storeA.getByEntityId(entityId);
       if (componentA === undefined) {
         continue;
       }
@@ -720,12 +679,10 @@ export class World {
         continue;
       }
 
-      const entityIndex = getEntityIndex(entityId);
-
       const componentA =
         smallestKey === "A"
           ? storeA.components()[i]
-          : storeA.getByEntityIndex(entityIndex);
+          : storeA.getByEntityId(entityId);
       if (componentA === undefined) {
         continue;
       }
@@ -733,7 +690,7 @@ export class World {
       const componentB =
         smallestKey === "B"
           ? storeB.components()[i]
-          : storeB.getByEntityIndex(entityIndex);
+          : storeB.getByEntityId(entityId);
       if (componentB === undefined) {
         continue;
       }
@@ -741,7 +698,7 @@ export class World {
       const componentC =
         smallestKey === "C"
           ? storeC.components()[i]
-          : storeC.getByEntityIndex(entityIndex);
+          : storeC.getByEntityId(entityId);
       if (componentC === undefined) {
         continue;
       }
@@ -757,6 +714,11 @@ export class World {
    */
   getEntities(): EntityId[] {
     return Array.from(this.entities);
+  }
+
+  /** @internal Returns whether this world owns the exact entity ID. */
+  hasEntity(entityId: EntityId): boolean {
+    return this.entities.has(entityId);
   }
 
   /**
@@ -778,40 +740,6 @@ export class World {
     }
 
     return componentTypes;
-  }
-
-  public serialize(): SerializedWorld {
-    const entities = this.getEntities().sort((left, right) => left - right);
-
-    return {
-      sceneId: this.sceneId ?? null,
-      entities: entities.map((entityId) => ({
-        entityId,
-        components: this.serializeEntityComponents(entityId),
-      })),
-    };
-  }
-
-  private serializeEntityComponents(entityId: EntityId): SerializedWorldComponent[] {
-    const componentTypes = this.getComponentTypes(entityId).sort((left, right) => {
-      return left.name.localeCompare(right.name);
-    });
-
-    const components: SerializedWorldComponent[] = [];
-
-    for (const componentType of componentTypes) {
-      const component = this.getComponent(entityId, componentType);
-      if (!isSerializableComponentInstance(component)) {
-        continue;
-      }
-
-      components.push({
-        type: componentType.name,
-        data: component.toJSON("save"),
-      });
-    }
-
-    return components;
   }
 
   /**

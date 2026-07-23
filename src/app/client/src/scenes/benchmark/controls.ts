@@ -85,7 +85,7 @@ export function mountBenchmarkControls(
       `phase: ${status.phase}`,
       `target: ${status.requestedCount.toLocaleString()}`,
       `created: ${status.createdCount.toLocaleString()} (${progress.toFixed(1)}%)`,
-      `last entity index: ${status.lastEntityIndex?.toLocaleString() ?? "none"}`,
+      `last entity ID: ${status.lastEntityId?.toLocaleString() ?? "none"}`,
       `animated/tick: ${status.animatedCount.toLocaleString()}`,
       `construction CPU: ${status.constructionCpuMs.toFixed(1)} ms`,
       `time to interactive: ${status.constructionWallMs.toFixed(1)} ms`,

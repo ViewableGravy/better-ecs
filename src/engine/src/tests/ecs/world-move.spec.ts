@@ -2,12 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import { Parent } from "@engine/components";
 import { Component } from "@engine/ecs/component";
+import { EntityIdAllocator } from "@engine/ecs/entity";
 import { UserWorld, World } from "@engine/ecs/world";
-import { StateComponent, state } from "@engine/serialization";
-
-@StateComponent
 class Marker extends Component {
-  @state("string")
   public value: string;
 
   constructor(value: string) {
@@ -18,8 +15,9 @@ class Marker extends Component {
 
 describe("World move hierarchy", () => {
   it("should move a parent entity and all descendants to target world", () => {
-    const source = new UserWorld(new World("source"));
-    const target = new UserWorld(new World("target"));
+    const entityIds = new EntityIdAllocator();
+    const source = new UserWorld(new World("source", entityIds));
+    const target = new UserWorld(new World("target", entityIds));
 
     const root = source.create();
     const child = source.create();
@@ -55,25 +53,4 @@ describe("World move hierarchy", () => {
     expect(Boolean(entityId)).toBe(true);
   });
 
-  it("should serialize serializable component data", () => {
-    const world = new UserWorld(new World("scene"));
-    const entityId = world.create();
-
-    world.add(entityId, new Marker("root"));
-
-    expect(world.serialize()).toEqual({
-      sceneId: "scene",
-      entities: [
-        {
-          entityId,
-          components: [
-            {
-              type: "Marker",
-              data: { value: "root" },
-            },
-          ],
-        },
-      ],
-    });
-  });
 });

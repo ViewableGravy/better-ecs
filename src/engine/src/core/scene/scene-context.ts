@@ -1,4 +1,5 @@
 import { UserWorld, World } from "@engine/ecs/world";
+import { EntityIdAllocator, type EntityId } from "@engine/ecs/entity";
 
 const DEFAULT_WORLD_ID = "default" as const;
 
@@ -11,6 +12,7 @@ export class SceneContext<TName extends string = string> {
   readonly name: TName;
 
   readonly #defaultWorldId: string;
+  readonly #entityIds = new EntityIdAllocator();
   readonly #worlds = new Map<string, World>();
   readonly #userWorlds = new Map<string, UserWorld>();
 
@@ -18,7 +20,10 @@ export class SceneContext<TName extends string = string> {
     this.name = name;
     this.#defaultWorldId = defaultWorldId;
 
-    defaultWorld.setWorldId(this.#defaultWorldId);
+    defaultWorld.setEntityIdAllocator(
+      this.#entityIds,
+      (entityId) => this.assertEntityIdAvailable(this.#defaultWorldId, entityId),
+    );
 
     this.#worlds.set(this.#defaultWorldId, defaultWorld);
     this.#userWorlds.set(this.#defaultWorldId, new UserWorld(defaultWorld));
@@ -78,7 +83,10 @@ export class SceneContext<TName extends string = string> {
    * If a world is already registered for the id, it will be replaced.
    */
   registerWorld(id: string, world: World): UserWorld {
-	world.setWorldId(id);
+    world.setEntityIdAllocator(
+      this.#entityIds,
+      (entityId) => this.assertEntityIdAvailable(id, entityId),
+    );
     this.#worlds.set(id, world);
 
     const wrapper = this.#userWorlds.get(id);
@@ -102,7 +110,7 @@ export class SceneContext<TName extends string = string> {
       throw new Error(`Cannot load additional world with reserved id "${this.#defaultWorldId}"`);
     }
 
-    const internal = new World(`${this.name}:${id}`);
+    const internal = new World(`${this.name}:${id}`, this.#entityIds);
     return this.registerWorld(id, internal);
   }
 
@@ -138,6 +146,16 @@ export class SceneContext<TName extends string = string> {
         this.#worlds.delete(id);
         this.#userWorlds.delete(id);
       }
+    }
+  }
+
+  private assertEntityIdAvailable(ownerWorldId: string, entityId: EntityId): void {
+    for (const [worldId, world] of this.#worlds) {
+      if (worldId === ownerWorldId || !world.hasEntity(entityId)) {
+        continue;
+      }
+
+      throw new Error(`Entity ${entityId} already exists in world "${worldId}"`);
     }
   }
 }

@@ -1,4 +1,2 @@
-import { Component, StateComponent } from "@engine";
-
-@StateComponent
+import { Component } from "@engine";
 export class TransportBeltLeaf extends Component {}

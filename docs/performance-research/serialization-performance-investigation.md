@@ -1,5 +1,9 @@
 # Serialization And Runtime Performance Investigation
 
+> Historical investigation: the server, networking, state-sync, generic ECS serialization, and
+> replication dirty-tracking implementations discussed here have since been removed. Paths and
+> implementation details below describe the code at the time measurements were collected.
+
 ## Scope
 
 This investigation focused on the memory-allocation hotspots, GC spike sources, micro-stutters, and eventual tab-crash path introduced or amplified by the recent serialization work.

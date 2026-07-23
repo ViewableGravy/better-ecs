@@ -1,11 +1,6 @@
-import { Component, StateComponent, state } from "@engine";
-
-@StateComponent
+import { Component } from "@engine";
 export class GridFootprint extends Component {
-  @state("float")
   declare public width: number;
-
-  @state("float")
   declare public height: number;
 
   public constructor(width: number, height: number) {

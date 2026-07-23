@@ -13,7 +13,7 @@ export type BenchmarkStatus = {
   phase: BenchmarkPhase;
   requestedCount: BenchmarkEntityCount;
   createdCount: number;
-  lastEntityIndex: number | null;
+  lastEntityId: number | null;
   animatedCount: number;
   constructionCpuMs: number;
   constructionWallMs: number;

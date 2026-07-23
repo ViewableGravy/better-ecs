@@ -10,7 +10,6 @@ export * from "@engine/ecs/storage";
 export * from "@engine/ecs/world";
 export * from "@engine/math";
 export { Rectangle } from "@engine/math/geometry/rectangle";
-export * from "@engine/serialization";
 export * from "@engine/systems/input";
 export * from "@engine/systems/transformSnapshot";
 export * from "@engine/systems/worldTransform2D";

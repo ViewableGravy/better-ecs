@@ -1,6 +1,5 @@
 import { Component } from "@engine/ecs/component";
 import { Vec3 } from "@engine/math/vec/vec3";
-import { StateComponent, state } from "@engine/serialization";
 
 export class TransformState3D {
   public pos: Vec3;
@@ -20,10 +19,7 @@ export class TransformState3D {
     this.scale.set(other.scale.x, other.scale.y, other.scale.z);
   }
 }
-
-@StateComponent
 export class Transform3D extends Component {
-  @state("json")
   declare public curr: TransformState3D;
 
   public prev: TransformState3D;
@@ -32,9 +28,5 @@ export class Transform3D extends Component {
     super();
     this.curr = new TransformState3D(x, y, z, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ);
     this.prev = new TransformState3D(x, y, z, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ);
-  }
-
-  protected override onAfterDeserialized(): void {
-    this.prev.copyFrom(this.curr);
   }
 }

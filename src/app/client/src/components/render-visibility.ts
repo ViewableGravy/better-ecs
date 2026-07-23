@@ -1,4 +1,4 @@
-import { Component, StateComponent, state } from "@engine";
+import { Component } from "@engine";
 import { Tagged } from 'type-fest';
 
 /**
@@ -15,13 +15,8 @@ function createVisibilityRole(id: number): RenderVisibilityRole {
 export const OUTSIDE = createVisibilityRole(1);
 export const HOUSE_ROOF = createVisibilityRole(2);
 export const HOUSE_INTERIOR = createVisibilityRole(3);
-
-@StateComponent
 export class RenderVisibility extends Component {
-  @state("int")
   declare public role: RenderVisibilityRole;
-
-  @state("float")
   declare public baseAlpha: number;
 
   constructor(role: RenderVisibilityRole, baseAlpha: number = 1) {

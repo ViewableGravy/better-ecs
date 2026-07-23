@@ -10,13 +10,11 @@ This is the single source of truth for agent behavior and coding conventions in 
 src/
   app/
     client/           → Frontend client application
-    server/           → Backend server application
   engine/             → Core engine utilised by frontend and backend
   libs/
     fps/              → Package Displays FPS information to the user
     physics/          → Provides physics + collisions for applications
     spatial-contexts/ → Provides ability to render a world inside another world
-    state-sync/       → basic synchronisation & serialization systems
   utils/              → Shared utilities available to all packages
 .github/              → Skills available to agent
 docs/                 → All documentation for the project
@@ -52,22 +50,19 @@ You are a very smart model, and very capable, but you have a limited context win
 ## Import and alias conventions
 
 - Always use top-level workspace aliases for imports. Relative imports are prohibited for both cross-project and same-project source code.
-- Prefer these aliases over `./` or `../`: `@client/*`, `@server/*`, `@engine/*`, `@utils/*`, `@libs/*`, `@repo/networking/*`, `@hmr/*`, and engine-local `@ui/*`.
+- Prefer these aliases over `./` or `../`: `@client/*`, `@engine/*`, `@utils/*`, `@libs/*`, `@hmr/*`, and
+  engine-local `@ui/*`.
 - If a needed alias does not exist yet, add it to the top-level TypeScript path configuration before writing the import.
 
 ### Workspace aliases (`tsconfig.base.json`)
 
 - `@client` / `@client/*` → `src/app/client/src`
-- `@server` / `@server/*` → `src/app/server/src`
 - `@engine` / `@engine/*` → `src/engine/src`
 - `@utils` / `@utils/*` → `src/utils/src`
 - `@libs/commands` / `@libs/commands/*` → `src/libs/commands/src`
 - `@libs/fps` / `@libs/fps/*` → `src/libs/fps/src`
-- `@libs/networking` / `@libs/networking/*` → `src/libs/networking/src`
 - `@libs/physics` / `@libs/physics/*` → `src/libs/physics/src`
 - `@libs/spatial-contexts` / `@libs/spatial-contexts/*` → `src/libs/spatial-contexts/src`
-- `@libs/state-sync` / `@libs/state-sync/*` → `src/libs/state-sync/src`
-- `@repo/networking` / `@repo/networking/*` → `src/libs/networking/src`
 - `@hmr` / `@hmr/*` → `vite/engine-hmr`
 
 ### App/package-local aliases

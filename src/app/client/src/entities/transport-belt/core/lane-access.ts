@@ -1,5 +1,4 @@
 import { ConveyorBeltComponent, type ConveyorSide } from "@client/components/conveyor-belt";
-import { mutate } from "@engine";
 
 /**********************************************************************************************************
  *   COMPONENT START
@@ -27,14 +26,6 @@ export function getConveyorLaneProgress(
   return conveyor.rightProgress;
 }
 
-function getConveyorLaneSlotsFieldKey(side: ConveyorSide): "left" | "right" {
-  if (side === "left") {
-    return "left";
-  }
-
-  return "right";
-}
-
 export function setConveyorLaneSlot(
   conveyor: ConveyorBeltComponent,
   side: ConveyorSide,
@@ -47,9 +38,7 @@ export function setConveyorLaneSlot(
     return;
   }
 
-  mutate(conveyor, getConveyorLaneSlotsFieldKey(side), (trackedSlots) => {
-    trackedSlots[index] = entityId;
-  });
+  slots[index] = entityId;
 }
 
 export function setConveyorLaneStoredProgress(

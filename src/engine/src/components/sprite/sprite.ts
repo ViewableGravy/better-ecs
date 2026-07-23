@@ -1,8 +1,5 @@
 import type { RegisteredAssets } from "@engine/core";
 import { Component } from "@engine/ecs/component";
-import { StateComponent, state } from "@engine/serialization";
-
-const DESERIALIZED_SPRITE_ASSET_ID_PLACEHOLDER = "" as Exclude<keyof RegisteredAssets, number | symbol>;
 
 export class Rgba {
   constructor(
@@ -71,42 +68,32 @@ export class Rgba {
  * The render system reads this component together with Transform2D to draw
  * the entity on screen.
  */
-@StateComponent
 export class Sprite extends Component {
   /** The asset ID of the texture to display. */
-  @state("string")
   declare public assetId: Exclude<keyof RegisteredAssets, number | symbol>;
 
   /** Display width in world units (0 = derive from texture). */
-  @state("float")
   declare public width: number;
 
   /** Display height in world units (0 = derive from texture). */
-  @state("float")
   declare public height: number;
 
   /** Anchor / pivot X (0-1, origin for rotation/scaling). */
-  @state("float")
   declare public anchorX: number;
 
   /** Anchor / pivot Y (0-1, origin for rotation/scaling). */
-  @state("float")
   declare public anchorY: number;
 
   /** Horizontal flip. */
-  @state("boolean")
   declare public flipX: boolean;
 
   /** Vertical flip. */
-  @state("boolean")
   declare public flipY: boolean;
 
   /** Z-order for sorting within a layer. */
-  @state("float")
   declare public zOrder: number;
 
   /** Render layer for multi-pass rendering. */
-  @state("float")
   declare public layer: number;
 
   /**
@@ -114,11 +101,10 @@ export class Sprite extends Component {
    * - true: always evaluate this sprite in the queue hot path (default)
    * - false: eligible for static cohort reuse
    */
-  @state("boolean")
   declare public isDynamic: boolean;
 
   constructor(
-    assetId: Exclude<keyof RegisteredAssets, number | symbol> = DESERIALIZED_SPRITE_ASSET_ID_PLACEHOLDER,
+    assetId: Exclude<keyof RegisteredAssets, number | symbol>,
     width: number = 0,
     height: number = 0,
     anchorX: number = 0.5,

@@ -1,9 +1,7 @@
 import { Sprite } from "@engine/components/sprite/sprite";
 import type { RegisteredAssets } from "@engine/core";
-import { StateComponent, state } from "@engine/serialization";
 
 type SpriteAssetId = Exclude<keyof RegisteredAssets, number | symbol>;
-const DESERIALIZED_ANIMATED_SPRITE_FRAME_PLACEHOLDER = "" as SpriteAssetId;
 
 export type AnimatedSpritePlaybackMode = "time" | "tick";
 
@@ -30,37 +28,21 @@ function isAnimatedSpriteConfig(
 ): value is AnimatedSpriteConfig {
   return !Array.isArray(value);
 }
-
-@StateComponent
 export class AnimatedSprite extends Sprite {
-  @state("json")
   declare public readonly frames: readonly SpriteAssetId[];
-
-  @state("float")
   declare public playbackRate: number;
-
-  @state("string")
   declare public playbackMode: AnimatedSpritePlaybackMode;
-
-  @state("float")
   declare public startTime: number;
-
-  @state("float")
   declare public startTick: number;
-
-  @state("boolean")
   declare public useGlobalOffset: boolean;
 
-  constructor();
   constructor(frames: readonly SpriteAssetId[]);
   constructor(config: AnimatedSpriteConfig);
-  constructor(configOrFrames?: AnimatedSpriteConfig | readonly SpriteAssetId[]) {
+  constructor(configOrFrames: AnimatedSpriteConfig | readonly SpriteAssetId[]) {
     let config: AnimatedSpriteConfig | undefined;
     let frames: readonly SpriteAssetId[];
 
-    if (configOrFrames === undefined) {
-      frames = [DESERIALIZED_ANIMATED_SPRITE_FRAME_PLACEHOLDER];
-    } else if (isAnimatedSpriteConfig(configOrFrames)) {
+    if (isAnimatedSpriteConfig(configOrFrames)) {
       config = configOrFrames;
       frames = config.assets;
     } else {

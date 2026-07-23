@@ -20,9 +20,6 @@ export type EngineConfigOptions = {
 	render?: {
 		culling?: EngineRenderCullingOptions;
 	};
-	serialization?: {
-		enableDirtyQueue?: boolean;
-	};
 };
 
 export type CreateEngineOptions<
@@ -42,4 +39,3 @@ export type CreateEngineOptions<
 	manualRegisterEngine?: boolean;
 	config?: EngineConfigOptions;
 };
-

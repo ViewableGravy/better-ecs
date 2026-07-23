@@ -1,12 +1,9 @@
-import { Component, Rectangle, StateComponent, state, type Vec2 } from "@engine";
+import { Component, Rectangle, type Vec2 } from "@engine";
 
 type BoundsArgs = [bounds: Rectangle];
 type VecArgs = [position: Vec2, size: Vec2];
 type Args = BoundsArgs | VecArgs;
-
-@StateComponent
 export class RectangleCollider extends Component {
-  @state("json")
   declare public bounds: Rectangle;
 
   public constructor(position: Vec2, size: Vec2);

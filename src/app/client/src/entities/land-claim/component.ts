@@ -2,17 +2,10 @@
  *   COMPONENT START
  **********************************************************************************************************/
 
-import { Component, StateComponent, state } from "@engine";
-
-@StateComponent
+import { Component } from "@engine";
 export class LandClaim extends Component {
-  @state("string")
   declare public ownerName: string;
-
-  @state("float")
   declare public ownedRadiusTiles: number;
-
-  @state("float")
   declare public buildableRadiusTiles: number;
 
   public constructor(ownerName: string, ownedRadiusTiles: number, buildableRadiusTiles: number) {

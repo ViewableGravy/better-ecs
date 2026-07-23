@@ -36,6 +36,38 @@ describe("SceneContext", () => {
     expect(scene.getWorld("overworld")).toBeUndefined();
   });
 
+  it("should share one monotonic entity ID allocator across its worlds", () => {
+    const scene = new SceneContext("scene", new World("scene"));
+    const defaultEntity = scene.getDefaultWorld().create();
+    const additionalEntity = scene.loadAdditionalWorld("house").create();
+
+    expect(additionalEntity).toBe(defaultEntity + 1);
+  });
+
+  it("should preserve the cursor of a populated world attached to a scene", () => {
+    const internal = new World("scene");
+    internal.createEntity();
+    const destroyed = internal.createEntity();
+    internal.destroyEntity(destroyed);
+
+    const scene = new SceneContext("scene", internal);
+
+    expect(scene.getDefaultWorld().create()).toBeGreaterThan(destroyed);
+  });
+
+  it("should reject duplicate IDs when attaching a populated world", () => {
+    const defaultWorld = new World("scene");
+    const additionalWorld = new World("scene:house");
+    const defaultEntity = defaultWorld.createEntity();
+    const additionalEntity = additionalWorld.createEntity();
+    const scene = new SceneContext("scene", defaultWorld);
+
+    expect(additionalEntity).toBe(defaultEntity);
+    expect(() => scene.registerWorld("house", additionalWorld)).toThrow(
+      `Entity ${additionalEntity} already exists in world "default"`,
+    );
+  });
+
   it("should not allow unregistering the default world", () => {
     const scene = new SceneContext("scene", new World("scene"));
 

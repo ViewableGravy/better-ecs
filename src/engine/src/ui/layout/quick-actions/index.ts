@@ -5,7 +5,6 @@ import { QuadOutlineToggle } from "@engine/ui/layout/quick-actions/quadOutlineTo
 import { RegisteredQuickActions } from "@engine/ui/layout/quick-actions/registeredQuickActions";
 import { ReloadCanvas } from "@engine/ui/layout/quick-actions/reloadCanvas";
 import { ReloadEngine } from "@engine/ui/layout/quick-actions/reloadEngine";
-import { SaveWorld } from "@engine/ui/layout/quick-actions/saveWorld";
 export {
     registerQuickAction,
     useRegisterQuickAction,
@@ -18,7 +17,6 @@ export const QuickActions = {
   QuadOutlineToggle,
   CullingBoundsToggle,
   PreviewModeToggle,
-  SaveWorld,
   ReloadCanvas,
   ReloadEngine,
   RegisteredQuickActions,

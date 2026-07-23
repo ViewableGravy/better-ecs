@@ -44,7 +44,6 @@ export const DefaultEngineEditorView: React.FC<DefaultEngineEditorViewProps> = (
 								<QuickActions.QuadOutlineToggle />
 								<QuickActions.CullingBoundsToggle />
 								<QuickActions.PreviewModeToggle />
-								<QuickActions.SaveWorld />
 								<RegisteredQuickActions />
 								<QuickActions.ReloadCanvas />
 								<QuickActions.ReloadEngine />
@@ -66,4 +65,3 @@ export const DefaultEngineEditorView: React.FC<DefaultEngineEditorViewProps> = (
 		</QueryClientProvider>
 	);
 };
-

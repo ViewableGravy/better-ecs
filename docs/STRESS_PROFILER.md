@@ -36,10 +36,10 @@ any scenario fails. Set `BENCHMARK_URL` to use an already-running server instead
 
 ## Current expected ceiling
 
-The current process-global entity allocator provides 1,048,575 lifetime IDs and never reuses a
-destroyed index. A fresh page can approach the 1M scenario, while 2M and 5M must currently fail with
-`Maximum entity count reached`. These are recorded as failures rather than clamped or skipped. The
-entity-capacity step should make those same scenarios progress further without changing the runner.
+Entity IDs are monotonic positive safe integers scoped to a scene, so the former 1,048,575
+lifetime-created ceiling no longer limits the 2M and 5M scenarios. Destroyed IDs are not reused.
+At these scales, memory, construction time, simulation work, and rendering should now fail before
+entity identity.
 
 This profile is deliberately a heavy baseline, not a claim that every visible conveyor item should
 remain a full object-based ECS entity. Later profiles should compare packed conveyor presentation,

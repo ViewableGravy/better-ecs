@@ -3,19 +3,12 @@
   "files": [],
   "include": [],
   "compilerOptions": {
-    "experimentalDecorators": true,
     "paths": {
       "@client": [
         "./src/app/client/src/index.ts"
       ],
       "@client/*": [
         "./src/app/client/src/*"
-      ],
-      "@server": [
-        "./src/app/server/src/main.ts"
-      ],
-      "@server/*": [
-        "./src/app/server/src/*"
       ],
       "@libs/commands": [
         "./src/libs/commands/src/index.ts"
@@ -29,12 +22,6 @@
       "@libs/fps/*": [
         "./src/libs/fps/src/*"
       ],
-      "@libs/networking": [
-        "./src/libs/networking/src/index.ts"
-      ],
-      "@libs/networking/*": [
-        "./src/libs/networking/src/*"
-      ],
       "@libs/physics": [
         "./src/libs/physics/src/index.ts"
       ],
@@ -46,12 +33,6 @@
       ],
       "@libs/spatial-contexts/*": [
         "./src/libs/spatial-contexts/src/*"
-      ],
-      "@libs/state-sync": [
-        "./src/libs/state-sync/src/index.ts"
-      ],
-      "@libs/state-sync/*": [
-        "./src/libs/state-sync/src/*"
       ],
       "@utils": [
         "./src/utils/src/index.ts"
@@ -70,12 +51,6 @@
       ],
       "@hmr/*": [
         "./vite/engine-hmr/*"
-      ],
-      "@repo/networking": [
-        "./src/libs/networking/src/index.ts"
-      ],
-      "@repo/networking/*": [
-        "./src/libs/networking/src/*"
       ]
     }
   },
@@ -99,16 +74,10 @@
       "path": "./src/libs/fps"
     },
     {
-      "path": "./src/libs/networking"
-    },
-    {
       "path": "./vite/engine-hmr"
     },
     {
       "path": "./src/app/client"
-    },
-    {
-      "path": "./src/app/server"
     }
   ],
   "exclude": [

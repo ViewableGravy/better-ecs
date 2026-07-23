@@ -48,7 +48,6 @@ export function createEngine<
 		opts.render ?? null,
 		opts.loading,
 		opts.config?.render?.culling,
-		opts.config?.serialization,
 		null,
 		shouldBootstrapCanvasFromRoot,
 	);
@@ -127,4 +126,3 @@ export type {
     CreateEngineOptions,
     EngineOverlay
 } from "@engine/core/factory/types";
-

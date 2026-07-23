@@ -19,12 +19,6 @@
       "@client/*": [
         "../app/client/src/*"
       ],
-      "@server": [
-        "../app/server/src/main.ts"
-      ],
-      "@server/*": [
-        "../app/server/src/*"
-      ],
       "@libs/commands": [
         "../libs/commands/src/index.ts"
       ],
@@ -37,12 +31,6 @@
       "@libs/fps/*": [
         "../libs/fps/src/*"
       ],
-      "@libs/networking": [
-        "../libs/networking/src/index.ts"
-      ],
-      "@libs/networking/*": [
-        "../libs/networking/src/*"
-      ],
       "@libs/physics": [
         "../libs/physics/src/index.ts"
       ],
@@ -54,12 +42,6 @@
       ],
       "@libs/spatial-contexts/*": [
         "../libs/spatial-contexts/src/*"
-      ],
-      "@libs/state-sync": [
-        "../libs/state-sync/src/index.ts"
-      ],
-      "@libs/state-sync/*": [
-        "../libs/state-sync/src/*"
       ],
       "@utils": [
         "../utils/src/index.ts"
@@ -78,12 +60,6 @@
       ],
       "@hmr/*": [
         "../../vite/engine-hmr/*"
-      ],
-      "@repo/networking": [
-        "../libs/networking/src/index.ts"
-      ],
-      "@repo/networking/*": [
-        "../libs/networking/src/*"
       ],
       "@ui": [
         "./src/ui/index.tsx"

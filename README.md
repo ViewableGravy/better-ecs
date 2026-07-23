@@ -1,53 +1,22 @@
-# Better ECS Game Engine
+# Better ECS
 
-A client-first ECS-based game engine using TypeScript, Vite, and Nx monorepo.
+A browser-first TypeScript game and ECS engine built with Vite and Nx.
 
-## Architecture
+The current scope is intentionally single-player. The repository has no server, networking,
+replication, or generic ECS serialization layer. Persistence and multiplayer will be designed from
+the needs of a working deterministic simulation rather than carried as speculative engine plumbing.
 
-This project follows a strict Entity-Component-System architecture:
+## Project structure
 
-- **Entities**: Opaque IDs only (using type-fest tagged types)
-- **Components**: Pure data, no logic
-- **Systems**: Operate over component sets, no direct system-to-system calls
-- **Feature-oriented structure**: Not "components vs systems"
-- **Client-first**: Browser-based runtime with Vite
-- **Multiplayer-ready**: Networking layer to be added later
-- **Schema-first serialization**: Supports JSON (authoring) and binary (runtime)
-
-## Project Structure
-
-```
-/better-ecs
-  /apps
-    /client        # Browser game (Vite)
-    /server        # Placeholder for future backend
-  /packages
-    /engine        # ECS, math, serialization, runtime
-    /shared        # Shared utilities/types
-  nx.json
-  package.json
-  tsconfig.base.json
-```
-
-## Engine Package Structure
-
-```
-/packages/engine/src
-  /ecs
-    entity.ts      # Entity type & factory
-    world.ts       # World container
-    storage.ts     # Component storage
-  /math
-    index.ts       # Math utilities (to be implemented)
-  /serialization
-    schema.ts      # Component schema interface
-    json.ts        # JSON serialization (to be implemented)
-    binary.ts      # Binary serialization (to be implemented)
-    index.ts
-  /core
-    game.ts        # Game initialization
-    time.ts        # Time management (to be implemented)
-  index.ts
+```text
+src/
+  app/client/          Browser game
+  engine/              ECS, scenes, rendering, input, editor
+  libs/commands/       Simulation commands
+  libs/fps/            FPS display
+  libs/physics/        Physics and collision
+  libs/spatial-contexts/
+  utils/               Shared utilities
 ```
 
 ## Setup
@@ -55,7 +24,7 @@ This project follows a strict Entity-Component-System architecture:
 Install dependencies:
 
 ```bash
-npm install
+bun install
 ```
 
 ## Development
@@ -63,43 +32,15 @@ npm install
 Run the client:
 
 ```bash
-npm run dev
-```
-
-Or run specific app:
-
-```bash
-npx nx dev client
+bun dev
 ```
 
 ## Design Principles
 
-1. **Entities are IDs only** - No classes, no methods
-2. **Components are pure data** - No behavior, no cross-references
-3. **Systems do not call each other** - Communication via shared data
-4. **Serialization is schema-driven** - Not raw JS objects
-5. **Rendering is policy-driven** - Draw order is a rendering decision
-6. **Multiplayer is layered later** - Architecture stays clean
-7. **Structure precedes implementation** - This is bootstrap phase only
+1. Entities are opaque, scene-scoped, monotonic IDs.
+2. Components contain data; feature-owned behavior stays near the owning feature.
+3. Systems operate over component queries and explicit commands.
+4. Hot paths avoid unnecessary allocation and per-field tracking.
+5. Impossible states should assert at ownership boundaries instead of creating nullable plumbing.
 
-## Current Status: Bootstrap Phase
-
-This is **structure only**. The following are NOT implemented yet:
-
-- ❌ Rendering systems
-- ❌ Gameplay systems
-- ❌ Components (Transform, Renderable, etc.)
-- ❌ Serialization logic
-- ❌ Networking
-- ❌ Editors
-- ❌ Game loop logic
-
-## Next Steps
-
-After bootstrap:
-1. Implement core game loop
-2. Add basic component types (Transform, etc.)
-3. Create render system
-4. Add serialization implementation
-5. Build gameplay systems
-6. Add networking layer
+See [docs/README.md](docs/README.md) for active plans and architecture references.
