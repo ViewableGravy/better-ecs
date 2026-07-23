@@ -13,6 +13,8 @@
     "server:dev": "NX_DAEMON=false nx run server:dev",
     "build": "bun x vite build --config vite.config.ts",
     "build:all": "bun x vite build --config vite.config.ts --force",
+    "benchmark:stress": "bun scripts/run-stress-benchmark.ts",
+    "benchmark:stress:smoke": "bun scripts/run-stress-benchmark.ts --smoke",
     "lint": "nx run-many --target=lint",
     "typecheck": "nx run-many --target=typecheck",
     "test": "nx run-many --target=test",

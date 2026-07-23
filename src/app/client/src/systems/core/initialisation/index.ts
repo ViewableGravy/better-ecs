@@ -40,6 +40,7 @@ export const System = createInitializationSystem(() => {
       <button id="to-main" style="padding: 4px 8px; font-size: 14px; background: white; border-radius: 5px; color: black;">Go to Main Scene</button>
       <button id="to-authoritative-networking" style="padding: 4px 8px; font-size: 14px; background: white; border-radius: 5px; color: black;">Go to Authoritative Networking Scene</button>
       <button id="to-e2e" style="padding: 4px 8px; font-size: 14px; background: white; border-radius: 5px; color: black;">Go to E2E Scene</button>
+      <button id="to-benchmark" style="padding: 4px 8px; font-size: 14px; background: white; border-radius: 5px; color: black;">Go to Stress Profiler</button>
     </div>
   `;
 
@@ -51,6 +52,10 @@ export const System = createInitializationSystem(() => {
 
   invariantById("to-main").onclick = () => {
     setScene("MainScene");
+  };
+
+  invariantById("to-benchmark").onclick = () => {
+    setScene("BenchmarkScene");
   };
 
   invariantById("to-authoritative-networking").onclick = () => {

@@ -2,6 +2,7 @@ import { Loader } from "@client/assets";
 import { createAppEngineLoadingOverlay } from "@client/overlays/create-app-engine-overlays";
 import { Render } from "@client/render";
 import { Scene as AuthoritativeNetworkingScene } from "@client/scenes/authoritative-networking";
+import { Scene as BenchmarkScene } from "@client/scenes/benchmark";
 import { Scene as E2eScene } from "@client/scenes/e2e";
 import { Scene as MainScene } from "@client/scenes/world";
 import { System as Initialize } from "@client/systems/core/initialisation";
@@ -22,7 +23,9 @@ export const createAppEngine = () => {
       MainScene,
       AuthoritativeNetworkingScene,
       E2eScene,
+      BenchmarkScene,
     ],
+    initialScene: resolveInitialScene(),
     config: {
       render: {
         culling: {
@@ -38,3 +41,8 @@ export const createAppEngine = () => {
     },
   });
 };
+
+function resolveInitialScene(): "MainScene" | "BenchmarkScene" {
+  const benchmark = new URLSearchParams(window.location.search).get("benchmark");
+  return benchmark === "stress" ? "BenchmarkScene" : "MainScene";
+}

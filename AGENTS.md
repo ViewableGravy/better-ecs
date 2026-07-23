@@ -90,6 +90,15 @@ You are a very smart model, and very capable, but you have a limited context win
   - Avoid "handling" a case that cannot happen. 
   - If an edge case must be checked (i.e. x === undefined) then ensure there is a comment explaining why this case can happen and cannot be assumed to be handled earlier
   - Do not convert an impossible state into nullable plumbing just to satisfy type flow. Assert the invariant at the boundary that establishes ownership, and keep the downstream path non-nullable.
+
+### Failure handling philosophy
+
+- Do not add speculative recovery for states that the architecture or types should make impossible.
+- If a type permits an invalid state that cannot occur in practice, strengthen the type or assert the invariant at the ownership boundary.
+- Prefer an immediate assertion, thrown error, or visible natural failure over silently normalising invalid state.
+- Retain defensive handling only for legitimate operational failures, such as external input, loading, persistence, or explicitly supported first-render states.
+- Do not pay a permanent per-frame branching cost for a lifecycle condition that can be established once during initialization.
+- Trial by fire is acceptable for currently unimportant edge cases: let the first real failure be visible and diagnosable, then add only the handling justified by that evidence.
 - Always use `src` as the source directory for apps/packages (never `lib` or `dist`).
 - When implementing an interface with a single unused argument, omit the argument entirely.
   - If there are multiple args and some are unused, use `_`, `__`, etc.
@@ -260,4 +269,4 @@ If solving a problem required investigation, trial/error, or non-obvious steps, 
 - Add `template.md` when response shape matters.
 - Prefer multiple small scripts for broad workflows.
 
-Agressively use the memory tool during development in this project. Memory is the core way that we keep information across sessions and is therefore extremely important. I would like you to put a priority on skill authoring as well. Memory is good for short term, relevant information (and other information) but I would heavily request that you create skills even when it seems trivial. Skills are extremely useful for the developer and for the agent as they give you awesome context around functions, and patterns in the code base. 
+Agressively use the memory tool during development in this project. Memory is the core way that we keep information across sessions and is therefore extremely important. I would like you to put a priority on skill authoring as well. Memory is good for short term, relevant information (and other information) but I would heavily request that you create skills even when it seems trivial. Skills are extremely useful for the developer and for the agent as they give you awesome context around functions, and patterns in the code base.
