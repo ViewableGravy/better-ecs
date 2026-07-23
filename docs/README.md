@@ -2,6 +2,11 @@
 
 This folder should stay focused on active work and durable reference material.
 
+## Handoff
+
+- [HANDOFF.md](HANDOFF.md)
+  - Current branch state, completed work, validation evidence, and recommended next task.
+
 ## Current execution path
 
 - [RENDERING_50K_120FPS_ROADMAP.md](/workspaces/better-ecs/docs/RENDERING_50K_120FPS_ROADMAP.md)
