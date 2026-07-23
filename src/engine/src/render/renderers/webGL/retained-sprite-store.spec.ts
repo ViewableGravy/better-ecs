@@ -1,9 +1,10 @@
 import { Rgba } from "@engine/components/sprite/sprite";
+import { EntityIdAllocator } from "@engine/ecs/entity";
 import {
   RETAINED_SPRITE_INSTANCE_FLOATS,
   type RetainedSpriteRenderData,
   RetainedSpriteStore,
-} from "@engine/render/retained/retained-sprite-store";
+} from "@engine/render/renderers/webGL/retained-sprite-store";
 import { describe, expect, it } from "vitest";
 
 // The retained store only reads image dimensions; browser image behavior is outside this unit's responsibility.
@@ -39,7 +40,7 @@ describe("RetainedSpriteStore", () => {
   });
 
   it("coalesces adjacent dirty slots into one range", () => {
-    const store = createPopulatedStore(4);
+    const store = createPopulatedStore(5);
 
     store.upsert(2, createRenderData({ currentX: 20 }));
     store.upsert(3, createRenderData({ currentX: 30 }));
@@ -47,6 +48,34 @@ describe("RetainedSpriteStore", () => {
     expect(store.consumeDirtyRange()).toEqual({
       startSlot: 1,
       slotCount: 2,
+      coversAllActiveSlots: false,
+      storageResized: false,
+    });
+  });
+
+  it("encloses non-adjacent dirty slots in one min/max span", () => {
+    const store = createPopulatedStore(5);
+
+    store.upsert(2, createRenderData({ currentX: 20 }));
+    store.upsert(4, createRenderData({ currentX: 40 }));
+
+    expect(store.consumeDirtyRange()).toEqual({
+      startSlot: 1,
+      slotCount: 3,
+      coversAllActiveSlots: false,
+      storageResized: false,
+    });
+  });
+
+  it("tracks a repeatedly changed slot only once before consumption", () => {
+    const store = createPopulatedStore(4);
+
+    store.upsert(2, createRenderData({ currentX: 20 }));
+    store.upsert(2, createRenderData({ currentX: 21 }));
+
+    expect(store.consumeDirtyRange()).toEqual({
+      startSlot: 1,
+      slotCount: 1,
       coversAllActiveSlots: false,
       storageResized: false,
     });
@@ -78,13 +107,15 @@ describe("RetainedSpriteStore", () => {
     store.upsert(10, createRenderData({ currentX: 10 }));
     store.upsert(20, createRenderData({ currentX: 20 }));
     store.upsert(30, createRenderData({ currentX: 30 }));
+    store.upsert(40, createRenderData({ currentX: 40 }));
+    store.upsert(50, createRenderData({ currentX: 50 }));
     store.consumeDirtyRange();
 
     expect(store.remove(20)).toBe(true);
-    expect(store.count).toBe(2);
+    expect(store.count).toBe(4);
     expect(store.has(20)).toBe(false);
-    expect(store.has(30)).toBe(true);
-    expect(store.data[RETAINED_SPRITE_INSTANCE_FLOATS + 2]).toBe(30);
+    expect(store.has(50)).toBe(true);
+    expect(store.data[RETAINED_SPRITE_INSTANCE_FLOATS + 2]).toBe(50);
     expect(store.consumeDirtyRange()).toEqual({
       startSlot: 1,
       slotCount: 1,
@@ -92,15 +123,33 @@ describe("RetainedSpriteStore", () => {
       storageResized: false,
     });
 
-    expect(store.upsert(30, createRenderData({ currentX: 300 }))).toBe(true);
-    expect(store.data[RETAINED_SPRITE_INSTANCE_FLOATS + 2]).toBe(300);
-    expect(store.data[2 * RETAINED_SPRITE_INSTANCE_FLOATS + 2]).toBe(30);
+    expect(store.upsert(50, createRenderData({ currentX: 500 }))).toBe(true);
+    expect(store.data[RETAINED_SPRITE_INSTANCE_FLOATS + 2]).toBe(500);
+    expect(store.data[4 * RETAINED_SPRITE_INSTANCE_FLOATS + 2]).toBe(50);
     expect(store.consumeDirtyRange()).toEqual({
       startSlot: 1,
       slotCount: 1,
       coversAllActiveSlots: false,
       storageResized: false,
     });
+  });
+
+  it("keys retained instances by the complete EntityId", () => {
+    const firstId = new EntityIdAllocator(7).create();
+    const sameFormerIndex = new EntityIdAllocator(7 + 2 ** 32).create();
+    const store = new RetainedSpriteStore();
+
+    store.upsert(firstId, createRenderData({ currentX: 7 }));
+    store.upsert(sameFormerIndex, createRenderData({ currentX: 70 }));
+
+    expect(store.count).toBe(2);
+    expect(store.has(firstId)).toBe(true);
+    expect(store.has(sameFormerIndex)).toBe(true);
+
+    store.remove(firstId);
+    expect(store.has(firstId)).toBe(false);
+    expect(store.has(sameFormerIndex)).toBe(true);
+    expect(store.data[2]).toBe(70);
   });
 });
 

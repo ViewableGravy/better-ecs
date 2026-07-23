@@ -127,23 +127,33 @@ need to be a full object-based ECS entity.
 The engine ECS sprite path now uses retained render buckets:
 
 - each rendered world is scanned once when it first becomes visible;
-- subsequent sprite synchronization is driven by engine-owned component lifecycle/change events;
-- direct `Sprite`, visual color/opacity, hierarchy, and hover mutations publish changes without
-  application-layer integration;
+- subsequent sprite synchronization is driven by one engine-owned entity-dirtiness event;
+- direct `Sprite` and visual color/opacity writes publish dirtiness, hierarchy changes publish from
+  world-transform synchronization, and structural hover add/remove is observed automatically;
 - transform changes are published once from the existing `WorldTransform2D` synchronization
   boundary, avoiding observable accessors in the hot `Vec2` read path;
-- ECS sprites queue one retained command per layer/z-order/asset/cohort bucket rather than one
-  command per entity;
-- WebGL keeps dense per-bucket CPU/GPU instance storage, uses generation-independent logical
-  instance IDs, swap-removes physical slots, and uploads only dirty ranges with a dense-update
-  fallback;
+- `SpritePipe` owns only ECS projection, entity dirtiness, animation sampling, logical buckets, and
+  queue markers;
+- animated sprites have a dedicated candidate index, so ordinary retained sprites are never scanned
+  merely to discover whether they are animated;
+- ECS sprites queue one retained command per layer/z-order/asset/change-frequency bucket rather
+  than one command per entity;
+- `WebGLRetainedSpriteBatcher` owns dense CPU/GPU instance storage, uses the full entity ID as the
+  logical instance ID, swap-removes physical slots, and uploads one allocation-free dirty span;
 - camera conversion and previous/current position interpolation run in the retained vertex shader,
   so camera or interpolation-alpha changes do not rebuild instance data;
-- static and dynamic sprites use separate retained cohorts;
+- frequently changing sprites are partitioned from stable sprites inside `SpritePipe`; this prevents
+  a dense moving subset from forcing unchanged instance data into the same full-buffer upload;
 - `RendererAPI.drawSprite` and manual render commands remain immediate-mode escape hatches.
 
-The retained store and ECS integration have focused coverage for unchanged frames, dirty ranges,
-growth, swap-removal, mutation publication, bucket release, and coexistence with manual commands.
+There is no Canvas2D renderer or parallel Canvas2D state. WebGL is the only engine rendering
+backend. `SpritePipe` is also the intended future `RenderGroup` integration seam: a group identity
+and transform-buffer reference can be projected beside sprite instance data without moving group
+ownership into ECS mutation plumbing prematurely.
+
+The WebGL retained store and SpritePipe have focused coverage for unchanged frames, dirty spans,
+growth, swap-removal, full entity IDs, entity mutation publication, bucket release, hierarchy
+updates, and coexistence with manual commands.
 The controlled RTX 4090 comparison uses Chromium 145 at 1280×720 with identical 60-frame warmup and
 240-frame sample settings. At 100k sprites, retained rendering reduced average frame time from
 123.19 ms to 89.65 ms (27.2%) and p95 from 133.33 ms to 100.00 ms. At 500k, both paths exceeded the
@@ -151,6 +161,38 @@ sampling deadline, but retained rendering captured 90 frames versus 73 and reduc
 frame time from 823.71 ms to 664.42 ms (19.3%). Reports:
 `benchmark-results/stress-2026-07-23T09-41-05.117Z.json` (retained) and
 `benchmark-results/stress-2026-07-23T09-44-08.775Z.json` (immediate baseline).
+
+The simplified architecture was remeasured on the same RTX 4090 after removing unproven
+multi-range bookkeeping. Its final report,
+`benchmark-results/stress-2026-07-23T11-03-29.721Z.json`, is at practical parity with the original
+retained checkpoint: 90.27 ms versus 89.65 ms at 100k (+0.7%), and 679.00 ms versus 664.42 ms at
+500k (+2.2%) with 89 versus 90 captured frames. The 500k post-run JavaScript heap reading was
+anomalously high while backing storage was unchanged, so it must not be treated as a memory
+regression or improvement without a GC-controlled profile.
+
+### Post-retained deletion cleanup
+
+The retained integration made the former per-entity ECS sprite pipeline unreachable. It has now
+been removed together with its sprite-record pool, sprite CPU-culling branch, command type, and
+handler. The direct manual path remains:
+`Renderer2D.render(Sprite, ...)` → `RenderCommand.drawSprite(...)` → WebGL immediate batching.
+
+The cleanup also removed an entirely unused second `RenderCommandRenderer`, unused render-queue
+trace instrumentation, an unused number-array pool, and unused command sequence/queue compatibility
+methods. The live `renderCommands()` dispatcher is 78 lines rather than 257. Transform snapshot
+loops now use allocation-free `world.forEach(...)` traversal instead of materializing full query
+arrays and then looking every component up again.
+
+After this pass, engine production code is 1,280 lines smaller than the first retained
+implementation and 552 lines smaller than the pre-retained engine, while retained ECS rendering
+and the immediate/manual sprite escape hatch both remain.
+
+The cleanup RTX 4090 report is
+`benchmark-results/stress-2026-07-23T11-15-45.159Z.json`. It is the first final tree to beat the
+original retained checkpoint on average throughput at both scales: 83.68 ms at 100k (6.7% faster)
+and 636.99 ms at 500k (4.1% faster), with 95 rather than 90 captured 500k frames. The 100k tail
+percentiles were equal; 500k p95/p99 were 2–4% slower, so this is an average-throughput result rather
+than a universal frame-tail improvement. JavaScript heap readings remain GC-sensitive.
 
 ## Query cursor continuation
 

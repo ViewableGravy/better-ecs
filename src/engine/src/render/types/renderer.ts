@@ -5,7 +5,6 @@ import type { Shape } from "@engine/components/shape";
 import type { Rgba, Sprite } from "@engine/components/sprite/sprite";
 import type { Texture } from "@engine/components/texture";
 import type { ShaderTransform2D, Transform2D } from "@engine/components/transform";
-import type { SpriteRenderState } from "@engine/core/render-pipeline/passes/render-world/sprite-render-record";
 import type { TextureCache, TextureCacheConfig } from "@engine/render/textureCache/texture-cache";
 import type { ShapeRenderInput } from "@engine/render/types/low-level";
 
@@ -21,6 +20,19 @@ export type {
 
 export type Renderable = Sprite | Shape;
 export type Settable = Camera;
+
+export type SpriteRenderState = {
+  assetId: string;
+  width: number;
+  height: number;
+  anchorX: number;
+  anchorY: number;
+  flipX: boolean;
+  flipY: boolean;
+  layer: number;
+  zOrder: number;
+  tint: Rgba;
+};
 
 export interface ShaderQuadOptions {
   texture?: Texture;
@@ -64,7 +76,7 @@ export { DEFAULT_RENDERER_CONFIG };
  * Renderer2D-facing composite renderer — the entry point for all rendering.
  *
  * Layering:
- *   - `RendererAPI`   — backend implementation (Canvas2D/WebGL)
+ *   - `RendererAPI`   — low-level WebGL implementation
  *   - `RenderCommand` — thin command facade over RendererAPI
  *   - `Renderer`      — 2D orchestration (camera, texture cache, renderables)
  */

@@ -2,27 +2,19 @@ import { Rgba, type RgbaChangeObserver } from "@engine/components/sprite/sprite"
 import { Component } from "@engine/ecs/component";
 
 class RgbaVisualComponent extends Component implements RgbaChangeObserver {
-  #value: Rgba;
+  readonly #value: Rgba;
 
   get value(): Rgba {
     return this.#value;
   }
 
   set value(value: Rgba) {
-    if (this.#value === value) {
-      return;
-    }
-
-    this.#value.setChangeObserver();
-    this.#value = value;
-    value.setChangeObserver(this);
-    this.__markChanged();
+    this.#value.copyFrom(value);
   }
 
   constructor(value: Rgba = new Rgba()) {
     super();
-    this.#value = value;
-    value.setChangeObserver(this);
+    this.#value = new Rgba(value.r, value.g, value.b, value.a, this);
   }
 
   notifyRgbaChanged(): void {

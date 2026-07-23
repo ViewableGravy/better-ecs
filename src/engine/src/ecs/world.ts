@@ -25,9 +25,7 @@ type AssertEntityIdAvailable = (entityId: EntityId) => void;
 const ALLOW_ENTITY_ID: AssertEntityIdAvailable = () => undefined;
 
 export interface WorldMutationObserver {
-  componentAdded?(world: UserWorld, entityId: EntityId, component: unknown): void;
-  componentChanged?(world: UserWorld, entityId: EntityId, component: Component): void;
-  componentRemoved?(world: UserWorld, entityId: EntityId, component: unknown): void;
+  entityChanged?(world: UserWorld, entityId: EntityId): void;
   worldReset?(world: UserWorld): void;
 }
 
@@ -100,7 +98,7 @@ export class UserWorld implements IUserWorld {
     }
   }
 
-  /** @internal Observe component lifecycle and field changes without exposing renderer state to the ECS. */
+  /** @internal Observe entity dirtiness and world resets without exposing renderer state to the ECS. */
   observeMutations(observer: WorldMutationObserver): () => void {
     this.#mutationObservers.add(observer);
     if (!this.#unsubscribeFromWorld) {
@@ -119,8 +117,8 @@ export class UserWorld implements IUserWorld {
   }
 
   /** @internal Publish a derived component update from an engine-owned synchronization boundary. */
-  notifyComponentChanged(entityId: EntityId, component: Component): void {
-    this.world.notifyComponentChanged(entityId, component);
+  notifyEntityChanged(entityId: EntityId): void {
+    this.world.notifyEntityChanged(entityId);
   }
 
   create(): EntityId {
@@ -266,19 +264,9 @@ export class UserWorld implements IUserWorld {
 
   #subscribeToWorld(): void {
     this.#unsubscribeFromWorld = this.world.observeMutations({
-      componentAdded: (_, entityId, component) => {
+      entityChanged: (_, entityId) => {
         for (const observer of this.#mutationObservers) {
-          observer.componentAdded?.(this, entityId, component);
-        }
-      },
-      componentChanged: (_, entityId, component) => {
-        for (const observer of this.#mutationObservers) {
-          observer.componentChanged?.(this, entityId, component);
-        }
-      },
-      componentRemoved: (_, entityId, component) => {
-        for (const observer of this.#mutationObservers) {
-          observer.componentRemoved?.(this, entityId, component);
+          observer.entityChanged?.(this, entityId);
         }
       },
       worldReset: () => {
@@ -291,9 +279,7 @@ export class UserWorld implements IUserWorld {
 }
 
 type InternalWorldMutationObserver = {
-  componentAdded?(world: World, entityId: EntityId, component: unknown): void;
-  componentChanged?(world: World, entityId: EntityId, component: Component): void;
-  componentRemoved?(world: World, entityId: EntityId, component: unknown): void;
+  entityChanged?(world: World, entityId: EntityId): void;
   worldReset?(world: World): void;
 };
 
@@ -367,12 +353,10 @@ export class World implements QueryCursorSource, ComponentOwner {
       }
 
       store.remove(entityId);
-      if (component !== undefined) {
-        this.notifyComponentRemoved(entityId, component);
-      }
     }
 
     this.entities.delete(entityId);
+    this.notifyEntityChanged(entityId);
   }
 
   private collectDescendants(entityId: EntityId): EntityId[] {
@@ -461,11 +445,7 @@ export class World implements QueryCursorSource, ComponentOwner {
       comp.__attach(entityId, this);
     }
 
-    if (replaced !== undefined && replaced !== comp) {
-      this.notifyComponentRemoved(entityId, replaced);
-    }
-
-    this.notifyComponentAdded(entityId, comp);
+    this.notifyEntityChanged(entityId);
   }
 
   /**
@@ -500,7 +480,7 @@ export class World implements QueryCursorSource, ComponentOwner {
 
       store.remove(entityId);
       if (component !== undefined) {
-        this.notifyComponentRemoved(entityId, component);
+        this.notifyEntityChanged(entityId);
       }
     }
   }
@@ -566,11 +546,11 @@ export class World implements QueryCursorSource, ComponentOwner {
       if (component instanceof Component) {
         component.__attach(entityId, targetWorld);
       }
-      this.notifyComponentRemoved(entityId, component);
-      targetWorld.notifyComponentAdded(entityId, component);
     }
 
     this.entities.delete(entityId);
+    this.notifyEntityChanged(entityId);
+    targetWorld.notifyEntityChanged(entityId);
   }
 
   /**
@@ -872,11 +852,10 @@ export class World implements QueryCursorSource, ComponentOwner {
     this.assertStructuralMutationAllowed("clear the world");
 
     for (const store of this.componentStores.values()) {
-      for (const [entityId, component] of store) {
+      for (const [, component] of store) {
         if (component instanceof Component) {
           component.__detach();
         }
-        this.notifyComponentRemoved(entityId, component);
       }
     }
 
@@ -893,21 +872,9 @@ export class World implements QueryCursorSource, ComponentOwner {
     return () => void this.mutationObservers.delete(observer);
   }
 
-  notifyComponentChanged(entityId: EntityId, component: Component): void {
+  notifyEntityChanged(entityId: EntityId): void {
     for (const observer of this.mutationObservers) {
-      observer.componentChanged?.(this, entityId, component);
-    }
-  }
-
-  private notifyComponentAdded(entityId: EntityId, component: unknown): void {
-    for (const observer of this.mutationObservers) {
-      observer.componentAdded?.(this, entityId, component);
-    }
-  }
-
-  private notifyComponentRemoved(entityId: EntityId, component: unknown): void {
-    for (const observer of this.mutationObservers) {
-      observer.componentRemoved?.(this, entityId, component);
+      observer.entityChanged?.(this, entityId);
     }
   }
 

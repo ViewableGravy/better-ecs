@@ -428,8 +428,8 @@ Rationale:
 - bucketed submission and cached world transforms are in place;
 - the retained path now removes per-frame ECS sprite traversal and full instance reconstruction for
   unchanged entities;
-- remaining work is physical-GPU validation, upload-policy tuning, and deciding whether split
-  stable/dynamic streams outperform the current retained interleaved record.
+- remaining work is upload-policy tuning, render-thread profiling, and determining which instance
+  fields can move into shared GPU-side group data.
 
 ## Current Implementation Status Summary
 
@@ -437,18 +437,24 @@ Rationale:
 
 Status:
 
-- added engine-owned world/component mutation observation with no application changes;
+- added engine-owned entity-level mutation observation with no application changes;
 - replaced automatic per-entity ECS sprite commands with retained sprite buckets;
 - retained logical instance identity while keeping physical GPU slots dense through swap-remove;
-- added persistent WebGL buffers with partial dirty-range uploads and a dense-update fallback;
+- added persistent WebGL buffers with allocation-free partial dirty-span uploads;
 - moved camera transformation and render interpolation into a retained sprite vertex shader;
-- separated static and dynamic sprite cohorts;
+- isolated ECS projection in `SpritePipe` and WebGL storage/submission in
+  `WebGLRetainedSpriteBatcher`;
+- indexed animated sprites separately so animation sampling never scans every retained entry;
+- retained the small stable/frequently-changing bucket partition after hardware measurement showed
+  that merging them forced full uploads of otherwise unchanged instance data;
+- removed the Canvas2D backend so no parallel renderer state remains;
 - preserved the existing immediate `drawSprite` and manual render-command path;
 - removed the superseded sprite record cache, queue manager, comparison dirty mask, and queue helper.
 
 Verification:
 
-- 118 engine tests pass, including 14 retained-store/registry/mutation tests;
+- 134 engine tests pass, including focused WebGL retained-store, SpritePipe, entity-mutation, color,
+  and transform-snapshot tests;
 - 107 client tests pass;
 - engine lint passes;
 - production client build passes;
@@ -472,9 +478,46 @@ Performance interpretation:
 - reports: `benchmark-results/stress-2026-07-23T09-41-05.117Z.json` (retained) and
   `benchmark-results/stress-2026-07-23T09-44-08.775Z.json` (immediate baseline);
 - focused tests establish that an unchanged retained instance performs no CPU slot rewrite and
-  produces no dirty upload range;
+  produces no dirty upload span;
 - target-hardware tests at 0/1/10/90/100% dirtiness remain required to tune the partial/full upload
   crossover beyond the current 50% dynamic profile.
+
+### 2026-07-23 — Retained architecture simplification checkpoint
+
+- removed Canvas2D and made WebGL the sole engine backend;
+- split ECS projection (`SpritePipe`), dense instance storage, and WebGL submission into narrow
+  owners while retaining the immediate/manual command escape hatch;
+- collapsed component-specific mutation callbacks into one entity-dirtiness event;
+- simplified `Rgba` ownership and removed redundant Parent/hover field observers;
+- retained the measured stable/frequently-changing partition and a dedicated animated-sprite index;
+- reverted unproven multi-range bookkeeping to one allocation-free dirty span after hardware
+  measurements showed the extra bookkeeping regressed the 50%-moving profile;
+- reduced engine production code by 488 lines relative to the first retained implementation and
+  left it only 240 lines above the pre-retained engine, while expanding focused regression tests;
+- final RTX 4090 report `benchmark-results/stress-2026-07-23T11-03-29.721Z.json` measured 90.27 ms
+  at 100k and 679.00 ms at 500k, within 0.7% and 2.2% of the original retained checkpoint;
+- the final 500k JavaScript heap reading was anomalously high but GPU/backing storage was stable;
+  memory conclusions require a GC-controlled follow-up.
+
+### 2026-07-23 — Superseded sprite pipeline deletion checkpoint
+
+- removed the unreachable `sprite-entity` command/handler, sprite render-record pool, and
+  sprite-specific CPU-culling code; automatic ECS sprites now have exactly one retained path;
+- preserved manual immediate sprites through `Renderer2D.render(Sprite, ...)` and
+  `RenderCommand.drawSprite(...)`;
+- deleted the unused duplicate `RenderCommandRenderer` implementation and dormant render-queue
+  trace instrumentation;
+- removed unused number-array pooling, command sequencing, and queue compatibility methods;
+- reduced the live render-command dispatcher from 257 lines to 78;
+- changed transform snapshot traversal from allocating query arrays plus repeated `world.get(...)`
+  calls to direct allocation-free component iteration;
+- historical sections below that mention sprite render records or `sprite-entity` describe
+  superseded checkpoints rather than current architecture.
+- final RTX 4090 report `benchmark-results/stress-2026-07-23T11-15-45.159Z.json` measured 83.68 ms
+  at 100k and 636.99 ms at 500k: 6.7% and 4.1% faster on average than the original retained
+  checkpoint, with 95 rather than 90 captured 500k frames;
+- 100k tail percentiles were equal/better, while 500k p95/p99 were 2–4% slower; treat this as an
+  average-throughput win, not a universal tail-latency win.
 
 ### 2026-03-06 — Phase 1 bucketed submission checkpoint
 

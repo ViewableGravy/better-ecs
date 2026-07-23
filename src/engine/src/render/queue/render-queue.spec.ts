@@ -19,7 +19,7 @@ describe("RenderQueue", () => {
     const queue = new RenderQueue();
 
     queue.add(createCommand({
-      type: "sprite-entity",
+      type: "retained-sprite-bucket",
       scope: "gameplay",
       bucketKind: "sprite",
       bucketKey: "sprite:b",
@@ -27,7 +27,7 @@ describe("RenderQueue", () => {
       zOrder: 0,
     }));
     queue.add(createCommand({
-      type: "sprite-entity",
+      type: "retained-sprite-bucket",
       scope: "gameplay",
       bucketKind: "sprite",
       bucketKey: "sprite:a",
@@ -35,7 +35,7 @@ describe("RenderQueue", () => {
       zOrder: 0,
     }));
     queue.add(createCommand({
-      type: "sprite-entity",
+      type: "retained-sprite-bucket",
       scope: "gameplay",
       bucketKind: "sprite",
       bucketKey: "sprite:b",
@@ -118,12 +118,10 @@ function createCommand(input: TestCommandInput): RenderCommand {
     world: null,
     entityId: null,
     shape: null,
-    spriteRecordIndex: undefined,
     scope: input.scope,
     bucketKind: input.bucketKind,
     bucketKey: input.bucketKey,
     layer: input.layer,
     zOrder: input.zOrder,
-    sequence: 0,
   };
 }

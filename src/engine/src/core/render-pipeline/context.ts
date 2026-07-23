@@ -1,7 +1,7 @@
 import type { WorldProvider } from "@engine/core/render-pipeline/types";
 import type { UserWorld } from "@engine/ecs/world";
 import type { Renderer } from "@engine/render";
-import { RetainedEcsSpriteRegistry } from "@engine/core/render-pipeline/passes/render-world/retained-sprites/registry";
+import { SpritePipe } from "@engine/core/render-pipeline/passes/render-world/retained-sprites/sprite-pipe";
 import {
     RenderQueue,
     type EngineFrameAllocatorRegistry,
@@ -18,7 +18,7 @@ export class RenderPipelineContext<
 	readonly frameAllocator: InternalFrameAllocator<TRegistry>;
 	readonly worldProvider: WorldProvider;
 	readonly state: TState;
-	readonly retainedSprites: RetainedEcsSpriteRegistry;
+	readonly spritePipe: SpritePipe;
 
 	visibleWorlds: readonly UserWorld[] = [];
 	world: UserWorld;
@@ -36,7 +36,7 @@ export class RenderPipelineContext<
 		this.frameAllocator = options.frameAllocator;
 		this.state = options.state;
 		this.world = options.world;
-		this.retainedSprites = new RetainedEcsSpriteRegistry(options.renderer);
+		this.spritePipe = new SpritePipe(options.renderer);
 	}
 }
 

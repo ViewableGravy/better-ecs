@@ -35,7 +35,7 @@ describe("handleShapeEntityCommand", () => {
     );
 
     expect(drawCalls).toHaveLength(1);
-    expect(drawCalls[0]?.fill).toEqual({
+    expect(drawCalls[0]?.fill).toMatchObject({
       r: 0.95,
       g: 0.9,
       b: 0.62,
@@ -70,7 +70,7 @@ describe("handleShapeEntityCommand", () => {
     );
 
     expect(drawCalls).toHaveLength(1);
-    expect(drawCalls[0]?.stroke).toEqual({
+    expect(drawCalls[0]?.stroke).toMatchObject({
       r: 0.1,
       g: 0.2,
       b: 0.3,
@@ -85,13 +85,11 @@ function createShapeEntityCommand(world: UserWorld, entityId: EntityId): ShapeEn
     world,
     entityId,
     shape: null,
-    spriteRecordIndex: undefined,
     scope: "gameplay",
     bucketKind: "shape",
     bucketKey: "shape",
     layer: 0,
     zOrder: 0,
-    sequence: 0,
   };
 }
 

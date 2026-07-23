@@ -1,27 +1,32 @@
 import {
-  AnimatedSprite,
-  EditorHoverHighlight,
-  Opacity,
-  OpacityTrack,
-  Parent,
-  resolveEntityTint,
-  Sprite,
-  Tint,
-  TintTrack,
-  WorldTransform2D,
+    AnimatedSprite,
+    EditorHoverHighlight,
+    resolveEntityTint,
+    Sprite,
+    WorldTransform2D,
+    type Transform2D,
 } from "@engine/components";
 import { getFrameAssetIdAtTime } from "@engine/components/sprite/animated";
 import { Rgba } from "@engine/components/sprite/sprite";
-import type { Component } from "@engine/ecs/component";
 import type { EntityId } from "@engine/ecs/entity";
 import type { UserWorld, WorldMutationObserver } from "@engine/ecs/world";
-import type { SpriteRenderState } from "@engine/core/render-pipeline/passes/render-world/sprite-render-record";
-import type { Renderer } from "@engine/render";
 import type { RenderCommand, RenderQueue } from "@engine/render/queue/render-queue";
+import type { SpriteRenderState } from "@engine/render/types/renderer";
+
+export interface SpritePipeRenderer {
+  upsertRetainedSprite(
+    bucketId: number,
+    instanceId: EntityId,
+    sprite: SpriteRenderState,
+    transform: Transform2D,
+  ): boolean;
+  removeRetainedSprite(bucketId: number, instanceId: EntityId): void;
+  releaseRetainedSpriteBucket(bucketId: number): void;
+}
 
 type RetainedSpriteEntry = {
-  readonly instanceId: number;
   bucketId: number | null;
+  animatedAssetId: string | null;
 };
 
 type RetainedSpriteBucket = {
@@ -34,11 +39,11 @@ type RetainedSpriteBucket = {
 type RetainedSpriteWorldState = {
   readonly dirtyEntityIds: Set<EntityId>;
   readonly animatedEntityIds: Set<EntityId>;
+  readonly retryEntityIds: EntityId[];
   readonly entries: Map<EntityId, RetainedSpriteEntry>;
   readonly bucketsByKey: Map<string, RetainedSpriteBucket>;
   readonly bucketsById: Map<number, RetainedSpriteBucket>;
   initialized: boolean;
-  unsubscribe: (() => void) | null;
 };
 
 const SHARED_TINT = new Rgba();
@@ -53,7 +58,6 @@ const SHARED_SPRITE_STATE: SpriteRenderState = {
   flipY: false,
   layer: 0,
   zOrder: 0,
-  isDynamic: true,
   tint: SHARED_TINT,
 };
 
@@ -61,17 +65,15 @@ const SHARED_SPRITE_STATE: SpriteRenderState = {
  * Engine-owned retained projection of ECS sprites.
  *
  * Worlds are scanned once when first rendered. Subsequent work is driven by
- * component lifecycle/change notifications plus animated frame sampling.
+ * entity dirtiness notifications plus animated frame sampling.
  */
-export class RetainedEcsSpriteRegistry implements WorldMutationObserver {
-  readonly #renderer: Renderer;
+export class SpritePipe implements WorldMutationObserver {
   readonly #states = new WeakMap<UserWorld, RetainedSpriteWorldState>();
-  #nextInstanceId = 1;
   #nextBucketId = 1;
 
-  constructor(renderer: Renderer) {
-    this.#renderer = renderer;
-  }
+  constructor(
+    private renderer: SpritePipeRenderer
+  ) {}
 
   syncAndQueue(
     world: UserWorld,
@@ -82,21 +84,37 @@ export class RetainedEcsSpriteRegistry implements WorldMutationObserver {
     const state = this.#resolveState(world);
     this.#initializeWorld(world, state);
 
+    // Sample animated sprites and mark any that have changed as dirty
     for (const entityId of state.animatedEntityIds) {
-      state.dirtyEntityIds.add(entityId);
+      const entry = state.entries.get(entityId);
+      const animatedSprite = world.get(entityId, AnimatedSprite);
+      if (!entry || !animatedSprite) {
+        state.dirtyEntityIds.add(entityId);
+        continue;
+      }
+
+      const assetId = getFrameAssetIdAtTime(animatedSprite, sampledTimeMs, sampledUpdateTick);
+      if (entry.animatedAssetId !== assetId) {
+        state.dirtyEntityIds.add(entityId);
+      }
     }
 
-    const retryEntityIds: EntityId[] = [];
+    // Sync dirty entities and retry any that failed to sync
+    const retryEntityIds = state.retryEntityIds;
+    retryEntityIds.length = 0;
     for (const entityId of state.dirtyEntityIds) {
       if (!this.#syncEntity(world, state, entityId, sampledTimeMs, sampledUpdateTick)) {
         retryEntityIds.push(entityId);
       }
     }
+
+    // Clear the dirty set and re-add any that failed to sync so they will be retried next frame
     state.dirtyEntityIds.clear();
     for (const entityId of retryEntityIds) {
       state.dirtyEntityIds.add(entityId);
     }
 
+    // Queue all non-empty retained sprite buckets for rendering
     for (const bucket of state.bucketsById.values()) {
       if (bucket.instanceCount > 0) {
         queue.add(bucket.command);
@@ -104,34 +122,12 @@ export class RetainedEcsSpriteRegistry implements WorldMutationObserver {
     }
   }
 
-  componentAdded(world: UserWorld, entityId: EntityId, component: unknown): void {
+  entityChanged(world: UserWorld, entityId: EntityId): void {
     const state = this.#states.get(world);
-    if (!state || !isRetainedSpriteDependency(component)) {
+    if (!state) {
       return;
     }
 
-    if (component instanceof AnimatedSprite) {
-      state.animatedEntityIds.add(entityId);
-    }
-    state.dirtyEntityIds.add(entityId);
-  }
-
-  componentChanged(world: UserWorld, entityId: EntityId, component: Component): void {
-    const state = this.#states.get(world);
-    if (state && isRetainedSpriteDependency(component)) {
-      state.dirtyEntityIds.add(entityId);
-    }
-  }
-
-  componentRemoved(world: UserWorld, entityId: EntityId, component: unknown): void {
-    const state = this.#states.get(world);
-    if (!state || !isRetainedSpriteDependency(component)) {
-      return;
-    }
-
-    if (component instanceof AnimatedSprite) {
-      state.animatedEntityIds.delete(entityId);
-    }
     state.dirtyEntityIds.add(entityId);
   }
 
@@ -154,12 +150,13 @@ export class RetainedEcsSpriteRegistry implements WorldMutationObserver {
     const created: RetainedSpriteWorldState = {
       dirtyEntityIds: new Set(),
       animatedEntityIds: new Set(),
+      retryEntityIds: [],
       entries: new Map(),
       bucketsByKey: new Map(),
       bucketsById: new Map(),
       initialized: false,
-      unsubscribe: world.observeMutations(this),
     };
+    world.observeMutations(this);
     this.#states.set(world, created);
     return created;
   }
@@ -170,10 +167,7 @@ export class RetainedEcsSpriteRegistry implements WorldMutationObserver {
     }
 
     world.forEach(Sprite, (entityId) => state.dirtyEntityIds.add(entityId));
-    world.forEach(AnimatedSprite, (entityId) => {
-      state.animatedEntityIds.add(entityId);
-      state.dirtyEntityIds.add(entityId);
-    });
+    world.forEach(AnimatedSprite, (entityId) => state.dirtyEntityIds.add(entityId));
     state.initialized = true;
   }
 
@@ -207,11 +201,16 @@ export class RetainedEcsSpriteRegistry implements WorldMutationObserver {
     let entry = state.entries.get(entityId);
     if (!entry) {
       entry = {
-        instanceId: this.#nextInstanceId,
         bucketId: null,
+        animatedAssetId: null,
       };
-      this.#nextInstanceId += 1;
       state.entries.set(entityId, entry);
+    }
+    entry.animatedAssetId = animatedSprite ? assetId : null;
+    if (animatedSprite) {
+      state.animatedEntityIds.add(entityId);
+    } else {
+      state.animatedEntityIds.delete(entityId);
     }
 
     SHARED_SPRITE_STATE.assetId = assetId;
@@ -223,23 +222,20 @@ export class RetainedEcsSpriteRegistry implements WorldMutationObserver {
     SHARED_SPRITE_STATE.flipY = projectedSprite.flipY;
     SHARED_SPRITE_STATE.layer = projectedSprite.layer;
     SHARED_SPRITE_STATE.zOrder = projectedSprite.zOrder;
-    SHARED_SPRITE_STATE.isDynamic = projectedSprite.isDynamic;
-
-    const cohort = projectedSprite.isDynamic ? "dynamic" : "static";
-    const bucketKey = `${projectedSprite.layer}:${projectedSprite.zOrder}:${assetId}:${cohort}`;
+    const bucketKey = `${projectedSprite.layer}:${projectedSprite.zOrder}:${assetId}:${projectedSprite.isDynamic}`;
     const bucket = this.#resolveBucket(state, bucketKey, projectedSprite.layer, projectedSprite.zOrder, assetId);
 
     if (entry.bucketId !== bucket.id) {
       if (entry.bucketId !== null) {
-        this.#removeEntryFromBucket(state, entry.bucketId, entry.instanceId);
+        this.#removeEntryFromBucket(state, entry.bucketId, entityId);
       }
       entry.bucketId = bucket.id;
       bucket.instanceCount += 1;
     }
 
-    return this.#renderer.upsertRetainedSprite(
+    return this.renderer.upsertRetainedSprite(
       bucket.id,
-      entry.instanceId,
+      entityId,
       SHARED_SPRITE_STATE,
       worldTransform,
     );
@@ -273,7 +269,6 @@ export class RetainedEcsSpriteRegistry implements WorldMutationObserver {
         bucketKey: `sprite:${assetId}`,
         layer,
         zOrder,
-        sequence: 0,
         retainedSpriteBucketId: id,
       },
     };
@@ -289,7 +284,7 @@ export class RetainedEcsSpriteRegistry implements WorldMutationObserver {
     }
 
     if (entry.bucketId !== null) {
-      this.#removeEntryFromBucket(state, entry.bucketId, entry.instanceId);
+      this.#removeEntryFromBucket(state, entry.bucketId, entityId);
     }
     state.entries.delete(entityId);
     state.animatedEntityIds.delete(entityId);
@@ -298,44 +293,33 @@ export class RetainedEcsSpriteRegistry implements WorldMutationObserver {
   #removeEntryFromBucket(
     state: RetainedSpriteWorldState,
     bucketId: number,
-    instanceId: number,
+    instanceId: EntityId,
   ): void {
     const bucket = state.bucketsById.get(bucketId);
     if (!bucket) {
       return;
     }
 
-    this.#renderer.removeRetainedSprite(bucketId, instanceId);
+    this.renderer.removeRetainedSprite(bucketId, instanceId);
     bucket.instanceCount -= 1;
     if (bucket.instanceCount > 0) {
       return;
     }
 
-    this.#renderer.releaseRetainedSpriteBucket(bucketId);
+    this.renderer.releaseRetainedSpriteBucket(bucketId);
     state.bucketsById.delete(bucketId);
     state.bucketsByKey.delete(bucket.key);
   }
 
   #releaseState(state: RetainedSpriteWorldState): void {
     for (const bucket of state.bucketsById.values()) {
-      this.#renderer.releaseRetainedSpriteBucket(bucket.id);
+      this.renderer.releaseRetainedSpriteBucket(bucket.id);
     }
     state.dirtyEntityIds.clear();
     state.animatedEntityIds.clear();
+    state.retryEntityIds.length = 0;
     state.entries.clear();
     state.bucketsByKey.clear();
     state.bucketsById.clear();
   }
-}
-
-function isRetainedSpriteDependency(component: unknown): boolean {
-  return component instanceof Sprite
-    || component instanceof AnimatedSprite
-    || component instanceof WorldTransform2D
-    || component instanceof Parent
-    || component instanceof Tint
-    || component instanceof TintTrack
-    || component instanceof Opacity
-    || component instanceof OpacityTrack
-    || component instanceof EditorHoverHighlight;
 }

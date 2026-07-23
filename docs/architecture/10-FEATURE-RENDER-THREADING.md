@@ -14,7 +14,7 @@ This document focuses on:
 
 ## Non-Goals (For The First Iterations)
 
-- Full WebGPU backend (keep WebGL2 as the “real” backend, Canvas2D as debug).
+- Full WebGPU backend (WebGL2 remains the engine backend).
 - Perfect determinism between update/render threads (render is allowed to be “eventually consistent”).
 - A full render graph / SRP equivalent. We can grow into a render graph later.
 
@@ -27,7 +27,7 @@ This document focuses on:
 - **Extract**: main thread step that reads ECS state and writes render-ready data into a frame.
 - **Frame**: the render snapshot (camera + instance data + resource references) consumed by the render thread.
 - **Prepare/Queue**: optional steps to sort, batch, and map render data to GPU-friendly layouts.
-- **Commit**: issue draw calls (WebGL2/WebGPU/Canvas2D).
+- **Commit**: issue draw calls (WebGL2 today, potentially WebGPU later).
 - **Backpressure**: mechanism to prevent render frames from piling up in a queue.
 
 ---
@@ -49,7 +49,7 @@ This affects:
 
 OffscreenCanvas in workers is supported broadly in Chromium-based browsers. Some platforms have limitations:
 - WebGL2 support in worker is generally good in Chromium; verify targets.
-- Canvas2D in worker is also supported, but performance is not comparable to WebGL instancing.
+- The engine intentionally exposes no Canvas2D renderer; worker rendering must use WebGL2.
 
 ---
 
@@ -237,7 +237,7 @@ export function createRenderThreadBackend(opts: {
   workerUrl: URL;
   buffering: "triple" | "double";
   transport: "shared" | "transfer";
-  renderer: "webgl2" | "canvas2d";
+  renderer: "webgl2";
   capacity: number;
 }): RenderBackend;
 ```
@@ -361,7 +361,7 @@ The goal is to keep each step independently shippable with a clear “done” si
   - Long runs show stable frame pacing (no multi-second spikes).
 
 ### Step 4: Switch The Worker Renderer To WebGL2 Instancing (POC)
-- Goal: render 10k–50k instances without Canvas2D limits.
+- Goal: render 10k–50k instances through WebGL2 instancing.
 - Work:
   - Implement a basic instanced quad pipeline (or points first).
   - Use typed arrays for instance data.

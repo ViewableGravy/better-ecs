@@ -7,7 +7,6 @@ import type { ShapeRenderInput } from "@engine/render/types/low-level";
  */
 export type RenderCommandType =
   | "retained-sprite-bucket"
-  | "sprite-entity"
   | "shader-entity"
   | "shape-entity"
   | "shape-draw";
@@ -65,14 +64,12 @@ export type RenderCommand = {
   world: UserWorld | null;
   entityId: EntityId | null;
   shape: ShapeRenderInput | null;
-  spriteRecordIndex?: number;
   retainedSpriteBucketId?: number;
   scope: RenderCommandScope;
   bucketKind: RenderCommandBucketKind;
   bucketKey: string;
   layer: number;
   zOrder: number;
-  sequence: number;
 };
 
 /**
@@ -81,7 +78,6 @@ export type RenderCommand = {
  * explicit scope/layer/sub-layer/bucket order.
  */
 export class RenderQueue {
-  #nextSequence = 0;
   readonly #orderedCommands: RenderCommand[] = [];
   readonly #orderedBuckets: RenderCommandBucket[] = [];
   readonly #scopes = new Map<RenderCommandScope, RenderScopeBuckets>();
@@ -106,9 +102,6 @@ export class RenderQueue {
    * Add a command to the queue while preserving stable insertion order.
    */
   add(command: RenderCommand): void {
-    command.sequence = this.#nextSequence;
-    this.#nextSequence += 1;
-
     const scope = this.#resolveScopeBuckets(command.scope);
     const layer = resolveOrCreateLayerBucket(scope, command.layer);
     const subLayer = resolveOrCreateSubLayerBucket(layer, command.zOrder);
@@ -117,27 +110,6 @@ export class RenderQueue {
 
     bucket.commands.push(command);
     this.#commandsDirty = true;
-  }
-
-  /**
-   * Maintain the public API shape for existing callers while materializing the
-   * ordered command view from bucketed storage.
-   */
-  sortByLayer(): void {
-    this.#rebuildOrderedCommandsIfNeeded();
-  }
-
-  forEachCommand(visitor: (command: RenderCommand) => void): void {
-    const commands = this.commands;
-
-    for (let index = 0; index < commands.length; index += 1) {
-      const command = commands[index];
-      if (!command) {
-        continue;
-      }
-
-      visitor(command);
-    }
   }
 
   /**
@@ -152,7 +124,6 @@ export class RenderQueue {
       scope.layers.clear();
     }
 
-    this.#nextSequence = 0;
     this.#commandsDirty = false;
   }
 
@@ -166,19 +137,8 @@ export class RenderQueue {
 
     orderedCommands.length = 0;
 
-    for (let bucketIndex = 0; bucketIndex < orderedBuckets.length; bucketIndex += 1) {
-      const bucket = orderedBuckets[bucketIndex];
-      if (!bucket) {
-        continue;
-      }
-
-      const bucketCommands = bucket.commands;
-      for (let commandIndex = 0; commandIndex < bucketCommands.length; commandIndex += 1) {
-        const command = bucketCommands[commandIndex];
-        if (!command) {
-          continue;
-        }
-
+    for (const bucket of orderedBuckets) {
+      for (const command of bucket.commands) {
         orderedCommands.push(command);
       }
     }

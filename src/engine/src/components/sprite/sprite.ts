@@ -2,11 +2,11 @@ import type { RegisteredAssets } from "@engine/core";
 import { Component } from "@engine/ecs/component";
 
 export class Rgba {
-  private _r: number;
-  private _g: number;
-  private _b: number;
-  private _a: number;
-  private _changeObserver: RgbaChangeObserver | undefined;
+  #r: number;
+  #g: number;
+  #b: number;
+  #a: number;
+  readonly #changeObserver: RgbaChangeObserver | undefined;
 
   constructor(
     r: number = 1,
@@ -15,150 +15,58 @@ export class Rgba {
     a: number = 1,
     changeObserver?: RgbaChangeObserver,
   ) {
-    this._r = r;
-    this._g = g;
-    this._b = b;
-    this._a = a;
-    this._changeObserver = changeObserver;
-    Object.defineProperties(this, {
-      _r: { enumerable: false },
-      _g: { enumerable: false },
-      _b: { enumerable: false },
-      _a: { enumerable: false },
-      _changeObserver: { enumerable: false },
-      r: {
-        enumerable: true,
-        configurable: true,
-        get: Rgba.#getR,
-        set: Rgba.#setR,
-      },
-      g: {
-        enumerable: true,
-        configurable: true,
-        get: Rgba.#getG,
-        set: Rgba.#setG,
-      },
-      b: {
-        enumerable: true,
-        configurable: true,
-        get: Rgba.#getB,
-        set: Rgba.#setB,
-      },
-      a: {
-        enumerable: true,
-        configurable: true,
-        get: Rgba.#getA,
-        set: Rgba.#setA,
-      },
-    });
+    this.#r = r;
+    this.#g = g;
+    this.#b = b;
+    this.#a = a;
+    this.#changeObserver = changeObserver;
   }
 
-  get r(): number { return this._r; }
+  get r(): number { return this.#r; }
   set r(value: number) {
-    if (this._r === value) return;
-    this._r = value;
-    this._changeObserver?.notifyRgbaChanged();
+    if (this.#r === value) return;
+    this.#r = value;
+    this.#changeObserver?.notifyRgbaChanged();
   }
 
-  get g(): number { return this._g; }
+  get g(): number { return this.#g; }
   set g(value: number) {
-    if (this._g === value) return;
-    this._g = value;
-    this._changeObserver?.notifyRgbaChanged();
+    if (this.#g === value) return;
+    this.#g = value;
+    this.#changeObserver?.notifyRgbaChanged();
   }
 
-  get b(): number { return this._b; }
+  get b(): number { return this.#b; }
   set b(value: number) {
-    if (this._b === value) return;
-    this._b = value;
-    this._changeObserver?.notifyRgbaChanged();
+    if (this.#b === value) return;
+    this.#b = value;
+    this.#changeObserver?.notifyRgbaChanged();
   }
 
-  get a(): number { return this._a; }
+  get a(): number { return this.#a; }
   set a(value: number) {
-    if (this._a === value) return;
-    this._a = value;
-    this._changeObserver?.notifyRgbaChanged();
-  }
-
-  /** @internal Bind nested color writes to an owning visual component. */
-  setChangeObserver(changeObserver?: RgbaChangeObserver): void {
-    this._changeObserver = changeObserver;
-  }
-
-  static #getR(this: Rgba): number { return this._r; }
-  static #setR(this: Rgba, value: number): void {
-    if (this._r === value) return;
-    this._r = value;
-    this._changeObserver?.notifyRgbaChanged();
-  }
-  static #getG(this: Rgba): number { return this._g; }
-  static #setG(this: Rgba, value: number): void {
-    if (this._g === value) return;
-    this._g = value;
-    this._changeObserver?.notifyRgbaChanged();
-  }
-  static #getB(this: Rgba): number { return this._b; }
-  static #setB(this: Rgba, value: number): void {
-    if (this._b === value) return;
-    this._b = value;
-    this._changeObserver?.notifyRgbaChanged();
-  }
-  static #getA(this: Rgba): number { return this._a; }
-  static #setA(this: Rgba, value: number): void {
-    if (this._a === value) return;
-    this._a = value;
-    this._changeObserver?.notifyRgbaChanged();
+    if (this.#a === value) return;
+    this.#a = value;
+    this.#changeObserver?.notifyRgbaChanged();
   }
 
   public set(r: number, g: number, b: number, a: number = 1): this {
-    this.r = r;
-    this.g = g;
-    this.b = b;
-    this.a = a;
+    if (this.#r === r && this.#g === g && this.#b === b && this.#a === a) {
+      return this;
+    }
+
+    this.#r = r;
+    this.#g = g;
+    this.#b = b;
+    this.#a = a;
+    this.#changeObserver?.notifyRgbaChanged();
     return this;
   }
 
   public copyFrom(other: Rgba): void {
-    this.r = other.r;
-    this.g = other.g;
-    this.b = other.b;
-    this.a = other.a;
+    this.set(other.r, other.g, other.b, other.a);
   }
 
-  /** Convert to CSS rgba string */
-  public toRgba(): string {
-    const r = Math.round(this.r * 255);
-    const g = Math.round(this.g * 255);
-    const b = Math.round(this.b * 255);
-    return `rgba(${r}, ${g}, ${b}, ${this.a})`;
-  }
-
-  /** Convert to hex string (ignores alpha) */
-  public toHex(): string {
-    const r = Math.round(this.r * 255)
-      .toString(16)
-      .padStart(2, "0");
-    const g = Math.round(this.g * 255)
-      .toString(16)
-      .padStart(2, "0");
-    const b = Math.round(this.b * 255)
-      .toString(16)
-      .padStart(2, "0");
-    return `#${r}${g}${b}`;
-  }
-
-  /** Create from hex string */
-  public static fromHex(hex: string): Rgba {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    if (!result) return new Rgba();
-    return new Rgba(
-      parseInt(result[1], 16) / 255,
-      parseInt(result[2], 16) / 255,
-      parseInt(result[3], 16) / 255,
-      1,
-    );
-  }
 }
 
 export interface RgbaChangeObserver {
@@ -259,9 +167,10 @@ export class Sprite extends Component {
   }
 
   /**
-   * Queue update policy.
-   * - true: always evaluate this sprite in the queue hot path (default)
-   * - false: eligible for static cohort reuse
+   * Whether this sprite is expected to change frequently.
+   *
+   * Retained rendering keeps frequently changing sprites separate so their GPU uploads do not
+   * include neighboring sprites that rarely change.
    */
   get isDynamic(): boolean { return this.#isDynamic; }
   set isDynamic(value: boolean) {

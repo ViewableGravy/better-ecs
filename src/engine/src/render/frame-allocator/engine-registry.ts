@@ -1,21 +1,15 @@
 import { Rgba } from "@engine/components/sprite/sprite";
-import { Transform2D } from "@engine/components/transform";
 import { createPoolFactory } from "@engine/core/allocator";
-import type { SpriteRenderRecord } from "@engine/core/render-pipeline/passes/render-world/sprite-render-record";
 import type { FramePoolFactory } from "@engine/render/frame-allocator/types";
 import type { RenderCommand } from "@engine/render/queue/render-queue";
 import type { DenseShapeRenderData } from "@engine/render/types/low-level";
 
 type ShapeCommandFactory = FramePoolFactory<DenseShapeRenderData, readonly []>;
-type NumberArrayFactory = FramePoolFactory<number[], readonly []>;
 type RenderCommandFactory = FramePoolFactory<RenderCommand, readonly []>;
-type SpriteRenderRecordFactory = FramePoolFactory<SpriteRenderRecord, readonly []>;
 
 export type EngineFrameAllocatorRegistry = {
   "engine:shape-command": ShapeCommandFactory;
-  "engine:number-array": NumberArrayFactory;
   "engine:render-command": RenderCommandFactory;
-  "engine:sprite-render-record": SpriteRenderRecordFactory;
 };
 
 export const engineFrameAllocatorRegistry: EngineFrameAllocatorRegistry = {
@@ -60,12 +54,6 @@ export const engineFrameAllocatorRegistry: EngineFrameAllocatorRegistry = {
       value.cornerRadius = 0;
     },
   ),
-  "engine:number-array": createPoolFactory(
-    (): number[] => [],
-    (value) => {
-      value.length = 0;
-    },
-  ),
   "engine:render-command": createPoolFactory(
     (): RenderCommand => ({
       type: "shape-entity",
@@ -77,8 +65,6 @@ export const engineFrameAllocatorRegistry: EngineFrameAllocatorRegistry = {
       bucketKey: "shape",
       layer: 0,
       zOrder: 0,
-      sequence: 0,
-      spriteRecordIndex: undefined,
     }),
     (value) => {
       value.type = "shape-entity";
@@ -90,52 +76,6 @@ export const engineFrameAllocatorRegistry: EngineFrameAllocatorRegistry = {
       value.bucketKey = "shape";
       value.layer = 0;
       value.zOrder = 0;
-      value.sequence = 0;
-      value.spriteRecordIndex = undefined;
-    },
-  ),
-  "engine:sprite-render-record": createPoolFactory(
-    (): SpriteRenderRecord => ({
-      sprite: {
-        assetId: "",
-        width: 0,
-        height: 0,
-        anchorX: 0.5,
-        anchorY: 0.5,
-        flipX: false,
-        flipY: false,
-        layer: 0,
-        zOrder: 0,
-        isDynamic: true,
-        tint: new Rgba(),
-      },
-      worldTransform: new Transform2D(),
-    }),
-    (value) => {
-      value.sprite.assetId = "";
-      value.sprite.width = 0;
-      value.sprite.height = 0;
-      value.sprite.anchorX = 0.5;
-      value.sprite.anchorY = 0.5;
-      value.sprite.flipX = false;
-      value.sprite.flipY = false;
-      value.sprite.layer = 0;
-      value.sprite.zOrder = 0;
-      value.sprite.isDynamic = true;
-      value.sprite.tint.r = 1;
-      value.sprite.tint.g = 1;
-      value.sprite.tint.b = 1;
-      value.sprite.tint.a = 1;
-      value.worldTransform.curr.pos.x = 0;
-      value.worldTransform.curr.pos.y = 0;
-      value.worldTransform.curr.rotation = 0;
-      value.worldTransform.curr.scale.x = 1;
-      value.worldTransform.curr.scale.y = 1;
-      value.worldTransform.prev.pos.x = 0;
-      value.worldTransform.prev.pos.y = 0;
-      value.worldTransform.prev.rotation = 0;
-      value.worldTransform.prev.scale.x = 1;
-      value.worldTransform.prev.scale.y = 1;
     },
   ),
 };

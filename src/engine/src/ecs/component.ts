@@ -1,7 +1,7 @@
 import type { EntityId } from "@engine/ecs/entity";
 
 export interface ComponentOwner {
-  notifyComponentChanged(entityId: EntityId, component: Component): void;
+  notifyEntityChanged(entityId: EntityId): void;
 }
 
 /**********************************************************************************************************
@@ -33,6 +33,6 @@ export class Component {
       return;
     }
 
-    this.#owner.notifyComponentChanged(entityId, this);
+    this.#owner.notifyEntityChanged(entityId);
   }
 }

@@ -5,7 +5,6 @@ import { Shape } from "@engine/components/shape";
 import { Rgba, Sprite } from "@engine/components/sprite/sprite";
 import { Texture, type TextureSourceData } from "@engine/components/texture";
 import type { ShaderTransform2D, Transform2D } from "@engine/components/transform";
-import type { SpriteRenderState } from "@engine/core/render-pipeline/passes/render-world/sprite-render-record";
 import { RenderCommand } from "@engine/render/render-command";
 import { TextureCache } from "@engine/render/textureCache/texture-cache";
 import type {
@@ -16,12 +15,14 @@ import type {
     Settable,
     ShaderQuadOptions,
     ShapeRenderInput,
+    SpriteRenderState,
     SpriteRenderData,
     TexturedQuadDrawData,
     TexturedQuadRenderData,
 } from "@engine/render/types/renderer";
 import type { RendererAPI } from "@engine/render/types/renderer-api";
-import type { RetainedSpriteRenderData } from "@engine/render/retained/retained-sprite-store";
+import type { RetainedSpriteRenderData } from "@engine/render/renderers/webGL/retained-sprite-store";
+import type { WebGLRetainedSpriteBatcher } from "@engine/render/renderers/webGL/retained-sprite-batcher";
 
 const FALLBACK_PENDING_COLOR = new Rgba(1, 0, 1, 0.4);
 const FALLBACK_ERROR_COLOR = new Rgba(1, 0, 0, 0.6);
@@ -69,6 +70,7 @@ const SHARED_FALLBACK_SHAPE_DATA: DenseShapeRenderData = {
 
 export class Renderer2D implements Renderer {
   readonly #command: RenderCommand;
+  readonly #retainedSpriteBatcher: WebGLRetainedSpriteBatcher;
   readonly #showFallback: boolean;
   #assets: LooseAssetManager | null = null;
 
@@ -81,6 +83,7 @@ export class Renderer2D implements Renderer {
 
   constructor(rendererApi: RendererAPI, config: RendererConfig) {
     this.#command = new RenderCommand(rendererApi);
+    this.#retainedSpriteBatcher = rendererApi.retainedSpriteBatcher;
     this.#showFallback = config.showFallback;
     this.config = config;
 
@@ -220,20 +223,27 @@ export class Renderer2D implements Renderer {
     data.sourceHeight = textureInfo.frameHeight;
     data.tint = sprite.tint;
 
-    this.#command.upsertRetainedSprite(bucketId, instanceId, data);
+    this.#retainedSpriteBatcher.upsert(bucketId, instanceId, data);
     return true;
   }
 
   removeRetainedSprite(bucketId: number, instanceId: number): void {
-    this.#command.removeRetainedSprite(bucketId, instanceId);
+    this.#retainedSpriteBatcher.remove(bucketId, instanceId);
   }
 
   drawRetainedSpriteBucket(bucketId: number, interpolationAlpha: number): void {
-    this.#command.drawRetainedSpriteBucket(bucketId, interpolationAlpha);
+    this.#retainedSpriteBatcher.draw(bucketId, {
+      interpolationAlpha,
+      cameraX: this.getCameraX(),
+      cameraY: this.getCameraY(),
+      cameraZoom: this.getCameraZoom(),
+      viewportWidth: this.getWidth(),
+      viewportHeight: this.getHeight(),
+    });
   }
 
   releaseRetainedSpriteBucket(bucketId: number): void {
-    this.#command.releaseRetainedSpriteBucket(bucketId);
+    this.#retainedSpriteBatcher.release(bucketId);
   }
 
   set(value: Settable, transform: Transform2D, alpha: number): void {

@@ -23,16 +23,17 @@ export type RetainedSpriteRenderData = {
 };
 
 export type RetainedSpriteDirtyRange = {
-  readonly startSlot: number;
-  readonly slotCount: number;
-  readonly coversAllActiveSlots: boolean;
-  readonly storageResized: boolean;
+  startSlot: number;
+  slotCount: number;
+  coversAllActiveSlots: boolean;
+  storageResized: boolean;
 };
 
 const INITIAL_CAPACITY = 16;
+const SHARED_PACKED_DATA = new Float32Array(RETAINED_SPRITE_INSTANCE_FLOATS);
 
 /**
- * Dense CPU shadow storage for one retained sprite bucket.
+ * Dense WebGL CPU shadow storage for one retained sprite bucket.
  *
  * Logical instance IDs remain stable while physical slots use swap-remove so
  * WebGL can always draw one contiguous active range.
@@ -41,6 +42,12 @@ export class RetainedSpriteStore {
   #data = new Float32Array(INITIAL_CAPACITY * RETAINED_SPRITE_INSTANCE_FLOATS);
   readonly #instanceIds: number[] = [];
   readonly #slotsByInstanceId = new Map<number, number>();
+  readonly #dirtyResult: RetainedSpriteDirtyRange = {
+    startSlot: 0,
+    slotCount: 0,
+    coversAllActiveSlots: false,
+    storageResized: true,
+  };
   #dirtyStart = Number.POSITIVE_INFINITY;
   #dirtyEnd = -1;
   #storageResized = true;
@@ -103,29 +110,29 @@ export class RetainedSpriteStore {
     }
 
     const count = this.count;
-    const startSlot = this.#storageResized ? 0 : Math.min(this.#dirtyStart, count);
-    const endSlot = this.#storageResized ? count : Math.min(this.#dirtyEnd + 1, count);
+    const storageResized = this.#storageResized;
+    const startSlot = storageResized ? 0 : Math.min(this.#dirtyStart, count);
+    const endSlot = storageResized ? count : Math.min(this.#dirtyEnd + 1, count);
     const slotCount = Math.max(0, endSlot - startSlot);
-    const result: RetainedSpriteDirtyRange = {
-      startSlot,
-      slotCount,
-      coversAllActiveSlots: startSlot === 0 && slotCount === count,
-      storageResized: this.#storageResized,
-    };
 
+    this.#dirtyResult.startSlot = startSlot;
+    this.#dirtyResult.slotCount = slotCount;
+    this.#dirtyResult.coversAllActiveSlots = startSlot === 0 && slotCount === count;
+    this.#dirtyResult.storageResized = storageResized;
     this.#dirtyStart = Number.POSITIVE_INFINITY;
     this.#dirtyEnd = -1;
     this.#storageResized = false;
-    return result;
+    return this.#dirtyResult;
   }
 
   #writeIfChanged(slot: number, value: RetainedSpriteRenderData): boolean {
     const base = slot * RETAINED_SPRITE_INSTANCE_FLOATS;
-    if (retainedSpriteDataMatches(this.#data, base, value)) {
+    packRetainedSpriteData(SHARED_PACKED_DATA, value);
+    if (slotMatches(this.#data, base, SHARED_PACKED_DATA)) {
       return false;
     }
 
-    writeRetainedSpriteData(this.#data, slot, value);
+    this.#data.set(SHARED_PACKED_DATA, base);
     this.#markDirty(slot);
     return true;
   }
@@ -152,45 +159,26 @@ export class RetainedSpriteStore {
   }
 }
 
-function retainedSpriteDataMatches(
-  target: Float32Array,
-  base: number,
-  value: RetainedSpriteRenderData,
-): boolean {
-  const imageWidth = value.image.width > 0 ? value.image.width : 1;
-  const imageHeight = value.image.height > 0 ? value.image.height : 1;
-  const frameWidth = value.sourceWidth > 0 ? value.sourceWidth : imageWidth;
-  const frameHeight = value.sourceHeight > 0 ? value.sourceHeight : imageHeight;
-  const insetX = frameWidth > 1 ? 0.5 : 0;
-  const insetY = frameHeight > 1 ? 0.5 : 0;
-
-  return target[base] === value.previousX
-    && target[base + 1] === value.previousY
-    && target[base + 2] === value.currentX
-    && target[base + 3] === value.currentY
-    && target[base + 4] === value.width
-    && target[base + 5] === value.height
-    && target[base + 6] === value.rotation
-    && target[base + 7] === value.anchorX
-    && target[base + 8] === value.anchorY
-    && target[base + 9] === value.flipScaleX
-    && target[base + 10] === value.flipScaleY
-    && target[base + 11] === (value.sourceX + insetX) / imageWidth
-    && target[base + 12] === (value.sourceY + insetY) / imageHeight
-    && target[base + 13] === (value.sourceX + frameWidth - insetX) / imageWidth
-    && target[base + 14] === (value.sourceY + frameHeight - insetY) / imageHeight
-    && target[base + 15] === value.tint.r
-    && target[base + 16] === value.tint.g
-    && target[base + 17] === value.tint.b
-    && target[base + 18] === value.tint.a;
-}
-
 function writeRetainedSpriteData(
   target: Float32Array,
   slot: number,
   value: RetainedSpriteRenderData,
 ): void {
-  const base = slot * RETAINED_SPRITE_INSTANCE_FLOATS;
+  packRetainedSpriteData(SHARED_PACKED_DATA, value);
+  target.set(SHARED_PACKED_DATA, slot * RETAINED_SPRITE_INSTANCE_FLOATS);
+}
+
+function slotMatches(target: Float32Array, base: number, packed: Float32Array): boolean {
+  for (let offset = 0; offset < RETAINED_SPRITE_INSTANCE_FLOATS; offset += 1) {
+    if (target[base + offset] !== packed[offset]) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function packRetainedSpriteData(target: Float32Array, value: RetainedSpriteRenderData): void {
   const imageWidth = value.image.width > 0 ? value.image.width : 1;
   const imageHeight = value.image.height > 0 ? value.image.height : 1;
   const frameWidth = value.sourceWidth > 0 ? value.sourceWidth : imageWidth;
@@ -198,25 +186,25 @@ function writeRetainedSpriteData(
   const insetX = frameWidth > 1 ? 0.5 : 0;
   const insetY = frameHeight > 1 ? 0.5 : 0;
 
-  target[base] = value.previousX;
-  target[base + 1] = value.previousY;
-  target[base + 2] = value.currentX;
-  target[base + 3] = value.currentY;
-  target[base + 4] = value.width;
-  target[base + 5] = value.height;
-  target[base + 6] = value.rotation;
-  target[base + 7] = value.anchorX;
-  target[base + 8] = value.anchorY;
-  target[base + 9] = value.flipScaleX;
-  target[base + 10] = value.flipScaleY;
-  target[base + 11] = (value.sourceX + insetX) / imageWidth;
-  target[base + 12] = (value.sourceY + insetY) / imageHeight;
-  target[base + 13] = (value.sourceX + frameWidth - insetX) / imageWidth;
-  target[base + 14] = (value.sourceY + frameHeight - insetY) / imageHeight;
-  target[base + 15] = value.tint.r;
-  target[base + 16] = value.tint.g;
-  target[base + 17] = value.tint.b;
-  target[base + 18] = value.tint.a;
+  target[0] = value.previousX;
+  target[1] = value.previousY;
+  target[2] = value.currentX;
+  target[3] = value.currentY;
+  target[4] = value.width;
+  target[5] = value.height;
+  target[6] = value.rotation;
+  target[7] = value.anchorX;
+  target[8] = value.anchorY;
+  target[9] = value.flipScaleX;
+  target[10] = value.flipScaleY;
+  target[11] = (value.sourceX + insetX) / imageWidth;
+  target[12] = (value.sourceY + insetY) / imageHeight;
+  target[13] = (value.sourceX + frameWidth - insetX) / imageWidth;
+  target[14] = (value.sourceY + frameHeight - insetY) / imageHeight;
+  target[15] = value.tint.r;
+  target[16] = value.tint.g;
+  target[17] = value.tint.b;
+  target[18] = value.tint.a;
 }
 
 function copyRetainedSpriteSlot(target: Float32Array, sourceSlot: number, destinationSlot: number): void {

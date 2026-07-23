@@ -4,7 +4,7 @@ export type {
     Renderable,
     RendererConfig, Settable, ShaderQuadOptions, ShapeRenderData,
     ShapeRenderInput,
-    SpriteRenderData, TextureCacheConfig,
+    SpriteRenderData, SpriteRenderState, TextureCacheConfig,
     TextureHandle,
     TextureInfo,
     TextureState,
@@ -21,7 +21,6 @@ export { RenderCommand } from "@engine/render/render-command";
 export { Renderer2D } from "@engine/render/renderers/renderer2d";
 
 // ── Renderer API backends ───────────────────────────────────────
-export { Canvas2DRenderAPI } from "@engine/render/renderers/canvas2d/canvas2d-renderer-api";
 export { WebGLRenderAPI } from "@engine/render/renderers/webGL/api";
 
 // ── Texture cache ───────────────────────────────────────────────
@@ -42,4 +41,3 @@ export type {
     FramePoolFactory,
     MergeFrameAllocatorRegistry
 } from "@engine/render/frame-allocator/types";
-

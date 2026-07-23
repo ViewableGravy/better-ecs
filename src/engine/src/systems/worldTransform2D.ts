@@ -250,7 +250,7 @@ function syncEntitySubtree(
   }
 
   COMPUTED_ENTITY_SET.add(entityId);
-  world.notifyComponentChanged(entityId, worldTransform);
+  world.notifyEntityChanged(entityId);
 
   const childEntityIds = CHILDREN_BY_PARENT.get(entityId);
   if (!childEntityIds) {
