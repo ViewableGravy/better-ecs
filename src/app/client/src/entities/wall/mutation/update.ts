@@ -2,11 +2,11 @@ import { RENDER_LAYERS } from "@client/consts";
 import type { PlaceableWallVisualVariant } from "@client/entities/wall/query/variant";
 import { createPlaceableWallSprite } from "@client/entities/wall/render/createPlaceableWallSprite";
 import { HALF_BOX_SIZE } from "@client/systems/world/build-mode/const";
-import type { EntityId, UserWorld } from "@engine";
+import type { EntityId, Registry } from "@engine";
 import { Sprite, Transform2D } from "@engine/components";
 
 export function updatePlaceableWallVisual(
-	world: UserWorld,
+	world: Registry,
 	wallEntityId: EntityId,
 	spriteVariant: PlaceableWallVisualVariant,
 ): void {

@@ -57,7 +57,7 @@ export const engineFrameAllocatorRegistry: EngineFrameAllocatorRegistry = {
   "engine:render-command": createPoolFactory(
     (): RenderCommand => ({
       type: "shape-entity",
-      world: null,
+      registry: null,
       entityId: null,
       shape: null,
       scope: "gameplay",
@@ -68,7 +68,7 @@ export const engineFrameAllocatorRegistry: EngineFrameAllocatorRegistry = {
     }),
     (value) => {
       value.type = "shape-entity";
-      value.world = null;
+      value.registry = null;
       value.entityId = null;
       value.shape = null;
       value.scope = "gameplay";

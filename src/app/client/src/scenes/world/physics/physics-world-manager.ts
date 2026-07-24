@@ -1,4 +1,5 @@
-import type { UserWorld } from "@engine";
+import type { Registry } from "@engine";
+import { syncWorldTransform2D } from "@engine/systems/worldTransform2D";
 import { PhysicsWorld } from "@libs/physics";
 
 /**********************************************************************************************************
@@ -14,13 +15,13 @@ type PhysicsWorldState = {
  **********************************************************************************************************/
 export class PhysicsWorldManager {
   private static frameId = 0;
-  private static readonly statesByWorld = new WeakMap<UserWorld, PhysicsWorldState>();
+  private static readonly statesByWorld = new WeakMap<Registry, PhysicsWorldState>();
 
   /**
    * Must be called at the start of each frame with all worlds that will require a PhysicsWorld this frame, 
    * to ensure they are built and up to date.
    */
-  public static beginFrame(worlds: Iterable<UserWorld>): void {
+  public static beginFrame(worlds: Iterable<Registry>): void {
     PhysicsWorldManager.frameId += 1;
 
     for (const world of worlds) {
@@ -28,14 +29,16 @@ export class PhysicsWorldManager {
     }
   }
 
-  public static requireWorld(world: UserWorld): PhysicsWorld {
+  public static requireWorld(world: Registry): PhysicsWorld {
     return PhysicsWorldManager.ensureBuilt(world);
   }
 
   /**
    * Ensures a PhysicsWorld is built for the given world and up to date for the current frame, returning it.
    */
-  private static ensureBuilt(world: UserWorld): PhysicsWorld {
+  private static ensureBuilt(world: Registry): PhysicsWorld {
+    syncWorldTransform2D(world);
+
     let state = PhysicsWorldManager.statesByWorld.get(world);
 
     if (!state) {

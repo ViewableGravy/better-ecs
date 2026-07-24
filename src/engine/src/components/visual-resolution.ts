@@ -1,12 +1,12 @@
 import { Rgba } from "@engine/components/sprite/sprite";
 import { FillColor, Opacity, OpacityTrack, StrokeColor, Tint, TintTrack } from "@engine/components/visual";
 import type { EntityId } from "@engine/ecs/entity";
-import type { UserWorld } from "@engine/ecs/world";
+import type { Registry } from "@engine/ecs/registry";
 
 const DEFAULT_TINT = new Rgba(1, 1, 1, 1);
 const DEFAULT_FILL = new Rgba(1, 1, 1, 1);
 
-export function resolveEntityTint(world: UserWorld, entityId: EntityId, out: Rgba): Rgba {
+export function resolveEntityTint(world: Registry, entityId: EntityId, out: Rgba): Rgba {
   const tint = world.get(entityId, Tint)?.value ?? DEFAULT_TINT;
   const tintTrack = world.get(entityId, TintTrack)?.value;
   const opacity = world.get(entityId, Opacity)?.value ?? 1;
@@ -28,7 +28,7 @@ export function resolveEntityTint(world: UserWorld, entityId: EntityId, out: Rgb
   return out;
 }
 
-export function resolveEntityFillColor(world: UserWorld, entityId: EntityId, out: Rgba): Rgba {
+export function resolveEntityFillColor(world: Registry, entityId: EntityId, out: Rgba): Rgba {
   const fill = world.get(entityId, FillColor)?.value ?? DEFAULT_FILL;
   const opacity = world.get(entityId, Opacity)?.value ?? 1;
   const opacityTrack = world.get(entityId, OpacityTrack)?.value ?? 1;
@@ -40,7 +40,7 @@ export function resolveEntityFillColor(world: UserWorld, entityId: EntityId, out
   return out;
 }
 
-export function resolveEntityStrokeColor(world: UserWorld, entityId: EntityId, out: Rgba): Rgba | null {
+export function resolveEntityStrokeColor(world: Registry, entityId: EntityId, out: Rgba): Rgba | null {
   const stroke = world.get(entityId, StrokeColor)?.value;
   if (!stroke) {
     return null;

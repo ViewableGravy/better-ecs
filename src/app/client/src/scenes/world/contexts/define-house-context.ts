@@ -1,33 +1,20 @@
-import { HOUSE_INTERIOR } from "@client/components/render-visibility";
 import { spawnBackground } from "@client/entities/background";
 import { spawnChair } from "@client/entities/chair";
 import { spawnDoor } from "@client/entities/door";
 import { spawnTable } from "@client/entities/table";
 import { spawnWall } from "@client/entities/wall";
-import { setupContextCamera } from "@client/scenes/world/contexts/shared";
 import { createHouseLayout } from "@client/scenes/world/utilities/house-layout";
+import type { Registry } from "@engine";
 import { Rgba } from "@engine/components";
-import { defineContext, type ContextId } from "@libs/spatial-contexts";
 
 type HouseContextOptions = {
-  overworldId: ContextId;
-  houseId: ContextId;
-  dungeonId: ContextId;
   houseHalfWidth: number;
   houseHalfHeight: number;
+  overworldDestination: { x: number; y: number };
+  dungeonDestination: { x: number; y: number };
 };
 
-export function defineHouseContext(options: HouseContextOptions) {
-  return defineContext({
-    id: options.houseId,
-    parentId: options.overworldId,
-    policy: {
-      visibility: "stack",
-      simulation: "focused-only",
-    },
-    setup(world) {
-      setupContextCamera(world);
-
+export function setupHouse(world: Registry, options: HouseContextOptions): void {
       const houseLayout = createHouseLayout(options.houseHalfWidth, options.houseHalfHeight);
 
       spawnBackground(world, {
@@ -36,7 +23,6 @@ export function defineHouseContext(options: HouseContextOptions) {
         color: new Rgba(0.4, 0.3, 0.2, 1),
         stroke: new Rgba(0.18, 0.1, 0.07, 1),
         strokeWidth: 6,
-        role: HOUSE_INTERIOR,
         gridBounds: true,
       });
 
@@ -46,7 +32,6 @@ export function defineHouseContext(options: HouseContextOptions) {
           y: segment.y,
           width: segment.width,
           height: segment.height,
-          role: HOUSE_INTERIOR,
         });
       }
 
@@ -58,7 +43,10 @@ export function defineHouseContext(options: HouseContextOptions) {
         fill: new Rgba(0.25, 0.55, 0.95, 1),
         stroke: new Rgba(0.08, 0.2, 0.42, 1),
         hasCollider: false,
-        role: HOUSE_INTERIOR,
+        portal: {
+          destination: options.overworldDestination,
+          label: "House -> Overworld",
+        },
       });
 
       spawnTable(world, { x: -60, y: -30, radius: 28 });
@@ -72,14 +60,9 @@ export function defineHouseContext(options: HouseContextOptions) {
         x: 120,
         y: 0,
         fill: new Rgba(0.85, 0.85, 0.85, 1),
-        role: HOUSE_INTERIOR,
         portal: {
-          mode: "teleport",
-          targetContextId: options.dungeonId,
-          spawn: { x: 0, y: 160 },
+          destination: options.dungeonDestination,
           label: "House -> Dungeon",
         },
       });
-    },
-  });
 }

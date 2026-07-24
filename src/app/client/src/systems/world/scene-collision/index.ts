@@ -2,12 +2,12 @@ import { PlayerComponent } from "@client/components/player";
 import { PhysicsWorldManager } from "@client/scenes/world/physics/physics-world-manager";
 import { createSystem } from "@engine";
 import { Transform2D } from "@engine/components";
-import { fromContext, World } from "@engine/context";
+import { fromContext, ActiveRegistry } from "@engine/context";
 import { collides, COLLISION_LAYERS, resolve } from "@libs/physics";
 
-export const System = createSystem("main:spatial-contexts-collision-authority")({
+export const System = createSystem("main:scene-collision-authority")({
   system() {
-    const world = fromContext(World);
+    const world = fromContext(ActiveRegistry);
     const physicsWorld = PhysicsWorldManager.requireWorld(world);
     const playerBody = physicsWorld.queryFirstLayer(COLLISION_LAYERS.ACTOR, PlayerComponent);
 

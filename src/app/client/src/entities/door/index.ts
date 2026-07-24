@@ -1,9 +1,8 @@
-import { OUTSIDE, RenderVisibility, type RenderVisibilityRole } from "@client/components/render-visibility";
+import { Portal, type PortalDestination } from "@client/components/portal";
 import { CollisionProfiles } from "@client/scenes/world/physics/collision-profiles";
-import { Vec2, type UserWorld } from "@engine";
+import { Vec2, type Registry } from "@engine";
 import { Debug, FillColor, Rgba, Shape, StrokeColor, Transform2D } from "@engine/components";
 import { RectangleCollider } from "@libs/physics";
-import { Portal, type PortalOpts } from "@libs/spatial-contexts";
 
 type SpawnDoorOptions = {
   x: number;
@@ -12,13 +11,14 @@ type SpawnDoorOptions = {
   height?: number;
   fill: Rgba;
   stroke?: Rgba;
-  portal?: PortalOpts;
+  portal?: {
+    destination: PortalDestination;
+    label?: string;
+  };
   hasCollider?: boolean;
-  role?: RenderVisibilityRole;
-  baseAlpha?: number;
 };
 
-export function spawnDoor(world: UserWorld, opts: SpawnDoorOptions): number {
+export function spawnDoor(world: Registry, opts: SpawnDoorOptions): number {
   const entity = world.create();
   const width = opts.width ?? 40;
   const height = opts.height ?? 80;
@@ -29,7 +29,7 @@ export function spawnDoor(world: UserWorld, opts: SpawnDoorOptions): number {
   world.add(entity, new FillColor(opts.fill));
   world.add(entity, new StrokeColor(opts.stroke ?? new Rgba(0, 0, 0, 1)));
 
-  if (opts.hasCollider ?? true) {
+  if (opts.portal || (opts.hasCollider ?? true)) {
     const halfWidth = width * 0.5;
     const halfHeight = height * 0.5;
 
@@ -37,14 +37,13 @@ export function spawnDoor(world: UserWorld, opts: SpawnDoorOptions): number {
       entity,
       new RectangleCollider(new Vec2(-halfWidth, -halfHeight), new Vec2(width, height)),
     );
-    world.add(entity, CollisionProfiles.solid());
+    world.add(entity, opts.portal ? CollisionProfiles.portal() : CollisionProfiles.solid());
   }
 
   if (opts.portal) {
-    world.add(entity, new Portal(opts.portal));
+    world.add(entity, new Portal(opts.portal.destination, opts.portal.label));
   }
 
-  world.add(entity, new RenderVisibility(opts.role ?? OUTSIDE, opts.baseAlpha ?? 1));
   world.add(entity, new Debug("door"));
 
   return entity;

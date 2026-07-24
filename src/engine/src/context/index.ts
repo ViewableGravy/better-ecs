@@ -9,7 +9,7 @@ import type {
 import type { AnyRenderPipelineContext } from "@engine/core/render-pipeline/context";
 import type { SceneContext } from "@engine/core/scene/scene-context";
 import type { EngineSystem } from "@engine/core/system";
-import type { UserWorld } from "@engine/ecs/world";
+import type { Registry } from "@engine/ecs/registry";
 import { mouseApi, type Mouse as MouseInterface } from "@engine/systems/input/mouse";
 
 /***** TYPE DEFINITIONS *****/
@@ -44,7 +44,7 @@ type DefaultRenderContext = AnyRenderPipelineContext;
  * @example
  * ```ts
  * const engine = fromContext(Engine);
- * const world = fromContext(World);
+ * const registry = fromContext(ActiveRegistry);
  * const input = fromContext(System("engine:input"));
  * const [updateDelta] = fromContext(Delta);
  * ```
@@ -87,9 +87,9 @@ export const Simulation: EngineContextOptions<[updateTick: number, updateTime: n
   select: (engine) => [engine.meta.updateTick, engine.meta.updateTime],
 };
 
-/** Context option that returns the current active world. */
-export const World: EngineContextOptions<UserWorld> = {
-  select: (engine) => engine.world,
+/** Context option that returns the active scene's ECS registry. */
+export const ActiveRegistry: EngineContextOptions<Registry> = {
+  select: (engine) => engine.registry,
 };
 
 /** Context option that returns the current active scene context. */
@@ -123,19 +123,9 @@ export const RenderQueue: RenderContextOptions<DefaultRenderContext["queue"]> = 
   select: (renderContext) => renderContext.queue,
 };
 
-export const RenderWorldProvider: RenderContextOptions<DefaultRenderContext["worldProvider"]> = {
+export const RenderRegistry: RenderContextOptions<DefaultRenderContext["registry"]> = {
   type: "render",
-  select: (renderContext) => renderContext.worldProvider,
-};
-
-export const RenderWorld: RenderContextOptions<DefaultRenderContext["world"]> = {
-  type: "render",
-  select: (renderContext) => renderContext.world,
-};
-
-export const RenderVisibleWorlds: RenderContextOptions<DefaultRenderContext["visibleWorlds"]> = {
-  type: "render",
-  select: (renderContext) => renderContext.visibleWorlds,
+  select: (renderContext) => renderContext.registry,
 };
 
 export const RenderState: RenderContextOptions<DefaultRenderContext["state"]> = {
@@ -165,7 +155,7 @@ export const FromEngine = {
   Engine: Engine,
   Delta: Delta,
   Simulation: Simulation,
-  World: World,
+  Registry: ActiveRegistry,
   Scene: Scene,
   Assets: Assets,
   SetScene: SetScene,
@@ -177,9 +167,7 @@ export const FromRender = {
   Renderer: RenderRenderer,
   FrameAllocator: RenderFrameAllocator,
   Queue: RenderQueue,
-  WorldProvider: RenderWorldProvider,
-  World: RenderWorld,
-  VisibleWorlds: RenderVisibleWorlds,
+  Registry: RenderRegistry,
   State: RenderState,
   InterpolationAlpha: RenderInterpolationAlpha,
 }

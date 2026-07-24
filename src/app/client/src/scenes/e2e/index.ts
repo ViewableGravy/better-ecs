@@ -1,5 +1,4 @@
 import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
-import { OUTSIDE, RenderVisibility } from "@client/components/render-visibility";
 import { spawnGear } from "@client/entities/gear";
 import { GhostPreviewComponent } from "@client/entities/ghost";
 import { ensurePlayer } from "@client/entities/player";
@@ -9,19 +8,20 @@ import { ConveyorUtils } from "@client/entities/transport-belt/ConveyorUtils";
 import type { TransportBeltEntityId } from "@client/entities/transport-belt/types";
 import { setupContextPlayer } from "@client/scenes/world/contexts/shared";
 import { System as CommandAllocatorReset } from "@client/systems/core/command-allocator-reset";
+import { System as PhysicsWorldSync } from "@client/systems/core/physics-world-sync";
 import { System as MotionProbeSystem } from "@client/systems/e2e/motion-probe";
 import { System as BuildModeSystem } from "@client/systems/world/build-mode";
+import { System as BuildModeAuthoritySystem } from "@client/systems/world/build-mode-authority";
+import { System as BuildModeCommandSystem } from "@client/systems/world/build-mode-command";
 import { System as BuildModePresentationSystem } from "@client/systems/world/build-mode-presentation";
 import { Placeable } from "@client/systems/world/build-mode/components";
 import { System as ConveyorEntityMotionSystem } from "@client/systems/world/conveyor-entity-motion";
-import { DebugOverlaySystem } from "@client/systems/world/debug-overlay";
 import { PlayerOrbitSystem } from "@client/systems/world/player-orbit";
-import type { EntityId, UserWorld } from "@engine";
+import type { EntityId, Registry } from "@engine";
 import { AnimatedSprite, Camera, Debug, Transform2D } from "@engine/components";
-import { Engine, FromEngine, fromContext } from "@engine/context";
-import { contextId, createContextScene, defineContext } from "@libs/spatial-contexts";
+import { createScene } from "@engine";
+import { ActiveRegistry, Engine, FromEngine, fromContext } from "@engine/context";
 
-const ROOT_CONTEXT_ID = contextId("default");
 const PLAYER_START_X = 0;
 const PLAYER_START_Y = 0;
 const BELT_ROW_START_X = -120;
@@ -61,10 +61,9 @@ type MotionProbeState = {
 };
 
 type E2ESceneHarness = {
-  world: UserWorld;
+  world: Registry;
   reset: () => void;
   placeableCount: () => number;
-  focusedContextId: () => string;
   resetPlayer: () => void;
   ghostPosition: () => { x: number; y: number } | null;
   pauseEngine: () => void;
@@ -81,33 +80,21 @@ declare global {
   }
 }
 
-export const Scene = createContextScene("E2EScene")({
+export const Scene = createScene("E2EScene")({
   systems: [
     CommandAllocatorReset,
+    PhysicsWorldSync,
+    BuildModeSystem,
+    BuildModeCommandSystem,
     MotionProbeSystem,
     ConveyorEntityMotionSystem,
     PlayerOrbitSystem,
-    BuildModeSystem,
+    BuildModeAuthoritySystem,
     BuildModePresentationSystem,
-    DebugOverlaySystem,
   ],
-  contexts: [
-    defineContext({
-      id: ROOT_CONTEXT_ID,
-      policy: {
-        visibility: "stack",
-        simulation: "focused-only",
-      },
-      setup(world) {
-        setupContextPlayer(world, PLAYER_START_X, PLAYER_START_Y);
-      },
-    }),
-  ],
-  async setup(_world, manager) {
-    manager.ensureWorldLoaded(ROOT_CONTEXT_ID);
-    manager.setFocusedContextId(ROOT_CONTEXT_ID);
-
-    const rootWorld = manager.requireWorld(ROOT_CONTEXT_ID);
+  async setup() {
+    const rootWorld = fromContext(ActiveRegistry);
+    setupContextPlayer(rootWorld, PLAYER_START_X, PLAYER_START_Y);
     const engine = fromContext(Engine);
     const assets = fromContext(FromEngine.Assets);
 
@@ -121,13 +108,10 @@ export const Scene = createContextScene("E2EScene")({
     window.__BETTER_ECS_E2E__ = {
       world: rootWorld,
       reset() {
-        resetPlacementScene(rootWorld, manager);
+        resetPlacementScene(rootWorld);
       },
       placeableCount() {
         return countPlaceables(rootWorld);
-      },
-      focusedContextId() {
-        return manager.focusedContextId;
       },
       resetPlayer() {
         const playerId = ensurePlayer(rootWorld);
@@ -172,11 +156,11 @@ export const Scene = createContextScene("E2EScene")({
   },
 });
 
-function countPlaceables(world: UserWorld): number {
+function countPlaceables(world: Registry): number {
   return world.query(Placeable).length;
 }
 
-function createVisualScenarioHarness(world: UserWorld, assets: VisualScenarioAssetLoader) {
+function createVisualScenarioHarness(world: Registry, assets: VisualScenarioAssetLoader) {
   const state = {
     startTick: 0,
     assetsReady: false,
@@ -239,7 +223,7 @@ function createEmptyVisualScenarioEntities(): VisualScenarioEntities {
   };
 }
 
-function teardownVisualScenario(world: UserWorld, entities: VisualScenarioEntities): void {
+function teardownVisualScenario(world: Registry, entities: VisualScenarioEntities): void {
   for (const beltEntityId of entities.beltEntityIds) {
     destroyTransportBelt(world, beltEntityId);
   }
@@ -257,7 +241,7 @@ function teardownVisualScenario(world: UserWorld, entities: VisualScenarioEntiti
   entities.motionProbeEntityId = null;
 }
 
-function spawnHarnessBeltRow(world: UserWorld): TransportBeltEntityId[] {
+function spawnHarnessBeltRow(world: Registry): TransportBeltEntityId[] {
   return [0, 1, 2, 3].map((offset) => {
     return spawnTransportBelt(world, {
       x: BELT_ROW_START_X + offset * BELT_SPACING,
@@ -267,20 +251,19 @@ function spawnHarnessBeltRow(world: UserWorld): TransportBeltEntityId[] {
   });
 }
 
-function spawnMotionProbe(world: UserWorld): EntityId {
+function spawnMotionProbe(world: Registry): EntityId {
   const entityId = world.create();
   const sprite = createPlayerSprite("moving", "e");
 
   world.add(entityId, new Transform2D(MOTION_PROBE_START_X, MOTION_PROBE_Y, 0));
   world.add(entityId, sprite);
-  world.add(entityId, new RenderVisibility(OUTSIDE, 1));
   world.add(entityId, new Debug("e2e-motion-probe"));
 
   return entityId;
 }
 
 function configureHarnessBeltSprites(
-  world: UserWorld,
+  world: Registry,
   beltEntityIds: readonly TransportBeltEntityId[],
   startTick: number,
 ): void {
@@ -294,7 +277,7 @@ function configureHarnessBeltSprites(
   }
 }
 
-function resetMotionProbe(world: UserWorld, entityId: EntityId, startTick: number): void {
+function resetMotionProbe(world: Registry, entityId: EntityId, startTick: number): void {
   world.tryPatch(entityId, Transform2D, (transform) => {
     transform.curr.pos.set(MOTION_PROBE_START_X, MOTION_PROBE_Y);
     transform.prev.pos.set(MOTION_PROBE_START_X, MOTION_PROBE_Y);
@@ -309,7 +292,7 @@ function resetMotionProbe(world: UserWorld, entityId: EntityId, startTick: numbe
 }
 
 function readTrackedBeltState(
-  world: UserWorld,
+  world: Registry,
   beltEntityIds: readonly TransportBeltEntityId[],
   trackedGearId: EntityId | null,
 ): VisualBeltState | null {
@@ -349,7 +332,7 @@ function readTrackedBeltState(
   return null;
 }
 
-function readMotionProbeState(world: UserWorld, entityId: EntityId | null): MotionProbeState | null {
+function readMotionProbeState(world: Registry, entityId: EntityId | null): MotionProbeState | null {
   if (entityId === null) {
     return null;
   }
@@ -366,7 +349,7 @@ function readMotionProbeState(world: UserWorld, entityId: EntityId | null): Moti
   };
 }
 
-function setPrimaryCameraPosition(world: UserWorld, x: number, y: number): void {
+function setPrimaryCameraPosition(world: Registry, x: number, y: number): void {
   for (const cameraEntityId of world.query(Camera, Transform2D)) {
     world.patch(cameraEntityId, Transform2D, (transform) => {
       transform.curr.pos.set(x, y);
@@ -375,12 +358,10 @@ function setPrimaryCameraPosition(world: UserWorld, x: number, y: number): void 
   }
 }
 
-function resetPlacementScene(world: UserWorld, manager: { setFocusedContextId: (id: typeof ROOT_CONTEXT_ID) => void }): void {
+function resetPlacementScene(world: Registry): void {
   for (const entityId of world.query(Placeable)) {
     world.destroy(entityId);
   }
-
-  manager.setFocusedContextId(ROOT_CONTEXT_ID);
 
   const playerId = ensurePlayer(world);
   world.patch(playerId, Transform2D, (playerTransform) => {

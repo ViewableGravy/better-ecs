@@ -1,6 +1,5 @@
-import { HOUSE_INTERIOR, RenderVisibility } from "@client/components/render-visibility";
 import { CollisionProfiles } from "@client/scenes/world/physics/collision-profiles";
-import type { UserWorld } from "@engine";
+import type { Registry } from "@engine";
 import { Debug, FillColor, Rgba, Shape, Transform2D } from "@engine/components";
 import { CircleCollider } from "@libs/physics";
 
@@ -10,7 +9,7 @@ type SpawnChairOptions = {
   radius?: number;
 };
 
-export function spawnChair(world: UserWorld, opts: SpawnChairOptions): number {
+export function spawnChair(world: Registry, opts: SpawnChairOptions): number {
   const radius = opts.radius ?? 14;
   const entity = world.create();
   const shape = new Shape("circle", radius * 2, radius * 2, 0, 3, 0);
@@ -20,7 +19,6 @@ export function spawnChair(world: UserWorld, opts: SpawnChairOptions): number {
   world.add(entity, new FillColor(new Rgba(0.78, 0.63, 0.46, 1)));
   world.add(entity, new CircleCollider(radius));
   world.add(entity, CollisionProfiles.solid());
-  world.add(entity, new RenderVisibility(HOUSE_INTERIOR, 1));
   world.add(entity, new Debug("chair"));
 
   return entity;

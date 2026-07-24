@@ -1,13 +1,13 @@
 import { createSystem } from "@engine";
 import { Debug, Transform2D } from "@engine/components";
-import { Delta, fromContext, World } from "@engine/context";
+import { Delta, fromContext, ActiveRegistry } from "@engine/context";
 
 const PROBE_SPEED_UNITS_PER_SECOND = 90;
 const PROBE_END_X = 90;
 
 export const System = createSystem("e2e:motion-probe")({
   system() {
-    const world = fromContext(World);
+    const world = fromContext(ActiveRegistry);
     const [updateDelta] = fromContext(Delta);
     const seconds = updateDelta / 1000;
 

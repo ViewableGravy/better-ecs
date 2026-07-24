@@ -2,7 +2,7 @@ import type { EngineClass } from "@engine/core/engine";
 import { createEngine, type CreateEngineOptions } from "@engine/core/factory";
 import type { SceneDefinitionTuple } from "@engine/core/scene/scene.types";
 import type { SystemFactoryTuple } from "@engine/core/system/types";
-import type { UserWorld } from "@engine/ecs/world";
+import type { Registry } from "@engine/ecs/registry";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -65,8 +65,8 @@ export class EngineTestHarness<
     );
   }
 
-  public get world(): UserWorld {
-    return this.engine.world;
+  public get registry(): Registry {
+    return this.engine.registry;
   }
 
   public stepUpdate(updateDelta: number = this.#defaultUpdateDelta): void {

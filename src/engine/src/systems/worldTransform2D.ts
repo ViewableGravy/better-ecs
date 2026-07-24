@@ -1,9 +1,9 @@
 import { Parent, Transform2D, WorldTransform2D } from "@engine/components";
-import { fromContext, Scene } from "@engine/context";
+import { ActiveRegistry, fromContext } from "@engine/context";
 import { createSystem } from "@engine/core/system";
 import type { EntityId } from "@engine/ecs/entity";
 import { composeWorldTransform2D, copyTransform2D } from "@engine/ecs/hierarchy";
-import type { UserWorld } from "@engine/ecs/world";
+import type { Registry } from "@engine/ecs/registry";
 import { transform2DTracker } from "@engine/systems/transform2d-tracker";
 
 const MAX_WORLD_TRANSFORM_DEPTH = 64;
@@ -19,11 +19,7 @@ let PATCH_PARENT_ENTITY_ID: EntityId | null = null;
 export const worldTransform2DSystem = createSystem("engine:worldTransform2D")({
   priority: -1_000_000,
   system() {
-    const scene = fromContext(Scene);
-
-    for (const world of scene.worlds) {
-      syncWorldTransform2D(world);
-    }
+    syncWorldTransform2D(fromContext(ActiveRegistry));
   },
 });
 
@@ -31,7 +27,7 @@ export const worldTransform2DSystem = createSystem("engine:worldTransform2D")({
  * Finalizes published local/topology changes into cached world transforms.
  * Sparse updates visit dirty subtrees; dense updates traverse each hierarchy once.
  */
-export function syncWorldTransform2D(world: UserWorld): void {
+export function syncWorldTransform2D(world: Registry): void {
   const state = transform2DTracker.getState(world);
   if (state.dirtyEntityIds.length === 0) {
     return;
@@ -68,7 +64,7 @@ export function syncWorldTransform2D(world: UserWorld): void {
 }
 
 /** Immediately synchronizes one subtree for editor and other exact-current-value callers. */
-export function syncWorldTransform2DSubtree(world: UserWorld, entityId: EntityId): void {
+export function syncWorldTransform2DSubtree(world: Registry, entityId: EntityId): void {
   const state = transform2DTracker.getState(world);
   COMPUTED_ENTITY_IDS.clear();
   if (syncEntityAncestors(world, entityId, 0)) {
@@ -78,13 +74,13 @@ export function syncWorldTransform2DSubtree(world: UserWorld, entityId: EntityId
   COMPUTED_ENTITY_IDS.clear();
 }
 
-function syncFlatWorld(world: UserWorld, dirtyEntityIds: readonly EntityId[]): void {
+function syncFlatWorld(world: Registry, dirtyEntityIds: readonly EntityId[]): void {
   for (const entityId of dirtyEntityIds) {
     syncEntitySubtree(world, entityId, 0);
   }
 }
 
-function syncSparseWorld(world: UserWorld, dirtyEntityIds: Set<EntityId>): void {
+function syncSparseWorld(world: Registry, dirtyEntityIds: Set<EntityId>): void {
   for (const entityId of dirtyEntityIds) {
     if (hasDirtyAncestor(world, entityId, dirtyEntityIds)) {
       continue;
@@ -94,7 +90,7 @@ function syncSparseWorld(world: UserWorld, dirtyEntityIds: Set<EntityId>): void 
   }
 }
 
-function syncDenseWorld(world: UserWorld, dirtyEntityIds: Set<EntityId>): void {
+function syncDenseWorld(world: Registry, dirtyEntityIds: Set<EntityId>): void {
   for (const entityId of dirtyEntityIds) {
     if (!world.has(entityId, Transform2D)) {
       invalidateWorldTransformSubtree(world, entityId);
@@ -113,7 +109,7 @@ function syncDenseWorld(world: UserWorld, dirtyEntityIds: Set<EntityId>): void {
 }
 
 function hasDirtyAncestor(
-  world: UserWorld,
+  world: Registry,
   entityId: EntityId,
   dirtyEntityIds: ReadonlySet<EntityId>,
 ): boolean {
@@ -132,7 +128,7 @@ function hasDirtyAncestor(
   return false;
 }
 
-function syncEntityAncestors(world: UserWorld, entityId: EntityId, depth: number): boolean {
+function syncEntityAncestors(world: Registry, entityId: EntityId, depth: number): boolean {
   if (depth > MAX_WORLD_TRANSFORM_DEPTH) {
     invalidateWorldTransformSubtree(world, entityId);
     return false;
@@ -165,7 +161,7 @@ function syncEntityAncestors(world: UserWorld, entityId: EntityId, depth: number
 }
 
 function syncEntitySubtree(
-  world: UserWorld,
+  world: Registry,
   entityId: EntityId,
   depth: number,
   consumedDirtyEntityIds?: Set<EntityId>,
@@ -232,7 +228,7 @@ function consumeDirtyEntityId(dirtyEntityIds: EntityId[], consumedEntityId: Enti
 }
 
 function syncChildren(
-  world: UserWorld,
+  world: Registry,
   entityId: EntityId,
   depth: number,
   consumedDirtyEntityIds?: Set<EntityId>,
@@ -250,7 +246,7 @@ function syncChildren(
 }
 
 function writeWorldTransform(
-  world: UserWorld,
+  world: Registry,
   entityId: EntityId,
   localTransform: Transform2D,
   parentWorldTransform: WorldTransform2D | undefined,
@@ -281,7 +277,7 @@ const PATCH_WORLD_TRANSFORM = (worldTransform: WorldTransform2D): void => {
 };
 
 function invalidateWorldTransformSubtree(
-  world: UserWorld,
+  world: Registry,
   entityId: EntityId,
 ): void {
   INVALIDATION_STACK.length = 0;

@@ -12,6 +12,7 @@ import {
     type SceneDefinition,
 } from "@engine/core";
 import { expectTypeOf } from "vitest";
+import { ActiveRegistry, fromContext } from "@engine/context";
 
 // ============================================================
 // Setup: Create test scenes and systems
@@ -26,8 +27,8 @@ const SceneOnlySystem = createSystem("scene:only")({
 
 const MenuScene = createScene("menu")({
   systems: [SceneOnlySystem],
-  setup(world) {
-    world.create();
+  setup() {
+    fromContext(ActiveRegistry).create();
   },
   teardown() {
     // cleanup
@@ -35,8 +36,8 @@ const MenuScene = createScene("menu")({
 });
 
 const GameScene = createScene("game")({
-  setup(world) {
-    world.create();
+  setup() {
+    fromContext(ActiveRegistry).create();
   },
 });
 
@@ -136,8 +137,8 @@ const engineNoScenes = createEngine({
   }),
 });
 
-// World should still be accessible
-expectTypeOf(engineNoScenes.world).not.toBeUndefined();
+// Registry should still be accessible
+expectTypeOf(engineNoScenes.registry).not.toBeUndefined();
 
 // ============================================================
 // Test: AllSceneNames resolves correctly with module augmentation
@@ -186,4 +187,3 @@ expectTypeOf<"test:no-state">().toExtend<TestSystemNames>();
 expectTypeOf<"scene:only">().toExtend<TestSystemNames>();
 
 export {};
-

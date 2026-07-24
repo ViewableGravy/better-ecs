@@ -9,7 +9,7 @@ import {
     isStraightTransportBeltFlow,
     TransportBeltGridQuery,
 } from "@client/entities/transport-belt/core";
-import type { EntityId, UserWorld } from "@engine";
+import type { EntityId, Registry } from "@engine";
 import type { ConveyorSideLoadTransfer } from "./types";
 
 /**********************************************************************************************************
@@ -17,7 +17,7 @@ import type { ConveyorSideLoadTransfer } from "./types";
  **********************************************************************************************************/
 
 export class ConveyorSideLoadUtils {
-  public static resolveDeferredTransfer(world: UserWorld, sourceEntityId: EntityId<ConveyorBeltComponent>): ConveyorSideLoadTransfer | null {
+  public static resolveDeferredTransfer(world: Registry, sourceEntityId: EntityId<ConveyorBeltComponent>): ConveyorSideLoadTransfer | null {
     const sourceConveyor = world.get(sourceEntityId, ConveyorBeltComponent);
 
     if (sourceConveyor.nextEntityId !== null) {
@@ -64,7 +64,7 @@ export class ConveyorSideLoadUtils {
   }
 
   private static findStraightTargetEntityId(
-    world: UserWorld,
+    world: Registry,
     sourceEntityId: EntityId,
     targetCoordinates: ReturnType<typeof TransportBeltGridQuery.resolveBeltCoordinates>,
   ): EntityId | null {

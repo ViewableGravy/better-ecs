@@ -16,7 +16,7 @@ import {
 } from "@client/entities/transport-belt/core";
 import type { TransportBeltEntityId } from "@client/entities/transport-belt/types";
 import type { GridCoordinates } from "@client/systems/world/build-mode/grid-singleton";
-import type { UserWorld } from "@engine";
+import type { Registry } from "@engine";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -62,10 +62,10 @@ const PERPENDICULAR_INCOMING_DIRECTIONS_BY_HEAD_DIRECTION: Readonly<Record<Trans
 };
 
 export class TransportBeltRotationVariantManager {
-  public static deriveBeltFlow(world: UserWorld, target: PreviewBeltVariantDerivationTarget): TransportBeltFlow;
-  public static deriveBeltFlow(world: UserWorld, target: ExistingBeltVariantDerivationTarget): TransportBeltFlow | null;
-  public static deriveBeltFlow(world: UserWorld, target: TransportBeltVariantDerivationTarget): TransportBeltFlow | null;
-  public static deriveBeltFlow(world: UserWorld, target: TransportBeltVariantDerivationTarget): TransportBeltFlow | null {
+  public static deriveBeltFlow(world: Registry, target: PreviewBeltVariantDerivationTarget): TransportBeltFlow;
+  public static deriveBeltFlow(world: Registry, target: ExistingBeltVariantDerivationTarget): TransportBeltFlow | null;
+  public static deriveBeltFlow(world: Registry, target: TransportBeltVariantDerivationTarget): TransportBeltFlow | null;
+  public static deriveBeltFlow(world: Registry, target: TransportBeltVariantDerivationTarget): TransportBeltFlow | null {
     const state = this.resolveDerivationState(world, target);
 
     if (state === null) {
@@ -77,9 +77,9 @@ export class TransportBeltRotationVariantManager {
     return [tailDirection, state.headDirection];
   }
 
-  public static deriveBeltVariant(world: UserWorld, target: PreviewBeltVariantDerivationTarget): TransportBeltVariant;
-  public static deriveBeltVariant(world: UserWorld, target: ExistingBeltVariantDerivationTarget): TransportBeltVariant | null;
-  public static deriveBeltVariant(world: UserWorld, target: TransportBeltVariantDerivationTarget): TransportBeltVariant | null {
+  public static deriveBeltVariant(world: Registry, target: PreviewBeltVariantDerivationTarget): TransportBeltVariant;
+  public static deriveBeltVariant(world: Registry, target: ExistingBeltVariantDerivationTarget): TransportBeltVariant | null;
+  public static deriveBeltVariant(world: Registry, target: TransportBeltVariantDerivationTarget): TransportBeltVariant | null {
     const flow = this.deriveBeltFlow(world, target);
 
     if (flow === null) {
@@ -97,7 +97,7 @@ export class TransportBeltRotationVariantManager {
     return getTransportBeltVariantByFlow(tailDirection, headDirection) ?? STRAIGHT_VARIANT_BY_HEAD_DIRECTION[headDirection];
   }
 
-  private static resolveDerivationState(world: UserWorld, target: TransportBeltVariantDerivationTarget): BeltVariantDerivationState | null {
+  private static resolveDerivationState(world: Registry, target: TransportBeltVariantDerivationTarget): BeltVariantDerivationState | null {
     if ("beltEntityId" in target) {
       const belt = world.get(target.beltEntityId, ConveyorBeltComponent);
 
@@ -121,7 +121,7 @@ export class TransportBeltRotationVariantManager {
     };
   }
 
-  private static deriveTailDirection(world: UserWorld, state: BeltVariantDerivationState): TransportBeltDirection {
+  private static deriveTailDirection(world: Registry, state: BeltVariantDerivationState): TransportBeltDirection {
     const defaultTailDirection = getOppositeTransportBeltDirection(state.headDirection);
 
     if (this.shouldStayStraight(world, state, defaultTailDirection)) {
@@ -142,7 +142,7 @@ export class TransportBeltRotationVariantManager {
   }
 
   private static shouldStayStraight(
-    world: UserWorld,
+    world: Registry,
     state: BeltVariantDerivationState,
     defaultTailDirection: TransportBeltDirection,
   ): boolean {
@@ -151,7 +151,7 @@ export class TransportBeltRotationVariantManager {
   }
 
   private static doesHeadConsumeOutput(
-    world: UserWorld,
+    world: Registry,
     coordinates: GridCoordinates,
     direction: TransportBeltDirection,
   ): boolean {
@@ -167,7 +167,7 @@ export class TransportBeltRotationVariantManager {
   }
 
   private static resolveUniqueIncomingDirection(
-    world: UserWorld,
+    world: Registry,
     coordinates: GridCoordinates,
     headDirection: TransportBeltDirection,
   ): TransportBeltDirection | null {
@@ -196,7 +196,7 @@ export class TransportBeltRotationVariantManager {
   }
 
   private static isIncomingFromDirection(
-    world: UserWorld,
+    world: Registry,
     coordinates: GridCoordinates,
     direction: TransportBeltDirection,
   ): boolean {
@@ -212,7 +212,7 @@ export class TransportBeltRotationVariantManager {
   }
 
   private static resolveNeighborFlow(
-    world: UserWorld,
+    world: Registry,
     coordinates: GridCoordinates,
     direction: TransportBeltDirection,
   ): TransportBeltFlow | null {

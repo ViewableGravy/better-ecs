@@ -1,10 +1,10 @@
 import { Shape } from "@engine/components";
 import { FromRender, fromContext } from "@engine/context";
-import type { UserWorld } from "@engine/ecs/world";
+import type { Registry } from "@engine/ecs/registry";
 import type { EngineFrameAllocatorRegistry, InternalFrameAllocator, RenderQueue } from "@engine/render";
 
 export function queueShapes(
-  world: UserWorld = fromContext(FromRender.World),
+  world: Registry = fromContext(FromRender.Registry),
   queue: RenderQueue = fromContext(FromRender.Queue),
   frameAllocator: InternalFrameAllocator<EngineFrameAllocatorRegistry> = fromContext(
     FromRender.FrameAllocator,
@@ -13,7 +13,7 @@ export function queueShapes(
   world.forEach(Shape, (id, shape) => {
     const command = frameAllocator.acquire("engine:render-command");
     command.type = "shape-entity";
-    command.world = world;
+    command.registry = world;
     command.entityId = id;
     command.shape = null;
     command.scope = "gameplay";

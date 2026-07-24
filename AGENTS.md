@@ -14,7 +14,6 @@ src/
   libs/
     fps/              → Package Displays FPS information to the user
     physics/          → Provides physics + collisions for applications
-    spatial-contexts/ → Provides ability to render a world inside another world
   utils/              → Shared utilities available to all packages
 .github/              → Skills available to agent
 docs/                 → All documentation for the project
@@ -43,7 +42,7 @@ You are a very smart model, and very capable, but you have a limited context win
 - Use symbol/text search first, then follow usages.
 - Before creating any new helper/function, always search for an existing implementation and reuse/extend it when viable.
 - Good first patterns:
-  - API names (`requireWorld`, `invariantQuery`, `resolveWorldTransform2D`)
+  - API names (`ActiveRegistry`, `invariantQuery`, `resolveWorldTransform2D`)
   - System definitions (`createSystem("...")`)
   - Class suffixes (`Manager`, `Mutator`)
 
@@ -62,7 +61,6 @@ You are a very smart model, and very capable, but you have a limited context win
 - `@libs/commands` / `@libs/commands/*` → `src/libs/commands/src`
 - `@libs/fps` / `@libs/fps/*` → `src/libs/fps/src`
 - `@libs/physics` / `@libs/physics/*` → `src/libs/physics/src`
-- `@libs/spatial-contexts` / `@libs/spatial-contexts/*` → `src/libs/spatial-contexts/src`
 - `@hmr` / `@hmr/*` → `vite/engine-hmr`
 
 ### App/package-local aliases

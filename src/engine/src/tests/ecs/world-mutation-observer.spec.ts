@@ -1,17 +1,16 @@
 import { Parent, Sprite, Transform2D } from "@engine/components";
 import type { EntityId } from "@engine/ecs/entity";
 import {
-  UserWorld,
-  World,
+  Registry,
   type ComponentMutationKind,
-  type WorldMutationObserver,
-} from "@engine/ecs/world";
+  type RegistryMutationObserver,
+} from "@engine/ecs/registry";
 import { describe, expect, it, vi } from "vitest";
 
-describe("UserWorld mutation observers", () => {
+describe("Registry mutation observers", () => {
   it("reports entity invalidation for structural changes and stops after unsubscribe", () => {
-    const world = new UserWorld(new World("scene"));
-    const entityChanged = vi.fn<NonNullable<WorldMutationObserver["entityChanged"]>>();
+    const world = new Registry();
+    const entityChanged = vi.fn<NonNullable<RegistryMutationObserver["entityChanged"]>>();
     const unsubscribe = world.observeMutations({ entityChanged });
     const entityId = world.create();
     const sprite = new Sprite("test", 16, 16);
@@ -30,9 +29,9 @@ describe("UserWorld mutation observers", () => {
   });
 
   it("publishes one component-aware event for patch while direct writes remain untracked", () => {
-    const world = new UserWorld(new World("scene"));
-    const entityChanged = vi.fn<NonNullable<WorldMutationObserver["entityChanged"]>>();
-    const componentChanged = vi.fn<NonNullable<WorldMutationObserver["componentChanged"]>>();
+    const world = new Registry();
+    const entityChanged = vi.fn<NonNullable<RegistryMutationObserver["entityChanged"]>>();
+    const componentChanged = vi.fn<NonNullable<RegistryMutationObserver["componentChanged"]>>();
     world.observeMutations({ entityChanged, componentChanged });
     const entityId = world.create();
     const sprite = new Sprite("test", 16, 16);
@@ -59,9 +58,9 @@ describe("UserWorld mutation observers", () => {
   });
 
   it("publishes a patch after a callback throws because the component may be partially changed", () => {
-    const world = new UserWorld(new World("scene"));
-    const entityChanged = vi.fn<NonNullable<WorldMutationObserver["entityChanged"]>>();
-    const componentChanged = vi.fn<NonNullable<WorldMutationObserver["componentChanged"]>>();
+    const world = new Registry();
+    const entityChanged = vi.fn<NonNullable<RegistryMutationObserver["entityChanged"]>>();
+    const componentChanged = vi.fn<NonNullable<RegistryMutationObserver["componentChanged"]>>();
     world.observeMutations({ entityChanged, componentChanged });
     const entityId = world.create();
     world.add(entityId, new Sprite("test", 16, 16));
@@ -85,8 +84,8 @@ describe("UserWorld mutation observers", () => {
   });
 
   it("tryPatch mutates when present and does nothing when absent", () => {
-    const world = new UserWorld(new World("scene"));
-    const componentChanged = vi.fn<NonNullable<WorldMutationObserver["componentChanged"]>>();
+    const world = new Registry();
+    const componentChanged = vi.fn<NonNullable<RegistryMutationObserver["componentChanged"]>>();
     world.observeMutations({ componentChanged });
     const entityId = world.create();
     const callback = vi.fn<(sprite: Sprite) => void>((sprite) => {
@@ -107,8 +106,8 @@ describe("UserWorld mutation observers", () => {
   });
 
   it("patch requires the component to exist without invoking the callback or publishing", () => {
-    const world = new UserWorld(new World("scene"));
-    const componentChanged = vi.fn<NonNullable<WorldMutationObserver["componentChanged"]>>();
+    const world = new Registry();
+    const componentChanged = vi.fn<NonNullable<RegistryMutationObserver["componentChanged"]>>();
     world.observeMutations({ componentChanged });
     const entityId = world.create();
     const callback = vi.fn<(sprite: Sprite) => void>();
@@ -121,7 +120,7 @@ describe("UserWorld mutation observers", () => {
   });
 
   it("reports component type and mutation kind for add, replace, patch, and remove", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const changes: Array<[Function, ComponentMutationKind]> = [];
     world.observeMutations({
       componentChanged: (_, __, componentType, kind) => {
@@ -146,7 +145,7 @@ describe("UserWorld mutation observers", () => {
   });
 
   it("rejects Parent patching in favor of hierarchy operations", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const parentEntityId = world.create();
     const childEntityId = world.create();
     world.setParent(childEntityId, parentEntityId);
@@ -157,7 +156,7 @@ describe("UserWorld mutation observers", () => {
   });
 
   it("reports component removals before the final destroyed-entity invalidation", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const changedEntityIds: EntityId[] = [];
     const removedComponentTypes: Function[] = [];
     world.observeMutations({
@@ -185,8 +184,8 @@ describe("UserWorld mutation observers", () => {
   });
 
   it("reports one invalidation when a component is replaced", () => {
-    const world = new UserWorld(new World("scene"));
-    const entityChanged = vi.fn<NonNullable<WorldMutationObserver["entityChanged"]>>();
+    const world = new Registry();
+    const entityChanged = vi.fn<NonNullable<RegistryMutationObserver["entityChanged"]>>();
     world.observeMutations({ entityChanged });
     const entityId = world.create();
     world.add(entityId, new Sprite("first", 16, 16));

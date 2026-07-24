@@ -45,19 +45,32 @@ export const System = createInitializationSystem(() => {
 
   canvasContainer.append(sceneSwitcherRoot);
 
-  invariantById("to-e2e").onclick = () => {
+  const mainButton = invariantById<HTMLButtonElement>("to-main");
+  const e2eButton = invariantById<HTMLButtonElement>("to-e2e");
+  const benchmarkButton = invariantById<HTMLButtonElement>("to-benchmark");
+  const syncTransitionState = (isTransitioning: boolean): void => {
+    mainButton.disabled = isTransitioning;
+    e2eButton.disabled = isTransitioning;
+    benchmarkButton.disabled = isTransitioning;
+  };
+  const unsubscribeTransitionState = engine.scene.onTransitionStateChange(syncTransitionState);
+
+  syncTransitionState(engine.scene.isTransitioning);
+
+  e2eButton.onclick = () => {
     setScene("E2EScene");
   };
 
-  invariantById("to-main").onclick = () => {
+  mainButton.onclick = () => {
     setScene("MainScene");
   };
 
-  invariantById("to-benchmark").onclick = () => {
+  benchmarkButton.onclick = () => {
     setScene("BenchmarkScene");
   };
 
   return () => {
+    unsubscribeTransitionState();
     window.removeEventListener("keydown", pauseToggleKeydownHandler);
   };
 });

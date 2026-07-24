@@ -1,39 +1,22 @@
-import { OUTSIDE } from "@client/components/render-visibility";
 import { spawnDoor } from "@client/entities/door";
 import { spawnDungeon } from "@client/entities/dungeon";
-import { setupContextCamera } from "@client/scenes/world/contexts/shared";
+import type { Registry } from "@engine";
 import { Rgba } from "@engine/components";
-import { defineContext, type ContextId } from "@libs/spatial-contexts";
 
 type DungeonContextOptions = {
-  overworldId: ContextId;
-  dungeonId: ContextId;
+  overworldDestination: { x: number; y: number };
 };
 
-export function defineDungeonContext(options: DungeonContextOptions) {
-  return defineContext({
-    id: options.dungeonId,
-    parentId: options.overworldId,
-    policy: {
-      visibility: "focused-only",
-      simulation: "focused-only",
-    },
-    setup(world) {
-      setupContextCamera(world);
+export function setupDungeon(world: Registry, options: DungeonContextOptions): void {
       spawnDungeon(world);
 
       spawnDoor(world, {
         x: 50,
         y: 220,
         fill: new Rgba(0.95, 0.4, 0.35, 1),
-        role: OUTSIDE,
         portal: {
-          mode: "teleport",
-          targetContextId: options.overworldId,
-          spawn: { x: 0, y: 40 },
+          destination: options.overworldDestination,
           label: "Dungeon -> Overworld",
         },
       });
-    },
-  });
 }

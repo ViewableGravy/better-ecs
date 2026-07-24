@@ -1,20 +1,13 @@
-import type { MousePoint, RegisteredEngine, UserWorld } from "@engine";
-import type { ContextId, ContextRelationship } from "@libs/spatial-contexts";
-import { resolveDeepestContextAtPoint, SpatialContexts } from "@libs/spatial-contexts";
+import type { MousePoint, RegisteredEngine, Registry } from "@engine";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
  **********************************************************************************************************/
 export type PlacementTargetResolution = {
-  inputWorld: UserWorld;
-  focusedWorld: UserWorld;
-  previewWorld: UserWorld;
-  previewContextId?: ContextId;
-  focusedContextId?: ContextId;
-  hoveredContextId?: ContextId;
-  commitContextId?: ContextId;
-  relationship?: ContextRelationship;
-  commitWorld?: UserWorld;
+  inputWorld: Registry;
+  focusedWorld: Registry;
+  previewWorld: Registry;
+  commitWorld: Registry;
   blocked: boolean;
 };
 
@@ -25,25 +18,13 @@ export function resolvePlacementWorld(
   engine: RegisteredEngine,
   worldPointer: MousePoint,
 ): PlacementTargetResolution {
-  const manager = SpatialContexts.requireManager(engine.scene.context);
-
-  const focusedContextId = manager.focusedContextId;
-  const focusedWorld = manager.focusedWorld;
-  const hoveredContextId = resolveDeepestContextAtPoint(manager, worldPointer);
-  const relationship = manager.getContextRelationship(focusedContextId, hoveredContextId);
-  const canPlaceInHoveredWorld = relationship === "self" || relationship === "ancestor";
-  const commitWorld = canPlaceInHoveredWorld ? manager.getWorld(hoveredContextId) : undefined;
+  const registry = engine.scene.registry;
 
   return {
-    inputWorld: focusedWorld,
-    focusedWorld,
-    previewWorld: focusedWorld,
-    previewContextId: focusedContextId,
-    focusedContextId,
-    hoveredContextId,
-    commitContextId: canPlaceInHoveredWorld ? hoveredContextId : undefined,
-    relationship,
-    commitWorld,
-    blocked: !canPlaceInHoveredWorld || !commitWorld,
+    inputWorld: registry,
+    focusedWorld: registry,
+    previewWorld: registry,
+    commitWorld: registry,
+    blocked: false,
   };
 }

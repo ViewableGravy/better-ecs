@@ -12,11 +12,10 @@ export const boxPlacementDefinition = createBuildItemSpec({
   item: "box",
   preview: createGhostPreviewAdapter(BoxGhost),
   lifecycle: {
-    commit({ world, snappedX, snappedY, renderVisibilityRole }) {
+    commit({ world, snappedX, snappedY }) {
       spawnBox(world, {
         snappedX,
         snappedY,
-        renderVisibilityRole,
       });
     },
   },

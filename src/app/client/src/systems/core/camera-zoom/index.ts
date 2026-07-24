@@ -1,6 +1,6 @@
 import { clamp, createSystem } from "@engine";
 import { Camera } from "@engine/components";
-import { System as ContextSystem, Engine, fromContext } from "@engine/context";
+import { ActiveRegistry, System as ContextSystem, Engine, fromContext } from "@engine/context";
 
 const MIN_ORTHO_SIZE = 120;
 const MAX_ORTHO_SIZE = 2400;
@@ -47,18 +47,14 @@ export const System = createSystem("camera-zoom")({
     data.pendingWheelDelta = 0;
 
     const zoomFactor = Math.exp(wheelDelta * ZOOM_SENSITIVITY);
-    const engine = fromContext(Engine);
+    const registry = fromContext(ActiveRegistry);
 
-    for (const world of engine.scene.context.worlds) {
-      for (const cameraId of world.query(Camera)) {
-        const camera = world.get(cameraId, Camera);
-        if (!camera) {
-          continue;
-        }
-
-        const nextOrthoSize = camera.orthoSize * zoomFactor;
-        camera.orthoSize = clamp(nextOrthoSize, MIN_ORTHO_SIZE, MAX_ORTHO_SIZE);
-      }
+    for (const cameraId of registry.query(Camera)) {
+      const camera = registry.require(cameraId, Camera);
+      const nextOrthoSize = camera.orthoSize * zoomFactor;
+      registry.patch(cameraId, Camera, (patchedCamera) => {
+        patchedCamera.orthoSize = clamp(nextOrthoSize, MIN_ORTHO_SIZE, MAX_ORTHO_SIZE);
+      });
     }
   },
 });

@@ -16,18 +16,15 @@ export function emitBuildModeCommands(
   gridCoordinates: GridCoordinates,
   placementTarget: PlacementTargetResolution,
 ): void {
-  const commitContextId = placementTarget.commitContextId;
-
-  if (commitContextId && data.pendingDelete) {
+  if (data.pendingDelete) {
     commands.push(CommandAllocator.acquire(
       "client:build-mode-delete-command",
-      commitContextId,
       gridCoordinates[0],
       gridCoordinates[1],
     ));
   }
 
-  if (!commitContextId || data.selectedItem === null) {
+  if (data.selectedItem === null) {
     return;
   }
 
@@ -39,7 +36,6 @@ export function emitBuildModeCommands(
     return void commands.push(CommandAllocator.acquire(
       "client:build-mode-place-command",
       data.selectedItem,
-      commitContextId,
       gridCoordinates[0],
       gridCoordinates[1],
       data.placementEndSide,
@@ -52,7 +48,6 @@ export function emitBuildModeCommands(
     commands.push(CommandAllocator.acquire(
       "client:build-mode-place-command",
       data.selectedItem,
-      commitContextId,
       candidate[0],
       candidate[1],
       data.placementEndSide,

@@ -1,5 +1,5 @@
 import { type PlayerAnimationState, type PlayerDirection } from "@client/components/player";
-import type { EntityId, UserWorld } from "@engine";
+import type { EntityId, Registry } from "@engine";
 import { AnimatedSprite } from "@engine/components";
 
 import { createPlayerSprite } from "@client/entities/player/render/createPlayerSprite";
@@ -9,7 +9,7 @@ import { createPlayerSprite } from "@client/entities/player/render/createPlayerS
  **********************************************************************************************************/
 
 export function ensurePlayerSprite(
-  world: UserWorld,
+  world: Registry,
   playerId: EntityId,
   animationState: PlayerAnimationState,
   direction: PlayerDirection,

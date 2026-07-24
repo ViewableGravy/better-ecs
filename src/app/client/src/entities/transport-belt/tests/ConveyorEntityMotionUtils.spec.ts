@@ -12,7 +12,7 @@ import { TransportBeltAutoShapeManager } from "@client/entities/transport-belt/p
 import { PhysicsWorldManager } from "@client/scenes/world/physics/physics-world-manager";
 import { GridSingleton } from "@client/systems/world/build-mode/grid-singleton";
 import { Placement } from "@client/systems/world/build-mode/placement";
-import { UserWorld, World, type EntityId } from "@engine";
+import { Registry, type EntityId } from "@engine";
 import { Parent, Transform2D } from "@engine/components";
 import { resolveWorldTransform2D } from "@engine/ecs/hierarchy";
 import { describe, expect, it } from "vitest";
@@ -24,7 +24,7 @@ const SHARED_DEFERRED_SIDE_LOADS: ConveyorSideLoadTransfer[] = [];
 const SHARED_CONVEYORS_TO_SYNC = new Set<EntityId>();
 
 const ConveyorEntityMotionUtils = {
-  advanceBeltLineFromLeaf(world: UserWorld, leafEntityId: EntityId, updateDelta: number): void {
+  advanceBeltLineFromLeaf(world: Registry, leafEntityId: EntityId, updateDelta: number): void {
     SHARED_BELT_CHAIN_ITERATOR.setLeaf(world, leafEntityId);
     SHARED_CONVEYOR_ENTITY_MOTION_UTILS.set(
       world,
@@ -40,7 +40,7 @@ const ConveyorEntityMotionUtils = {
       SHARED_CONVEYOR_ENTITY_MOTION_UTILS.syncConveyorEntityTransforms(conveyorEntityId);
     }
   },
-  advanceWorld(world: UserWorld, updateDelta: number): void {
+  advanceWorld(world: Registry, updateDelta: number): void {
     if (updateDelta <= 0) {
       return;
     }
@@ -82,7 +82,7 @@ const ConveyorEntityMotionUtils = {
     }
   },
   advanceConveyor(
-    world: UserWorld,
+    world: Registry,
     conveyor: ConveyorBeltComponent,
     nextConveyor: ConveyorBeltComponent | null,
     updateDelta: number,
@@ -94,14 +94,14 @@ const ConveyorEntityMotionUtils = {
       updateDelta,
     );
   },
-  syncConveyorTransforms(world: UserWorld, conveyor: ConveyorBeltComponent): void {
+  syncConveyorTransforms(world: Registry, conveyor: ConveyorBeltComponent): void {
     RuntimeConveyorEntityMotionUtils.syncConveyorTransforms(world, conveyor);
   },
 };
 
 describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
   it("advances later slots first so earlier slots can move into newly freed space", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const conveyorEntityId = world.create();
     const conveyor = new ConveyorBeltComponent("horizontal-right");
     const slot0EntityId = world.create();
@@ -132,7 +132,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
   });
 
   it("moves three cogs with mixed spacing without stalling open slots", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const conveyorEntityId = world.create();
     const conveyor = new ConveyorBeltComponent("vertical-up");
     const slot0EntityId = world.create();
@@ -161,7 +161,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
   });
 
   it("moves four cogs across both lanes without cross-lane deadlock", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const conveyorEntityId = world.create();
     const conveyor = new ConveyorBeltComponent("vertical-down");
     const left0EntityId = world.create();
@@ -194,7 +194,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
   });
 
   it("keeps the tail slot occupied when there is no downstream conveyor", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const conveyorEntityId = world.create();
     const conveyor = new ConveyorBeltComponent("horizontal-right");
     const entityId = world.create();
@@ -218,7 +218,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
   });
 
   it("does not carry stalled tail progress into a newly connected conveyor", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const headBeltId = world.create();
     const tailBeltId = world.create();
     const headBelt = new ConveyorBeltComponent("horizontal-right");
@@ -268,7 +268,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
   });
 
   it("preserves previous world position when transferring an item to the next conveyor", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const headBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "horizontal-right" });
     const tailBeltId = spawnTransportBelt(world, { x: 20, y: 0, variant: "horizontal-right" });
     const entityId = world.create();
@@ -295,7 +295,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
   });
 
   it("preserves previous world position when a side load reparents an item", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const mainBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "vertical-down" });
     const sideBeltId = spawnTransportBelt(world, { x: -20, y: 0, variant: "horizontal-right" });
     const entityId = world.create();
@@ -320,7 +320,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
   });
 
   it("consumes multi-slot progress in one update instead of clamping visuals to the belt end", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const conveyorEntityId = world.create();
     const conveyor = new ConveyorBeltComponent("horizontal-right");
     const entityId = world.create();
@@ -349,7 +349,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
   });
 
   it("resets seam timing when a downstream conveyor is placed after a tail item is already waiting", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const headBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "horizontal-right" });
     const entityId = world.create();
 
@@ -374,7 +374,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
   });
 
   it("does not transfer an end-of-line item into a ghost belt preview", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const headBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "horizontal-right" });
     const entityId = world.create();
 
@@ -399,7 +399,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
   });
 
   it("keeps straight belts on the same timing as the previous full-belt duration", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const conveyorEntityId = world.create();
     const conveyor = new ConveyorBeltComponent("horizontal-right");
     const entityId = world.create();
@@ -421,7 +421,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
   });
 
   it("moves items into the next connected conveyor when traversing from the leaf", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const headBeltId = world.create();
     const tailBeltId = world.create();
     const headBelt = new ConveyorBeltComponent("horizontal-right");
@@ -460,7 +460,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
   });
 
   it("reuses the existing parent component when transferring to the next conveyor", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const headBeltId = world.create();
     const tailBeltId = world.create();
     const headBelt = new ConveyorBeltComponent("horizontal-right");
@@ -491,7 +491,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
   });
 
   it("moves items from a curve into the next connected straight conveyor", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const curveBeltId = world.create();
     const tailBeltId = world.create();
     const curveBelt = new ConveyorBeltComponent("angled-left-up");
@@ -524,7 +524,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
   });
 
   it("advances a closed loop from its designated leaf anchor without revisiting it forever", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const anchorBeltId = world.create();
     const secondBeltId = world.create();
     const thirdBeltId = world.create();
@@ -568,7 +568,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
   });
 
   it("lets the designated loop anchor transfer into its downstream belt", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const anchorBeltId = world.create();
     const secondBeltId = world.create();
     const thirdBeltId = world.create();
@@ -612,7 +612,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
   });
 
   it("keeps loop items moving when adding an adjacent non-connecting belt", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     spawnTransportBelt(world, { x: 0, y: 0, variant: "angled-bottom-right" });
     const secondBeltId = spawnTransportBelt(world, { x: 20, y: 0, variant: "angled-left-bottom" });
     const thirdBeltId = spawnTransportBelt(world, { x: 20, y: 20, variant: "angled-top-left" });
@@ -657,7 +657,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
   });
 
   it("keeps items moving after breaking a loop", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const firstBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "angled-bottom-right" });
     const secondBeltId = spawnTransportBelt(world, { x: 20, y: 0, variant: "angled-left-bottom" });
     const thirdBeltId = spawnTransportBelt(world, { x: 20, y: 20, variant: "angled-top-left" });
@@ -688,7 +688,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
   });
 
   it("keeps the user's loop layout moving after adding an unrelated side belt and deleting from the loop", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const centerBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "vertical-up" });
     const topLeftBeltId = spawnTransportBelt(world, { x: 0, y: -20, variant: "angled-bottom-right" });
     const topRightBeltId = spawnTransportBelt(world, { x: 20, y: -20, variant: "angled-left-bottom" });
@@ -736,7 +736,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
   });
 
   it("keeps multiple carried items advancing in the user's screenshot layout after the opposite belt is deleted", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const centerBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "vertical-up" });
     const topLeftBeltId = spawnTransportBelt(world, { x: 0, y: -20, variant: "angled-bottom-right" });
     const topRightBeltId = spawnTransportBelt(world, { x: 20, y: -20, variant: "angled-left-bottom" });
@@ -782,7 +782,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
   });
 
   it("keeps already-moving items advancing in the larger loop after adding a side belt and deleting the opposite middle belt", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const beltIds = {
       leftTop: spawnTransportBelt(world, { x: 0, y: -20, variant: "angled-bottom-right" }),
       leftUpper: spawnTransportBelt(world, { x: 0, y: 0, variant: "vertical-up" }),
@@ -858,7 +858,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
   });
 
   it("keeps already-moving items advancing when the opposite belt is deleted through placement", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const beltIds = {
       leftTop: spawnTransportBelt(world, { x: 0, y: -20, variant: "angled-bottom-right" }),
       leftUpper: spawnTransportBelt(world, { x: 0, y: 0, variant: "vertical-up" }),
@@ -938,7 +938,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
     ] as const;
 
     for (const removedBelt of removalVariants) {
-      const world = new UserWorld(new World("scene"));
+      const world = new Registry();
       const beltIds = {
         center: spawnTransportBelt(world, { x: 0, y: 0, variant: "vertical-up" }),
         "top-left": spawnTransportBelt(world, { x: 0, y: -20, variant: "angled-bottom-right" }),
@@ -978,7 +978,7 @@ describe("ConveyorEntityMotionUtils.advanceConveyor", () => {
 
 describe("ConveyorWorldMotionUtils.advanceWorld", () => {
   it("starts a side-loaded item at the beginning of the target slot on its first tick", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     spawnTransportBelt(world, { x: 0, y: -20, variant: "vertical-down" });
     const middleBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "vertical-down" });
     spawnTransportBelt(world, { x: 0, y: 20, variant: "vertical-down" });
@@ -1003,7 +1003,7 @@ describe("ConveyorWorldMotionUtils.advanceWorld", () => {
   });
 
   it("side-loads both source lanes into the faced target lane after normal belt motion and syncs transforms", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     spawnTransportBelt(world, { x: 0, y: -20, variant: "vertical-down" });
     const middleBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "vertical-down" });
     spawnTransportBelt(world, { x: 0, y: 20, variant: "vertical-down" });
@@ -1035,7 +1035,7 @@ describe("ConveyorWorldMotionUtils.advanceWorld", () => {
   });
 
   it("waits until the target belt has already advanced before inserting side-loaded items", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const topBeltId = spawnTransportBelt(world, { x: 0, y: -20, variant: "vertical-down" });
     const middleBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "vertical-down" });
     spawnTransportBelt(world, { x: 0, y: 20, variant: "vertical-down" });
@@ -1070,7 +1070,7 @@ describe("ConveyorWorldMotionUtils.advanceWorld", () => {
   });
 
   it("places an east side-loader onto the target belt's left lane when the target flows downward", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     spawnTransportBelt(world, { x: 0, y: -20, variant: "vertical-down" });
     const middleBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "vertical-down" });
     spawnTransportBelt(world, { x: 0, y: 20, variant: "vertical-down" });

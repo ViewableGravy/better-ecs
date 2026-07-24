@@ -14,7 +14,7 @@ import { Rgba } from "@engine/components/sprite/sprite";
 import { Transform2D } from "@engine/components/transform";
 import { fromContext, FromRender } from "@engine/context";
 import { getWorldTransform2D } from "@engine/ecs/hierarchy";
-import type { UserWorld } from "@engine/ecs/world";
+import type { Registry } from "@engine/ecs/registry";
 import type {
     DenseShapeRenderData,
     EngineFrameAllocatorRegistry,
@@ -70,7 +70,7 @@ const TRANSPARENT_FILL = new Rgba(0, 0, 0, 0);
  *   COMPONENT START
  **********************************************************************************************************/
 export function queueGizmos(
-  world: UserWorld = fromContext(FromRender.World),
+  world: Registry = fromContext(FromRender.Registry),
   renderer: Pick<Renderer, "getCameraZoom"> = fromContext(FromRender.Renderer),
   queue: RenderQueue = fromContext(FromRender.Queue),
   frameAllocator: InternalFrameAllocator<EngineFrameAllocatorRegistry> = fromContext(
@@ -659,7 +659,7 @@ function queueLine(
 
   const command = frameAllocator.acquire("engine:render-command");
   command.type = "shape-draw";
-  command.world = null;
+  command.registry = null;
   command.entityId = null;
   command.shape = shape;
   command.scope = "overlay";
@@ -702,7 +702,7 @@ function queueCircle(
 
   const command = frameAllocator.acquire("engine:render-command");
   command.type = "shape-draw";
-  command.world = null;
+  command.registry = null;
   command.entityId = null;
   command.shape = shape;
   command.scope = "overlay";
@@ -743,7 +743,7 @@ function queueRoundedRectangle(
 
   const command = frameAllocator.acquire("engine:render-command");
   command.type = "shape-draw";
-  command.world = null;
+  command.registry = null;
   command.entityId = null;
   command.shape = shape;
   command.scope = "overlay";

@@ -1,11 +1,11 @@
 import { OrbitMotion } from "@client/components/orbit-motion";
 import { createSystem } from "@engine";
 import { Parent, Transform2D } from "@engine/components";
-import { Delta, fromContext, World } from "@engine/context";
+import { Delta, fromContext, ActiveRegistry } from "@engine/context";
 
 export const PlayerOrbitSystem = createSystem("main:player-orbit")({
   system() {
-    const world = fromContext(World);
+    const world = fromContext(ActiveRegistry);
     const [updateDelta] = fromContext(Delta);
     const seconds = updateDelta / 1000;
 

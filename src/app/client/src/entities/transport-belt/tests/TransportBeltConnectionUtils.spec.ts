@@ -7,16 +7,16 @@ import { TransportBeltAutoShapeManager } from "@client/entities/transport-belt/p
 import { TransportBeltTerminalDecoration } from "@client/entities/transport-belt/placement/TransportBeltTerminalDecoration";
 import { TransportBeltConnectionUtils } from "@client/entities/transport-belt/topology/TransportBeltConnectionUtils";
 import { GridSingleton } from "@client/systems/world/build-mode/grid-singleton";
-import { EntityId, UserWorld, World } from "@engine";
+import { EntityId, Registry } from "@engine";
 import { AnimatedSprite, Parent, Transform2D } from "@engine/components";
 import { describe, expect, it } from "vitest";
 
-function countLeafBelts(world: UserWorld, beltEntityIds: readonly EntityId[]): number {
+function countLeafBelts(world: Registry, beltEntityIds: readonly EntityId[]): number {
   return beltEntityIds.filter((beltEntityId) => world.has(beltEntityId, TransportBeltLeaf)).length;
 }
 
 function findTerminalDecorationEntityId(
-  world: UserWorld,
+  world: Registry,
   ownerEntityId: EntityId,
   role: "start" | "end",
 ): EntityId | null {
@@ -36,7 +36,7 @@ function findTerminalDecorationEntityId(
 }
 
 function expectTerminalDecoration(
-  world: UserWorld,
+  world: Registry,
   ownerEntityId: EntityId,
   role: "start" | "end",
   expectedLocalX: number,
@@ -61,7 +61,7 @@ function expectTerminalDecoration(
 
 describe("spawnTransportBelt connectivity", () => {
   it("renders start and end terminal pieces for an isolated belt", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const beltEntityId = spawnTransportBelt(world, { x: 0, y: 0, variant: "horizontal-right" });
 
     expectTerminalDecoration(world, beltEntityId, "start", -20, 0, "transport-belt:start-left_1");
@@ -69,7 +69,7 @@ describe("spawnTransportBelt connectivity", () => {
   });
 
   it("connects adjacent straight belts and marks the tail as a leaf", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const firstBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "horizontal-right" });
     const secondBeltId = spawnTransportBelt(world, { x: 20, y: 0, variant: "horizontal-right" });
 
@@ -91,7 +91,7 @@ describe("spawnTransportBelt connectivity", () => {
   });
 
   it("removes terminal pieces correctly when the upstream belt is placed second", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const tailBeltId = spawnTransportBelt(world, { x: 20, y: 0, variant: "horizontal-right" });
     const headBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "horizontal-right" });
 
@@ -107,7 +107,7 @@ describe("spawnTransportBelt connectivity", () => {
   });
 
   it("connects a straight belt into a compatible curve", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const straightBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "horizontal-right" });
     const curveBeltId = spawnTransportBelt(world, { x: 20, y: 0, variant: "angled-left-up" });
 
@@ -121,7 +121,7 @@ describe("spawnTransportBelt connectivity", () => {
   });
 
   it("connects a curve into a compatible straight belt", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const curveBeltId = spawnTransportBelt(world, { x: 20, y: 0, variant: "angled-left-up" });
     const straightBeltId = spawnTransportBelt(world, { x: 20, y: -20, variant: "vertical-up" });
 
@@ -135,7 +135,7 @@ describe("spawnTransportBelt connectivity", () => {
   });
 
   it("preserves a single designated leaf anchor when a new belt closes a loop", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const firstBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "angled-bottom-right" });
     const secondBeltId = spawnTransportBelt(world, { x: 20, y: 0, variant: "angled-left-bottom" });
     const thirdBeltId = spawnTransportBelt(world, { x: 20, y: 20, variant: "angled-top-left" });
@@ -166,7 +166,7 @@ describe("spawnTransportBelt connectivity", () => {
   });
 
   it("preserves the designated loop leaf anchor when that anchor is reconnected", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const firstBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "angled-bottom-right" });
     const secondBeltId = spawnTransportBelt(world, { x: 20, y: 0, variant: "angled-left-bottom" });
     const thirdBeltId = spawnTransportBelt(world, { x: 20, y: 20, variant: "angled-top-left" });
@@ -184,7 +184,7 @@ describe("spawnTransportBelt connectivity", () => {
   });
 
   it("rewires an inserted middle belt into the existing line", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const firstBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "horizontal-right" });
     const thirdBeltId = spawnTransportBelt(world, { x: 40, y: 0, variant: "horizontal-right" });
     const secondBeltId = spawnTransportBelt(world, { x: 20, y: 0, variant: "horizontal-right" });
@@ -207,7 +207,7 @@ describe("spawnTransportBelt connectivity", () => {
   });
 
   it("does not connect belts that are adjacent but flowing the opposite direction", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const leftBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "horizontal-left" });
     const rightBeltId = spawnTransportBelt(world, { x: 20, y: 0, variant: "horizontal-right" });
 
@@ -223,7 +223,7 @@ describe("spawnTransportBelt connectivity", () => {
   });
 
   it("does not connect tangential belts", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const verticalBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "vertical-up" });
     const horizontalBeltId = spawnTransportBelt(world, { x: 20, y: 0, variant: "horizontal-right" });
 
@@ -237,7 +237,7 @@ describe("spawnTransportBelt connectivity", () => {
   });
 
   it("does not connect a curve whose entry side does not face the current belt", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const straightBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "horizontal-right" });
     const wrongCurveBeltId = spawnTransportBelt(world, { x: 20, y: 0, variant: "angled-right-up" });
 
@@ -249,7 +249,7 @@ describe("spawnTransportBelt connectivity", () => {
   });
 
   it("does not connect or reshape a side belt when the existing line stays straight", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const topBeltId = spawnTransportBelt(world, { x: 20, y: -20, variant: "vertical-down" });
     const middleBeltId = spawnTransportBelt(world, { x: 20, y: 0, variant: "vertical-down" });
     const bottomBeltId = spawnTransportBelt(world, { x: 20, y: 20, variant: "vertical-down" });
@@ -277,7 +277,7 @@ describe("spawnTransportBelt connectivity", () => {
   });
 
   it("ignores a ghost belt when reconnecting a real belt line", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const firstBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "horizontal-right" });
     const secondBeltId = spawnTransportBelt(world, { x: 20, y: 0, variant: "horizontal-right" });
 
@@ -297,7 +297,7 @@ describe("spawnTransportBelt connectivity", () => {
 
 describe("destroyTransportBelt", () => {
   it("restores terminal pieces when a connecting belt is removed", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const firstBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "horizontal-right" });
     const secondBeltId = spawnTransportBelt(world, { x: 20, y: 0, variant: "horizontal-right" });
 
@@ -310,7 +310,7 @@ describe("destroyTransportBelt", () => {
   });
 
   it("breaks the line at the removed belt and destroys child items with it", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const firstBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "horizontal-right" });
     const middleBeltId = spawnTransportBelt(world, { x: 20, y: 0, variant: "horizontal-right" });
     const tailBeltId = spawnTransportBelt(world, { x: 40, y: 0, variant: "horizontal-right" });
@@ -335,7 +335,7 @@ describe("destroyTransportBelt", () => {
   });
 
   it("clears the old loop anchor when breaking a closed loop", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const firstBeltId = spawnTransportBelt(world, { x: 0, y: 0, variant: "angled-bottom-right" });
     const secondBeltId = spawnTransportBelt(world, { x: 20, y: 0, variant: "angled-left-bottom" });
     const thirdBeltId = spawnTransportBelt(world, { x: 20, y: 20, variant: "angled-top-left" });
@@ -357,7 +357,7 @@ describe("destroyTransportBelt", () => {
   });
 
   it("does not let a ghost preview steal the new leaf after breaking a loop", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     spawnTransportBelt(world, { x: 0, y: 0, variant: "angled-bottom-right" });
     const secondBeltId = spawnTransportBelt(world, { x: 20, y: 0, variant: "angled-left-bottom" });
     spawnTransportBelt(world, { x: 20, y: 20, variant: "angled-top-left" });

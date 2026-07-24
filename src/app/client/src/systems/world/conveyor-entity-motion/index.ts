@@ -7,7 +7,7 @@ import type { ConveyorSideLoadTransfer } from "@client/entities/transport-belt/m
 import { ConveyorBeltChainIterator } from "@client/entities/transport-belt/topology/ConveyorBeltChainIterator";
 import type { EntityId } from "@engine";
 import { createSystem } from "@engine";
-import { fromContext, World } from "@engine/context";
+import { fromContext, ActiveRegistry } from "@engine/context";
 
 const beltIterator = new ConveyorBeltChainIterator();
 const motionUtils = new ConveyorEntityMotionUtils();
@@ -16,7 +16,7 @@ const conveyorsToSync = new Set<EntityId>();
 
 export const System = createSystem("main:conveyor-entity-motion-authority")({
   system() {
-    const world = fromContext(World);
+    const world = fromContext(ActiveRegistry);
     const tickDelta = 1;
 
     deferredSideLoads.length = 0;

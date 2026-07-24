@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import { Parent, Transform2D } from "@engine/components";
-import { UserWorld, World } from "@engine/ecs/world";
+import { Registry } from "@engine/ecs/registry";
 import { getEntityAtWorldPoint } from "@engine/core/input/mouse";
 import { syncWorldTransform2D } from "@engine/systems/worldTransform2D";
 
 describe("getEntityAtWorldPoint", () => {
   it("prefers parent by default when child and parent are both selectable", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
 
     const parent = world.create();
     const child = world.create();
@@ -22,7 +22,7 @@ describe("getEntityAtWorldPoint", () => {
   });
 
   it("returns most nested entity when preferParent is false", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
 
     const parent = world.create();
     const child = world.create();
@@ -37,7 +37,7 @@ describe("getEntityAtWorldPoint", () => {
   });
 
   it("does not promote to parent when parent would not be selected", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
 
     const parent = world.create();
     const child = world.create();
@@ -52,7 +52,7 @@ describe("getEntityAtWorldPoint", () => {
   });
 
   it("promotes through multiple ancestors when all are equally selectable", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
 
     const root = world.create();
     const parent = world.create();

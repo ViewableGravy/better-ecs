@@ -8,7 +8,7 @@ export * from "@engine/ecs/entity";
 export * from "@engine/ecs/hierarchy";
 export * from "@engine/ecs/query-cursor";
 export * from "@engine/ecs/storage";
-export * from "@engine/ecs/world";
+export * from "@engine/ecs/registry";
 export * from "@engine/math";
 export { Rectangle } from "@engine/math/geometry/rectangle";
 export * from "@engine/systems/input";

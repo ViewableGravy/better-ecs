@@ -1,7 +1,6 @@
 import { ironGearSheet } from "@client/assets/iron-gear";
-import { OUTSIDE, RenderVisibility } from "@client/components/render-visibility";
 import { RENDER_LAYERS } from "@client/consts";
-import type { EntityId, UserWorld } from "@engine";
+import type { EntityId, Registry } from "@engine";
 import { Debug, Sprite, Transform2D } from "@engine/components";
 
 type GearSizeVariant = Extract<keyof typeof ironGearSheet.sprites, string>;
@@ -19,7 +18,7 @@ const GEAR_RENDER_SIZE_BY_VARIANT: Record<GearSizeVariant, number> = {
   "extra-small": 2,
 };
 
-export function spawnGear(world: UserWorld, options: SpawnGearOptions = {}): EntityId {
+export function spawnGear(world: Registry, options: SpawnGearOptions = {}): EntityId {
   const sizeVariant = options.size ?? "large";
   const assetId: `iron-gear:${GearSizeVariant}` = `iron-gear:${sizeVariant}`;
   const renderSize = GEAR_RENDER_SIZE_BY_VARIANT[sizeVariant];
@@ -33,7 +32,6 @@ export function spawnGear(world: UserWorld, options: SpawnGearOptions = {}): Ent
 
   world.add(gear, new Transform2D(options.x ?? 0, options.y ?? 0, 0));
   world.add(gear, sprite);
-  world.add(gear, new RenderVisibility(OUTSIDE, 1));
   world.add(gear, new Debug("gear"));
 
   return gear;

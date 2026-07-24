@@ -2,7 +2,7 @@ import { OrbitMotion } from "@client/components/orbit-motion";
 import { PlayerComponent } from "@client/components/player";
 import { createPlayerSprite } from "@client/entities/player/render/createPlayerSprite";
 import { CollisionProfiles } from "@client/scenes/world/physics/collision-profiles";
-import { type EntityId, type UserWorld } from "@engine";
+import { type EntityId, type Registry } from "@engine";
 import {
     AnimatedSprite,
     Debug,
@@ -16,7 +16,7 @@ import { CircleCollider } from "@libs/physics";
 
 export const PLAYER_GROUNDED_HITBOX_RADIUS = 3;
 
-export function ensurePlayer(world: UserWorld) {
+export function ensurePlayer(world: Registry) {
   let [player] = world.query(PlayerComponent);
 
   if (!player) {
@@ -26,7 +26,7 @@ export function ensurePlayer(world: UserWorld) {
   return player;
 }
 
-export function spawnPlayer(world: UserWorld): EntityId<PlayerComponent> {
+export function spawnPlayer(world: Registry): EntityId<PlayerComponent> {
   const player = world.create();
   const sprite = createPlayerSprite("idle", "s");
 

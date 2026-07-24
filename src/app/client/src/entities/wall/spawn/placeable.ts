@@ -1,4 +1,3 @@
-import { OUTSIDE, RenderVisibility, type RenderVisibilityRole } from "@client/components/render-visibility";
 import { PlaceableWallComponent } from "@client/entities/wall/components";
 import type { PlaceableWallVisualVariant } from "@client/entities/wall/query/variant";
 import { createPlaceableWallSprite } from "@client/entities/wall/render/createPlaceableWallSprite";
@@ -11,7 +10,7 @@ import {
     BOX_SIZE,
     HALF_BOX_SIZE,
 } from "@client/systems/world/build-mode/metrics";
-import { Vec2, type EntityId, type UserWorld } from "@engine";
+import { Vec2, type EntityId, type Registry } from "@engine";
 import { Debug, Transform2D } from "@engine/components";
 import { RectangleCollider } from "@libs/physics";
 
@@ -22,7 +21,6 @@ import { RectangleCollider } from "@libs/physics";
 type SpawnPlacedPlaceableWallOptions = {
 	snappedX: number;
 	snappedY: number;
-	renderVisibilityRole?: RenderVisibilityRole;
 	spriteVariant?: PlaceableWallVisualVariant;
 	profile?: "placed";
 };
@@ -43,7 +41,7 @@ const PLACEABLE_WALL_COLLIDER_TOP = HALF_BOX_SIZE - PLACEABLE_WALL_COLLIDER_HEIG
  *   COMPONENT START
  **********************************************************************************************************/
 
-export function spawnPlaceableWall(world: UserWorld, options: SpawnPlaceableWallOptions): EntityId {
+export function spawnPlaceableWall(world: Registry, options: SpawnPlaceableWallOptions): EntityId {
 	const wallEntityId = world.create();
 	const centerX = options.snappedX + HALF_BOX_SIZE;
 	const centerY = options.snappedY + HALF_BOX_SIZE;
@@ -73,7 +71,6 @@ export function spawnPlaceableWall(world: UserWorld, options: SpawnPlaceableWall
 	world.add(wallEntityId, new GridFootprint(BOX_SIZE, BOX_SIZE));
 	world.add(wallEntityId, new PlaceableWallComponent());
 	world.add(wallEntityId, new Placeable("wall"));
-	world.add(wallEntityId, new RenderVisibility(options.renderVisibilityRole ?? OUTSIDE, 1));
 	world.add(wallEntityId, new Debug("wall-placeable"));
 
 	return wallEntityId;

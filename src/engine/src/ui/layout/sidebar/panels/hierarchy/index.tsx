@@ -7,9 +7,6 @@ import {
 	type HierarchyTreeSnapshot,
 } from "@engine/ui/layout/sidebar/panels/hierarchy/queries/hierarchyTreeQuery";
 import styles from "@engine/ui/layout/sidebar/styles.module.css";
-import { WorldIdContext } from "@engine/ui/layout/sidebar/worldViewer/context";
-import { Dropdown } from "@engine/ui/layout/sidebar/worldViewer/dropdown";
-import { EntityRow } from "@engine/ui/layout/sidebar/worldViewer/entityRow";
 import { EngineUiContext } from "@engine/ui/utilities/engine-context";
 import { useInvariantContext } from "@engine/ui/utilities/hooks/use-invariant-context";
 import { useCallback } from "react";
@@ -27,8 +24,6 @@ export const HierarchyPanel: React.FC = () => {
 		select: useCallback((tree: HierarchyTreeSnapshot) => {
 			return {
 				activeSceneName: tree.activeSceneName,
-				activeWorldId: tree.activeWorldId,
-				worldIds: tree.worldIds,
 			};
 		}, []),
 	});
@@ -44,24 +39,7 @@ export const HierarchyPanel: React.FC = () => {
 			<EngineEditorLayout.PanelTitle>{panelTitle}</EngineEditorLayout.PanelTitle>
 			<EngineEditorLayout.PanelContent className={styles.hierarchyPanelContent}>
 				<ul className={styles.worldsEntitiesPanel}>
-					{isSuccess &&
-						data.worldIds.map((worldId) => (
-							<WorldIdContext key={worldId} value={worldId}>
-								<li className={styles.worldsEntitiesEntityItem}>
-									<Dropdown.Manager defaultExpanded={worldId === data.activeWorldId}>
-										<EntityRow.DropdownButton depth={0} hasContent>
-											<EntityRow.Root>
-												<EntityRow.Icon.World />
-												<span className={styles.worldsEntitiesEntityName}>{worldId}</span>
-											</EntityRow.Root>
-										</EntityRow.DropdownButton>
-										<Dropdown.Content>
-											<WorldEntitiesDropdown />
-										</Dropdown.Content>
-									</Dropdown.Manager>
-								</li>
-							</WorldIdContext>
-						))}
+					{isSuccess && <WorldEntitiesDropdown />}
 				</ul>
 			</EngineEditorLayout.PanelContent>
 		</TabPanel>

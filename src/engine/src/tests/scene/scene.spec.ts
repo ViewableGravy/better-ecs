@@ -5,6 +5,8 @@
 
 import { createEngine, createScene } from "@engine/core";
 import { SCENE_BRAND } from "@engine/core/scene/scene.types";
+import type { Registry } from "@engine/ecs/registry";
+import { ActiveRegistry, fromContext } from "@engine/context";
 import { describe, expect, it, vi } from "vitest";
 
 describe("createScene", () => {
@@ -89,13 +91,13 @@ describe("EngineClass with scenes", () => {
     expect(engine.scene.current).toBe("__default__");
   });
 
-  it("should provide world access via engine.scene.world", () => {
+  it("should provide world access via engine.scene.registry", () => {
     const engine = createEngine({
       systems: [],
       scenes: [],
     });
 
-    const world = engine.scene.world;
+    const world = engine.scene.registry;
     expect(world).toBeDefined();
     expect(typeof world.create).toBe("function");
   });
@@ -105,7 +107,7 @@ describe("EngineClass with scenes", () => {
       scenes: [],
     });
 
-    expect(engine.scene.world).toBeDefined();
+    expect(engine.scene.registry).toBeDefined();
     expect(engine.systems).toHaveProperty("engine:input");
     expect(engine.systems).toHaveProperty("engine:transformSnapshot");
   });
@@ -144,11 +146,11 @@ describe("engine.scene.set", () => {
     expect(engine.scene.current).toBe("menu");
   });
 
-  it("should call setup with the scene world", async () => {
-    let receivedWorld: any = null;
+  it("should provide the scene Registry through context during setup", async () => {
+    let receivedRegistry: Registry | null = null;
     const MenuScene = createScene("menu")({
-      setup: (world) => {
-        receivedWorld = world;
+      setup() {
+        receivedRegistry = fromContext(ActiveRegistry);
       },
     });
 
@@ -159,8 +161,7 @@ describe("engine.scene.set", () => {
 
     await engine.scene.set("menu");
 
-    expect(receivedWorld).not.toBeNull();
-    expect(typeof receivedWorld.create).toBe("function");
+    expect(receivedRegistry).toBe(engine.registry);
   });
 
   it("should throw for unregistered scene", async () => {
@@ -218,7 +219,8 @@ describe("engine.scene.set", () => {
     let entityCount = 0;
 
     const MenuScene = createScene("menu")({
-      setup: (world) => {
+      setup() {
+        const world = fromContext(ActiveRegistry);
         world.create();
         world.create();
         world.create();
@@ -227,7 +229,8 @@ describe("engine.scene.set", () => {
     });
 
     const GameScene = createScene("game")({
-      setup: (world) => {
+      setup() {
+        const world = fromContext(ActiveRegistry);
         // New scene should start with no entities
         entityCount = world.all().length;
       },
@@ -347,8 +350,8 @@ describe("initialScene option", () => {
   });
 });
 
-describe("World isolation", () => {
-  it("should have separate worlds per scene", async () => {
+describe("Registry isolation", () => {
+  it("should have separate registries per scene", async () => {
     class TestComponent {
       constructor(public value: string) {}
     }
@@ -356,14 +359,16 @@ describe("World isolation", () => {
     let menuEntityId: any;
 
     const MenuScene = createScene("menu")({
-      setup: (world) => {
+      setup() {
+        const world = fromContext(ActiveRegistry);
         menuEntityId = world.create();
         world.add(menuEntityId, TestComponent, new TestComponent("menu"));
       },
     });
 
     const GameScene = createScene("game")({
-      setup: (world) => {
+      setup() {
+        const world = fromContext(ActiveRegistry);
         // Should not find the menu entity
         const entities = world.all();
         expect(entities.length).toBe(0);
@@ -379,11 +384,12 @@ describe("World isolation", () => {
     await engine.scene.set("game");
   });
 
-  it("should provide fresh world on re-entering a scene", async () => {
+  it("should provide a fresh Registry on re-entering a scene", async () => {
     let entityCount = 0;
 
     const MenuScene = createScene("menu")({
-      setup: (world) => {
+      setup() {
+        const world = fromContext(ActiveRegistry);
         world.create();
         entityCount = world.all().length;
       },

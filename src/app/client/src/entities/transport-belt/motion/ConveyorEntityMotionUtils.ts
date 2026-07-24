@@ -16,7 +16,7 @@ import {
     SHARED_SLOT_POSITION,
 } from "@client/entities/transport-belt/motion/constants";
 import type { ConveyorSideLoadTransfer } from "@client/entities/transport-belt/motion/types";
-import type { EntityId, UserWorld } from "@engine";
+import type { EntityId, Registry } from "@engine";
 import { Parent, Transform2D } from "@engine/components";
 import { resolveWorldTransform2D } from "@engine/ecs/hierarchy";
 
@@ -36,12 +36,12 @@ const MAX_PROGRESS_WITHIN_SLOT = 1 - PROGRESS_SEAM_EPSILON;
  **********************************************************************************************************/
 
 export class ConveyorEntityMotionUtils {
-  private world: UserWorld | null = null;
+  private world: Registry | null = null;
   private tickDelta = 0;
   private nextConveyorEntityId: EntityId | null = null;
 
   public set(
-    world: UserWorld,
+    world: Registry,
     tickDelta: number,
     initialNextConveyorEntityId: EntityId | null,
   ): void {
@@ -90,7 +90,7 @@ export class ConveyorEntityMotionUtils {
   }
 
   public static advanceConveyor(
-    world: UserWorld,
+    world: Registry,
     conveyor: ConveyorBeltComponent,
     nextConveyor: ConveyorBeltComponent | null,
     tickDelta: number,
@@ -115,7 +115,7 @@ export class ConveyorEntityMotionUtils {
   }
 
   public static syncConveyorTransforms(
-    world: UserWorld,
+    world: Registry,
     conveyor: ConveyorBeltComponent,
   ): void {
     for (const side of CONVEYOR_SIDES) {
@@ -123,7 +123,7 @@ export class ConveyorEntityMotionUtils {
     }
   }
 
-  public static transferSideLoad(world: UserWorld, transfer: ConveyorSideLoadTransfer): boolean {
+  public static transferSideLoad(world: Registry, transfer: ConveyorSideLoadTransfer): boolean {
     const sourceConveyor = world.get(transfer.sourceEntityId, ConveyorBeltComponent);
     const targetConveyor = world.get(transfer.targetEntityId, ConveyorBeltComponent);
 
@@ -156,7 +156,7 @@ export class ConveyorEntityMotionUtils {
   }
 
   private static advanceLane(
-    world: UserWorld,
+    world: Registry,
     conveyor: ConveyorBeltComponent,
     nextConveyor: ConveyorBeltComponent | null,
     side: ConveyorSide,
@@ -186,7 +186,7 @@ export class ConveyorEntityMotionUtils {
   }
 
   private static advanceLaneEntity(
-    world: UserWorld,
+    world: Registry,
     conveyor: ConveyorBeltComponent,
     nextConveyor: ConveyorBeltComponent | null,
     side: ConveyorSide,
@@ -314,7 +314,7 @@ export class ConveyorEntityMotionUtils {
   }
 
   private static syncLaneTransforms(
-    world: UserWorld,
+    world: Registry,
     conveyor: ConveyorBeltComponent,
     side: ConveyorSide,
   ): void {
@@ -371,7 +371,7 @@ export class ConveyorEntityMotionUtils {
   }
 
   private static transferToNextConveyor(
-    world: UserWorld,
+    world: Registry,
     conveyor: ConveyorBeltComponent,
     nextConveyor: ConveyorBeltComponent | null,
     side: ConveyorSide,
@@ -409,7 +409,7 @@ export class ConveyorEntityMotionUtils {
   }
 
   private static transferSideLoadLane(
-    world: UserWorld,
+    world: Registry,
     sourceConveyorEntityId: EntityId,
     sourceConveyor: ConveyorBeltComponent,
     sourceLane: ConveyorSide,
@@ -444,7 +444,7 @@ export class ConveyorEntityMotionUtils {
     return true;
   }
 
-  private static syncParent(world: UserWorld, entityId: EntityId, parentEntityId: EntityId): void {
+  private static syncParent(world: Registry, entityId: EntityId, parentEntityId: EntityId): void {
     const transform = world.get(entityId, Transform2D);
     const parent = world.get(entityId, Parent);
 
@@ -458,7 +458,7 @@ export class ConveyorEntityMotionUtils {
   }
 
   private static preservePreviousWorldPosition(
-    world: UserWorld,
+    world: Registry,
     transform: Transform2D,
     previousParentEntityId: EntityId,
     nextParentEntityId: EntityId,

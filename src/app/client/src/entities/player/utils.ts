@@ -1,5 +1,5 @@
 import { getPlayerEntityId } from "@client/entities/player/actions";
-import type { UserWorld } from "@engine";
+import type { Registry } from "@engine";
 import { Transform2D } from "@engine/components";
 import invariant from "tiny-invariant";
 
@@ -9,7 +9,7 @@ import invariant from "tiny-invariant";
  * be broken, so this class serves as a single source of truth for those actions.
  */
 export class PlayerUtils {
-  public static getTransform(world: UserWorld) {
+  public static getTransform(world: Registry) {
     const playerId = getPlayerEntityId(world);
     invariant(playerId, "Player entity not found in world.");
 

@@ -1,16 +1,16 @@
 import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
-import type { EntityId, UserWorld } from "@engine";
+import type { EntityId, Registry } from "@engine";
 
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
 
 export class ConveyorBeltChainIterator implements IterableIterator<EntityId> {
-  private world: UserWorld | null = null;
+  private world: Registry | null = null;
   private leafEntityId: EntityId | null = null;
   private currentEntityId: EntityId | null = null;
 
-  public setLeaf(world: UserWorld, leafEntityId: EntityId): void {
+  public setLeaf(world: Registry, leafEntityId: EntityId): void {
     this.world = world;
     this.leafEntityId = leafEntityId;
     this.currentEntityId = leafEntityId;

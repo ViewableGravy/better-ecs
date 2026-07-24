@@ -1,4 +1,4 @@
-import type { EntityId, UserWorld } from "@engine";
+import type { EntityId, Registry } from "@engine";
 
 import type { GhostKind } from "@client/entities/ghost/component";
 
@@ -10,15 +10,15 @@ type GhostPreviewVariant = string | null;
 
 type CreateGhostPresetOptions<TPayload> = {
   kind: GhostKind;
-  spawn: (world: UserWorld, x: number, y: number, payload?: TPayload) => EntityId;
-  sync?: (world: UserWorld, ghostEntityId: EntityId, payload?: TPayload) => void;
+  spawn: (world: Registry, x: number, y: number, payload?: TPayload) => EntityId;
+  sync?: (world: Registry, ghostEntityId: EntityId, payload?: TPayload) => void;
   resolvePreviewVariant?: (payload?: TPayload) => GhostPreviewVariant;
 };
 
 export type GhostPreset<TPayload = void> = {
   kind: GhostKind;
-  spawn: (world: UserWorld, x: number, y: number, payload?: TPayload) => EntityId;
-  sync?: (world: UserWorld, ghostEntityId: EntityId, payload?: TPayload) => void;
+  spawn: (world: Registry, x: number, y: number, payload?: TPayload) => EntityId;
+  sync?: (world: Registry, ghostEntityId: EntityId, payload?: TPayload) => void;
   resolvePreviewVariant?: (payload?: TPayload) => GhostPreviewVariant;
 };
 

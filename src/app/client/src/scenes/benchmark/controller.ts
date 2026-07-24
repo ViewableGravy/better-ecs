@@ -16,7 +16,7 @@ import type {
   BenchmarkRunResult,
   BenchmarkStatus,
 } from "@client/scenes/benchmark/types";
-import type { AnyEngine, EntityId, UserWorld } from "@engine";
+import type { AnyEngine, EntityId, Registry } from "@engine";
 import { Sprite, Transform2D } from "@engine/components";
 
 const CONSTRUCTION_CHUNK_SIZE = 5_000;
@@ -27,7 +27,7 @@ const MOVE_TICKS_PER_CYCLE = 120;
 type StatusListener = (status: BenchmarkStatus) => void;
 
 export class BenchmarkController {
-  readonly #world: UserWorld;
+  readonly #world: Registry;
   readonly #engine: AnyEngine;
   readonly #entityIds: EntityId[] = [];
   readonly #movingEntityIds: EntityId[] = [];
@@ -46,7 +46,7 @@ export class BenchmarkController {
   #statusListener: StatusListener = () => undefined;
   readonly #abortController = new AbortController();
 
-  public constructor(world: UserWorld, engine: AnyEngine) {
+  public constructor(world: Registry, engine: AnyEngine) {
     this.#world = world;
     this.#engine = engine;
     this.#queryBenchmark = new QueryBenchmark(world);

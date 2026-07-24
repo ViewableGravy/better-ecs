@@ -3,7 +3,6 @@ import {
     ConveyorBeltComponent,
     syncConveyorBeltDirectionsFromVariant,
 } from "@client/components/conveyor-belt";
-import { OUTSIDE, RenderVisibility } from "@client/components/render-visibility";
 import type {
     TransportBeltDirection,
     TransportBeltVariant,
@@ -18,11 +17,11 @@ import {
 } from "@client/entities/transport-belt/placement/TransportBeltTerminalDecoration";
 import { createTransportBeltSprite } from "@client/entities/transport-belt/render/createTransportBeltSprite";
 import { GRID_CELL_SIZE } from "@client/systems/world/build-mode/const";
-import type { EntityId, UserWorld } from "@engine";
+import type { EntityId, Registry } from "@engine";
 import { AnimatedSprite, Debug, Transform2D } from "@engine/components";
 
 export class TransportBeltTerminalDecorationManager {
-  public static syncBelts(world: UserWorld, beltEntityIds: readonly (EntityId | null)[]): void {
+  public static syncBelts(world: Registry, beltEntityIds: readonly (EntityId | null)[]): void {
     const visitedEntityIds = new Set<EntityId>();
 
     for (const beltEntityId of beltEntityIds) {
@@ -35,7 +34,7 @@ export class TransportBeltTerminalDecorationManager {
     }
   }
 
-  public static syncBelt(world: UserWorld, beltEntityId: EntityId): void {
+  public static syncBelt(world: Registry, beltEntityId: EntityId): void {
     const belt = world.get(beltEntityId, ConveyorBeltComponent);
 
     if (!belt || !canConveyorStoreEntities(belt.variant)) {
@@ -49,14 +48,14 @@ export class TransportBeltTerminalDecorationManager {
     this.syncTerminal(world, beltEntityId, "end", belt.headDirection, belt.nextEntityId === null);
   }
 
-  public static destroyOwnedDecorations(world: UserWorld, beltEntityId: EntityId): void {
+  public static destroyOwnedDecorations(world: Registry, beltEntityId: EntityId): void {
     for (const decorationEntityId of this.findOwnedDecorationEntityIds(world, beltEntityId)) {
       world.destroy(decorationEntityId);
     }
   }
 
   private static syncTerminal(
-    world: UserWorld,
+    world: Registry,
     beltEntityId: EntityId,
     role: TransportBeltTerminalDecorationRole,
     direction: TransportBeltDirection,
@@ -87,7 +86,6 @@ export class TransportBeltTerminalDecorationManager {
     const localY = offsetY * GRID_CELL_SIZE;
     const absoluteWorldY = ownerTransform.curr.pos.y + localY;
     const ownerSprite = world.get(beltEntityId, AnimatedSprite);
-    const renderVisibility = world.get(beltEntityId, RenderVisibility);
     const variant = this.resolveTerminalVariant(role, direction);
 
     if (existingDecorationEntityId === null) {
@@ -99,10 +97,6 @@ export class TransportBeltTerminalDecorationManager {
       world.add(
         decorationEntityId,
         createTransportBeltSprite(variant, absoluteWorldY, ownerSprite ?? undefined),
-      );
-      world.add(
-        decorationEntityId,
-        new RenderVisibility(renderVisibility?.role ?? OUTSIDE, renderVisibility?.baseAlpha ?? 1),
       );
       world.add(decorationEntityId, new Debug(`transport-belt-${role}`));
       return;
@@ -123,14 +117,10 @@ export class TransportBeltTerminalDecorationManager {
       existingDecorationEntityId,
       createTransportBeltSprite(variant, absoluteWorldY, ownerSprite ?? undefined),
     );
-    world.add(
-      existingDecorationEntityId,
-      new RenderVisibility(renderVisibility?.role ?? OUTSIDE, renderVisibility?.baseAlpha ?? 1),
-    );
   }
 
   private static isTerminalTileOccupied(
-    world: UserWorld,
+    world: Registry,
     beltEntityId: EntityId,
     direction: TransportBeltDirection,
   ): boolean {
@@ -143,7 +133,7 @@ export class TransportBeltTerminalDecorationManager {
   }
 
   private static findOwnedDecorationEntityId(
-    world: UserWorld,
+    world: Registry,
     beltEntityId: EntityId,
     role: TransportBeltTerminalDecorationRole,
   ): EntityId | null {
@@ -162,7 +152,7 @@ export class TransportBeltTerminalDecorationManager {
     return null;
   }
 
-  private static findOwnedDecorationEntityIds(world: UserWorld, beltEntityId: EntityId): EntityId[] {
+  private static findOwnedDecorationEntityIds(world: Registry, beltEntityId: EntityId): EntityId[] {
     const decorationEntityIds: EntityId[] = [];
 
     for (const decorationEntityId of world.query(TransportBeltTerminalDecoration)) {

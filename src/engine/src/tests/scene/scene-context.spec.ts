@@ -1,112 +1,24 @@
+import { SceneContext } from "@engine/core";
+import { Registry } from "@engine/ecs/registry";
 import { describe, expect, it } from "vitest";
 
-import { SceneContext } from "@engine/core";
-import { World } from "@engine/ecs/world";
-
-class TestComponent {
-  constructor(public value: string) {}
-}
-
 describe("SceneContext", () => {
-  it("should expose a default world", () => {
-    const internal = new World("scene");
-    const scene = new SceneContext("scene", internal);
+  it("owns exactly one registry", () => {
+    const registry = new Registry();
+    const scene = new SceneContext("scene", registry);
+    const entityId = scene.registry.create();
 
     expect(scene.name).toBe("scene");
-    expect(scene.defaultWorldId).toBe("default");
-
-    const world = scene.getDefaultWorld();
-    const id = world.create();
-    expect(world.all()).toEqual([id]);
+    expect(scene.registry).toBe(registry);
+    expect(scene.registry.all()).toEqual([entityId]);
   });
 
-  it("should register and unregister additional worlds", () => {
-    const scene = new SceneContext("scene", new World("scene"));
+  it("clears its registry", () => {
+    const scene = new SceneContext("scene");
+    scene.registry.create();
 
-    expect(scene.hasWorld("overworld")).toBe(false);
+    scene.clear();
 
-    const overworld = scene.loadAdditionalWorld("overworld");
-    overworld.create();
-
-    expect(scene.hasWorld("overworld")).toBe(true);
-    expect(scene.getWorld("overworld")?.all().length).toBe(1);
-
-    scene.unloadWorld("overworld");
-    expect(scene.hasWorld("overworld")).toBe(false);
-    expect(scene.getWorld("overworld")).toBeUndefined();
+    expect(scene.registry.all()).toEqual([]);
   });
-
-  it("should share one monotonic entity ID allocator across its worlds", () => {
-    const scene = new SceneContext("scene", new World("scene"));
-    const defaultEntity = scene.getDefaultWorld().create();
-    const additionalEntity = scene.loadAdditionalWorld("house").create();
-
-    expect(additionalEntity).toBe(defaultEntity + 1);
-  });
-
-  it("should preserve the cursor of a populated world attached to a scene", () => {
-    const internal = new World("scene");
-    internal.createEntity();
-    const destroyed = internal.createEntity();
-    internal.destroyEntity(destroyed);
-
-    const scene = new SceneContext("scene", internal);
-
-    expect(scene.getDefaultWorld().create()).toBeGreaterThan(destroyed);
-  });
-
-  it("should reject duplicate IDs when attaching a populated world", () => {
-    const defaultWorld = new World("scene");
-    const additionalWorld = new World("scene:house");
-    const defaultEntity = defaultWorld.createEntity();
-    const additionalEntity = additionalWorld.createEntity();
-    const scene = new SceneContext("scene", defaultWorld);
-
-    expect(additionalEntity).toBe(defaultEntity);
-    expect(() => scene.registerWorld("house", additionalWorld)).toThrow(
-      `Entity ${additionalEntity} already exists in world "default"`,
-    );
-  });
-
-  it("should not allow unregistering the default world", () => {
-    const scene = new SceneContext("scene", new World("scene"));
-
-    expect(() => scene.unloadWorld("default")).toThrow("Cannot unregister default world");
-  });
-
-  it("should clear all worlds and drop non-default worlds", () => {
-    const scene = new SceneContext("scene", new World("scene"));
-
-    scene.getDefaultWorld().create();
-    scene.loadAdditionalWorld("a").create();
-    scene.loadAdditionalWorld("b").create();
-
-    scene.clearAllWorlds();
-
-    expect(scene.getDefaultWorld().all().length).toBe(0);
-    expect(scene.hasWorld("a")).toBe(false);
-    expect(scene.hasWorld("b")).toBe(false);
-  });
-
-  it("should move an entity between worlds without duplication", () => {
-    const scene = new SceneContext("scene", new World("scene"));
-    const house = scene.loadAdditionalWorld("house");
-    const overworld = scene.loadAdditionalWorld("overworld");
-
-    const player = house.create();
-    house.add(player, TestComponent, new TestComponent("player"));
-
-    house.move(player, overworld);
-
-    expect(house.all()).toEqual([]);
-    expect(overworld.all()).toEqual([player]);
-    expect(overworld.get(player, TestComponent)?.value).toBe("player");
-
-    overworld.move(player, house);
-
-    expect(overworld.all()).toEqual([]);
-    expect(house.all()).toEqual([player]);
-    expect(house.get(player, TestComponent)?.value).toBe("player");
-  });
-
 });

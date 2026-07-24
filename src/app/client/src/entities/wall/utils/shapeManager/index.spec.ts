@@ -1,10 +1,9 @@
-import { OUTSIDE } from "@client/components/render-visibility";
 import { destroyPlaceableWall } from "@client/entities/wall/mutation/delete";
 import { spawnPlaceableWall } from "@client/entities/wall/spawn/placeable";
 import { PlaceableWallAutoShapeManager } from "@client/entities/wall/utils/shapeManager";
 import { GridSingleton } from "@client/systems/world/build-mode/grid-singleton";
 import { BOX_SIZE, HALF_BOX_SIZE } from "@client/systems/world/build-mode/metrics";
-import { UserWorld, World, type EntityId } from "@engine";
+import { Registry, type EntityId } from "@engine";
 import { Sprite } from "@engine/components";
 import { RectangleCollider } from "@libs/physics";
 import { describe, expect, it } from "vitest";
@@ -15,7 +14,7 @@ const RIGHT_CONNECTION_WALL_ASSET_IDS = ["wall-ending-right:1", "wall-ending-rig
 
 describe("PlaceableWallAutoShapeManager", () => {
 	it("renders an isolated wall as a single sprite", () => {
-		const world = new UserWorld(new World("scene"));
+		const world = new Registry();
 		const wallEntityId = spawnWallAt(world, 0, 0);
 
 		PlaceableWallAutoShapeManager.refreshAffectedWalls(world, wallEntityId);
@@ -24,7 +23,7 @@ describe("PlaceableWallAutoShapeManager", () => {
 	});
 
 	it("renders a two-wall chain with left and right ending sprites", () => {
-		const world = new UserWorld(new World("scene"));
+		const world = new Registry();
 		const leftWallEntityId = spawnWallAt(world, 0, 0);
 		const rightWallEntityId = spawnWallAt(world, 20, 0);
 
@@ -35,7 +34,7 @@ describe("PlaceableWallAutoShapeManager", () => {
 	});
 
 	it("renders middle walls as horizontal segments when both horizontal neighbors exist", () => {
-		const world = new UserWorld(new World("scene"));
+		const world = new Registry();
 
 		const leftWallEntityId = spawnWallAt(world, 0, 0);
 		const middleWallEntityId = spawnWallAt(world, 20, 0);
@@ -50,7 +49,7 @@ describe("PlaceableWallAutoShapeManager", () => {
 	});
 
 	it("returns adjacent walls to single sprites after a horizontal neighbor is removed", () => {
-		const world = new UserWorld(new World("scene"));
+		const world = new Registry();
 
 		const leftWallEntityId = spawnWallAt(world, 0, 0);
 		const middleWallEntityId = spawnWallAt(world, 20, 0);
@@ -66,7 +65,7 @@ describe("PlaceableWallAutoShapeManager", () => {
 	});
 
 	it("uses a grounded collider covering the bottom 30 percent of the tile", () => {
-		const world = new UserWorld(new World("scene"));
+		const world = new Registry();
 		const wallEntityId = spawnWallAt(world, 0, 0);
 		const collider = world.require(wallEntityId, RectangleCollider);
 
@@ -77,7 +76,7 @@ describe("PlaceableWallAutoShapeManager", () => {
 	});
 });
 
-function spawnWallAt(world: UserWorld, x: number, y: number): EntityId {
+function spawnWallAt(world: Registry, x: number, y: number): EntityId {
 	const [snappedX, snappedY] = GridSingleton.gridCoordinatesToWorldOrigin(
 		GridSingleton.worldToGridCoordinates(x, y),
 	);
@@ -85,6 +84,5 @@ function spawnWallAt(world: UserWorld, x: number, y: number): EntityId {
 	return spawnPlaceableWall(world, {
 		snappedX,
 		snappedY,
-		renderVisibilityRole: OUTSIDE,
 	});
 }

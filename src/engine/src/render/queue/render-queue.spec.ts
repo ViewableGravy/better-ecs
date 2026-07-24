@@ -115,7 +115,7 @@ describe("RenderQueue", () => {
 function createCommand(input: TestCommandInput): RenderCommand {
   return {
     type: input.type,
-    world: null,
+    registry: null,
     entityId: null,
     shape: null,
     scope: input.scope,

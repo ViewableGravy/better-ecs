@@ -11,6 +11,22 @@ import { describe, expect, it } from "vitest";
  **********************************************************************************************************/
 
 describe("BuildModeDragPlacement", () => {
+  it("places one tile when a complete click occurs between update ticks", () => {
+    const state = createState({
+      selectedItem: "transport-belt",
+      pendingPlace: true,
+    });
+    const hoveredCoordinates = coordinates(0, 0);
+
+    expect(BuildModeDragPlacement.resolvePlacementBatch(state, hoveredCoordinates)).toEqual({
+      mode: "single",
+      axis: null,
+      anchor: null,
+      hovered: hoveredCoordinates,
+      candidates: [hoveredCoordinates],
+    });
+  });
+
   it("starts placing belts on the first hovered tile while the pointer is held", () => {
     const state = createState({
       selectedItem: "transport-belt",

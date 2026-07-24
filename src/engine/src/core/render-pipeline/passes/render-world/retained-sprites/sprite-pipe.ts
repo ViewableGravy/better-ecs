@@ -11,9 +11,9 @@ import { getFrameAssetIdAtTime } from "@engine/components/sprite/animated";
 import { Rgba } from "@engine/components/sprite/sprite";
 import type { EntityId } from "@engine/ecs/entity";
 import type {
-  UserWorld,
-  WorldMutationObserver,
-} from "@engine/ecs/world";
+  Registry,
+  RegistryMutationObserver,
+} from "@engine/ecs/registry";
 import type { RenderCommand, RenderQueue } from "@engine/render/queue/render-queue";
 import type { SpriteRenderState } from "@engine/render/types/renderer";
 
@@ -40,7 +40,7 @@ type RetainedSpriteBucket = {
   instanceCount: number;
 };
 
-type RetainedSpriteWorldState = {
+type RetainedSpriteRegistryState = {
   readonly dirtyEntityIds: Set<EntityId>;
   readonly animatedEntityIds: Set<EntityId>;
   readonly retryEntityIds: EntityId[];
@@ -68,11 +68,11 @@ const SHARED_SPRITE_STATE: SpriteRenderState = {
 /**
  * Engine-owned retained projection of ECS sprites.
  *
- * Worlds are scanned once when first rendered. Subsequent work is driven by
+ * Registries are scanned once when first rendered. Subsequent work is driven by
  * entity dirtiness notifications plus animated frame sampling.
  */
-export class SpritePipe implements WorldMutationObserver {
-  readonly #states = new WeakMap<UserWorld, RetainedSpriteWorldState>();
+export class SpritePipe implements RegistryMutationObserver {
+  readonly #states = new WeakMap<Registry, RetainedSpriteRegistryState>();
   #nextBucketId = 1;
 
   constructor(
@@ -80,18 +80,18 @@ export class SpritePipe implements WorldMutationObserver {
   ) {}
 
   syncAndQueue(
-    world: UserWorld,
+    registry: Registry,
     queue: RenderQueue,
     sampledTimeMs: number,
     sampledUpdateTick: number,
   ): void {
-    const state = this.#resolveState(world);
-    this.#initializeWorld(world, state);
+    const state = this.#resolveState(registry);
+    this.#initializeRegistry(registry, state);
 
     // Sample animated sprites and mark any that have changed as dirty
     for (const entityId of state.animatedEntityIds) {
       const entry = state.entries.get(entityId);
-      const animatedSprite = world.get(entityId, AnimatedSprite);
+      const animatedSprite = registry.get(entityId, AnimatedSprite);
       if (!entry || !animatedSprite) {
         state.dirtyEntityIds.add(entityId);
         continue;
@@ -107,7 +107,7 @@ export class SpritePipe implements WorldMutationObserver {
     const retryEntityIds = state.retryEntityIds;
     retryEntityIds.length = 0;
     for (const entityId of state.dirtyEntityIds) {
-      if (!this.#syncEntity(world, state, entityId, sampledTimeMs, sampledUpdateTick)) {
+      if (!this.#syncEntity(registry, state, entityId, sampledTimeMs, sampledUpdateTick)) {
         retryEntityIds.push(entityId);
       }
     }
@@ -126,8 +126,8 @@ export class SpritePipe implements WorldMutationObserver {
     }
   }
 
-  entityChanged(world: UserWorld, entityId: EntityId): void {
-    const state = this.#states.get(world);
+  entityChanged(registry: Registry, entityId: EntityId): void {
+    const state = this.#states.get(registry);
     if (!state) {
       return;
     }
@@ -136,7 +136,7 @@ export class SpritePipe implements WorldMutationObserver {
   }
 
   componentChanged(
-    world: UserWorld,
+    registry: Registry,
     entityId: EntityId,
     componentType: Function,
   ): void {
@@ -144,11 +144,11 @@ export class SpritePipe implements WorldMutationObserver {
       return;
     }
 
-    this.entityChanged(world, entityId);
+    this.entityChanged(registry, entityId);
   }
 
-  worldReset(world: UserWorld): void {
-    const state = this.#states.get(world);
+  registryReset(registry: Registry): void {
+    const state = this.#states.get(registry);
     if (!state) {
       return;
     }
@@ -157,13 +157,13 @@ export class SpritePipe implements WorldMutationObserver {
     state.initialized = false;
   }
 
-  #resolveState(world: UserWorld): RetainedSpriteWorldState {
-    const existing = this.#states.get(world);
+  #resolveState(registry: Registry): RetainedSpriteRegistryState {
+    const existing = this.#states.get(registry);
     if (existing) {
       return existing;
     }
 
-    const created: RetainedSpriteWorldState = {
+    const created: RetainedSpriteRegistryState = {
       dirtyEntityIds: new Set(),
       animatedEntityIds: new Set(),
       retryEntityIds: [],
@@ -172,31 +172,31 @@ export class SpritePipe implements WorldMutationObserver {
       bucketsById: new Map(),
       initialized: false,
     };
-    world.observeMutations(this);
-    this.#states.set(world, created);
+    registry.observeMutations(this);
+    this.#states.set(registry, created);
     return created;
   }
 
-  #initializeWorld(world: UserWorld, state: RetainedSpriteWorldState): void {
+  #initializeRegistry(registry: Registry, state: RetainedSpriteRegistryState): void {
     if (state.initialized) {
       return;
     }
 
-    world.forEach(Sprite, (entityId) => state.dirtyEntityIds.add(entityId));
-    world.forEach(AnimatedSprite, (entityId) => state.dirtyEntityIds.add(entityId));
+    registry.forEach(Sprite, (entityId) => state.dirtyEntityIds.add(entityId));
+    registry.forEach(AnimatedSprite, (entityId) => state.dirtyEntityIds.add(entityId));
     state.initialized = true;
   }
 
   #syncEntity(
-    world: UserWorld,
-    state: RetainedSpriteWorldState,
+    registry: Registry,
+    state: RetainedSpriteRegistryState,
     entityId: EntityId,
     sampledTimeMs: number,
     sampledUpdateTick: number,
   ): boolean {
-    const sprite = world.get(entityId, Sprite);
-    const animatedSprite = sprite ? undefined : world.get(entityId, AnimatedSprite);
-    const worldTransform = world.get(entityId, WorldTransform2D);
+    const sprite = registry.get(entityId, Sprite);
+    const animatedSprite = sprite ? undefined : registry.get(entityId, AnimatedSprite);
+    const worldTransform = registry.get(entityId, WorldTransform2D);
     const projectedSprite = sprite ?? animatedSprite;
     if (!projectedSprite || !worldTransform) {
       this.#removeEntry(state, entityId);
@@ -206,8 +206,8 @@ export class SpritePipe implements WorldMutationObserver {
     const assetId = animatedSprite
       ? getFrameAssetIdAtTime(animatedSprite, sampledTimeMs, sampledUpdateTick)
       : projectedSprite.assetId;
-    const tint = resolveEntityTint(world, entityId, SHARED_TINT);
-    const hover = world.get(entityId, EditorHoverHighlight);
+    const tint = resolveEntityTint(registry, entityId, SHARED_TINT);
+    const hover = registry.get(entityId, EditorHoverHighlight);
     if (hover) {
       tint.r += (HOVER_TINT.r - tint.r) * hover.amount;
       tint.g += (HOVER_TINT.g - tint.g) * hover.amount;
@@ -258,7 +258,7 @@ export class SpritePipe implements WorldMutationObserver {
   }
 
   #resolveBucket(
-    state: RetainedSpriteWorldState,
+    state: RetainedSpriteRegistryState,
     key: string,
     layer: number,
     zOrder: number,
@@ -277,7 +277,7 @@ export class SpritePipe implements WorldMutationObserver {
       instanceCount: 0,
       command: {
         type: "retained-sprite-bucket",
-        world: null,
+        registry: null,
         entityId: null,
         shape: null,
         scope: "gameplay",
@@ -293,7 +293,7 @@ export class SpritePipe implements WorldMutationObserver {
     return created;
   }
 
-  #removeEntry(state: RetainedSpriteWorldState, entityId: EntityId): void {
+  #removeEntry(state: RetainedSpriteRegistryState, entityId: EntityId): void {
     const entry = state.entries.get(entityId);
     if (!entry) {
       return;
@@ -307,7 +307,7 @@ export class SpritePipe implements WorldMutationObserver {
   }
 
   #removeEntryFromBucket(
-    state: RetainedSpriteWorldState,
+    state: RetainedSpriteRegistryState,
     bucketId: number,
     instanceId: EntityId,
   ): void {
@@ -327,7 +327,7 @@ export class SpritePipe implements WorldMutationObserver {
     state.bucketsByKey.delete(bucket.key);
   }
 
-  #releaseState(state: RetainedSpriteWorldState): void {
+  #releaseState(state: RetainedSpriteRegistryState): void {
     for (const bucket of state.bucketsById.values()) {
       this.renderer.releaseRetainedSpriteBucket(bucket.id);
     }

@@ -1,8 +1,6 @@
 // packages/engine/src/core/scene/scene.types.ts
 import type { EngineOverlay } from "@engine/core/factory/types";
-import type { SceneContext } from "@engine/core/scene/scene-context";
 import type { SystemFactoryTuple } from "@engine/core/system";
-import type { UserWorld } from "@engine/ecs/world";
 
 /**
  * Internal symbol used to identify scene definitions.
@@ -21,30 +19,11 @@ export type SceneConfig<TSystems extends SystemFactoryTuple = SystemFactoryTuple
   /** Optional loading overlay that runs during scene setup/teardown transitions. */
   loading?: EngineOverlay;
 
-  /**
-   * Called when the scene becomes active. Use this to create entities and set up the scene.
-   * @param world - The scene's world instance
-   */
-  setup: (world: UserWorld) => any;
+  /** Called in scene context when the scene becomes active. */
+  setup: () => any;
 
-  /**
-   * Called when the scene becomes active with access to the scene context.
-   * Use this to register additional worlds, scene-wide state, etc.
-   */
-  sceneSetup?: (scene: SceneContext) => any;
-
-  /**
-   * Called when the scene is being deactivated. Use this for any custom cleanup.
-   * Note: Entity cleanup is handled automatically by the engine.
-   * @param world - The scene's world instance
-   */
-  teardown?: (world: UserWorld) => any;
-
-  /**
-   * Called when the scene is being deactivated with access to the scene context.
-   * Use this to cleanup scene-wide state and additional worlds.
-   */
-  sceneTeardown?: (scene: SceneContext) => any;
+  /** Called in scene context before automatic registry cleanup. */
+  teardown?: () => any;
 };
 
 /**
@@ -64,16 +43,10 @@ export type SceneDefinition<
   loading: EngineOverlay | null;
 
   /** Set up the scene (create entities, etc.) */
-  setup: (world: UserWorld) => void | Promise<void>;
-
-  /** Optional scene-level setup */
-  sceneSetup: (scene: SceneContext) => void | Promise<void>;
+  setup: () => void | Promise<void>;
 
   /** Tear down the scene (custom cleanup) */
-  teardown: (world: UserWorld) => void | Promise<void>;
-
-  /** Optional scene-level teardown */
-  sceneTeardown: (scene: SceneContext) => void | Promise<void>;
+  teardown: () => void | Promise<void>;
 
   /** Internal brand symbol for scene definitions */
   readonly [SCENE_BRAND]: true;

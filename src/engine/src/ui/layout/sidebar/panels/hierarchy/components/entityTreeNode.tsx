@@ -9,7 +9,7 @@ import {
     type HierarchyTreeSnapshot,
 } from "@engine/ui/layout/sidebar/panels/hierarchy/queries/hierarchyTreeQuery";
 import styles from "@engine/ui/layout/sidebar/styles.module.css";
-import { EntityIdContext, WorldIdContext } from "@engine/ui/layout/sidebar/worldViewer/context";
+import { EntityIdContext } from "@engine/ui/layout/sidebar/worldViewer/context";
 import { DebugHover } from "@engine/ui/layout/sidebar/worldViewer/debugHover";
 import { Dropdown } from "@engine/ui/layout/sidebar/worldViewer/dropdown";
 import { EntityRow } from "@engine/ui/layout/sidebar/worldViewer/entityRow";
@@ -37,20 +37,14 @@ export const EntityTreeNode: React.FC<EntityTreeNodeProps> = React.memo(({
 }) => {
   /***** HOOKS *****/
   const engine = useInvariantContext(EngineUiContext);
-  const worldId = useInvariantContext(WorldIdContext);
   const entityId = useInvariantContext(EntityIdContext);
 
   /***** QUERIES *****/
   const { data: nodeData } = useQuery({
     ...createHierarchyTreeQueryOptions(engine),
     select: useCallback((snapshot: HierarchyTreeSnapshot): HierarchyEntityNode | null => {
-      const worldTree = snapshot.worldsById[worldId];
-      if (!worldTree) {
-        return null;
-      }
-
-      return worldTree.entitiesById[entityId.toString()] ?? null;
-    }, [entityId, worldId]),
+      return snapshot.registry.entitiesById[entityId.toString()] ?? null;
+    }, [entityId]),
   });
 
   /***** RENDER HELPERS *****/

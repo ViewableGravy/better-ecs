@@ -26,13 +26,13 @@ type CullingViewport = {
 
 export type ShaderEntityRenderCommand = RenderCommand & {
   type: "shader-entity";
-  world: NonNullable<RenderCommand["world"]>;
+  registry: NonNullable<RenderCommand["registry"]>;
   entityId: NonNullable<RenderCommand["entityId"]>;
 };
 
 export type ShapeEntityRenderCommand = RenderCommand & {
   type: "shape-entity";
-  world: NonNullable<RenderCommand["world"]>;
+  registry: NonNullable<RenderCommand["registry"]>;
   entityId: NonNullable<RenderCommand["entityId"]>;
 };
 
@@ -141,7 +141,7 @@ export function isEntityRenderCommand(command: RenderCommand): command is Entity
     return false;
   }
 
-  return command.world !== null && command.entityId !== null;
+  return command.registry !== null && command.entityId !== null;
 }
 
 function intersectsShaderEntity(
@@ -150,7 +150,7 @@ function intersectsShaderEntity(
   transform: Transform2D,
   alpha: number,
 ): boolean {
-  const world = command.world;
+  const world = command.registry;
   const entityId = command.entityId;
 
   invariant(world, "Culling shader-entity command requires world");
@@ -186,7 +186,7 @@ function intersectsShapeEntity(
   transform: Transform2D,
   alpha: number,
 ): boolean {
-  const world = command.world;
+  const world = command.registry;
   const entityId = command.entityId;
 
   invariant(world, "Culling shape-entity command requires world");

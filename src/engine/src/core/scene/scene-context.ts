@@ -1,161 +1,23 @@
-import { UserWorld, World } from "@engine/ecs/world";
-import { EntityIdAllocator, type EntityId } from "@engine/ecs/entity";
-
-const DEFAULT_WORLD_ID = "default" as const;
+import { Registry } from "@engine/ecs/registry";
 
 /**
- * Runtime scene context available during system execution via `useScene()`.
+ * Runtime state owned by one active scene.
  *
- * A scene owns one or more worlds. The engine guarantees a default world exists.
+ * A scene has exactly one ECS registry. Logical areas within a scene share that registry and
+ * coordinate space; loading, visibility, and simulation policy belong to scene-level systems.
  */
 export class SceneContext<TName extends string = string> {
-  readonly name: TName;
+  readonly registry: Registry;
 
-  readonly #defaultWorldId: string;
-  readonly #entityIds = new EntityIdAllocator();
-  readonly #worlds = new Map<string, World>();
-  readonly #userWorlds = new Map<string, UserWorld>();
-
-  constructor(name: TName, defaultWorld: World, defaultWorldId: string = DEFAULT_WORLD_ID) {
-    this.name = name;
-    this.#defaultWorldId = defaultWorldId;
-
-    defaultWorld.setEntityIdAllocator(
-      this.#entityIds,
-      (entityId) => this.assertEntityIdAvailable(this.#defaultWorldId, entityId),
-    );
-
-    this.#worlds.set(this.#defaultWorldId, defaultWorld);
-    this.#userWorlds.set(this.#defaultWorldId, new UserWorld(defaultWorld));
+  constructor(
+    readonly name: TName,
+    registry: Registry = new Registry(),
+  ) {
+    this.registry = registry;
   }
 
-  /** Returns the id of the default world. */
-  get defaultWorldId(): string {
-    return this.#defaultWorldId;
-  }
-
-  /** Returns the default world (always present). */
-  getDefaultWorld(): UserWorld {
-    const world = this.#userWorlds.get(this.#defaultWorldId);
-    if (!world) {
-      // Should be impossible unless internal invariants are violated.
-      throw new Error("SceneContext invariant violated: default world wrapper missing");
-    }
-    return world;
-  }
-
-  /** Returns a world by id, if loaded. */
-  getWorld(id: string): UserWorld | undefined {
-    return this.#userWorlds.get(id);
-  }
-
-  requireWorld(id: string): UserWorld {
-    const world = this.getWorld(id);
-    if (!world) {
-      throw new Error(`World with id "${id}" not found in scene "${this.name}"`);
-    }
-    return world;
-  }
-
-  /** Returns the internal `World` by id for engine / low-level callers. */
-  getInternalWorld(id: string): World | undefined {
-    return this.#worlds.get(id);
-  }
-
-  /** Returns all loaded worlds for this scene. */
-  get worlds() {
-    return this.#userWorlds.values();
-  }
-
-  /** Returns world id + world entries for this scene. */
-  get worldEntries(): IterableIterator<[string, UserWorld]> {
-    return this.#userWorlds.entries();
-  }
-
-  /** Returns whether a world id is currently loaded. */
-  hasWorld(id: string): boolean {
-    return this.#worlds.has(id);
-  }
-
-  /**
-   * Register a world under an id.
-   *
-   * If a world is already registered for the id, it will be replaced.
-   */
-  registerWorld(id: string, world: World): UserWorld {
-    world.setEntityIdAllocator(
-      this.#entityIds,
-      (entityId) => this.assertEntityIdAvailable(id, entityId),
-    );
-    this.#worlds.set(id, world);
-
-    const wrapper = this.#userWorlds.get(id);
-    if (wrapper) {
-      wrapper.setWorld(world);
-      return wrapper;
-    }
-
-    const newWrapper = new UserWorld(world);
-    this.#userWorlds.set(id, newWrapper);
-    return newWrapper;
-  }
-
-  /**
-   * Create and register an additional world.
-   *
-   * The created world is returned as a `UserWorld` wrapper.
-   */
-  loadAdditionalWorld(id: string): UserWorld {
-    if (id === this.#defaultWorldId) {
-      throw new Error(`Cannot load additional world with reserved id "${this.#defaultWorldId}"`);
-    }
-
-    const internal = new World(`${this.name}:${id}`, this.#entityIds);
-    return this.registerWorld(id, internal);
-  }
-
-  /**
-   * Unregister a non-default world.
-   */
-  unloadWorld(id: string): void {
-    this.unregisterWorld(id);
-  }
-
-  /**
-   * Unregister a non-default world.
-   */
-  unregisterWorld(id: string): void {
-    if (id === this.#defaultWorldId) {
-      throw new Error("Cannot unregister default world");
-    }
-
-    this.#worlds.delete(id);
-    this.#userWorlds.delete(id);
-  }
-
-  /**
-   * Clear all worlds and unregister non-default worlds.
-   * @internal
-   */
-  clearAllWorlds(): void {
-    // Clear + drop non-default worlds
-    for (const [id, world] of this.#worlds) {
-      world.clear();
-
-      if (id !== this.#defaultWorldId) {
-        this.#worlds.delete(id);
-        this.#userWorlds.delete(id);
-      }
-    }
-  }
-
-  private assertEntityIdAvailable(ownerWorldId: string, entityId: EntityId): void {
-    for (const [worldId, world] of this.#worlds) {
-      if (worldId === ownerWorldId || !world.hasEntity(entityId)) {
-        continue;
-      }
-
-      throw new Error(`Entity ${entityId} already exists in world "${worldId}"`);
-    }
+  /** Clears all ECS state owned by this scene. */
+  clear(): void {
+    this.registry.clear();
   }
 }

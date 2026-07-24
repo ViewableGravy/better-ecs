@@ -26,7 +26,7 @@ import { RenderManager } from "@engine/core/render-pipeline";
 import { SceneManager } from "@engine/core/scene/scene-manager";
 import type { SceneDefinitionTuple, SceneName } from "@engine/core/scene/scene.types";
 import type { EngineInitializationSystem, EngineSystem, SystemFactoryTuple } from "@engine/core/system/types";
-import type { UserWorld } from "@engine/ecs/world";
+import type { Registry } from "@engine/ecs/registry";
 
 export class EngineClass<
 	TSystems extends SystemFactoryTuple,
@@ -93,8 +93,8 @@ export class EngineClass<
 		return this.scene.all as any;
 	}
 
-	public get world(): UserWorld {
-		return this.scene.world;
+	public get registry(): Registry {
+		return this.scene.registry;
 	}
 
 	public get canvas(): HTMLCanvasElement {

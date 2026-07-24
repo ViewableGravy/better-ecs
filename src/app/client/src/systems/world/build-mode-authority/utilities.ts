@@ -2,11 +2,8 @@ import { buildModeStateDefault, type BuildModeState } from "@client/systems/worl
 import { BuildModeDragPlacement } from "@client/systems/world/build-mode/drag-placement";
 import type { GridCoordinate } from "@client/systems/world/build-mode/grid-singleton";
 import { Placement } from "@client/systems/world/build-mode/placement";
-import { resolvePlacementRenderVisibilityRole } from "@client/systems/world/build-mode/utils";
 import type { RegisteredEngine } from "@engine";
 import type { BuildModeCommand } from "@libs/commands/build-mode";
-import type { ContextId } from "@libs/spatial-contexts";
-import { SpatialContexts } from "@libs/spatial-contexts";
 
 const commandBuildModeState: BuildModeState = {
   ...buildModeStateDefault,
@@ -19,7 +16,7 @@ export function executeBuildModeCommands(
 ): void {
   for (const command of commands) {
     if (command.type === "build-mode:delete") {
-      executeDeleteCommand(engine, command.contextId, command.gridX, command.gridY);
+      executeDeleteCommand(engine, command.gridX, command.gridY);
       continue;
     }
 
@@ -29,18 +26,10 @@ export function executeBuildModeCommands(
 
 function executeDeleteCommand(
   engine: RegisteredEngine,
-  contextId: ContextId,
   gridX: GridCoordinate,
   gridY: GridCoordinate,
 ): void {
-  const manager = SpatialContexts.requireManager(engine.scene.context);
-  const commitWorld = manager.getWorld(contextId);
-
-  if (!commitWorld) {
-    return;
-  }
-
-  Placement.deleteAtGrid(commitWorld, [gridX, gridY]);
+  Placement.deleteAtGrid(engine.scene.registry, [gridX, gridY]);
 }
 
 function executePlaceCommand(
@@ -48,12 +37,7 @@ function executePlaceCommand(
   command: Extract<BuildModeCommand, { type: "build-mode:place" }>,
   buildModeState: BuildModeState,
 ): void {
-  const manager = SpatialContexts.requireManager(engine.scene.context);
-  const commitWorld = manager.getWorld(command.contextId);
-
-  if (!commitWorld) {
-    return;
-  }
+  const commitWorld = engine.scene.registry;
 
   commandBuildModeState.selectedItem = command.itemType;
   commandBuildModeState.placementEndSide = command.placementEndSide;
@@ -62,12 +46,7 @@ function executePlaceCommand(
     inputWorld: commitWorld,
     focusedWorld: commitWorld,
     previewWorld: commitWorld,
-    previewContextId: undefined,
-    focusedContextId: undefined,
-    hoveredContextId: undefined,
-    commitContextId: undefined,
     commitWorld,
-    relationship: undefined,
     blocked: false,
   }, [command.gridX, command.gridY], commandBuildModeState);
 
@@ -75,9 +54,7 @@ function executePlaceCommand(
     return;
   }
 
-  resolvedPlacement.commit.execute(
-    resolvePlacementRenderVisibilityRole(engine, command.contextId),
-  );
+  resolvedPlacement.commit.execute();
 
   BuildModeDragPlacement.recordPlacement(buildModeState, resolvedPlacement.intent.context.gridCoordinates);
 }

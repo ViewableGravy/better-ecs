@@ -1,6 +1,5 @@
-import { OUTSIDE, RenderVisibility } from "@client/components/render-visibility";
 import { CollisionProfiles } from "@client/scenes/world/physics/collision-profiles";
-import type { UserWorld } from "@engine";
+import type { Registry } from "@engine";
 import { Debug, FillColor, Rgba, Shape, Transform2D } from "@engine/components";
 import { CircleCollider } from "@libs/physics";
 
@@ -10,7 +9,7 @@ type SpawnTreeOptions = {
   radius?: number;
 };
 
-export function spawnTree(world: UserWorld, opts: SpawnTreeOptions): number {
+export function spawnTree(world: Registry, opts: SpawnTreeOptions): number {
   const radius = opts.radius ?? 26;
   const entity = world.create();
   const shape = new Shape("circle", radius * 2, radius * 2, 0, 1, 0);
@@ -20,7 +19,6 @@ export function spawnTree(world: UserWorld, opts: SpawnTreeOptions): number {
   world.add(entity, new FillColor(new Rgba(0.2, 0.65, 0.25, 1)));
   world.add(entity, new CircleCollider(radius));
   world.add(entity, CollisionProfiles.solid());
-  world.add(entity, new RenderVisibility(OUTSIDE, 1));
   world.add(entity, new Debug("tree"));
 
   return entity;

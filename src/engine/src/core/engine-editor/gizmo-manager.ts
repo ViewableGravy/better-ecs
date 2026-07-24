@@ -1,106 +1,72 @@
 import invariant from "tiny-invariant";
 import { Gizmo, type GizmoHandle } from "@engine/components";
 import type { EntityId } from "@engine/ecs/entity";
-import type { UserWorld } from "@engine/ecs/world";
-
-type EngineEditorSceneContext = {
-  worldEntries: IterableIterator<[string, UserWorld]>;
-  requireWorld: (id: string) => UserWorld;
-};
+import type { Registry } from "@engine/ecs/registry";
 
 type EngineEditorGizmoManagerOptions = {
-  getSceneContext: () => EngineEditorSceneContext;
-  getActiveWorldId: () => string;
+  getRegistry: () => Registry;
 };
 
 export class EngineEditorGizmoManager {
-  readonly #getSceneContext: () => EngineEditorSceneContext;
-  readonly #getActiveWorldId: () => string;
+  readonly #getRegistry: () => Registry;
 
   public constructor(options: EngineEditorGizmoManagerOptions) {
-    this.#getSceneContext = options.getSceneContext;
-    this.#getActiveWorldId = options.getActiveWorldId;
+    this.#getRegistry = options.getRegistry;
   }
 
-  public create(entityId: EntityId, worldId?: string): boolean {
-    const sceneContext = this.#getSceneContext();
-    const targetWorldId = worldId ?? this.#getActiveWorldId();
-    const world = sceneContext.requireWorld(targetWorldId);
+  public create(entityId: EntityId): boolean {
+    const registry = this.#getRegistry();
 
     invariant(
-      world.all().includes(entityId),
-      `[EngineEditorGizmoManager]: entity ${entityId} not found in world ${targetWorldId}`,
+      registry.all().includes(entityId),
+      `[EngineEditorGizmoManager]: entity ${entityId} not found in the active scene Registry`,
     );
 
     this.clear();
-    world.add(entityId, Gizmo, new Gizmo());
+    registry.add(entityId, Gizmo, new Gizmo());
     return true;
   }
 
   public destroy(entityId: EntityId): boolean {
-    const sceneContext = this.#getSceneContext();
-
-    for (const [, world] of sceneContext.worldEntries) {
-      if (!world.has(entityId, Gizmo)) {
-        continue;
-      }
-
-      world.remove(entityId, Gizmo);
-      return true;
+    const registry = this.#getRegistry();
+    if (!registry.has(entityId, Gizmo)) {
+      return false;
     }
 
-    return false;
+    registry.remove(entityId, Gizmo);
+    return true;
   }
 
   public clear(): void {
-    const sceneContext = this.#getSceneContext();
-
-    for (const [, world] of sceneContext.worldEntries) {
-      for (const gizmoEntityId of world.query(Gizmo)) {
-        world.remove(gizmoEntityId, Gizmo);
-      }
+    const registry = this.#getRegistry();
+    for (const gizmoEntityId of registry.query(Gizmo)) {
+      registry.remove(gizmoEntityId, Gizmo);
     }
   }
 
   public currentEntityId(): EntityId | null {
-    const sceneContext = this.#getSceneContext();
-
-    for (const [, world] of sceneContext.worldEntries) {
-      for (const entityId of world.query(Gizmo)) {
-        return entityId;
-      }
+    for (const entityId of this.#getRegistry().query(Gizmo)) {
+      return entityId;
     }
 
     return null;
   }
 
   public setHoveredHandle(entityId: EntityId, handle: GizmoHandle | null): void {
-    const sceneContext = this.#getSceneContext();
-
-    for (const [, world] of sceneContext.worldEntries) {
-      const gizmo = world.require(entityId, Gizmo);
-
-      if (gizmo.hoveredHandle === handle) {
-        return;
-      }
-
-      gizmo.hoveredHandle = handle;
+    const gizmo = this.#getRegistry().require(entityId, Gizmo);
+    if (gizmo.hoveredHandle === handle) {
       return;
     }
+
+    gizmo.hoveredHandle = handle;
   }
 
   public setActiveHandle(entityId: EntityId, handle: GizmoHandle | null): void {
-    const sceneContext = this.#getSceneContext();
-
-    for (const [, world] of sceneContext.worldEntries) {
-      const gizmo = world.require(entityId, Gizmo);
-
-      if (gizmo.activeHandle === handle) {
-        return;
-      }
-
-      gizmo.activeHandle = handle;
+    const gizmo = this.#getRegistry().require(entityId, Gizmo);
+    if (gizmo.activeHandle === handle) {
       return;
     }
+
+    gizmo.activeHandle = handle;
   }
 }

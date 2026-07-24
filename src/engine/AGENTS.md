@@ -4,7 +4,7 @@
 
 The `@repo/engine` package is the core ECS engine providing:
 - Entity-Component-System architecture
-- World management and queries
+- Scene-owned Registry management and queries
 - System lifecycle (update/render phases)
 - Scene management and transitions
 - Type-safe hooks for system development
@@ -22,7 +22,7 @@ When adding new features to the engine, prefer creating a dedicated **Manager cl
 class SceneManager<TScenes> {
   set(sceneName: string): Promise<void>;
   get current(): string | null;
-  get world(): UserWorld;
+  get registry(): Registry;
 }
 
 // Access via: engine.scene.set("game")
@@ -31,7 +31,7 @@ class SceneManager<TScenes> {
 class EngineClass {
   setScene(name: string): Promise<void>;
   getActiveSceneName(): string;
-  getActiveSceneWorld(): UserWorld;
+  getActiveSceneRegistry(): Registry;
 }
 ```
 
@@ -94,7 +94,7 @@ See top-level AGENTS.md for testing instructions. Engine-specific notes:
 
 The engine should export:
 - Core types and helpers (`createEngine`, `createSystem`, `createScene`)
-- Hooks (`useWorld`, `useSystem`, `useSetScene`, etc.)
+- Context selectors (`ActiveRegistry`, `System`, `SetScene`, etc.)
 - Type utilities (`AllSystemNames`, `AllSceneNames`)
 
 **Do NOT export:**

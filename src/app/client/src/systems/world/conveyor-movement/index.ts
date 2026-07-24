@@ -5,12 +5,12 @@ import { PhysicsWorldManager } from "@client/scenes/world/physics/physics-world-
 import { BELT_QUERY_FILTER, SHARED_BELT_WORLD_TRANSFORM, SHARED_MOTION, SHARED_PLAYER_WORLD_TRANSFORM } from "@client/systems/world/conveyor-movement/constants";
 import { createSystem, resolveWorldTransform2D, Vec2, type EntityId } from "@engine";
 import { Transform2D } from "@engine/components";
-import { Delta, fromContext, World } from "@engine/context";
+import { Delta, fromContext, ActiveRegistry } from "@engine/context";
 import { COLLISION_LAYERS, RectangleCollider } from "@libs/physics";
 
 export const System = createSystem("main:conveyor-movement-authority")({
   system() {
-    const world = fromContext(World);
+    const world = fromContext(ActiveRegistry);
     const [updateDelta] = fromContext(Delta);
     const seconds = updateDelta / 1000;
     const physicsWorld = PhysicsWorldManager.requireWorld(world);

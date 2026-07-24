@@ -1,5 +1,4 @@
 import { PlayerComponent } from "@client/components/player";
-import { OUTSIDE } from "@client/components/render-visibility";
 import { spawnBox } from "@client/entities/box";
 import { PhysicsWorldManager } from "@client/scenes/world/physics/physics-world-manager";
 import { WorldTestHarness } from "@client/scenes/world/testing/WorldTestHarness";
@@ -20,7 +19,7 @@ describe("WorldTestHarness", () => {
 
     expect(harness.playerPosition()).toEqual({ x: 100, y: 0 });
 
-    const player = harness.world.require(harness.requirePlayerEntityId(), PlayerComponent);
+    const player = harness.registry.require(harness.requirePlayerEntityId(), PlayerComponent);
 
     expect(player.animationState).toBe("moving");
     expect(player.direction).toBe("e");
@@ -64,15 +63,14 @@ describe("WorldTestHarness", () => {
       },
     });
 
-    const boxEntityId = spawnBox(harness.world, {
+    const boxEntityId = spawnBox(harness.registry, {
       snappedX: 0,
       snappedY: 0,
-      renderVisibilityRole: OUTSIDE,
     });
 
     harness.resolveCollision();
 
-    const physicsWorldAfter = PhysicsWorldManager.requireWorld(harness.world);
+    const physicsWorldAfter = PhysicsWorldManager.requireWorld(harness.registry);
     const playerBodyAfter = physicsWorldAfter.queryFirstLayer(COLLISION_LAYERS.ACTOR, PlayerComponent);
     const boxBodyAfter = physicsWorldAfter.getBody(boxEntityId);
 

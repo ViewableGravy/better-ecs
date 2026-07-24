@@ -19,7 +19,7 @@ export interface Register {
 
 export type AnyEngine = {
   systems: Record<string, any>;
-  world: any;
+  registry: any;
   meta: any;
   /**
    * Record of scene names to scene definitions.

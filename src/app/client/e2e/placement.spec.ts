@@ -5,14 +5,12 @@ declare global {
     __BETTER_ECS_E2E__?: {
       reset: () => void;
       placeableCount: () => number;
-      focusedContextId: () => string;
     };
   }
 }
 
 type E2EHarnessSnapshot = {
   placeableCount: number;
-  focusedContextId: string;
 };
 
 async function waitForHarness(page: Page): Promise<void> {
@@ -28,7 +26,6 @@ async function resetScene(page: Page): Promise<void> {
 async function readHarness(page: Page): Promise<E2EHarnessSnapshot> {
   return page.evaluate(() => ({
     placeableCount: window.__BETTER_ECS_E2E__?.placeableCount() ?? -1,
-    focusedContextId: window.__BETTER_ECS_E2E__?.focusedContextId() ?? "",
   }));
 }
 
@@ -42,7 +39,7 @@ async function deleteAt(page: Page, x: number, y: number): Promise<void> {
   await page.waitForTimeout(120);
 }
 
-test.describe("placement e2e scene", () => {
+test.describe("placement scene", () => {
   test("supports setup, placement assertions, and teardown-driven reset", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("button", { name: "Go to E2E Scene" }).click();
@@ -50,28 +47,30 @@ test.describe("placement e2e scene", () => {
     await waitForHarness(page);
 
     await resetScene(page);
+    await page.keyboard.press("3");
+    await page.waitForTimeout(120);
+    await placeAt(page, 290, 260);
+
     await page.keyboard.press("1");
     await page.waitForTimeout(120);
 
     const baseline = await readHarness(page);
-    expect(baseline.focusedContextId).toBe("default");
-    expect(baseline.placeableCount).toBe(0);
+    expect(baseline.placeableCount).toBe(1);
 
     await placeAt(page, 260, 260);
     await placeAt(page, 320, 260);
 
     const afterPlacement = await readHarness(page);
-    expect(afterPlacement.placeableCount).toBe(2);
+    expect(afterPlacement.placeableCount).toBe(3);
 
     await deleteAt(page, 260, 260);
 
     const afterDelete = await readHarness(page);
-    expect(afterDelete.placeableCount).toBe(1);
+    expect(afterDelete.placeableCount).toBe(2);
 
     await resetScene(page);
 
     const afterReset = await readHarness(page);
     expect(afterReset.placeableCount).toBe(0);
-    expect(afterReset.focusedContextId).toBe("default");
   });
 });

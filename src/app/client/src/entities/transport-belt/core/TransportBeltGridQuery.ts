@@ -9,7 +9,7 @@ import {
     type CardinalSide,
 } from "@client/systems/world/build-mode/grid-neighbor-query";
 import { type GridCoordinates } from "@client/systems/world/build-mode/grid-singleton";
-import type { EntityId, UserWorld } from "@engine";
+import type { EntityId, Registry } from "@engine";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -35,7 +35,7 @@ type FindBeltEntityAtCoordinatesOptions = {
 
 export class TransportBeltGridQuery {
   public static resolveBeltCoordinates(
-    world: UserWorld,
+    world: Registry,
     beltEntityId: EntityId,
   ): GridCoordinates {
     return GridNeighborQuery.resolveEntityCoordinates(world, beltEntityId);
@@ -63,7 +63,7 @@ export class TransportBeltGridQuery {
   }
 
   public static findBeltEntityAtCoordinates(
-    world: UserWorld,
+    world: Registry,
     coordinates: GridCoordinates,
     options: FindBeltEntityAtCoordinatesOptions = {},
   ): EntityId | null {
@@ -77,7 +77,7 @@ export class TransportBeltGridQuery {
   }
 
   public static resolveNeighborEntityId(
-    world: UserWorld,
+    world: Registry,
     coordinates: GridCoordinates,
     side: CardinalSide,
     options: FindBeltEntityAtCoordinatesOptions = {},
@@ -93,7 +93,7 @@ export class TransportBeltGridQuery {
   }
 
   public static resolveNeighborEntityIdInDirection(
-    world: UserWorld,
+    world: Registry,
     coordinates: GridCoordinates,
     direction: TransportBeltDirection,
     options: FindBeltEntityAtCoordinatesOptions = {},
@@ -102,7 +102,7 @@ export class TransportBeltGridQuery {
   }
 
   public static buildNeighborMatrix(
-    world: UserWorld,
+    world: Registry,
     coordinates: GridCoordinates,
   ): TransportBeltNeighborMatrix {
     const variantsByOffset = new Map<string, TransportBeltVariant>();

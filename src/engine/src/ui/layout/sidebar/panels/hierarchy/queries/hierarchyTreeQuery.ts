@@ -1,6 +1,6 @@
 import { Debug, EditorHoverHighlight, Gizmo, Parent } from "@engine/components";
 import type { EntityId } from "@engine/ecs/entity";
-import type { UserWorld } from "@engine/ecs/world";
+import type { Registry } from "@engine/ecs/registry";
 import { type EngineUiContextValue } from "@engine/ui/utilities/engine-context";
 import { createQueryOptions } from "@engine/ui/utilities/query/create-query-options";
 
@@ -18,7 +18,7 @@ export type HierarchyEntityNode = {
   components: ComponentTreeNode[];
 };
 
-export type HierarchyWorldTree = {
+export type HierarchyRegistryTree = {
   rootEntityIds: EntityId[];
   expandedEntityIds: EntityId[];
   entitiesById: Record<string, HierarchyEntityNode>;
@@ -26,9 +26,7 @@ export type HierarchyWorldTree = {
 
 export type HierarchyTreeSnapshot = {
   activeSceneName: string | null;
-  activeWorldId: string | null;
-  worldIds: string[];
-  worldsById: Record<string, HierarchyWorldTree>;
+  registry: HierarchyRegistryTree;
 };
 
 const HIERARCHY_TREE_QUERY_KEY = ["engine-ui", "hierarchy-tree"] as const;
@@ -58,51 +56,27 @@ function buildHierarchyTreeSnapshot(
   engine: EngineUiContextValue,
   previousSnapshot?: HierarchyTreeSnapshot,
 ): HierarchyTreeSnapshot {
-  const worldIds: string[] = [];
-  const worldsById: Record<string, HierarchyWorldTree> = {};
-
-  for (const [worldId] of engine.scene.context.worldEntries) {
-    worldIds.push(worldId);
-  }
-
-  worldIds.sort((left, right) => left.localeCompare(right));
-  const stableWorldIds = reuseArray(previousSnapshot?.worldIds, worldIds);
-  let hasWorldTreeChanges = previousSnapshot === undefined;
-
-  for (const worldId of stableWorldIds) {
-    const world = engine.scene.context.requireWorld(worldId);
-    const previousWorldTree = previousSnapshot?.worldsById[worldId];
-    const nextWorldTree = buildWorldTree(world, previousWorldTree);
-    worldsById[worldId] = nextWorldTree;
-
-    if (nextWorldTree !== previousWorldTree) {
-      hasWorldTreeChanges = true;
-    }
-  }
+  const nextRegistryTree = buildRegistryTree(engine.scene.registry, previousSnapshot?.registry);
 
   if (
     previousSnapshot &&
-    !hasWorldTreeChanges &&
     previousSnapshot.activeSceneName === engine.scene.activeSceneName &&
-    previousSnapshot.activeWorldId === engine.scene.activeWorldId &&
-    previousSnapshot.worldIds === stableWorldIds
+    previousSnapshot.registry === nextRegistryTree
   ) {
     return previousSnapshot;
   }
 
   return {
     activeSceneName: engine.scene.activeSceneName,
-    activeWorldId: engine.scene.activeWorldId,
-    worldIds: stableWorldIds,
-    worldsById,
+    registry: nextRegistryTree,
   };
 }
 
-function buildWorldTree(
-  world: UserWorld,
-  previousWorldTree?: HierarchyWorldTree,
-): HierarchyWorldTree {
-  const allEntityIds = world
+function buildRegistryTree(
+  registry: Registry,
+  previousRegistryTree?: HierarchyRegistryTree,
+): HierarchyRegistryTree {
+  const allEntityIds = registry
     .all()
     .slice()
     .sort((left, right) => left - right);
@@ -118,13 +92,13 @@ function buildWorldTree(
     visibleEntityIds.push(entityId);
     visibleEntityIdSet.add(entityId);
 
-    if (gizmoEntityId === null && world.has(entityId, Gizmo)) {
+    if (gizmoEntityId === null && registry.has(entityId, Gizmo)) {
       gizmoEntityId = entityId;
     }
   }
 
   for (const entityId of visibleEntityIds) {
-    const parentId = world.get(entityId, Parent)?.entityId;
+    const parentId = registry.get(entityId, Parent)?.entityId;
     if (parentId !== undefined) {
       parentByEntityId.set(entityId, parentId);
     }
@@ -152,7 +126,7 @@ function buildWorldTree(
   }
 
   rootEntityIds.sort((left, right) => left - right);
-  const stableRootEntityIds = reuseArray(previousWorldTree?.rootEntityIds, rootEntityIds);
+  const stableRootEntityIds = reuseArray(previousRegistryTree?.rootEntityIds, rootEntityIds);
 
   const expandedEntityIds: EntityId[] = [];
   if (gizmoEntityId !== null) {
@@ -176,13 +150,13 @@ function buildWorldTree(
   }
 
   const entitiesById: Record<string, HierarchyEntityNode> = {};
-  let hasEntityNodeChanges = previousWorldTree === undefined;
+  let hasEntityNodeChanges = previousRegistryTree === undefined;
 
   for (const entityId of visibleEntityIds) {
     const entityIdKey = entityId.toString();
-    const previousNode = previousWorldTree?.entitiesById[entityIdKey];
-    const debugName = world.get(entityId, Debug)?.name ?? null;
-    const components = world
+    const previousNode = previousRegistryTree?.entitiesById[entityIdKey];
+    const debugName = registry.get(entityId, Debug)?.name ?? null;
+    const components = registry
       .getComponentTypes(entityId)
       .filter((componentType) => componentType !== EditorHoverHighlight)
       .map((componentType) => ({
@@ -212,16 +186,16 @@ function buildWorldTree(
     }
   }
 
-  const stableExpandedEntityIds = reuseArray(previousWorldTree?.expandedEntityIds, expandedEntityIds);
+  const stableExpandedEntityIds = reuseArray(previousRegistryTree?.expandedEntityIds, expandedEntityIds);
 
   if (
-    previousWorldTree &&
+    previousRegistryTree &&
     !hasEntityNodeChanges &&
-    Object.keys(previousWorldTree.entitiesById).length === visibleEntityIds.length &&
-    previousWorldTree.rootEntityIds === stableRootEntityIds &&
-    previousWorldTree.expandedEntityIds === stableExpandedEntityIds
+    Object.keys(previousRegistryTree.entitiesById).length === visibleEntityIds.length &&
+    previousRegistryTree.rootEntityIds === stableRootEntityIds &&
+    previousRegistryTree.expandedEntityIds === stableExpandedEntityIds
   ) {
-    return previousWorldTree;
+    return previousRegistryTree;
   }
 
   return {

@@ -1,4 +1,4 @@
-import type { EntityId, UserWorld } from "@engine";
+import type { EntityId, Registry } from "@engine";
 import { CircleCollider } from "@libs/physics/colliders/circle";
 import { CompoundCollider } from "@libs/physics/colliders/compound";
 import { PointCollider } from "@libs/physics/colliders/point";
@@ -12,7 +12,7 @@ import type { Collider } from "@libs/physics/types";
  * use a compound collider as their primary shape while still benefiting from broad-phase
  * pruning via its parent collider.
  */
-export function getEntityCollider(world: UserWorld, entityId: EntityId): Collider | undefined {
+export function getEntityCollider(world: Registry, entityId: EntityId): Collider | undefined {
   const compound = world.get(entityId, CompoundCollider);
   if (compound) {
     return compound;

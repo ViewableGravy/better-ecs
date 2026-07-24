@@ -1,5 +1,4 @@
 import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
-import { OUTSIDE, RenderVisibility } from "@client/components/render-visibility";
 import {
     getTransportBeltFlow,
     type TransportBeltVariant,
@@ -12,7 +11,7 @@ import {
 } from "@client/entities/transport-belt/types";
 import { CollisionProfiles } from "@client/scenes/world/physics/collision-profiles";
 import { TRANSPORT_BELT_COLLIDER_SIZE } from "@client/systems/world/build-mode/metrics";
-import { Vec2, type EntityId, type UserWorld } from "@engine";
+import { Vec2, type EntityId, type Registry } from "@engine";
 import { AnimatedSprite, Debug, Transform2D } from "@engine/components";
 import { RectangleCollider } from "@libs/physics";
 import invariant from "tiny-invariant";
@@ -29,7 +28,7 @@ type SpawnTransportBeltOptions = {
   profile?: TransportBeltSpawnProfile;
 };
 
-export function spawnTransportBelt(world: UserWorld, options: SpawnTransportBeltOptions): TransportBeltEntityId {
+export function spawnTransportBelt(world: Registry, options: SpawnTransportBeltOptions): TransportBeltEntityId {
   const variant = options.variant ?? "horizontal-right";
   const profile = options.profile ?? "placed";
 
@@ -54,7 +53,6 @@ export function spawnTransportBelt(world: UserWorld, options: SpawnTransportBelt
   );
   world.add(belt, CollisionProfiles.conveyor());
   world.add(belt, new ConveyorBeltComponent(variant, options.speed));
-  world.add(belt, new RenderVisibility(OUTSIDE, 1));
   world.add(belt, new Debug("transport-belt"));
 
   if (options.connectToNeighbors ?? true) {
@@ -64,12 +62,12 @@ export function spawnTransportBelt(world: UserWorld, options: SpawnTransportBelt
   return belt;
 }
 
-export function destroyTransportBelt(world: UserWorld, beltEntityId: EntityId): void {
+export function destroyTransportBelt(world: Registry, beltEntityId: EntityId): void {
   TransportBeltConnectionUtils.destroyBelt(world, beltEntityId);
 }
 
 export function updateTransportBeltVariant(
-  world: UserWorld,
+  world: Registry,
   beltEntityId: EntityId,
   variant: TransportBeltVariant,
 ): void {

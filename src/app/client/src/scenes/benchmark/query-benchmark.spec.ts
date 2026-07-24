@@ -3,18 +3,20 @@ import { describe, expect, it } from "vitest";
 import { BENCHMARK_QUERY_SELECTIVE_STRIDE } from "@client/scenes/benchmark/config";
 import { QueryBenchmark } from "@client/scenes/benchmark/query-benchmark";
 import { BenchmarkQueryMarker } from "@client/scenes/benchmark/query-marker";
-import { UserWorld, World } from "@engine";
+import { Registry } from "@engine";
 import { Sprite, Transform2D } from "@engine/components";
 
 describe("QueryBenchmark", () => {
   it("compares equivalent dense and selective traversals", () => {
-    const world = new UserWorld(new World("benchmark"));
+    const world = new Registry();
     const benchmark = new QueryBenchmark(world);
     const entityCount = 20;
 
     for (let index = 0; index < entityCount; index += 1) {
       const entityId = world.create();
       world.add(entityId, new Transform2D(index, 0));
+
+      // @ts-expect-error: Sprite is not a required component for the benchmark, but it is used to ensure that the query has a non-zero number of components to match against.
       world.add(entityId, new Sprite("test", 1, 1));
     }
 

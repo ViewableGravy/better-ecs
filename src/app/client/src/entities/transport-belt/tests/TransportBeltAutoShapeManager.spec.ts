@@ -3,11 +3,11 @@ import { destroyTransportBelt, spawnTransportBelt } from "@client/entities/trans
 import { TransportBeltAutoShapeManager } from "@client/entities/transport-belt/placement/TransportBeltAutoShapeManager";
 import { TransportBeltTerminalDecoration } from "@client/entities/transport-belt/placement/TransportBeltTerminalDecoration";
 import { GridSingleton } from "@client/systems/world/build-mode/grid-singleton";
-import { UserWorld, World } from "@engine";
+import { Registry } from "@engine";
 import { describe, expect, it } from "vitest";
 
 function findTerminalDecorationEntityId(
-  world: UserWorld,
+  world: Registry,
   ownerEntityId: number,
   role: "start" | "end",
 ): number | null {
@@ -28,7 +28,7 @@ function findTerminalDecorationEntityId(
 
 describe("TransportBeltAutoShapeManager", () => {
   it("bends a belt when exactly one side neighbor uniquely feeds its start", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
 
     spawnTransportBelt(world, { x: 10, y: 10, variant: "horizontal-left" });
     spawnTransportBelt(world, { x: 30, y: 10, variant: "angled-top-left" });
@@ -41,7 +41,7 @@ describe("TransportBeltAutoShapeManager", () => {
   });
 
   it("keeps the original straight direction when two side inputs compete", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
 
     spawnTransportBelt(world, { x: 10, y: 10, variant: "horizontal-left" });
     spawnTransportBelt(world, { x: 30, y: 10, variant: "angled-top-left" });
@@ -55,7 +55,7 @@ describe("TransportBeltAutoShapeManager", () => {
   });
 
   it("prefers staying straight when the original tail already has an incoming belt", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
 
     spawnTransportBelt(world, { x: 10, y: -10, variant: "vertical-down" });
     const middleBeltId = spawnTransportBelt(world, { x: 10, y: 10, variant: "vertical-down" });
@@ -68,7 +68,7 @@ describe("TransportBeltAutoShapeManager", () => {
   });
 
   it("keeps a horizontal line straight when a side feeder faces its middle belt", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
 
     spawnTransportBelt(world, { x: -10, y: 10, variant: "horizontal-right" });
     const middleBeltId = spawnTransportBelt(world, { x: 10, y: 10, variant: "horizontal-right" });
@@ -81,7 +81,7 @@ describe("TransportBeltAutoShapeManager", () => {
   });
 
   it("returns a vertical line to straight after the upstream belt is removed and re-added beside a side feeder", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
 
     const upperBeltId = spawnTransportBelt(world, { x: 10, y: -10, variant: "vertical-down" });
     const middleBeltId = spawnTransportBelt(world, { x: 10, y: 10, variant: "vertical-down" });
@@ -108,7 +108,7 @@ describe("TransportBeltAutoShapeManager", () => {
   });
 
   it("does not flatten a valid curve when a straight belt is added on its head side", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
 
     spawnTransportBelt(world, { x: 10, y: -10, variant: "vertical-down" });
     const curvedBeltId = spawnTransportBelt(world, { x: 10, y: 10, variant: "angled-bottom-right" });
@@ -120,7 +120,7 @@ describe("TransportBeltAutoShapeManager", () => {
   });
 
   it("reverts a bent belt back to straight when the side feeder is removed", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
 
     const sideFeederBeltId = spawnTransportBelt(world, { x: 10, y: 10, variant: "horizontal-right" });
     const bentBeltId = spawnTransportBelt(world, { x: 30, y: 10, variant: "vertical-up" });
@@ -139,7 +139,7 @@ describe("TransportBeltAutoShapeManager", () => {
   });
 
   it("straightens a bottom-right belt when an opposite straight feeder is added later", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
 
     spawnTransportBelt(world, { x: 10, y: 50, variant: "vertical-up" });
     const middleBeltId = spawnTransportBelt(world, { x: 10, y: 30, variant: "angled-bottom-right" });
@@ -157,7 +157,7 @@ describe("TransportBeltAutoShapeManager", () => {
   });
 
   it("preserves an existing valid bend when a competing backside belt is added", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
 
     spawnTransportBelt(world, { x: 10, y: 30, variant: "angled-right-up" });
     const bentBeltId = spawnTransportBelt(world, { x: 10, y: 10, variant: "angled-bottom-right" });
@@ -169,7 +169,7 @@ describe("TransportBeltAutoShapeManager", () => {
   });
 
   it("removes a tail belt end decoration after adding a conveyor directly in front of it", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
 
     const headBeltId = spawnTransportBelt(world, { x: 10, y: 10, variant: "vertical-down" });
     const placedBeltId = spawnTransportBelt(world, { x: 10, y: 30, variant: "vertical-down" });

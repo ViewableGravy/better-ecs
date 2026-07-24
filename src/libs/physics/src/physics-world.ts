@@ -1,5 +1,6 @@
-import type { EntityId, UserWorld } from "@engine";
+import type { EntityId, Registry } from "@engine";
 import { Transform2D } from "@engine/components";
+import { getWorldTransform2D } from "@engine/ecs/hierarchy";
 import { collides } from "@libs/physics/check";
 import { CircleCollider } from "@libs/physics/colliders/circle";
 import { CompoundCollider } from "@libs/physics/colliders/compound";
@@ -36,14 +37,14 @@ type QueryLayerComponent = Class<unknown>;
 
 export class PhysicsWorld {
   private readonly bodiesByEntityId = new Map<EntityId, PhysicsBody>();
-  private world: UserWorld | undefined;
+  private world: Registry | undefined;
 
-  public build(world: UserWorld): void {
+  public build(world: Registry): void {
     this.world = world;
     this.bodiesByEntityId.clear();
 
     for (const entityId of world.query(Transform2D)) {
-      const transform = world.require(entityId, Transform2D);
+      const transform = getWorldTransform2D(world, entityId) ?? world.require(entityId, Transform2D);
 
       const collider = getEntityCollider(world, entityId);
       if (!collider) {

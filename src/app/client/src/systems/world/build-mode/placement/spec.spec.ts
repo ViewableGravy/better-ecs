@@ -1,4 +1,3 @@
-import { OUTSIDE } from "@client/components/render-visibility";
 import { spawnBox } from "@client/entities/box";
 import { BoxGhost } from "@client/entities/box/ghost";
 import { spawnLandClaim } from "@client/entities/land-claim";
@@ -13,7 +12,7 @@ import { GridSingleton } from "@client/systems/world/build-mode/grid-singleton";
 import { createGhostPreviewAdapter } from "@client/systems/world/build-mode/placement/preview";
 import { createBuildItemSpec } from "@client/systems/world/build-mode/placement/spec";
 import type { PlacementContext } from "@client/systems/world/build-mode/placement/types";
-import { UserWorld, World } from "@engine";
+import { Registry } from "@engine";
 import { describe, expect, it } from "vitest";
 
 /**********************************************************************************************************
@@ -21,7 +20,7 @@ import { describe, expect, it } from "vitest";
  **********************************************************************************************************/
 
 function createPlacementContext(
-  world: UserWorld,
+  world: Registry,
   gridCoordinates: ReturnType<typeof GridSingleton.worldToGridCoordinates>,
   snappedX: number,
   snappedY: number,
@@ -32,9 +31,6 @@ function createPlacementContext(
     focusedWorld: world,
     previewWorld: world,
     commitWorld: world,
-    previewContextId: undefined,
-    commitContextId: undefined,
-    relationship: undefined,
     gridCoordinates,
     snappedX,
     snappedY,
@@ -44,7 +40,7 @@ function createPlacementContext(
 
 describe("createBuildItemSpec", () => {
   it("checks every occupied footprint cell when using the default placement rules", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const anchorCoordinates = GridSingleton.worldToGridCoordinates(0, 0);
     const [claimSnappedX, claimSnappedY] = GridSingleton.gridCoordinatesToWorldOrigin(anchorCoordinates);
     const occupiedCoordinates = GridSingleton.worldToGridCoordinates(20, 0);
@@ -70,12 +66,10 @@ describe("createBuildItemSpec", () => {
       snappedX: claimSnappedX,
       snappedY: claimSnappedY,
       ownerName: LAND_CLAIM_OWNER_NAME,
-      renderVisibilityRole: OUTSIDE,
     });
     spawnBox(world, {
       snappedX: occupiedSnappedX,
       snappedY: occupiedSnappedY,
-      renderVisibilityRole: OUTSIDE,
     });
 
     PhysicsWorldManager.beginFrame([world]);

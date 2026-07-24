@@ -3,14 +3,14 @@ import {
     ensurePlayer,
     spawnPlayer,
 } from "@client/entities/player";
-import { UserWorld, World } from "@engine";
+import { Registry } from "@engine";
 import { Parent } from "@engine/components";
 import { CircleCollider } from "@libs/physics";
 import { describe, expect, it } from "vitest";
 
 describe("Player grounded collider", () => {
   it("spawns the player with a single grounded circle collider", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const playerEntityId = spawnPlayer(world);
 
     expect(world.require(playerEntityId, CircleCollider).radius).toBe(PLAYER_GROUNDED_HITBOX_RADIUS);
@@ -18,7 +18,7 @@ describe("Player grounded collider", () => {
   });
 
   it("ensurePlayer reuses the existing spawned player", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const playerEntityId = spawnPlayer(world);
     const ensuredPlayerEntityId = ensurePlayer(world);
 

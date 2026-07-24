@@ -1,6 +1,6 @@
 import { GridBounds } from "@client/components/grid-bounds";
 import { GridSingleton } from "@client/systems/world/build-mode/grid-singleton";
-import { type UserWorld } from "@engine";
+import { type Registry } from "@engine";
 import { Rgba, Shape, Transform2D } from "@engine/components";
 import { System as ContextSystem, fromContext } from "@engine/context";
 import type {
@@ -47,7 +47,7 @@ const lineY = {
 };
 
 export function drawGrid(
-  world: UserWorld,
+  world: Registry,
   renderer: Renderer,
   queue: RenderQueue,
   frameAllocator: InternalFrameAllocator<EngineFrameAllocatorRegistry>,
@@ -107,7 +107,7 @@ export function drawGrid(
 
     const command = frameAllocator.acquire("engine:render-command");
     command.type = "shape-draw";
-    command.world = world;
+    command.registry = world;
     command.entityId = null;
     command.shape = shape;
     command.layer = GRID_LAYER;
@@ -122,7 +122,7 @@ export function drawGrid(
 
     const command = frameAllocator.acquire("engine:render-command");
     command.type = "shape-draw";
-    command.world = world;
+    command.registry = world;
     command.entityId = null;
     command.shape = shape;
     command.layer = GRID_LAYER;
@@ -146,7 +146,7 @@ function alignUp(value: number): number {
   );
 }
 
-function getGridBounds(world: UserWorld):
+function getGridBounds(world: Registry):
   | {
       minX: number;
       minY: number;

@@ -13,7 +13,7 @@ import {
     DELETE_POINT_RADIUS,
     HALF_BOX_SIZE,
 } from "@client/systems/world/build-mode/metrics";
-import { Vec2, type EntityId, type MousePoint, type UserWorld } from "@engine";
+import { Vec2, type EntityId, type MousePoint, type Registry } from "@engine";
 import { Transform2D } from "@engine/components";
 import {
     CircleCollider,
@@ -47,7 +47,7 @@ export class PlacementQueries {
     mask: COLLISION_LAYERS.SOLID | COLLISION_LAYERS.CONVEYOR,
   };
 
-  public static deleteAt(world: UserWorld, worldPointer: MousePoint): void {
+  public static deleteAt(world: Registry, worldPointer: MousePoint): void {
     PlacementQueries.deletePointTransform.curr.pos.set(worldPointer.x, worldPointer.y);
     PlacementQueries.deletePointTransform.prev.pos.set(worldPointer.x, worldPointer.y);
 
@@ -61,7 +61,7 @@ export class PlacementQueries {
     PlacementQueries.deleteEntity(world, hit?.entityId);
   }
 
-  public static deleteAtGrid(world: UserWorld, gridCoordinates: GridCoordinates): void {
+  public static deleteAtGrid(world: Registry, gridCoordinates: GridCoordinates): void {
     const overlaps = PlacementQueries.queryPlacementOccupantsByGrid(world, gridCoordinates);
 
     PlacementQueries.deleteEntity(
@@ -72,7 +72,7 @@ export class PlacementQueries {
     );
   }
 
-  private static deleteEntity(world: UserWorld, entityId: EntityId | undefined): void {
+  private static deleteEntity(world: Registry, entityId: EntityId | undefined): void {
     if (entityId === undefined) {
       return;
     }
@@ -103,7 +103,7 @@ export class PlacementQueries {
     world.destroy(entityId);
   }
 
-  public static replaceTransportBeltAt(world: UserWorld, x: number, y: number): void {
+  public static replaceTransportBeltAt(world: Registry, x: number, y: number): void {
     const targetCoordinates = GridSingleton.worldToGridCoordinates(x, y);
 
     PlacementQueries.destroyPlacementOccupantsByGrid(world, targetCoordinates, {
@@ -117,12 +117,12 @@ export class PlacementQueries {
   }
 
   public static destroyPlacementOccupantsByGrid(
-    world: UserWorld,
+    world: Registry,
     gridCoordinates: GridCoordinates,
     options: {
       mask?: CollisionLayerMask;
       shouldDestroy?: (occupant: PhysicsBody) => boolean;
-      destroy: (world: UserWorld, entityId: EntityId) => void;
+      destroy: (world: Registry, entityId: EntityId) => void;
     },
   ): void {
     const overlaps = PlacementQueries.queryPlacementOccupantsByGrid(world, gridCoordinates, options.mask);
@@ -137,7 +137,7 @@ export class PlacementQueries {
   }
 
   public static queryPlacementOccupantsByGrid(
-    world: UserWorld,
+    world: Registry,
     gridCoordinates: GridCoordinates,
     mask: CollisionLayerMask = PlacementQueries.placementFilter.mask,
   ): PhysicsBody[] {
@@ -161,7 +161,7 @@ export class PlacementQueries {
   }
 
   public static queryFirstPlacementOverlap(
-    world: UserWorld,
+    world: Registry,
     gridCoordinates: GridCoordinates,
     mask: CollisionLayerMask = PlacementQueries.placementFilter.mask,
   ): PhysicsBody | undefined {

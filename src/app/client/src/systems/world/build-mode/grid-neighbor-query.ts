@@ -5,7 +5,7 @@ import {
     type GridCoordinate,
     type GridCoordinates,
 } from "@client/systems/world/build-mode/grid-singleton";
-import type { EntityId, UserWorld } from "@engine";
+import type { EntityId, Registry } from "@engine";
 import { Transform2D } from "@engine/components";
 
 /**********************************************************************************************************
@@ -32,7 +32,7 @@ export const CARDINAL_GRID_OFFSETS: Readonly<Record<CardinalSide, readonly [x: n
 };
 
 export class GridNeighborQuery {
-  public static resolveEntityCoordinates(world: UserWorld, entityId: EntityId): GridCoordinates {
+  public static resolveEntityCoordinates(world: Registry, entityId: EntityId): GridCoordinates {
     const gridPosition = world.get(entityId, GridPosition);
 
     if (gridPosition) {
@@ -59,7 +59,7 @@ export class GridNeighborQuery {
   }
 
   public static findEntityAtCoordinates<TComponent>(
-    world: UserWorld,
+    world: Registry,
     entityIds: Iterable<EntityId>,
     resolveComponent: (entityId: EntityId) => TComponent,
     coordinates: GridCoordinates,
@@ -93,7 +93,7 @@ export class GridNeighborQuery {
   }
 
   public static resolveNeighborEntityId<TComponent>(
-    world: UserWorld,
+    world: Registry,
     entityIds: Iterable<EntityId>,
     resolveComponent: (entityId: EntityId) => TComponent,
     coordinates: GridCoordinates,

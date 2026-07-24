@@ -2,12 +2,12 @@ import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import { spawnTransportBelt } from "@client/entities/transport-belt";
 import { TransportBeltRotationVariantManager } from "@client/entities/transport-belt/placement/TransportBeltRotationVariantManager";
 import { GridSingleton } from "@client/systems/world/build-mode/grid-singleton";
-import { UserWorld, World } from "@engine";
+import { Registry } from "@engine";
 import { describe, expect, it } from "vitest";
 
 describe("TransportBeltRotationVariantManager", () => {
   it("derives the default straight preview variant when no neighbors contribute", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
 
     expect(
       TransportBeltRotationVariantManager.deriveBeltVariant(world, {
@@ -18,7 +18,7 @@ describe("TransportBeltRotationVariantManager", () => {
   });
 
   it("bends the preview tail when exactly one side neighbor feeds the tile", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
 
     spawnTransportBelt(world, { x: -20, y: 0, variant: "horizontal-right" });
 
@@ -31,7 +31,7 @@ describe("TransportBeltRotationVariantManager", () => {
   });
 
   it("prefers the back connection over a competing side feeder for preview orientation", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
 
     spawnTransportBelt(world, { x: -20, y: 0, variant: "horizontal-right" });
     spawnTransportBelt(world, { x: 0, y: 20, variant: "vertical-up" });
@@ -45,7 +45,7 @@ describe("TransportBeltRotationVariantManager", () => {
   });
 
   it("preserves a placed belt's valid incoming side before re-bending it", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
 
     spawnTransportBelt(world, { x: 0, y: 20, variant: "vertical-up" });
     const beltEntityId = spawnTransportBelt(world, { x: 0, y: 0, variant: "angled-bottom-right" });
@@ -54,7 +54,7 @@ describe("TransportBeltRotationVariantManager", () => {
   });
 
   it("keeps a placed belt straight when its back feeds a head-side consumer", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
 
     spawnTransportBelt(world, { x: -20, y: 0, variant: "horizontal-right" });
     const beltEntityId = spawnTransportBelt(world, { x: 0, y: 0, variant: "angled-bottom-right" });
@@ -65,7 +65,7 @@ describe("TransportBeltRotationVariantManager", () => {
   });
 
   it("switches a bottom-right belt back to straight once both straight neighbors exist", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
 
     spawnTransportBelt(world, { x: 10, y: 50, variant: "vertical-up" });
     const beltEntityId = spawnTransportBelt(world, { x: 10, y: 30, variant: "angled-bottom-right" });

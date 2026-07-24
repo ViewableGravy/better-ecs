@@ -1,13 +1,13 @@
 import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import { spawnTransportBelt } from "@client/entities/transport-belt";
 import { ConveyorUtils } from "@client/entities/transport-belt/ConveyorUtils";
-import { UserWorld, World } from "@engine";
+import { Registry } from "@engine";
 import { Parent, Transform2D } from "@engine/components";
 import { describe, expect, it } from "vitest";
 
 describe("ConveyorUtils.addEntity", () => {
   it("places a carried item onto the requested belt slot and parents it to the conveyor", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const beltEntityId = spawnTransportBelt(world, { x: 0, y: 0, connectToNeighbors: false });
     const entityId = world.create();
 

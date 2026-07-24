@@ -1,4 +1,3 @@
-import { RenderVisibility, type RenderVisibilityRole } from "@client/components/render-visibility";
 import { RENDER_LAYERS } from "@client/consts";
 import { CollisionProfiles } from "@client/scenes/world/physics/collision-profiles";
 import { GridFootprint } from "@client/systems/world/build-mode/components/grid-footprint";
@@ -9,7 +8,7 @@ import {
     BOX_SIZE,
     HALF_BOX_SIZE,
 } from "@client/systems/world/build-mode/metrics";
-import { Vec2, type EntityId, type UserWorld } from "@engine";
+import { Vec2, type EntityId, type Registry } from "@engine";
 import {
     Debug,
     FillColor,
@@ -54,7 +53,6 @@ type SpawnLandClaimOptions = {
   snappedX: number;
   snappedY: number;
   ownerName: string;
-  renderVisibilityRole: RenderVisibilityRole;
 };
 
 type SpawnPlacedLandClaimOptions = SpawnLandClaimOptions & {
@@ -74,7 +72,7 @@ type SpawnLandClaimProfileOptions = SpawnPlacedLandClaimOptions | SpawnPreviewLa
  *   COMPONENT START
  **********************************************************************************************************/
 
-export function spawnLandClaim(world: UserWorld, options: SpawnLandClaimProfileOptions): EntityId {
+export function spawnLandClaim(world: Registry, options: SpawnLandClaimProfileOptions): EntityId {
   const landClaim = world.create();
   const centerX = options.snappedX + HALF_BOX_SIZE;
   const centerY = options.snappedY + HALF_BOX_SIZE;
@@ -90,7 +88,6 @@ export function spawnLandClaim(world: UserWorld, options: SpawnLandClaimProfileO
       landClaim,
       LAND_CLAIM_BUILDABLE_WORLD_SIZE,
       LAND_CLAIM_BUILDABLE_FILL,
-      undefined,
       -99,
       "land-claim-buildable-overlay-ghost",
     );
@@ -99,12 +96,11 @@ export function spawnLandClaim(world: UserWorld, options: SpawnLandClaimProfileO
       landClaim,
       LAND_CLAIM_OWNED_WORLD_SIZE,
       LAND_CLAIM_OWNED_FILL,
-      undefined,
       -98,
       "land-claim-owned-overlay-ghost",
     );
-    spawnFlagCloth(world, landClaim, undefined, "land-claim-ghost-flag");
-    spawnNameplate(world, landClaim, undefined, "land-claim-ghost-nameplate");
+    spawnFlagCloth(world, landClaim, "land-claim-ghost-flag");
+    spawnNameplate(world, landClaim, "land-claim-ghost-nameplate");
     world.add(landClaim, new Debug(`${ownerName}-land-claim-ghost`));
 
     return landClaim;
@@ -133,7 +129,6 @@ export function spawnLandClaim(world: UserWorld, options: SpawnLandClaimProfileO
       LAND_CLAIM_BUILDABLE_RADIUS_TILES,
     ),
   );
-  world.add(landClaim, new RenderVisibility(placedOptions.renderVisibilityRole, 1));
   world.add(landClaim, new Debug("land-claim"));
 
   spawnClaimOverlay(
@@ -141,7 +136,6 @@ export function spawnLandClaim(world: UserWorld, options: SpawnLandClaimProfileO
     landClaim,
     LAND_CLAIM_BUILDABLE_WORLD_SIZE,
     LAND_CLAIM_BUILDABLE_FILL,
-    placedOptions.renderVisibilityRole,
     -99,
     "land-claim-buildable-overlay",
   );
@@ -150,17 +144,16 @@ export function spawnLandClaim(world: UserWorld, options: SpawnLandClaimProfileO
     landClaim,
     LAND_CLAIM_OWNED_WORLD_SIZE,
     LAND_CLAIM_OWNED_FILL,
-    placedOptions.renderVisibilityRole,
     -98,
     "land-claim-owned-overlay",
   );
-  spawnFlagCloth(world, landClaim, placedOptions.renderVisibilityRole);
-  spawnNameplate(world, landClaim, placedOptions.renderVisibilityRole);
+  spawnFlagCloth(world, landClaim);
+  spawnNameplate(world, landClaim);
 
   return landClaim;
 }
 
-function addLandClaimRenderable(world: UserWorld, entityId: EntityId): void {
+function addLandClaimRenderable(world: Registry, entityId: EntityId): void {
   world.add(
     entityId,
     new Shape(
@@ -177,11 +170,10 @@ function addLandClaimRenderable(world: UserWorld, entityId: EntityId): void {
 }
 
 function spawnClaimOverlay(
-  world: UserWorld,
+  world: Registry,
   parentEntityId: EntityId,
   size: number,
   fill: Rgba,
-  renderVisibilityRole: RenderVisibilityRole | undefined,
   zOrder: number,
   debugLabel: string,
 ): void {
@@ -202,16 +194,12 @@ function spawnClaimOverlay(
     ),
   );
   world.add(overlayEntityId, new FillColor(overlayFill));
-  if (renderVisibilityRole !== undefined) {
-    world.add(overlayEntityId, new RenderVisibility(renderVisibilityRole, fill.a));
-  }
   world.add(overlayEntityId, new Debug(debugLabel));
 }
 
 function spawnFlagCloth(
-  world: UserWorld,
+  world: Registry,
   parentEntityId: EntityId,
-  renderVisibilityRole: RenderVisibilityRole | undefined,
   debugLabel: string = "land-claim-flag",
 ): void {
   const flagEntityId = world.create();
@@ -231,16 +219,12 @@ function spawnFlagCloth(
   );
   world.add(flagEntityId, new FillColor(cloneColor(LAND_CLAIM_FLAG_FILL)));
   world.add(flagEntityId, new StrokeColor(cloneColor(LAND_CLAIM_FLAG_STROKE)));
-  if (renderVisibilityRole !== undefined) {
-    world.add(flagEntityId, new RenderVisibility(renderVisibilityRole, 1));
-  }
   world.add(flagEntityId, new Debug(debugLabel));
 }
 
 function spawnNameplate(
-  world: UserWorld,
+  world: Registry,
   parentEntityId: EntityId,
-  renderVisibilityRole: RenderVisibilityRole | undefined,
   debugLabel: string = "land-claim-nameplate",
 ): void {
   const nameplateEntityId = world.create();
@@ -257,9 +241,6 @@ function spawnNameplate(
   world.setParent(nameplateEntityId, parentEntityId);
   world.add(nameplateEntityId, new Transform2D(0, LAND_CLAIM_NAMEPLATE_OFFSET_Y));
   world.add(nameplateEntityId, sprite);
-  if (renderVisibilityRole !== undefined) {
-    world.add(nameplateEntityId, new RenderVisibility(renderVisibilityRole, 1));
-  }
   world.add(nameplateEntityId, new Debug(debugLabel));
 }
 

@@ -1,5 +1,5 @@
 import { HALF_BOX_SIZE } from "@client/systems/world/build-mode/metrics";
-import type { EntityId, UserWorld } from "@engine";
+import type { EntityId, Registry } from "@engine";
 import { Transform2D } from "@engine/components";
 
 import { GhostPreviewComponent } from "@client/entities/ghost/component";
@@ -12,7 +12,7 @@ import { GhostUtils } from "@client/entities/ghost/utils";
 
 export class GhostPreviewManager {
   public static sync<TPayload>(
-    world: UserWorld,
+    world: Registry,
     ghostEntityId: EntityId | null,
     x: number,
     y: number,
@@ -41,14 +41,14 @@ export class GhostPreviewManager {
     return ghostEntityId;
   }
 
-  private static syncPosition(world: UserWorld, ghostEntityId: EntityId, x: number, y: number): void {
+  private static syncPosition(world: Registry, ghostEntityId: EntityId, x: number, y: number): void {
     world.patch(ghostEntityId, Transform2D, (transform) => {
       transform.curr.pos.set(x + HALF_BOX_SIZE, y + HALF_BOX_SIZE);
       transform.prev.pos.set(x + HALF_BOX_SIZE, y + HALF_BOX_SIZE);
     });
   }
 
-  private static destroyGhost(world: UserWorld, ghostEntityId: EntityId | null): void {
+  private static destroyGhost(world: Registry, ghostEntityId: EntityId | null): void {
     if (ghostEntityId === null || !world.all().includes(ghostEntityId)) {
       return;
     }
@@ -57,7 +57,7 @@ export class GhostPreviewManager {
   }
 
   private static syncPreviewVariant(
-    world: UserWorld,
+    world: Registry,
     ghostEntityId: EntityId,
     previewVariant: string | null,
   ): void {
@@ -67,7 +67,7 @@ export class GhostPreviewManager {
   }
 
   private static matchesGhost(
-    world: UserWorld,
+    world: Registry,
     ghostEntityId: EntityId | null,
     kind: string,
     ownerId: string,

@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import { Parent, Transform2D } from "@engine/components";
-import { UserWorld, World } from "@engine/ecs/world";
+import { Registry } from "@engine/ecs/registry";
 import { EngineEditorSelectionManager } from "@engine/core/engine-editor/selection-manager";
 import { syncWorldTransform2D } from "@engine/systems/worldTransform2D";
 
 describe("EngineEditorSelectionManager", () => {
   it("prefers parent by default when parent and child overlap", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
 
     const parent = world.create();
     const child = world.create();
@@ -26,7 +26,7 @@ describe("EngineEditorSelectionManager", () => {
   });
 
   it("returns most nested entity when preferParent is false", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
 
     const parent = world.create();
     const child = world.create();
@@ -45,7 +45,7 @@ describe("EngineEditorSelectionManager", () => {
   });
 
   it("keeps child selected when parent is farther than nearest pick", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
 
     const parent = world.create();
     const child = world.create();

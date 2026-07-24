@@ -1,4 +1,4 @@
-import type { EntityId, UserWorld } from "@engine";
+import type { EntityId, Registry } from "@engine";
 import { createSystem, resolveWorldTransform2D } from "@engine";
 import { FillColor, Rgba, Shape, Sprite, StrokeColor, Transform2D } from "@engine/components";
 import { Engine, fromContext, System } from "@engine/context";
@@ -38,19 +38,17 @@ export function createDebugSystem(opts: PhysicsDebugOpts) {
         data.visible = !data.visible;
       }
 
-      const sceneWorlds = engine.scene.context.worlds;
-      for (const sceneWorld of sceneWorlds) {
-        if (!data.visible) {
-          sceneWorld.destroy(ColliderDebugProxy);
-        } else {
-          syncColliderDebugWorld(sceneWorld);
-        }
+      const registry = engine.scene.registry;
+      if (!data.visible) {
+        registry.destroy(ColliderDebugProxy);
+      } else {
+        syncColliderDebugWorld(registry);
       }
     },
   });
 }
 
-function syncColliderDebugWorld(world: UserWorld): void {
+function syncColliderDebugWorld(world: Registry): void {
   const debugByTarget = new Map<EntityId, EntityId>();
 
   for (const debugEntityId of world.query(ColliderDebugProxy)) {
@@ -123,7 +121,7 @@ function syncColliderDebugWorld(world: UserWorld): void {
 }
 
 function syncDebugShapeFromTarget(
-  world: UserWorld,
+  world: Registry,
   targetId: EntityId,
   debugEntityId: EntityId,
   targetCollider: ReturnType<typeof getEntityCollider>,
@@ -192,7 +190,7 @@ function syncDebugShapeFromTarget(
   });
 }
 
-function applyLayerDebugStyle(world: UserWorld, targetId: EntityId, debugEntityId: EntityId): void {
+function applyLayerDebugStyle(world: Registry, targetId: EntityId, debugEntityId: EntityId): void {
   const participation = world.get(targetId, CollisionParticipation);
   const layers = participation?.layers ?? 0n;
 
@@ -221,12 +219,12 @@ function applyLayerDebugStyle(world: UserWorld, targetId: EntityId, debugEntityI
   );
 }
 
-function setDebugColors(world: UserWorld, entityId: EntityId, r: number, g: number, b: number): void {
+function setDebugColors(world: Registry, entityId: EntityId, r: number, g: number, b: number): void {
   world.patch(entityId, StrokeColor, (strokeColor) => strokeColor.value.set(r, g, b, 1));
   world.patch(entityId, FillColor, (fillColor) => fillColor.value.set(r, g, b, 0.08));
 }
 
-function getTargetRenderOrder(world: UserWorld, targetId: EntityId): { layer: number; zOrder: number } {
+function getTargetRenderOrder(world: Registry, targetId: EntityId): { layer: number; zOrder: number } {
   const targetShape = world.get(targetId, Shape);
   if (targetShape) {
     return {

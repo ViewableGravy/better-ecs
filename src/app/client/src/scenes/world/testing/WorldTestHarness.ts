@@ -17,9 +17,9 @@ import { Placeable } from "@client/systems/world/build-mode/components/placeable
 import { buildModeStateDefault, type BuildModeState } from "@client/systems/world/build-mode/const";
 import { GridSingleton } from "@client/systems/world/build-mode/grid-singleton";
 import { System as Collision } from "@client/systems/world/scene-collision";
-import { EngineTestHarness, type EntityId } from "@engine";
+import { createScene, EngineTestHarness, type EntityId } from "@engine";
 import { Camera, Transform2D } from "@engine/components";
-import { createContextScene } from "@libs/spatial-contexts";
+import { ActiveRegistry, fromContext } from "@engine/context";
 
 const DEFAULT_VIEWPORT_WIDTH = 800;
 const DEFAULT_VIEWPORT_HEIGHT = 600;
@@ -72,7 +72,7 @@ export class WorldTestHarness {
       options.viewportHeight ?? DEFAULT_VIEWPORT_HEIGHT,
     );
 
-    const TestScene = createContextScene("WorldTestScene")({
+    const TestScene = createScene("WorldTestScene")({
       systems: [
         CommandAllocatorReset,
         PhysicsWorldSync,
@@ -85,9 +85,8 @@ export class WorldTestHarness {
         BuildModeAuthoritySystem,
         CameraFollow,
       ],
-      contexts: [],
-      setup(world) {
-        setupContextPlayer(world, playerStart.x, playerStart.y);
+      setup() {
+        setupContextPlayer(fromContext(ActiveRegistry), playerStart.x, playerStart.y);
       },
     });
 
@@ -104,8 +103,8 @@ export class WorldTestHarness {
     return harness;
   }
 
-  public get world() {
-    return this.engineHarness.world;
+  public get registry() {
+    return this.engineHarness.registry;
   }
 
   public get engine() {
@@ -187,14 +186,14 @@ export class WorldTestHarness {
   }
 
   public placeableCount(): number {
-    return this.world.query(Placeable).length;
+    return this.registry.query(Placeable).length;
   }
 
   public findPlaceableAtWorld(worldX: number, worldY: number): EntityId | undefined {
     const [gridX, gridY] = GridSingleton.worldToGridCoordinates(worldX, worldY);
 
-    for (const entityId of this.world.query(Placeable, GridPosition)) {
-      const gridPosition = this.world.require(entityId, GridPosition);
+    for (const entityId of this.registry.query(Placeable, GridPosition)) {
+      const gridPosition = this.registry.require(entityId, GridPosition);
 
       if (gridPosition.x === gridX && gridPosition.y === gridY) {
         return entityId;
@@ -233,28 +232,28 @@ export class WorldTestHarness {
   }
 
   public requirePlayerEntityId(): EntityId<PlayerComponent> {
-    const [playerId] = this.world.invariantQuery(PlayerComponent);
+    const [playerId] = this.registry.invariantQuery(PlayerComponent);
 
     return playerId;
   }
 
   public requirePlayerTransform(): Transform2D {
-    return this.world.require(this.requirePlayerEntityId(), Transform2D);
+    return this.registry.require(this.requirePlayerEntityId(), Transform2D);
   }
 
   public requireCameraTransform(): Transform2D {
-    const [cameraEntityId] = this.world.query(Camera, Transform2D);
+    const [cameraEntityId] = this.registry.query(Camera, Transform2D);
 
     if (cameraEntityId === undefined) {
       throw new Error("Primary camera not found in harness world.");
     }
 
-    return this.world.require(cameraEntityId, Transform2D);
+    return this.registry.require(cameraEntityId, Transform2D);
   }
 
   private setPointerWorld(worldX: number, worldY: number): void {
     const input = this.engine.systems["engine:input"].data;
-    const camera = this.engine.utils.activeCameraView(this.world);
+    const camera = this.engine.utils.activeCameraView(this.registry);
     const viewport = this.#canvas.getBoundingClientRect();
 
     input.mouseClientX = (worldX - camera.x) * camera.zoom + viewport.width / 2;

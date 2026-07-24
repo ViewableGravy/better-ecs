@@ -1,21 +1,18 @@
 import { PlayerUtils } from "@client/entities/player/utils";
 import { createSystem } from "@engine";
 import { Camera, Transform2D } from "@engine/components";
-import { Engine, fromContext, World } from "@engine/context";
+import { fromContext, ActiveRegistry } from "@engine/context";
 
 export const System = createSystem("camera-follow")({
   system() {
-    const sourceWorld = fromContext(World);
-    const engine = fromContext(Engine);
-    const sourceTransform = PlayerUtils.getTransform(sourceWorld);
+    const registry = fromContext(ActiveRegistry);
+    const sourceTransform = PlayerUtils.getTransform(registry);
 
-    for (const world of engine.scene.context.worlds) {
-      for (const cameraId of world.query(Camera, Transform2D)) {
-        world.patch(cameraId, Transform2D, (cameraTransform) => {
-          cameraTransform.curr.copyFrom(sourceTransform.curr);
-          cameraTransform.prev.copyFrom(sourceTransform.prev);
-        });
-      }
+    for (const cameraId of registry.query(Camera, Transform2D)) {
+      registry.patch(cameraId, Transform2D, (cameraTransform) => {
+        cameraTransform.curr.copyFrom(sourceTransform.curr);
+        cameraTransform.prev.copyFrom(sourceTransform.prev);
+      });
     }
   },
 });

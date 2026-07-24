@@ -37,12 +37,6 @@
       "@libs/physics/*": [
         "../libs/physics/src/*"
       ],
-      "@libs/spatial-contexts": [
-        "../libs/spatial-contexts/src/index.ts"
-      ],
-      "@libs/spatial-contexts/*": [
-        "../libs/spatial-contexts/src/*"
-      ],
       "@utils": [
         "../utils/src/index.ts"
       ],

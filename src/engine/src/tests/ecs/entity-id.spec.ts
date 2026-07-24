@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { EntityIdAllocator, isEntityId } from "@engine/ecs/entity";
 import { ComponentStore } from "@engine/ecs/storage";
-import { UserWorld, World } from "@engine/ecs/world";
+import { Registry } from "@engine/ecs/registry";
 
 describe("Entity IDs", () => {
   it("allocates beyond the old 20-bit ceiling", () => {
@@ -13,7 +13,7 @@ describe("Entity IDs", () => {
   });
 
   it("never reuses a destroyed ID", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const destroyed = world.create();
 
     world.destroy(destroyed);

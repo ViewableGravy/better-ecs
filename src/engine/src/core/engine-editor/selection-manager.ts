@@ -1,12 +1,12 @@
-import type { UserWorld } from "@engine/ecs/world";
+import type { Registry } from "@engine/ecs/registry";
 import { getEntityAtWorldPoint, type EntityAtPointOptions } from "@engine/core/input/mouse";
 
 type EngineEditorSelectionManagerOptions = {
-  getWorld: () => UserWorld;
+  getWorld: () => Registry;
 };
 
 export class EngineEditorSelectionManager {
-  readonly #getWorld: () => UserWorld;
+  readonly #getWorld: () => Registry;
 
   public constructor(options: EngineEditorSelectionManagerOptions) {
     this.#getWorld = options.getWorld;

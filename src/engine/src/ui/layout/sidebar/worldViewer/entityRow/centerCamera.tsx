@@ -1,7 +1,7 @@
 import { Transform2D } from "@engine/components";
 import { resolveWorldTransform2D } from "@engine/ecs/hierarchy";
 import styles from "@engine/ui/layout/sidebar/styles.module.css";
-import { EntityIdContext, WorldIdContext } from "@engine/ui/layout/sidebar/worldViewer/context";
+import { EntityIdContext } from "@engine/ui/layout/sidebar/worldViewer/context";
 import { EngineUiContext } from "@engine/ui/utilities/engine-context";
 import { useInvariantContext } from "@engine/ui/utilities/hooks/use-invariant-context";
 import type { MouseEvent } from "react";
@@ -21,7 +21,6 @@ const SHARED_TARGET_TRANSFORM = new Transform2D();
 export const CenterCamera: React.FC<CenterCameraProps> = ({ className }) => {
   /***** HOOKS *****/
   const engine = useInvariantContext(EngineUiContext);
-  const worldId = useInvariantContext(WorldIdContext);
   const entityId = useInvariantContext(EntityIdContext);
 
   /***** FUNCTIONS *****/
@@ -30,10 +29,10 @@ export const CenterCamera: React.FC<CenterCameraProps> = ({ className }) => {
 
     engine.editor.running.pause();
 
-    const world = engine.scene.context.requireWorld(worldId);
-    engine.editor.gizmo.create(entityId, worldId);
+    const registry = engine.scene.registry;
+    engine.editor.gizmo.create(entityId);
 
-    if (!resolveWorldTransform2D(world, entityId, SHARED_TARGET_TRANSFORM)) {
+    if (!resolveWorldTransform2D(registry, entityId, SHARED_TARGET_TRANSFORM)) {
       return;
     }
 

@@ -28,7 +28,7 @@ export function handleShapeEntityCommand(
   frameAllocator: InternalFrameAllocator<EngineFrameAllocatorRegistry> = fromContext(FromRender.FrameAllocator),
   interpolationAlpha: number = fromContext(FromRender.InterpolationAlpha),
 ): void {
-  const world = command.world;
+  const world = command.registry;
   const entityId = command.entityId;
 
   const shape = world.get(entityId, Shape);

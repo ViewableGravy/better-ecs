@@ -8,7 +8,7 @@ import {
 } from "@engine/components";
 import { SpritePipe } from "@engine/core/render-pipeline/passes/render-world/retained-sprites/sprite-pipe";
 import type { EntityId } from "@engine/ecs/entity";
-import { UserWorld, World } from "@engine/ecs/world";
+import { Registry } from "@engine/ecs/registry";
 import {
   DEFAULT_RENDERER_CONFIG,
   RenderQueue,
@@ -21,7 +21,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 describe("SpritePipe", () => {
   let renderer: TestRenderer;
   let registry: SpritePipe;
-  let world: UserWorld;
+  let world: Registry;
   let entityId: EntityId;
   let sprite: Sprite;
   let worldTransform: WorldTransform2D;
@@ -29,7 +29,7 @@ describe("SpritePipe", () => {
   beforeEach(() => {
     renderer = createTestRenderer();
     registry = new SpritePipe(renderer);
-    world = new UserWorld(new World("scene"));
+    world = new Registry();
     entityId = world.create();
     sprite = new Sprite("test", 16, 8);
     worldTransform = new WorldTransform2D();
@@ -228,7 +228,7 @@ describe("SpritePipe", () => {
   });
 
   it("keeps scene-scoped EntityIds isolated through distinct world buckets", () => {
-    const secondWorld = new UserWorld(new World("second-scene"));
+    const secondWorld = new Registry();
     const secondEntityId = secondWorld.create();
     secondWorld.add(secondEntityId, new Sprite("test", 16, 8));
     secondWorld.add(secondEntityId, new WorldTransform2D());
@@ -266,7 +266,7 @@ describe("SpritePipe", () => {
     const queue = new RenderQueue();
     queue.add({
       type: "shape-draw",
-      world: null,
+      registry: null,
       entityId: null,
       shape: null,
       scope: "gameplay",

@@ -1,13 +1,13 @@
 import { Camera, Transform2D } from "@engine/components";
 import type { EntityId } from "@engine/ecs/entity";
-import type { UserWorld } from "@engine/ecs/world";
+import type { Registry } from "@engine/ecs/registry";
 
 export type EngineCameraMode = "world" | "engine";
 
 type EngineCameraOptions = {
   isPaused: () => boolean;
   isPreviewMode: () => boolean;
-  resolveWorld: () => UserWorld;
+  resolveWorld: () => Registry;
   resolveViewportHeight: () => number;
 };
 
@@ -18,7 +18,7 @@ export class EngineCamera {
 
   readonly #isPaused: () => boolean;
   readonly #isPreviewMode: () => boolean;
-  readonly #resolveWorld: () => UserWorld;
+  readonly #resolveWorld: () => Registry;
   readonly #resolveViewportHeight: () => number;
 
   constructor(options: EngineCameraOptions) {

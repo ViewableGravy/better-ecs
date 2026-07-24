@@ -1,6 +1,6 @@
 import { Parent, Transform2D, WorldTransform2D } from "@engine/components";
 import type { EntityId } from "@engine/ecs/entity";
-import type { IUserWorld } from "@engine/ecs/world";
+import type { Registry } from "@engine/ecs/registry";
 
 const MAX_HIERARCHY_DEPTH = 64;
 const LOCAL_STACK: Array<Transform2D | undefined> = new Array(MAX_HIERARCHY_DEPTH);
@@ -14,7 +14,7 @@ const LOCAL_STACK: Array<Transform2D | undefined> = new Array(MAX_HIERARCHY_DEPT
  * - The result includes both `curr` and `prev` to preserve interpolation behavior.
  */
 export function resolveWorldTransform2D(
-  world: IUserWorld,
+  world: Registry,
   entityId: EntityId,
   out: Transform2D,
 ): boolean {
@@ -28,7 +28,7 @@ export function resolveWorldTransform2D(
 }
 
 export function getWorldTransform2D(
-  world: IUserWorld,
+  world: Registry,
   entityId: EntityId,
 ): WorldTransform2D | undefined {
   return world.get(entityId, WorldTransform2D);
@@ -58,7 +58,7 @@ export function composeWorldTransform2D(
 }
 
 function resolveWorldTransform2DFromHierarchy(
-  world: IUserWorld,
+  world: Registry,
   entityId: EntityId,
   out: Transform2D,
 ): boolean {

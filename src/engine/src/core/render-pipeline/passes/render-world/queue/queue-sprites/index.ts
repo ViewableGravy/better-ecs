@@ -7,7 +7,7 @@ export function queueSprites(): void {
   const context = fromContext(FromRender.Context);
   const engine = fromContext(Engine);
   context.spritePipe.syncAndQueue(
-    context.world,
+    context.registry,
     context.queue,
     performance.now(),
     engine.meta.updateTick,

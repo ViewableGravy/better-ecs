@@ -24,6 +24,13 @@ export const CollisionProfiles = {
       COLLISION_LAYERS.ACTOR,
       false,
     ),
+  portal: () =>
+    new CollisionParticipation(
+      COLLISION_LAYERS.SOLID,
+      0n,
+      COLLISION_LAYERS.ACTOR,
+      true,
+    ),
   conveyor: () => 
     new CollisionParticipation(
       CONVEYOR_LAYERS, 

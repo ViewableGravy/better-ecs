@@ -1,8 +1,7 @@
 import { RENDER_LAYERS } from "@client/consts";
 import { GRID_CELL_SIZE } from "@client/systems/world/build-mode/const";
-import type { UserWorld } from "@engine";
+import type { Registry } from "@engine";
 import { Debug, Sprite, Transform2D } from "@engine/components";
-import { OUTSIDE, RenderVisibility } from "@client/components/render-visibility";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -43,7 +42,7 @@ const ORE_SPRITE_SIZE = GRID_CELL_SIZE * 1.5;
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
-export function spawnOreField(world: UserWorld, options: SpawnOreFieldOptions): void {
+export function spawnOreField(world: Registry, options: SpawnOreFieldOptions): void {
   const columns = options.columns ?? 18;
   const rows = options.rows ?? 16;
   const patchWidth = columns * GRID_CELL_SIZE;
@@ -69,7 +68,7 @@ export function spawnOreField(world: UserWorld, options: SpawnOreFieldOptions): 
 }
 
 function placeOreEntity(
-  world: UserWorld,
+  world: Registry,
   opts: {
     x: number;
     y: number;
@@ -90,7 +89,6 @@ function placeOreEntity(
 
   world.add(oreEntity, transform);
   world.add(oreEntity, sprite);
-  world.add(oreEntity, new RenderVisibility(OUTSIDE, 1));
   world.add(oreEntity, new Debug("ore"));
 }
 

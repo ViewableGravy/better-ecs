@@ -1,4 +1,4 @@
-import type { EntityId, UserWorld } from "@engine";
+import type { EntityId, Registry } from "@engine";
 import { Transform2D } from "@engine/components";
 import type { GridCoordinate } from "@libs/commands/build-mode";
 
@@ -57,7 +57,7 @@ export class GridSingleton {
   }
 
   public static getEntityAtGridCoordinates(
-    world: UserWorld,
+    world: Registry,
     coordinates: GridCoordinates,
   ): EntityId | undefined {
     for (const entityId of world.query(Transform2D)) {

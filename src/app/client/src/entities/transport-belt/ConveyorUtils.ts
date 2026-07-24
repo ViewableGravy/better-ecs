@@ -12,7 +12,7 @@ import {
 } from "@client/entities/transport-belt/core";
 import { BeltItemRailsUtility } from "@client/entities/transport-belt/motion/BeltItemRailsUtility";
 import type { TransportBeltEntityId } from "@client/entities/transport-belt/types";
-import { Vec2, type EntityId, type UserWorld } from "@engine";
+import { Vec2, type EntityId, type Registry } from "@engine";
 import { Transform2D } from "@engine/components";
 import invariant from "tiny-invariant";
 
@@ -23,7 +23,7 @@ export class ConveyorUtils {
    * Parents an entity to a conveyor and places it into a specific lane slot.
    */
   public static addEntity(
-    world: UserWorld,
+    world: Registry,
     conveyorEntityId: TransportBeltEntityId,
     entity: EntityId,
     side: ConveyorSide,

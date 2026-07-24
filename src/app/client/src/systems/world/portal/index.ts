@@ -1,70 +1,48 @@
 import { PlayerComponent } from "@client/components/player";
-import { ensurePlayer } from "@client/entities/player";
+import { Portal } from "@client/components/portal";
 import { PhysicsWorldManager } from "@client/scenes/world/physics/physics-world-manager";
+import { createSystem } from "@engine";
 import { Transform2D } from "@engine/components";
+import { ActiveRegistry, fromContext } from "@engine/context";
 import { COLLISION_LAYERS } from "@libs/physics";
-import { createPortalSystem, type PortalActivationArgs } from "@libs/spatial-contexts";
 
-/**********************************************************************************************************
-*   CONSTS
-**********************************************************************************************************/
-const portalOccupancy = new Set<string>();
-const portalActivationFilter = {
+const PORTAL_FILTER = {
   category: COLLISION_LAYERS.ACTOR,
   mask: COLLISION_LAYERS.SOLID,
 };
 
-/**********************************************************************************************************
- *   COMPONENT SYSTEM START
- **********************************************************************************************************/
-export const System = createPortalSystem({
-  name: "main:spatial-contexts-portals-authority",
-  shouldActivate: shouldActivatePortal,
-  onEnter({ nextWorld }) {
-    ensurePlayer(nextWorld);
-  },
-  onTeleport({ portal, nextWorld }) {
-    if (!portal.spawn) return;
-    const spawn = portal.spawn;
+let requirePortalExit = false;
 
-    const playerId = ensurePlayer(nextWorld);
-    nextWorld.patch(playerId, Transform2D, (transform) => {
-      transform.curr.pos.set(spawn.x, spawn.y);
-      transform.prev.pos.set(spawn.x, spawn.y);
+export const System = createSystem("main:portal-authority")({
+  system() {
+    const registry = fromContext(ActiveRegistry);
+    const physics = PhysicsWorldManager.requireWorld(registry);
+    const playerBody = physics.queryFirstLayer(COLLISION_LAYERS.ACTOR, PlayerComponent);
+    if (!playerBody) {
+      return;
+    }
+
+    const overlaps = physics.queryOverlap({
+      collider: playerBody.collider,
+      transform: playerBody.transform,
+      filter: PORTAL_FILTER,
+    });
+    const portalEntityId = overlaps.find((overlap) => registry.has(overlap.entityId, Portal))?.entityId;
+
+    if (portalEntityId === undefined) {
+      requirePortalExit = false;
+      return;
+    }
+
+    if (requirePortalExit) {
+      return;
+    }
+
+    const portal = registry.require(portalEntityId, Portal);
+    requirePortalExit = true;
+    registry.patch(playerBody.entityId, Transform2D, (transform) => {
+      transform.curr.pos.set(portal.destination.x, portal.destination.y);
+      transform.prev.pos.set(portal.destination.x, portal.destination.y);
     });
   },
 });
-
-/**********************************************************************************************************
- *   UTILITIES
- **********************************************************************************************************/
-function shouldActivatePortal(args: PortalActivationArgs): boolean {
-  const physicsWorld = PhysicsWorldManager.requireWorld(args.world);
-  const playerBody = physicsWorld.queryFirstLayer(COLLISION_LAYERS.ACTOR, PlayerComponent);
-  if (!playerBody) return false;
-
-  const overlaps = physicsWorld.queryOverlap({
-    collider: playerBody.collider,
-    transform: playerBody.transform,
-    filter: portalActivationFilter,
-  });
-
-  let inside = false;
-  for (const overlap of overlaps) {
-    if (overlap.entityId === args.portalEntity) {
-      inside = true;
-      break;
-    }
-  }
-
-  const portalKey = `${args.focusedContextId}:${args.portalEntity}`;
-  const wasInside = portalOccupancy.has(portalKey);
-
-  if (inside) {
-    portalOccupancy.add(portalKey);
-  } else {
-    portalOccupancy.delete(portalKey);
-  }
-
-  return inside && !wasInside;
-}

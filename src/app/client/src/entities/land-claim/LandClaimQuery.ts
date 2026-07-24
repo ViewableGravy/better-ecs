@@ -1,6 +1,6 @@
 import { GridPosition } from "@client/systems/world/build-mode/components";
 import type { GridCoordinates } from "@client/systems/world/build-mode/grid-singleton";
-import type { EntityId, UserWorld } from "@engine";
+import type { EntityId, Registry } from "@engine";
 
 import { LandClaim } from "@client/entities/land-claim/component";
 
@@ -15,24 +15,24 @@ type ClaimCoverageType = "owned" | "buildable";
  **********************************************************************************************************/
 
 export class LandClaimQuery {
-  public static findOwnedClaimAtCoordinates(world: UserWorld, gridCoordinates: GridCoordinates): EntityId | undefined {
+  public static findOwnedClaimAtCoordinates(world: Registry, gridCoordinates: GridCoordinates): EntityId | undefined {
     return this.findClaimAtCoordinates(world, gridCoordinates, "owned");
   }
 
-  public static findBuildableClaimAtCoordinates(world: UserWorld, gridCoordinates: GridCoordinates): EntityId | undefined {
+  public static findBuildableClaimAtCoordinates(world: Registry, gridCoordinates: GridCoordinates): EntityId | undefined {
     return this.findClaimAtCoordinates(world, gridCoordinates, "buildable");
   }
 
-  public static isWithinOwnedArea(world: UserWorld, gridCoordinates: GridCoordinates): boolean {
+  public static isWithinOwnedArea(world: Registry, gridCoordinates: GridCoordinates): boolean {
     return this.findOwnedClaimAtCoordinates(world, gridCoordinates) !== undefined;
   }
 
-  public static isWithinBuildableArea(world: UserWorld, gridCoordinates: GridCoordinates): boolean {
+  public static isWithinBuildableArea(world: Registry, gridCoordinates: GridCoordinates): boolean {
     return this.findBuildableClaimAtCoordinates(world, gridCoordinates) !== undefined;
   }
 
   private static findClaimAtCoordinates(
-    world: UserWorld,
+    world: Registry,
     gridCoordinates: GridCoordinates,
     coverageType: ClaimCoverageType,
   ): EntityId | undefined {

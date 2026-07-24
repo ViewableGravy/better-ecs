@@ -1,10 +1,9 @@
-import { RenderVisibility, type RenderVisibilityRole } from "@client/components/render-visibility";
 import { CollisionProfiles } from "@client/scenes/world/physics/collision-profiles";
 import { GridFootprint } from "@client/systems/world/build-mode/components/grid-footprint";
 import { GridPosition } from "@client/systems/world/build-mode/components/grid-position";
 import { Placeable } from "@client/systems/world/build-mode/components/placeable";
 import { GridSingleton } from "@client/systems/world/build-mode/grid-singleton";
-import { Vec2, type EntityId, type UserWorld } from "@engine";
+import { Vec2, type EntityId, type Registry } from "@engine";
 import { Debug, FillColor, Rgba, Shape, StrokeColor, Transform2D } from "@engine/components";
 import { RectangleCollider } from "@libs/physics";
 
@@ -19,7 +18,6 @@ const PLACED_STROKE = new Rgba(1, 1, 1, 1);
 type SpawnPlacedBoxOptions = {
   snappedX: number;
   snappedY: number;
-  renderVisibilityRole: RenderVisibilityRole;
   profile?: "placed";
 };
 
@@ -31,7 +29,7 @@ type SpawnPreviewBoxOptions = {
 
 type SpawnBoxOptions = SpawnPlacedBoxOptions | SpawnPreviewBoxOptions;
 
-export function spawnBox(world: UserWorld, opts: SpawnBoxOptions): EntityId {
+export function spawnBox(world: Registry, opts: SpawnBoxOptions): EntityId {
   const placed = world.create();
 
   world.add(placed, new Transform2D(opts.snappedX + HALF_BOX_SIZE, opts.snappedY + HALF_BOX_SIZE));
@@ -55,12 +53,11 @@ export function spawnBox(world: UserWorld, opts: SpawnBoxOptions): EntityId {
   world.add(placed, new GridPosition(gridX, gridY));
   world.add(placed, new GridFootprint(BOX_SIZE, BOX_SIZE));
   world.add(placed, new Placeable("box"));
-  world.add(placed, new RenderVisibility(opts.renderVisibilityRole, 1));
   world.add(placed, new Debug("box"));
   return placed;
 }
 
-function addBoxRenderable(world: UserWorld, entityId: EntityId): void {
+function addBoxRenderable(world: Registry, entityId: EntityId): void {
   world.add(entityId, new Shape("rectangle", BOX_SIZE, BOX_SIZE, 1));
   world.add(entityId, new FillColor(new Rgba(PLACED_FILL.r, PLACED_FILL.g, PLACED_FILL.b, PLACED_FILL.a)));
   world.add(entityId, new StrokeColor(new Rgba(PLACED_STROKE.r, PLACED_STROKE.g, PLACED_STROKE.b, PLACED_STROKE.a)));

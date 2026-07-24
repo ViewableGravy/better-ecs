@@ -1,4 +1,3 @@
-import type { ContextId } from "@libs/spatial-contexts/context-id";
 import type { Tagged } from "type-fest";
 
 /**********************************************************************************************************
@@ -14,7 +13,6 @@ export type BuildModePlacementEndSide = "top" | "right" | "bottom" | "left";
 export type BuildModePlaceCommand = {
   type: "build-mode:place";
   itemType: BuildModeItemType;
-  contextId: ContextId;
   gridX: GridCoordinate;
   gridY: GridCoordinate;
   placementEndSide: BuildModePlacementEndSide;
@@ -22,7 +20,6 @@ export type BuildModePlaceCommand = {
 
 export type BuildModeDeleteCommand = {
   type: "build-mode:delete";
-  contextId: ContextId;
   gridX: GridCoordinate;
   gridY: GridCoordinate;
 };

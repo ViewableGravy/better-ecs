@@ -5,7 +5,7 @@ import { createEngine } from "@engine/core";
 import { executeWithContext } from "@engine/core/context";
 import { getWorldTransform2D } from "@engine/ecs/hierarchy";
 import type { EntityId } from "@engine/ecs/entity";
-import { UserWorld, World, type WorldMutationObserver } from "@engine/ecs/world";
+import { Registry, type RegistryMutationObserver } from "@engine/ecs/registry";
 import { transform2DTracker } from "@engine/systems/transform2d-tracker";
 import {
   syncWorldTransform2D,
@@ -15,7 +15,7 @@ import {
 
 describe("worldTransform2D", () => {
   it("caches composed world transforms across a hierarchy", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
 
     const root = world.create();
     const child = world.create();
@@ -33,7 +33,7 @@ describe("worldTransform2D", () => {
   });
 
   it("immediately synchronizes an explicitly patched subtree outside scene systems", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
 
     const root = world.create();
     const child = world.create();
@@ -57,7 +57,7 @@ describe("worldTransform2D", () => {
   });
 
   it("recomputes patched ancestors before immediately synchronizing a child subtree", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const root = world.create();
     const child = world.create();
 
@@ -80,7 +80,7 @@ describe("worldTransform2D", () => {
   });
 
   it("does not finalize an immediately synchronized dirty subtree twice", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const root = world.create();
     const child = world.create();
 
@@ -111,7 +111,7 @@ describe("worldTransform2D", () => {
   });
 
   it("does not propagate a direct component write until it is patched", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const root = world.create();
     const child = world.create();
 
@@ -133,7 +133,7 @@ describe("worldTransform2D", () => {
   });
 
   it("settles cached interpolation history after movement stops", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
 
     const entityId = world.create();
     world.add(entityId, new Transform2D(0, 0));
@@ -159,7 +159,7 @@ describe("worldTransform2D", () => {
   });
 
   it("refreshes cached world transforms when direct updates keep curr and prev in sync", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
 
     const root = world.create();
     const child = world.create();
@@ -191,7 +191,7 @@ describe("worldTransform2D", () => {
   });
 
   it("removes stale cached transforms when local transforms are removed", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
 
     const entityId = world.create();
     world.add(entityId, new Transform2D(1, 2));
@@ -206,7 +206,7 @@ describe("worldTransform2D", () => {
   });
 
   it("invalidates cached transforms through a descendant chain deeper than 64 entities", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const entityIds: EntityId[] = [];
 
     for (let index = 0; index < 70; index += 1) {
@@ -239,7 +239,7 @@ describe("worldTransform2D", () => {
   });
 
   it("publishes world-transform changes only for a sparse dirty subtree", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const root = world.create();
     const child = world.create();
     const grandchild = world.create();
@@ -275,14 +275,14 @@ describe("worldTransform2D", () => {
   });
 
   it("does not publish transform work on a clean frame", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const entityId = world.create();
     world.add(entityId, new Transform2D(1, 2));
     syncWorldTransform2D(world);
     transform2DTracker.snapshot(world);
 
-    const entityChanged = vi.fn<NonNullable<WorldMutationObserver["entityChanged"]>>();
-    const componentChanged = vi.fn<NonNullable<WorldMutationObserver["componentChanged"]>>();
+    const entityChanged = vi.fn<NonNullable<RegistryMutationObserver["entityChanged"]>>();
+    const componentChanged = vi.fn<NonNullable<RegistryMutationObserver["componentChanged"]>>();
     world.observeMutations({ entityChanged, componentChanged });
 
     syncWorldTransform2D(world);
@@ -293,7 +293,7 @@ describe("worldTransform2D", () => {
   });
 
   it("recomputes a subtree after reparenting through the hierarchy API", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const firstRoot = world.create();
     const secondRoot = world.create();
     const child = world.create();
@@ -317,7 +317,7 @@ describe("worldTransform2D", () => {
   });
 
   it("invalidates and recreates a world transform after local transform removal and re-addition", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const entityId = world.create();
     world.add(entityId, new Transform2D(1, 2));
     syncWorldTransform2D(world);
@@ -333,7 +333,7 @@ describe("worldTransform2D", () => {
   });
 
   it("removes cached transforms when destroying a hierarchy", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const root = world.create();
     const child = world.create();
     const grandchild = world.create();
@@ -357,23 +357,19 @@ describe("worldTransform2D", () => {
     expect(world.get(sibling, WorldTransform2D)).toBeDefined();
   });
 
-  it("finalizes every loaded world through the engine system", () => {
+  it("finalizes the active scene Registry through the engine system", () => {
     const engine = createEngine({
       systems: [],
       scenes: [],
       manualRegisterEngine: true,
     });
-    const defaultWorld = engine.scene.context.getDefaultWorld();
-    const additionalWorld = engine.scene.context.loadAdditionalWorld("additional");
-    const defaultEntityId = defaultWorld.create();
-    const additionalEntityId = additionalWorld.create();
-    defaultWorld.add(defaultEntityId, new Transform2D(4, 5));
-    additionalWorld.add(additionalEntityId, new Transform2D(8, 9));
+    const registry = engine.scene.registry;
+    const entityId = registry.create();
+    registry.add(entityId, new Transform2D(4, 5));
 
     const system = worldTransform2DSystem();
     executeWithContext({ engine }, () => system.system());
 
-    expect(defaultWorld.require(defaultEntityId, WorldTransform2D).curr.pos.x).toBe(4);
-    expect(additionalWorld.require(additionalEntityId, WorldTransform2D).curr.pos.x).toBe(8);
+    expect(registry.require(entityId, WorldTransform2D).curr.pos.x).toBe(4);
   });
 });

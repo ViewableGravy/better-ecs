@@ -41,7 +41,9 @@ export class BuildModeDragPlacement {
     const dragPlacementMode = getDragPlacementMode(data.selectedItem);
 
     if (!data.placePointerActive || dragPlacementMode === null) {
-      return this.createBatch("single", hoveredCoordinates, [], null);
+      const candidates = data.pendingPlace ? [hoveredCoordinates] : [];
+
+      return this.createBatch("single", hoveredCoordinates, candidates, null);
     }
 
     if (dragPlacementMode === "paint") {

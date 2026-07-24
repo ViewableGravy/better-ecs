@@ -1,7 +1,7 @@
 import { Parent, Transform2D } from "@engine/components";
 import type { EntityId } from "@engine/ecs/entity";
 import { getWorldTransform2D } from "@engine/ecs/hierarchy";
-import type { UserWorld } from "@engine/ecs/world";
+import type { Registry } from "@engine/ecs/registry";
 import type { EngineClass } from "@engine/core/engine";
 import type { SceneDefinitionTuple } from "@engine/core/scene/scene.types";
 import type { SystemFactoryTuple } from "@engine/core/system/types";
@@ -98,7 +98,7 @@ export class EngineMouseEvent {
 
   public entityAtPoint(
     maxDistancePixels: number,
-    world: UserWorld = this.#engine.scene.world,
+    world: Registry = this.#engine.scene.registry,
     options?: EntityAtPointOptions,
   ): EntityId | null {
     return getEntityAtPoint(
@@ -124,7 +124,7 @@ export class EngineMouseEvent {
         x: this.mouseX,
         y: this.mouseY,
       },
-      this.#engine.scene.world,
+      this.#engine.scene.registry,
     );
 
     this.#worldPoint = next;
@@ -134,7 +134,7 @@ export class EngineMouseEvent {
 
 export function getEntityAtPoint(
   engine: EngineInputHost,
-  world: UserWorld,
+  world: Registry,
   point: Point2D,
   maxDistancePixels: number,
   options?: EntityAtPointOptions,
@@ -149,7 +149,7 @@ export function getEntityAtPoint(
 }
 
 export function getEntityAtWorldPoint(
-  world: UserWorld,
+  world: Registry,
   point: Point2D,
   maxDistance: number,
   options?: EntityAtPointOptions,
@@ -193,7 +193,7 @@ export function getEntityAtWorldPoint(
 }
 
 function resolveHierarchyPreferredEntity(
-  world: UserWorld,
+  world: Registry,
   point: Point2D,
   entityId: EntityId,
   maxPreferredDistanceSquared: number,

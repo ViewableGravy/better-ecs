@@ -18,12 +18,11 @@ export const landClaimPlacementDefinition = createBuildItemSpec({
     },
   },
   lifecycle: {
-    commit({ world, snappedX, snappedY, renderVisibilityRole }) {
+    commit({ world, snappedX, snappedY }) {
       spawnLandClaim(world, {
         snappedX,
         snappedY,
         ownerName: LAND_CLAIM_OWNER_NAME,
-        renderVisibilityRole,
       });
     },
   },

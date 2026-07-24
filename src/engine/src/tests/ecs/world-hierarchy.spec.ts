@@ -1,12 +1,11 @@
 import { Parent } from "@engine/components";
-import { EntityIdAllocator } from "@engine/ecs/entity";
-import { UserWorld, World, type WorldMutationObserver } from "@engine/ecs/world";
+import { Registry, type RegistryMutationObserver } from "@engine/ecs/registry";
 import { describe, expect, it, vi } from "vitest";
 
-describe("World hierarchy", () => {
+describe("Registry hierarchy", () => {
   it("attaches, reparents, and removes Parent while keeping cached children coherent", () => {
-    const world = new UserWorld(new World("scene"));
-    const componentChanged = vi.fn<NonNullable<WorldMutationObserver["componentChanged"]>>();
+    const world = new Registry();
+    const componentChanged = vi.fn<NonNullable<RegistryMutationObserver["componentChanged"]>>();
     world.observeMutations({ componentChanged });
     const firstParent = world.create();
     const secondParent = world.create();
@@ -31,10 +30,10 @@ describe("World hierarchy", () => {
   });
 
   it("treats setting the existing parent and removing no parent as no-ops", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const parent = world.create();
     const child = world.create();
-    const componentChanged = vi.fn<NonNullable<WorldMutationObserver["componentChanged"]>>();
+    const componentChanged = vi.fn<NonNullable<RegistryMutationObserver["componentChanged"]>>();
     world.observeMutations({ componentChanged });
 
     world.setParent(child, parent);
@@ -49,7 +48,7 @@ describe("World hierarchy", () => {
   });
 
   it("rejects self-parenting, missing entities, and indirect cycles without changing adjacency", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const root = world.create();
     const child = world.create();
     const grandchild = world.create();
@@ -68,7 +67,7 @@ describe("World hierarchy", () => {
   });
 
   it("cleans adjacency when a child is destroyed and recursively destroys cached descendants", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const root = world.create();
     const child = world.create();
     const grandchild = world.create();
@@ -82,21 +81,4 @@ describe("World hierarchy", () => {
     expect(world.getChildren(child)).toBeUndefined();
   });
 
-  it("moves subtree adjacency to the target world and detaches a moved child from an external parent", () => {
-    const entityIds = new EntityIdAllocator();
-    const source = new UserWorld(new World("source", entityIds));
-    const target = new UserWorld(new World("target", entityIds));
-    const root = source.create();
-    const child = source.create();
-    const grandchild = source.create();
-    source.setParent(child, root);
-    source.setParent(grandchild, child);
-
-    source.move(child, target);
-
-    expect(source.getChildren(root)).toBeUndefined();
-    expect(target.get(child, Parent)).toBeUndefined();
-    expect(target.require(grandchild, Parent).entityId).toBe(child);
-    expect(target.getChildren(child)).toEqual(new Set([grandchild]));
-  });
 });

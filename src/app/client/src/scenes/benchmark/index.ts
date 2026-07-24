@@ -8,7 +8,7 @@ import { BenchmarkController } from "@client/scenes/benchmark/controller";
 import { mountBenchmarkControls } from "@client/scenes/benchmark/controls";
 import type { BenchmarkHarness } from "@client/scenes/benchmark/types";
 import { createScene, createSystem } from "@engine";
-import { Engine, FromEngine, fromContext } from "@engine/context";
+import { ActiveRegistry, Engine, FromEngine, fromContext } from "@engine/context";
 
 declare global {
   interface Window {
@@ -28,12 +28,13 @@ const BenchmarkMotionSystem = createSystem("benchmark:motion")({
 
 export const Scene = createScene("BenchmarkScene")({
   systems: [BenchmarkMotionSystem],
-  async setup(world) {
+  async setup() {
+    const registry = fromContext(ActiveRegistry);
     const engine = fromContext(Engine);
     const assets = fromContext(FromEngine.Assets);
-    const controller = new BenchmarkController(world, engine);
+    const controller = new BenchmarkController(registry, engine);
 
-    setupContextCamera(world);
+    setupContextCamera(registry);
     unmountControls = mountBenchmarkControls(controller, engine);
     disposeController = () => controller.dispose();
     runBenchmarkMotion = () => controller.update(engine.meta.updateTick);

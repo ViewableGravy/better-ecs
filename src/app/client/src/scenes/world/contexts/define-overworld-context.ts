@@ -3,8 +3,6 @@ import {
     type ConveyorSide,
     type ConveyorSlotIndex,
 } from "@client/components/conveyor-belt";
-import { OUTSIDE } from "@client/components/render-visibility";
-import { spawnContextEntryRegion } from "@client/entities/context-entry-region";
 import { spawnDemoShaderQuad } from "@client/entities/demo-shader-quad";
 import { spawnDoor } from "@client/entities/door";
 import { spawnGear } from "@client/entities/gear";
@@ -21,16 +19,14 @@ import { spawnTree } from "@client/entities/tree";
 import { spawnWall } from "@client/entities/wall";
 import { setupContextPlayer } from "@client/scenes/world/contexts/shared";
 import { createHouseLayout } from "@client/scenes/world/utilities/house-layout";
-import type { UserWorld } from "@engine";
+import type { Registry } from "@engine";
 import { Rgba } from "@engine/components";
-import { defineContext, type ContextId } from "@libs/spatial-contexts";
 
 type OverworldContextOptions = {
-  overworldId: ContextId;
-  houseId: ContextId;
-  dungeonId: ContextId;
   houseHalfWidth: number;
   houseHalfHeight: number;
+  houseDestination: { x: number; y: number };
+  dungeonDestination: { x: number; y: number };
 };
 
 type DemoCogPlacement = {
@@ -73,7 +69,7 @@ const STRAIGHT_BELT_DEMO_COG_LAYOUTS: Readonly<Partial<Record<TransportBeltVaria
 };
 
 function spawnBeltRow(
-  world: UserWorld,
+  world: Registry,
   options: {
     x: number;
     y: number;
@@ -105,7 +101,7 @@ function spawnBeltRow(
 }
 
 function spawnBeltLoop(
-  world: UserWorld,
+  world: Registry,
   options: {
     x: number;
     y: number;
@@ -182,7 +178,7 @@ function spawnBeltLoop(
   };
 }
 
-function spawnAnimatedTransportLoop(world: UserWorld, loop: BeltLoopEntityIds): void {
+function spawnAnimatedTransportLoop(world: Registry, loop: BeltLoopEntityIds): void {
   const candidateBelts = [
     loop.topLeft,
     ...loop.topEdges,
@@ -207,14 +203,7 @@ function spawnAnimatedTransportLoop(world: UserWorld, loop: BeltLoopEntityIds): 
   }
 }
 
-export function defineOverworldContext(options: OverworldContextOptions) {
-  return defineContext({
-    id: options.overworldId,
-    policy: {
-      visibility: "stack",
-      simulation: "focused-only",
-    },
-    setup(world) {
+export function setupOverworld(world: Registry, options: OverworldContextOptions): void {
       setupContextPlayer(world, -320, 0);
 
       const houseLayout = createHouseLayout(options.houseHalfWidth, options.houseHalfHeight);
@@ -225,7 +214,6 @@ export function defineOverworldContext(options: OverworldContextOptions) {
         y: 0,
         width: options.houseHalfWidth * 2,
         height: options.houseHalfHeight * 2,
-        contextId: options.houseId,
       });
 
       for (const segment of houseLayout.wallSegments) {
@@ -246,15 +234,10 @@ export function defineOverworldContext(options: OverworldContextOptions) {
         fill: new Rgba(0.25, 0.55, 0.95, 1),
         stroke: new Rgba(0.08, 0.2, 0.42, 1),
         hasCollider: false,
-        role: OUTSIDE,
-      });
-
-      spawnContextEntryRegion(world, {
-        topLeftX: -options.houseHalfWidth,
-        topLeftY: -options.houseHalfHeight,
-        width: options.houseHalfWidth * 2,
-        height: options.houseHalfHeight * 2,
-        targetContextId: options.houseId,
+        portal: {
+          destination: options.houseDestination,
+          label: "Overworld -> House",
+        },
       });
 
       spawnTree(world, { x: -260, y: -140 });
@@ -274,11 +257,8 @@ export function defineOverworldContext(options: OverworldContextOptions) {
         x: 0,
         y: -220,
         fill: new Rgba(0.5, 0.65, 1, 1),
-        role: OUTSIDE,
         portal: {
-          mode: "teleport",
-          targetContextId: options.dungeonId,
-          spawn: { x: 0, y: 160 },
+          destination: options.dungeonDestination,
           label: "Overworld -> Dungeon",
         },
       });
@@ -445,6 +425,4 @@ export function defineOverworldContext(options: OverworldContextOptions) {
 
       spawnAnimatedTransportLoop(world, clockwiseLoop);
       spawnAnimatedTransportLoop(world, counterClockwiseLoop);
-    },
-  });
 }

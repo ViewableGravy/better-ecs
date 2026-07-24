@@ -5,7 +5,7 @@ import type {
   BenchmarkQueryResult,
   BenchmarkQueryStrategyResult,
 } from "@client/scenes/benchmark/types";
-import type { EntityId, QueryCursor2, UserWorld } from "@engine";
+import type { EntityId, QueryCursor2, Registry } from "@engine";
 import { Sprite, Transform2D } from "@engine/components";
 
 const TARGET_MATCH_VISITS = 1_000_000;
@@ -15,12 +15,12 @@ type QueryTuple<TA, TB> = readonly [EntityId<TA & TB>, TA, TB];
 type QueryRun = () => number;
 
 export class QueryBenchmark {
-  readonly #world: UserWorld;
+  readonly #world: Registry;
   readonly #denseCursor: QueryCursor2<Transform2D, Sprite>;
   readonly #selectiveCursor: QueryCursor2<Transform2D, BenchmarkQueryMarker>;
   readonly #SHARED_SELECTIVE_MARKER = new BenchmarkQueryMarker();
 
-  public constructor(world: UserWorld) {
+  public constructor(world: Registry) {
     this.#world = world;
     this.#denseCursor = world.createQueryCursor(Transform2D, Sprite);
     this.#selectiveCursor = world.createQueryCursor(Transform2D, BenchmarkQueryMarker);

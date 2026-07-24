@@ -1,4 +1,3 @@
-import { OUTSIDE } from "@client/components/render-visibility";
 import { spawnBox } from "@client/entities/box";
 import { GhostPreviewComponent } from "@client/entities/ghost";
 import { spawnLandClaim } from "@client/entities/land-claim";
@@ -11,12 +10,12 @@ import { Placeable } from "@client/systems/world/build-mode/components/placeable
 import { buildModeStateDefault } from "@client/systems/world/build-mode/const";
 import { GridSingleton } from "@client/systems/world/build-mode/grid-singleton";
 import { Placement } from "@client/systems/world/build-mode/placement";
-import { UserWorld, World } from "@engine";
+import { Registry } from "@engine";
 import { describe, expect, it } from "vitest";
 
 describe("Placement", () => {
   it("restricts regular placement to claim buildable territory", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const [snappedX, snappedY] = GridSingleton.gridCoordinatesToWorldOrigin(
       GridSingleton.worldToGridCoordinates(0, 0),
     );
@@ -30,7 +29,6 @@ describe("Placement", () => {
       snappedX,
       snappedY,
       ownerName: LAND_CLAIM_OWNER_NAME,
-      renderVisibilityRole: OUTSIDE,
     });
 
     PhysicsWorldManager.beginFrame([world]);
@@ -44,7 +42,7 @@ describe("Placement", () => {
   });
 
   it("keeps land claims placeable outside existing claim territory when the tile is empty", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const [snappedX, snappedY] = GridSingleton.gridCoordinatesToWorldOrigin(
       GridSingleton.worldToGridCoordinates(0, 0),
     );
@@ -53,7 +51,6 @@ describe("Placement", () => {
       snappedX,
       snappedY,
       ownerName: LAND_CLAIM_OWNER_NAME,
-      renderVisibilityRole: OUTSIDE,
     });
 
     PhysicsWorldManager.beginFrame([world]);
@@ -63,7 +60,7 @@ describe("Placement", () => {
   });
 
   it("allows belts to replace conveyors on the same grid cell", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const [snappedX, snappedY] = GridSingleton.gridCoordinatesToWorldOrigin(
       GridSingleton.worldToGridCoordinates(0, 0),
     );
@@ -74,7 +71,6 @@ describe("Placement", () => {
       snappedX,
       snappedY,
       ownerName: LAND_CLAIM_OWNER_NAME,
-      renderVisibilityRole: OUTSIDE,
     });
     spawnTransportBelt(world, { x: targetCenterX, y: targetCenterY, variant: "horizontal-right" });
 
@@ -84,7 +80,7 @@ describe("Placement", () => {
   });
 
   it("blocks belts from replacing solid occupants by default", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const [snappedX, snappedY] = GridSingleton.gridCoordinatesToWorldOrigin(
       GridSingleton.worldToGridCoordinates(0, 0),
     );
@@ -95,12 +91,10 @@ describe("Placement", () => {
       snappedX,
       snappedY,
       ownerName: LAND_CLAIM_OWNER_NAME,
-      renderVisibilityRole: OUTSIDE,
     });
     spawnBox(world, {
       snappedX: targetSnappedX,
       snappedY: targetSnappedY,
-      renderVisibilityRole: OUTSIDE,
     });
 
     PhysicsWorldManager.beginFrame([world]);
@@ -109,19 +103,14 @@ describe("Placement", () => {
   });
 
   it("keeps preview and commit worlds explicit on the resolved placement", () => {
-    const previewWorld = new UserWorld(new World("preview-scene"));
-    const commitWorld = new UserWorld(new World("commit-scene"));
+    const previewWorld = new Registry();
+    const commitWorld = new Registry();
     const gridCoordinates = GridSingleton.worldToGridCoordinates(0, 0);
     const resolvedPlacement = Placement.resolveSelection({
       inputWorld: previewWorld,
       focusedWorld: previewWorld,
       previewWorld,
-      previewContextId: undefined,
-      focusedContextId: undefined,
-      hoveredContextId: undefined,
-      commitContextId: undefined,
       commitWorld,
-      relationship: undefined,
       blocked: false,
     }, gridCoordinates, {
       ...buildModeStateDefault,
@@ -141,7 +130,7 @@ describe("Placement", () => {
     expect(previewWorld.has(ghostEntityId, GhostPreviewComponent)).toBe(true);
     expect(commitWorld.query(Placeable)).toHaveLength(0);
 
-    resolvedPlacement.commit.execute(OUTSIDE);
+    resolvedPlacement.commit.execute();
 
     expect(commitWorld.query(Placeable)).toHaveLength(1);
     expect(previewWorld.query(Placeable)).toHaveLength(0);

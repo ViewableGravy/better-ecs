@@ -5,17 +5,12 @@ import { EngineEditorSelectionManager } from "@engine/core/engine-editor/selecti
 import type { EngineRenderCullingSettings } from "@engine/core/engine/render-culling";
 import type { EngineInput, EngineKeyboardEvent } from "@engine/core/input";
 import { createEngineRunningState, type EngineRunningState } from "@engine/core/running-state";
-import type { UserWorld } from "@engine/ecs/world";
+import type { Registry } from "@engine/ecs/registry";
 import { proxy } from "valtio";
 
 type EngineEditorHost = {
   scene: {
-    world: UserWorld;
-    context: {
-      worldEntries: IterableIterator<[string, UserWorld]>;
-      requireWorld: (id: string) => UserWorld;
-    };
-    activeWorldId: string;
+    registry: Registry;
   };
   canvas: HTMLCanvasElement;
   input: EngineInput;
@@ -47,22 +42,21 @@ export class EngineEditor {
     this.camera = new EngineCamera({
       isPaused: () => this.runningState.paused,
       isPreviewMode: () => this.#previewMode,
-      resolveWorld: () => this.#engine.scene.world,
+      resolveWorld: () => this.#engine.scene.registry,
       resolveViewportHeight: () => this.#engine.canvas.getBoundingClientRect().height,
     });
 
     this.gizmo = new EngineEditorGizmoManager({
-      getSceneContext: () => this.#engine.scene.context,
-      getActiveWorldId: () => this.#engine.scene.activeWorldId,
+      getRegistry: () => this.#engine.scene.registry,
     });
 
     this.selection = new EngineEditorSelectionManager({
-      getWorld: () => this.#engine.scene.world,
+      getWorld: () => this.#engine.scene.registry,
     });
 
     this.gizmoInput = new GizmoInputManager({
       input: this.#engine.input,
-      getWorld: () => this.#engine.scene.world,
+      getWorld: () => this.#engine.scene.registry,
       gizmo: this.gizmo,
     });
 

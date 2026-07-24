@@ -1,5 +1,5 @@
 import { Rgba, Tint } from "@engine/components";
-import { UserWorld, World, type WorldMutationObserver } from "@engine/ecs/world";
+import { Registry, type RegistryMutationObserver } from "@engine/ecs/registry";
 import { describe, expect, it, vi } from "vitest";
 
 describe("Rgba", () => {
@@ -18,8 +18,8 @@ describe("Rgba", () => {
   });
 
   it("publishes an owning visual component once after a complete color patch", () => {
-    const world = new UserWorld(new World("scene"));
-    const entityChanged = vi.fn<NonNullable<WorldMutationObserver["entityChanged"]>>();
+    const world = new Registry();
+    const entityChanged = vi.fn<NonNullable<RegistryMutationObserver["entityChanged"]>>();
     world.observeMutations({ entityChanged });
     const entityId = world.create();
     const tint = new Tint();
@@ -52,8 +52,8 @@ describe("Rgba", () => {
   });
 
   it("copies replacement values into the stable component-owned color", () => {
-    const world = new UserWorld(new World("scene"));
-    const entityChanged = vi.fn<NonNullable<WorldMutationObserver["entityChanged"]>>();
+    const world = new Registry();
+    const entityChanged = vi.fn<NonNullable<RegistryMutationObserver["entityChanged"]>>();
     world.observeMutations({ entityChanged });
     const entityId = world.create();
     const tint = new Tint(new Rgba(0, 0, 0, 1));

@@ -15,7 +15,6 @@ src/
   libs/commands/       Simulation commands
   libs/fps/            FPS display
   libs/physics/        Physics and collision
-  libs/spatial-contexts/
   utils/               Shared utilities
 ```
 

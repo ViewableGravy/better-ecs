@@ -1,5 +1,5 @@
 import { EditorHoverHighlight } from "@engine/components";
-import { EntityIdContext, WorldIdContext } from "@engine/ui/layout/sidebar/worldViewer/context";
+import { EntityIdContext } from "@engine/ui/layout/sidebar/worldViewer/context";
 import { EngineUiContext } from "@engine/ui/utilities/engine-context";
 import { useInvariantContext } from "@engine/ui/utilities/hooks/use-invariant-context";
 import React, { useEffect } from "react";
@@ -17,42 +17,32 @@ type DebugHoverProps = {
 export const DebugHover: React.FC<DebugHoverProps> = ({ children }) => {
   /***** HOOKS *****/
   const engine = useInvariantContext(EngineUiContext);
-  const worldId = useInvariantContext(WorldIdContext);
   const entityId = useInvariantContext(EntityIdContext);
 
   useEffect(() => {
     return () => {
-      const world = engine.scene.context.getWorld(worldId);
-      if (!world) {
-        return;
-      }
+      const registry = engine.scene.registry;
 
-      if (world.has(entityId, EditorHoverHighlight)) {
-        world.remove(entityId, EditorHoverHighlight);
+      if (registry.has(entityId, EditorHoverHighlight)) {
+        registry.remove(entityId, EditorHoverHighlight);
       }
     };
-  }, [engine, entityId, worldId]);
+  }, [engine, entityId]);
 
   /***** FUNCTIONS *****/
   const onMouseEnter = () => {
-    const world = engine.scene.context.getWorld(worldId);
-    if (!world) {
-      return;
-    }
+    const registry = engine.scene.registry;
 
-    if (!world.has(entityId, EditorHoverHighlight)) {
-      world.add(entityId, EditorHoverHighlight, new EditorHoverHighlight(0.35));
+    if (!registry.has(entityId, EditorHoverHighlight)) {
+      registry.add(entityId, EditorHoverHighlight, new EditorHoverHighlight(0.35));
     }
   };
 
   const onMouseLeave = () => {
-    const world = engine.scene.context.getWorld(worldId);
-    if (!world) {
-      return;
-    }
+    const registry = engine.scene.registry;
 
-    if (world.has(entityId, EditorHoverHighlight)) {
-      world.remove(entityId, EditorHoverHighlight);
+    if (registry.has(entityId, EditorHoverHighlight)) {
+      registry.remove(entityId, EditorHoverHighlight);
     }
   };
 

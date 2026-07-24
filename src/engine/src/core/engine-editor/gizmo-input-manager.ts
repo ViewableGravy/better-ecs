@@ -16,14 +16,14 @@ import { EngineEditorGizmoManager } from "@engine/core/engine-editor/gizmo-manag
 import type { EngineInput, EngineKeyboardEvent, EngineMouseEvent } from "@engine/core/input";
 import type { EntityId } from "@engine/ecs/entity";
 import { getWorldTransform2D } from "@engine/ecs/hierarchy";
-import type { UserWorld } from "@engine/ecs/world";
+import type { Registry } from "@engine/ecs/registry";
 import { syncWorldTransform2DSubtree } from "@engine/systems/worldTransform2D";
 
 const PICK_RADIUS_PIXELS = 18;
 
 type GizmoInputManagerOptions = {
   input: EngineInput;
-  getWorld: () => UserWorld;
+  getWorld: () => Registry;
   gizmo: EngineEditorGizmoManager;
 };
 
@@ -66,7 +66,7 @@ type DragState =
 
 export class GizmoInputManager {
   readonly #input: EngineInput;
-  readonly #getWorld: () => UserWorld;
+  readonly #getWorld: () => Registry;
   readonly #gizmo: EngineEditorGizmoManager;
   readonly #unsubscribers: Array<() => void> = [];
 

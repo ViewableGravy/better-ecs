@@ -1,12 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import { Sprite, Transform2D } from "@engine/components";
-import { EntityIdAllocator } from "@engine/ecs/entity";
-import { UserWorld, World } from "@engine/ecs/world";
+import { Registry } from "@engine/ecs/registry";
 
-describe("World query traversal", () => {
+describe("Registry query traversal", () => {
   it("rejects structural mutation from a forEach callback", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const entityId = world.create();
     world.add(entityId, new Transform2D());
     world.add(entityId, new Sprite("test", 1, 1));
@@ -25,26 +24,8 @@ describe("World query traversal", () => {
     }
   });
 
-  it("rejects moving an entity when either world is being traversed", () => {
-    const entityIds = new EntityIdAllocator();
-    const source = new UserWorld(new World("source", entityIds));
-    const target = new UserWorld(new World("target", entityIds));
-    const sourceEntityId = source.create();
-    const targetEntityId = target.create();
-    source.add(sourceEntityId, new Transform2D());
-    target.add(targetEntityId, new Transform2D());
-
-    expect(() => {
-      source.forEach(Transform2D, () => source.move(sourceEntityId, target));
-    }).toThrow("during active query traversal");
-
-    expect(() => {
-      target.forEach(Transform2D, () => source.move(sourceEntityId, target));
-    }).toThrow("during active query traversal");
-  });
-
   it("allows component data mutation and nested read-only traversal", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const entityId = world.create();
     world.add(entityId, new Transform2D());
     world.add(entityId, new Sprite("test", 1, 1));
@@ -63,7 +44,7 @@ describe("World query traversal", () => {
   });
 
   it("releases the traversal guard when a callback throws", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const entityId = world.create();
     world.add(entityId, new Transform2D());
 
@@ -77,7 +58,7 @@ describe("World query traversal", () => {
   });
 
   it("reuses a typed cursor without result arrays or row tuples", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const transformOnlyEntityId = world.create();
     const matchedEntityId = world.create();
     const spriteOnlyEntityId = world.create();
@@ -112,7 +93,7 @@ describe("World query traversal", () => {
   });
 
   it("keeps structural mutation guarded for cursor traversal and releases on early exit", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const entityId = world.create();
     world.add(entityId, new Transform2D());
     world.add(entityId, new Sprite("test", 1, 1));
@@ -128,7 +109,7 @@ describe("World query traversal", () => {
   });
 
   it("rejects re-entering the same cursor and releases its traversal guard", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const entityId = world.create();
     world.add(entityId, new Transform2D());
     world.add(entityId, new Sprite("test", 1, 1));

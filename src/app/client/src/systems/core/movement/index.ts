@@ -15,11 +15,11 @@ import {
 } from "@client/systems/core/movement/utilities";
 import { createSystem } from "@engine";
 import { AnimatedSprite, Transform2D } from "@engine/components";
-import { System as ContextSystem, Delta, fromContext, World } from "@engine/context";
+import { System as ContextSystem, Delta, fromContext, ActiveRegistry } from "@engine/context";
 
 export const System = createSystem("main:player-movement-authority")({
   system() {
-    const world = fromContext(World);
+    const world = fromContext(ActiveRegistry);
     const { data: commandData } = fromContext(ContextSystem("main:local-player-movement-command"));
     const [updateDelta] = fromContext(Delta);
 

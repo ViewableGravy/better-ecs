@@ -2,7 +2,7 @@ import { Camera } from "@engine/components/camera";
 import { Transform2D } from "@engine/components/transform";
 import type { EngineInputHost, Point2D } from "@engine/core/input";
 import type { EntityId } from "@engine/ecs/entity";
-import type { UserWorld } from "@engine/ecs/world";
+import type { Registry } from "@engine/ecs/registry";
 
 export type CameraView = {
   x: number;
@@ -18,7 +18,7 @@ const CAMERA_VIEW_BUFFER: CameraView = {
 
 export function resolveActiveCameraViewFromEngine(
   engine: EngineInputHost,
-  world: UserWorld,
+  world: Registry,
   cameraEntityId?: EntityId,
 ): CameraView {
   const camera = engine.editor.camera;
@@ -51,7 +51,7 @@ export function resolveActiveCameraViewFromEngine(
 export function pointToWorldFromEngine(
   engine: EngineInputHost,
   point: Point2D,
-  world: UserWorld,
+  world: Registry,
   cameraEntityId?: EntityId,
 ): Point2D {
   const cameraView = resolveActiveCameraViewFromEngine(engine, world, cameraEntityId);
@@ -65,7 +65,7 @@ export function pointToWorldFromEngine(
 }
 
 function resolveCameraSelection(
-  world: UserWorld,
+  world: Registry,
   cameraEntityId?: EntityId,
 ): { camera: Camera; transform: Transform2D } | undefined {
   if (cameraEntityId !== undefined) {

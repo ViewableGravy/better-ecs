@@ -1,5 +1,5 @@
 import styles from "@engine/ui/layout/sidebar/styles.module.css";
-import { EntityIdContext, WorldIdContext } from "@engine/ui/layout/sidebar/worldViewer/context";
+import { EntityIdContext } from "@engine/ui/layout/sidebar/worldViewer/context";
 import { EngineUiContext } from "@engine/ui/utilities/engine-context";
 import { useInvariantContext } from "@engine/ui/utilities/hooks/use-invariant-context";
 import type { MouseEvent } from "react";
@@ -17,15 +17,13 @@ type DeleteProps = {
 export const Delete: React.FC<DeleteProps> = ({ className }) => {
   /***** HOOKS *****/
   const engine = useInvariantContext(EngineUiContext);
-  const worldId = useInvariantContext(WorldIdContext);
   const entityId = useInvariantContext(EntityIdContext);
 
   /***** FUNCTIONS *****/
   const onDelete = (event: MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
 
-    const world = engine.scene.context.requireWorld(worldId);
-    world.destroy(entityId);
+    engine.scene.registry.destroy(entityId);
   };
 
   /***** RENDER *****/

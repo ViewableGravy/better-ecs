@@ -4,7 +4,6 @@ import {
   createHierarchyTreeQueryOptions,
   type HierarchyTreeSnapshot,
 } from "@engine/ui/layout/sidebar/panels/hierarchy/queries/hierarchyTreeQuery";
-import { WorldIdContext } from "@engine/ui/layout/sidebar/worldViewer/context";
 import { EngineUiContext } from "@engine/ui/utilities/engine-context";
 import { useInvariantContext } from "@engine/ui/utilities/hooks/use-invariant-context";
 import { useCallback } from "react";
@@ -21,17 +20,16 @@ const EMPTY_ENTITY_IDS: EntityId[] = [];
 export const WorldEntitiesDropdown: React.FC = () => {
   /***** HOOKS *****/
   const engine = useInvariantContext(EngineUiContext);
-  const worldId = useInvariantContext(WorldIdContext);
 
   /***** QUERIES *****/
   const { data } = useQuery({
     ...createHierarchyTreeQueryOptions(engine),
     select: useCallback((snapshot: HierarchyTreeSnapshot) => {
       return {
-        rootEntityIds: snapshot.worldsById[worldId]?.rootEntityIds,
-        expandedEntityIds: snapshot.worldsById[worldId]?.expandedEntityIds,
+        rootEntityIds: snapshot.registry.rootEntityIds,
+        expandedEntityIds: snapshot.registry.expandedEntityIds,
       };
-    }, [worldId]),
+    }, []),
   });
 
   /***** RENDER *****/

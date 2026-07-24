@@ -1,7 +1,6 @@
 import { RENDER_LAYERS } from "@client/consts";
-import type { UserWorld } from "@engine";
+import type { Registry } from "@engine";
 import { Debug, ShaderQuad, Transform2D } from "@engine/components";
-import { OUTSIDE, RenderVisibility } from "@client/components/render-visibility";
 
 type SpawnDemoShaderQuadOptions = {
   x: number;
@@ -10,7 +9,7 @@ type SpawnDemoShaderQuadOptions = {
   height?: number;
 };
 
-export function spawnDemoShaderQuad(world: UserWorld, options: SpawnDemoShaderQuadOptions): number {
+export function spawnDemoShaderQuad(world: Registry, options: SpawnDemoShaderQuadOptions): number {
   const entity = world.create();
 
   const shaderQuad = new ShaderQuad(
@@ -23,7 +22,6 @@ export function spawnDemoShaderQuad(world: UserWorld, options: SpawnDemoShaderQu
 
   world.add(entity, new Transform2D(options.x, options.y));
   world.add(entity, shaderQuad);
-  world.add(entity, new RenderVisibility(OUTSIDE, 1));
   world.add(entity, new Debug("shader-quad"));
 
   return entity;

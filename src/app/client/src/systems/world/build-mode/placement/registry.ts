@@ -1,5 +1,4 @@
-import type { RenderVisibilityRole } from "@client/components/render-visibility";
-import type { EntityId, UserWorld } from "@engine";
+import type { EntityId, Registry } from "@engine";
 
 import {
     getBuildItemDefinition,
@@ -26,12 +25,12 @@ export type RegisteredResolvedPlacement = {
   evaluation: PlacementEvaluation<unknown>;
   canPlace: boolean;
   preview: {
-    world: UserWorld;
+    world: Registry;
     sync: (ghostEntityId: EntityId | null, ownerId: string) => EntityId;
   };
   commit: {
-    world: UserWorld;
-    execute: (renderVisibilityRole: RenderVisibilityRole) => void;
+    world: Registry;
+    execute: () => void;
   };
 };
 
@@ -99,8 +98,8 @@ function createRegisteredResolvedPlacement<TPayload>(
     },
     commit: {
       world: context.commitWorld,
-      execute(renderVisibilityRole) {
-        definition.lifecycle.commit({ ...context, renderVisibilityRole }, payload);
+      execute() {
+        definition.lifecycle.commit(context, payload);
       },
     },
   };

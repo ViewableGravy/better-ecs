@@ -1,4 +1,3 @@
-import { RenderVisibility } from "@client/components/render-visibility";
 import { RENDER_LAYERS } from "@client/consts";
 import { GhostPreviewComponent, type GhostKind } from "@client/entities/ghost/component";
 import { CollisionProfiles } from "@client/scenes/world/physics/collision-profiles";
@@ -11,7 +10,7 @@ import {
     INVALID_GHOST_TINT,
     VALID_GHOST_TINT,
 } from "@client/systems/world/build-mode/const";
-import type { EntityId, UserWorld } from "@engine";
+import type { EntityId, Registry } from "@engine";
 import { AnimatedSprite, FillColor, Rgba, Shape, Sprite, StrokeColor, Tint, Transform2D } from "@engine/components";
 
 /**********************************************************************************************************
@@ -19,8 +18,17 @@ import { AnimatedSprite, FillColor, Rgba, Shape, Sprite, StrokeColor, Tint, Tran
  **********************************************************************************************************/
 
 export class GhostUtils {
+  public static destroyOwned(world: Registry, ownerId: string): void {
+    for (const ghostEntityId of world.query(GhostPreviewComponent)) {
+      const ghostPreview = world.require(ghostEntityId, GhostPreviewComponent);
+      if (ghostPreview.ownerId === ownerId) {
+        world.destroy(ghostEntityId);
+      }
+    }
+  }
+
   public static applyEffect<TEntityId extends EntityId>(
-    world: UserWorld,
+    world: Registry,
     ghostEntityId: TEntityId,
     kind: GhostKind = "box",
     ownerId: string = "local-player",
@@ -39,7 +47,7 @@ export class GhostUtils {
   }
 
   public static syncPlacementState(
-    world: UserWorld,
+    world: Registry,
     ghostEntityId: EntityId,
     isPlaceable: boolean,
   ): void {
@@ -50,7 +58,7 @@ export class GhostUtils {
     this.syncInvalidPlacementIndicator(world, ghostEntityId, ghostPreview, isPlaceable);
   }
 
-  private static applyAppearance(world: UserWorld, ghostEntityId: EntityId, isPlaceable: boolean): void {
+  private static applyAppearance(world: Registry, ghostEntityId: EntityId, isPlaceable: boolean): void {
     const shape = world.get(ghostEntityId, Shape);
 
     if (shape) {
@@ -96,7 +104,7 @@ export class GhostUtils {
     }
   }
 
-  private static syncTint(world: UserWorld, entityId: EntityId, color: Rgba): void {
+  private static syncTint(world: Registry, entityId: EntityId, color: Rgba): void {
     const tint = world.get(entityId, Tint);
 
     if (tint) {
@@ -107,18 +115,15 @@ export class GhostUtils {
     world.add(entityId, new Tint(this.cloneColor(color)));
   }
 
-  private static stripPlacedOnlyComponents(world: UserWorld, ghostEntityId: EntityId): void {
+  private static stripPlacedOnlyComponents(world: Registry, ghostEntityId: EntityId): void {
     if (world.has(ghostEntityId, Placeable)) {
       world.remove(ghostEntityId, Placeable);
     }
 
-    if (world.has(ghostEntityId, RenderVisibility)) {
-      world.remove(ghostEntityId, RenderVisibility);
-    }
   }
 
   private static syncInvalidPlacementIndicator(
-    world: UserWorld,
+    world: Registry,
     ghostEntityId: EntityId,
     ghostPreview: GhostPreviewComponent,
     isPlaceable: boolean,
@@ -162,7 +167,7 @@ export class GhostUtils {
   }
 
   private static createIndicatorSlash(
-    world: UserWorld,
+    world: Registry,
     parentEntityId: EntityId,
     rotation: number,
     stroke: Rgba,

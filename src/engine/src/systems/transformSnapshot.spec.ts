@@ -2,7 +2,7 @@ import { Transform2D, WorldTransform2D } from "@engine/components";
 import { createEngine } from "@engine/core";
 import { executeWithContext } from "@engine/core/context";
 import type { EntityId } from "@engine/ecs/entity";
-import type { WorldMutationObserver } from "@engine/ecs/world";
+import type { RegistryMutationObserver } from "@engine/ecs/registry";
 import { transformSnapshotSystem } from "@engine/systems/transformSnapshot";
 import { describe, expect, it, vi } from "vitest";
 
@@ -13,7 +13,7 @@ describe("transformSnapshotSystem", () => {
       scenes: [],
       manualRegisterEngine: true,
     });
-    const world = engine.world;
+    const world = engine.registry;
     const entityId = world.create();
     const localTransform = new Transform2D();
     const worldTransform = new WorldTransform2D();
@@ -31,7 +31,7 @@ describe("transformSnapshotSystem", () => {
       previousScaleX: number;
       previousScaleY: number;
     }> = [];
-    const entityChanged = vi.fn<NonNullable<WorldMutationObserver["entityChanged"]>>(
+    const entityChanged = vi.fn<NonNullable<RegistryMutationObserver["entityChanged"]>>(
       (_, changedEntityId) => {
         if (changedEntityId !== entityId) {
           return;

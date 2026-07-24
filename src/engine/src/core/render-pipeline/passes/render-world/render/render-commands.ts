@@ -21,11 +21,7 @@ export function renderCommands(): void {
   const renderer = fromContext(FromRender.Renderer);
   const interpolationAlpha = fromContext(FromRender.InterpolationAlpha);
   const engine = fromContext(FromEngine.Engine);
-  const activeRenderWorld = fromContext(FromRender.World);
-  const visibleWorlds = fromContext(FromRender.VisibleWorlds);
   const cullingBounds = fromContext(CullingBounds);
-  const isLastVisibleWorld = visibleWorlds.length === 0
-    || visibleWorlds[visibleWorlds.length - 1] === activeRenderWorld;
 
   renderer.setMeshOverlayEnabled(engine.editor.viewState.showQuadOutlines);
 
@@ -61,18 +57,18 @@ export function renderCommands(): void {
   }
 
   const showCullingBounds = engine.editor.viewState.showCullingBounds || engine.renderCulling.debugOutline;
-  if (isLastVisibleWorld && showCullingBounds && cullingBounds) {
+  if (showCullingBounds && cullingBounds) {
     drawCullingBoundsOverlay(renderer, cullingBounds);
   }
 }
 
 function resolveCommandWorldTransform(command: EntityRenderCommand, out: Transform2D): boolean {
-  const worldTransform = getWorldTransform2D(command.world, command.entityId);
+  const worldTransform = getWorldTransform2D(command.registry, command.entityId);
   if (worldTransform) {
     out.curr.copyFrom(worldTransform.curr);
     out.prev.copyFrom(worldTransform.prev);
     return true;
   }
 
-  return resolveWorldTransform2D(command.world, command.entityId, out);
+  return resolveWorldTransform2D(command.registry, command.entityId, out);
 }

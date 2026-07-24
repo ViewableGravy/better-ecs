@@ -1,10 +1,18 @@
 import { Parent } from "@engine/components";
 import { Component } from "@engine/ecs/component";
-import type { EntityId, QueryResult } from "@engine/ecs/entity";
+import type {
+  EntityComponentLookupResult,
+  EntityId,
+  InvariantQueryResult,
+  QueryResult,
+} from "@engine/ecs/entity";
 import { EntityIdAllocator } from "@engine/ecs/entity";
-import type { QueryCursorSource } from "@engine/ecs/query-cursor";
+import { QueryCursor2, type QueryCursorSource } from "@engine/ecs/query-cursor";
 import { ComponentStore } from "@engine/ecs/storage";
-import type { ComponentMutationKind } from "@engine/ecs/world/user-world";
+import type {
+  ComponentMutationKind,
+  RegistryMutationObserver,
+} from "@engine/ecs/registry/types";
 import invariant from "tiny-invariant";
 import type { Class } from "type-fest";
 
@@ -17,61 +25,21 @@ type ForEach3Callback<TA, TB, TC> = (
   componentC: TC,
 ) => void;
 type PatchCallback<T> = (component: T) => void;
-type AssertEntityIdAvailable = (entityId: EntityId) => void;
 
-const ALLOW_ENTITY_ID: AssertEntityIdAvailable = () => undefined;
-type InternalWorldMutationObserver = {
-  entityChanged?(world: World, entityId: EntityId): void;
-  componentChanged?(
-    world: World,
-    entityId: EntityId,
-    componentType: Function,
-    kind: ComponentMutationKind,
-    component: unknown,
-  ): void;
-  worldReset?(world: World): void;
-};
-
-export class World implements QueryCursorSource {
-  private entities = new Set<EntityId>();
-  private componentStores = new Map<Function, ComponentStore<unknown>>();
-  private entityIds: EntityIdAllocator;
-  private assertEntityIdAvailable = ALLOW_ENTITY_ID;
+export class Registry implements QueryCursorSource {
+  private readonly entities = new Set<EntityId>();
+  private readonly componentStores = new Map<Function, ComponentStore<unknown>>();
+  private readonly entityIds = new EntityIdAllocator();
   private activeQueryTraversals = 0;
-  
-  private readonly mutationObservers = new Set<InternalWorldMutationObserver>();
+
+  private readonly mutationObservers = new Set<RegistryMutationObserver>();
   private readonly childrenByParent = new Map<EntityId, Set<EntityId>>();
   private readonly parentByChild = new Map<EntityId, EntityId>();
-
-  /** Optional scene identifier for debugging */
-  public sceneId?: string;
-
-  constructor(sceneId?: string, entityIds: EntityIdAllocator = new EntityIdAllocator()) {
-    this.sceneId = sceneId;
-    this.entityIds = entityIds;
-  }
-
-  /** @internal Attach this world to the allocator owned by its scene. */
-  setEntityIdAllocator(
-    entityIds: EntityIdAllocator,
-    assertEntityIdAvailable: AssertEntityIdAvailable = ALLOW_ENTITY_ID,
-  ): this {
-    this.assertStructuralMutationAllowed("change the entity ID allocator");
-
-    for (const entityId of this.entities) {
-      assertEntityIdAvailable(entityId);
-    }
-
-    entityIds.advanceTo(this.entityIds.nextEntityId);
-    this.entityIds = entityIds;
-    this.assertEntityIdAvailable = assertEntityIdAvailable;
-    return this;
-  }
 
   /**
    * Creates a new entity
    */
-  createEntity(): EntityId {
+  create(): EntityId {
     this.assertStructuralMutationAllowed("create an entity");
     const entityId = this.entityIds.create();
     this.entities.add(entityId);
@@ -79,9 +47,26 @@ export class World implements QueryCursorSource {
   }
 
   /**
-   * Destroys an entity and removes all its components
+   * Destroys one entity, or every entity matching the supplied component types.
    */
-  destroyEntity(entityId: EntityId): void {
+  destroy(...componentTypes: Function[]): void;
+  destroy(entityId: EntityId): void;
+  destroy(entityIdOrComponentType: EntityId | Function, ...componentTypes: Function[]): void {
+    if (typeof entityIdOrComponentType === "number") {
+      this.destroyOne(entityIdOrComponentType);
+      return;
+    }
+
+    const entityIds = this.query(
+      entityIdOrComponentType as Class<unknown>,
+      ...(componentTypes as Class<unknown>[]),
+    );
+    for (const entityId of entityIds) {
+      this.destroyOne(entityId);
+    }
+  }
+
+  private destroyOne(entityId: EntityId): void {
     this.assertStructuralMutationAllowed("destroy an entity");
     if (!this.entities.has(entityId)) return;
 
@@ -148,9 +133,9 @@ export class World implements QueryCursorSource {
   /**
    * Adds or replaces a component on an entity
    */
-  addComponent<T>(entityId: EntityId<T>, componentType: Function, component: T): void;
-  addComponent<T>(entityId: EntityId<T>, component: T): void;
-  addComponent<T>(entityId: EntityId<T>, componentTypeOrComponent: Function | T, component?: T): void {
+  add<T extends object>(entityId: EntityId, componentType: Class<T>, component: T): void;
+  add<T extends object>(entityId: EntityId, component: T): void;
+  add<T extends object>(entityId: EntityId, componentTypeOrComponent: Class<T> | T, component?: T): void {
     this.assertStructuralMutationAllowed("add or replace a component");
 
     if (!this.entities.has(entityId)) {
@@ -160,7 +145,7 @@ export class World implements QueryCursorSource {
     const componentType =
       component !== undefined
         ? (componentTypeOrComponent as Function)
-        : (componentTypeOrComponent as any).constructor;
+        : componentTypeOrComponent.constructor;
     const comp = component !== undefined ? component : (componentTypeOrComponent as T);
 
     if (componentType === Parent && comp instanceof Parent) {
@@ -200,24 +185,36 @@ export class World implements QueryCursorSource {
   /**
    * Gets a component from an entity
    */
-  getComponent<T>(entityId: EntityId, componentType: Class<T>): T | undefined {
+  get<T, TEntityComponents>(
+    entityId: EntityId<TEntityComponents>,
+    componentType: Class<T>,
+  ): EntityComponentLookupResult<TEntityComponents, T>;
+  get<T>(entityId: EntityId, componentType: Class<T>): T | undefined {
     const store = this.componentStores.get(componentType);
 
-    if (!store) 
+    if (!store) {
       return undefined;
+    }
 
     return (store as ComponentStore<T>).get(entityId);
+  }
+
+  /** Returns an existing component or throws when the entity does not own it. */
+  require<T>(entityId: EntityId, componentType: Class<T>): T {
+    const component = this.get(entityId, componentType);
+    invariant(component, `Component ${componentType.name} does not exist on entity ${entityId}`);
+    return component;
   }
 
   /**
    * Mutates an existing component and publishes exactly once even when the callback throws after a partial write.
    */
-  patchComponent<T>(entityId: EntityId, componentType: Class<T>, callback: PatchCallback<T>): T {
+  patch<T>(entityId: EntityId, componentType: Class<T>, callback: PatchCallback<T>): T {
     if (componentType === Parent) {
       throw new Error("Parent cannot be patched directly; use setParent or removeParent");
     }
 
-    const component = this.getComponent(entityId, componentType);
+    const component = this.get(entityId, componentType);
 
     invariant(component, `Component ${componentType.name} does not exist on entity ${entityId}`);
 
@@ -231,7 +228,7 @@ export class World implements QueryCursorSource {
   }
 
   /** Mutates and publishes an existing component, or returns undefined without invoking the callback. */
-  tryPatchComponent<T>(
+  tryPatch<T>(
     entityId: EntityId,
     componentType: Class<T>,
     callback: PatchCallback<T>,
@@ -240,7 +237,7 @@ export class World implements QueryCursorSource {
       throw new Error("Parent cannot be patched directly; use setParent or removeParent");
     }
 
-    const component = this.getComponent(entityId, componentType);
+    const component = this.get(entityId, componentType);
     if (component === undefined) {
       return undefined;
     }
@@ -257,7 +254,7 @@ export class World implements QueryCursorSource {
   /**
    * Checks if an entity has a component
    */
-  hasComponent<T>(entityId: EntityId<T>, componentType: Function): boolean {
+  has<T>(entityId: EntityId, componentType: Class<T>): entityId is EntityId<T> {
     const store = this.componentStores.get(componentType);
     if (!store) return false;
     return store.has(entityId);
@@ -266,7 +263,7 @@ export class World implements QueryCursorSource {
   /**
    * Removes a component from an entity
    */
-  removeComponent<T>(entityId: EntityId<T>, componentType: Function): void {
+  remove<T>(entityId: EntityId, componentType: Class<T>): void {
     this.assertStructuralMutationAllowed("remove a component");
     if (componentType === Parent) {
       this.removeParent(entityId);
@@ -345,89 +342,6 @@ export class World implements QueryCursorSource {
   }
 
   /**
-   * Moves an entity and all of its descendants to another world.
-   */
-  moveEntityTo(entityId: EntityId, targetWorld: World): void {
-    this.assertStructuralMutationAllowed("move an entity");
-    targetWorld.assertStructuralMutationAllowed("receive a moved entity");
-
-    if (this === targetWorld) {
-      return;
-    }
-
-    if (this.entityIds !== targetWorld.entityIds) {
-      throw new Error("Cannot move entities between worlds with different entity ID allocators");
-    }
-
-    if (!this.entities.has(entityId)) {
-      throw new Error(`Entity ${entityId} does not exist`);
-    }
-
-    const descendants = this.collectDescendants(entityId);
-    const entitiesToMove: EntityId[] = [entityId, ...descendants];
-    const movingEntityIds = new Set(entitiesToMove);
-
-    for (const movingEntityId of entitiesToMove) {
-      if (targetWorld.entities.has(movingEntityId)) {
-        throw new Error(`Entity ${movingEntityId} already exists in target world`);
-      }
-    }
-
-    const rootParentEntityId = this.parentByChild.get(entityId);
-    if (rootParentEntityId !== undefined && !movingEntityIds.has(rootParentEntityId)) {
-      this.removeParent(entityId);
-    }
-
-    for (const movingEntityId of entitiesToMove) {
-      this.moveEntityShallowTo(movingEntityId, targetWorld);
-    }
-  }
-
-  private moveEntityShallowTo(entityId: EntityId, targetWorld: World): void {
-    if (!this.entities.has(entityId)) {
-      throw new Error(`Entity ${entityId} does not exist`);
-    }
-
-    if (targetWorld.entities.has(entityId)) {
-      throw new Error(`Entity ${entityId} already exists in target world`);
-    }
-
-    targetWorld.entities.add(entityId);
-
-    for (const [componentType, sourceStore] of this.componentStores) {
-      const component = sourceStore.get(entityId);
-      if (component === undefined) {
-        continue;
-      }
-
-      let targetStore = targetWorld.componentStores.get(componentType);
-      if (!targetStore) {
-        targetStore = new ComponentStore<unknown>();
-        targetWorld.componentStores.set(componentType, targetStore);
-      }
-
-      targetStore.add(entityId, component);
-      sourceStore.remove(entityId);
-      if (componentType === Parent && component instanceof Parent) {
-        this.detachParent(entityId);
-        targetWorld.attachParent(entityId, component.entityId);
-      }
-
-      if (component instanceof Component) {
-        component.__attach(entityId);
-      }
-
-      this.notifyComponentChanged(entityId, componentType, "removed", component);
-      targetWorld.notifyComponentChanged(entityId, componentType, "added", component);
-    }
-
-    this.childrenByParent.delete(entityId);
-    this.entities.delete(entityId);
-    this.notifyEntityChanged(entityId);
-    targetWorld.notifyEntityChanged(entityId);
-  }
-
-  /**
    * Queries entities by component types (intersection).
    *
    * Algorithm:
@@ -445,7 +359,7 @@ export class World implements QueryCursorSource {
     // No filter means "all entities".
     if (componentTypes.length === 0) {
       // Query metadata is compile-time only, so the runtime array can be reused as-is.
-      return this.getEntities() as QueryResult<TComponentTypes>;
+      return this.all() as QueryResult<TComponentTypes>;
     }
 
     // Resolve stores once and track the smallest store for base iteration.
@@ -511,7 +425,54 @@ export class World implements QueryCursorSource {
     return result as QueryResult<TComponentTypes>;
   }
 
-  forEach1<TA>(componentTypeA: Class<TA>, callback: ForEach1Callback<TA>): void {
+  /**
+   * Traverses matching entities without allocating result rows.
+   * Structural registry mutation throws until traversal completes.
+   */
+  forEach<TA>(componentTypeA: Class<TA>, callback: ForEach1Callback<TA>): void;
+  forEach<TA, TB>(
+    componentTypeA: Class<TA>,
+    componentTypeB: Class<TB>,
+    callback: ForEach2Callback<TA, TB>,
+  ): void;
+  forEach<TA, TB, TC>(
+    componentTypeA: Class<TA>,
+    componentTypeB: Class<TB>,
+    componentTypeC: Class<TC>,
+    callback: ForEach3Callback<TA, TB, TC>,
+  ): void;
+  forEach(
+    componentTypeA: Function,
+    componentTypeBOrCallback: Function,
+    componentTypeCOrCallback?: Function,
+    maybeCallback?: Function,
+  ): void {
+    if (typeof maybeCallback === "function" && componentTypeCOrCallback) {
+      this.forEachThree(
+        componentTypeA as Class<unknown>,
+        componentTypeBOrCallback as Class<unknown>,
+        componentTypeCOrCallback as Class<unknown>,
+        maybeCallback as ForEach3Callback<unknown, unknown, unknown>,
+      );
+      return;
+    }
+
+    if (typeof componentTypeCOrCallback === "function") {
+      this.forEachTwo(
+        componentTypeA as Class<unknown>,
+        componentTypeBOrCallback as Class<unknown>,
+        componentTypeCOrCallback as ForEach2Callback<unknown, unknown>,
+      );
+      return;
+    }
+
+    this.forEachOne(
+      componentTypeA as Class<unknown>,
+      componentTypeBOrCallback as ForEach1Callback<unknown>,
+    );
+  }
+
+  private forEachOne<TA>(componentTypeA: Class<TA>, callback: ForEach1Callback<TA>): void {
     const storeA = this.componentStores.get(componentTypeA) as ComponentStore<TA> | undefined;
     if (!storeA) {
       return;
@@ -537,7 +498,7 @@ export class World implements QueryCursorSource {
     }
   }
 
-  forEach2<TA, TB>(
+  private forEachTwo<TA, TB>(
     componentTypeA: Class<TA>,
     componentTypeB: Class<TB>,
     callback: ForEach2Callback<TA, TB>,
@@ -601,7 +562,7 @@ export class World implements QueryCursorSource {
     }
   }
 
-  forEach3<TA, TB, TC>(
+  private forEachThree<TA, TB, TC>(
     componentTypeA: Class<TA>,
     componentTypeB: Class<TB>,
     componentTypeC: Class<TC>,
@@ -671,6 +632,24 @@ export class World implements QueryCursorSource {
     }
   }
 
+  createQueryCursor<TA, TB>(
+    componentTypeA: Class<TA>,
+    componentTypeB: Class<TB>,
+  ): QueryCursor2<TA, TB> {
+    return new QueryCursor2(this, componentTypeA, componentTypeB);
+  }
+
+  invariantQuery<const TComponentTypes extends readonly Class<unknown>[]>(
+    ...componentTypes: TComponentTypes
+  ): InvariantQueryResult<TComponentTypes> {
+    const results = this.query(...componentTypes);
+    invariant(
+      results.length > 0,
+      `Invariant query for components [${componentTypes.map((type) => type.name).join(", ")}] returned no results`,
+    );
+    return results as InvariantQueryResult<TComponentTypes>;
+  }
+
   /** @internal Resolves a component store when a reusable query cursor begins traversal. */
   getQueryCursorStore<T>(componentType: Class<T>): ComponentStore<T> | undefined {
     return this.componentStores.get(componentType) as ComponentStore<T> | undefined;
@@ -689,7 +668,7 @@ export class World implements QueryCursorSource {
   /**
    * Gets all entities
    */
-  getEntities(): EntityId[] {
+  all(): EntityId[] {
     return Array.from(this.entities);
   }
 
@@ -701,11 +680,6 @@ export class World implements QueryCursorSource {
   /** Returns a component store's dense entity view. Structural mutations invalidate iteration. */
   getComponentEntityIds(componentType: Function): readonly EntityId[] {
     return this.componentStores.get(componentType)?.entityIds() ?? [];
-  }
-
-  /** @internal Returns whether this world owns the exact entity ID. */
-  hasEntity(entityId: EntityId): boolean {
-    return this.entities.has(entityId);
   }
 
   /**
@@ -733,7 +707,7 @@ export class World implements QueryCursorSource {
    * Clears all entities and components
    */
   clear(): void {
-    this.assertStructuralMutationAllowed("clear the world");
+    this.assertStructuralMutationAllowed("clear the registry");
 
     for (const store of this.componentStores.values()) {
       for (const [, component] of store) {
@@ -748,12 +722,12 @@ export class World implements QueryCursorSource {
     this.childrenByParent.clear();
     this.parentByChild.clear();
     for (const observer of this.mutationObservers) {
-      observer.worldReset?.(this);
+      observer.registryReset?.(this);
     }
   }
 
   /** @internal Subscribe to mutation events used by retained engine integrations. */
-  observeMutations(observer: InternalWorldMutationObserver): () => void {
+  observeMutations(observer: RegistryMutationObserver): () => void {
     this.mutationObservers.add(observer);
     return () => void this.mutationObservers.delete(observer);
   }
@@ -828,7 +802,7 @@ export class World implements QueryCursorSource {
 
   private endQueryTraversal(): void {
     if (this.activeQueryTraversals === 0) {
-      throw new Error("World query traversal invariant violated: no active traversal to end");
+      throw new Error("Registry query traversal invariant violated: no active traversal to end");
     }
 
     this.activeQueryTraversals -= 1;

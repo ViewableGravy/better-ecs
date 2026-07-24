@@ -19,11 +19,10 @@ export const wallPlacementDefinition = createBuildItemSpec<PlaceableWallVisualVa
     return PlaceableWallAutoShapeManager.deriveVariantAtCoordinates(previewWorld, gridCoordinates);
   },
   lifecycle: {
-    commit({ world, snappedX, snappedY, renderVisibilityRole }, spriteVariant) {
+    commit({ world, snappedX, snappedY }, spriteVariant) {
       const wallEntityId = spawnPlaceableWall(world, {
         snappedX,
         snappedY,
-        renderVisibilityRole,
         spriteVariant,
       });
 

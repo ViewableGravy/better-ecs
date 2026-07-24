@@ -1,13 +1,11 @@
 import type { EngineFrameAllocatorRegistry, FrameAllocatorRegistry } from "@engine/render";
 import type { RenderPassContext } from "@engine/core/render-pipeline/context";
-import type { RenderPassScope } from "@engine/core/render-pipeline/types";
 
 export type RenderPass<
 	TRegistry extends FrameAllocatorRegistry = EngineFrameAllocatorRegistry,
 	TState extends object = Record<string, never>,
 > = {
 	readonly name: string;
-	readonly scope?: RenderPassScope;
 	execute: (context: RenderPassContext<TRegistry, TState>) => void;
 };
 

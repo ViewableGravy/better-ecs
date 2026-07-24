@@ -18,9 +18,6 @@
       "path": "../../utils/tsconfig.lib.json"
     },
     {
-      "path": "../../libs/spatial-contexts/tsconfig.lib.json"
-    },
-    {
       "path": "../../libs/physics/tsconfig.lib.json"
     },
     {

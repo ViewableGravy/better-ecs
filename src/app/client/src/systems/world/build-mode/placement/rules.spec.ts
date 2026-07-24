@@ -1,5 +1,4 @@
 import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
-import { OUTSIDE } from "@client/components/render-visibility";
 import { spawnBox } from "@client/entities/box";
 import { spawnLandClaim } from "@client/entities/land-claim";
 import {
@@ -15,7 +14,7 @@ import {
     createPlacementEvaluator,
 } from "@client/systems/world/build-mode/placement/rules";
 import type { PlacementContext } from "@client/systems/world/build-mode/placement/types";
-import { UserWorld, World } from "@engine";
+import { Registry } from "@engine";
 import { COLLISION_LAYERS } from "@libs/physics";
 import { describe, expect, it } from "vitest";
 
@@ -24,7 +23,7 @@ import { describe, expect, it } from "vitest";
  **********************************************************************************************************/
 
 function createPlacementContext(
-  world: UserWorld,
+  world: Registry,
   gridCoordinates: ReturnType<typeof GridSingleton.worldToGridCoordinates>,
   snappedX: number,
   snappedY: number,
@@ -35,9 +34,6 @@ function createPlacementContext(
     focusedWorld: world,
     previewWorld: world,
     commitWorld: world,
-    previewContextId: undefined,
-    commitContextId: undefined,
-    relationship: undefined,
     gridCoordinates,
     snappedX,
     snappedY,
@@ -47,7 +43,7 @@ function createPlacementContext(
 
 describe("placement rules", () => {
   it("checks every occupied footprint cell and reports staged evaluation details", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const anchorCoordinates = GridSingleton.worldToGridCoordinates(0, 0);
     const [claimSnappedX, claimSnappedY] = GridSingleton.gridCoordinatesToWorldOrigin(anchorCoordinates);
     const occupiedCoordinates = GridSingleton.worldToGridCoordinates(20, 0);
@@ -65,12 +61,10 @@ describe("placement rules", () => {
       snappedX: claimSnappedX,
       snappedY: claimSnappedY,
       ownerName: LAND_CLAIM_OWNER_NAME,
-      renderVisibilityRole: OUTSIDE,
     });
     spawnBox(world, {
       snappedX: occupiedSnappedX,
       snappedY: occupiedSnappedY,
-      renderVisibilityRole: OUTSIDE,
     });
 
     PhysicsWorldManager.beginFrame([world]);
@@ -89,7 +83,7 @@ describe("placement rules", () => {
   });
 
   it("reports replacement targets when replace-compatible occupants are allowed", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const anchorCoordinates = GridSingleton.worldToGridCoordinates(0, 0);
     const [claimSnappedX, claimSnappedY] = GridSingleton.gridCoordinatesToWorldOrigin(anchorCoordinates);
     const beltCoordinates = GridSingleton.worldToGridCoordinates(20, 0);
@@ -112,7 +106,6 @@ describe("placement rules", () => {
       snappedX: claimSnappedX,
       snappedY: claimSnappedY,
       ownerName: LAND_CLAIM_OWNER_NAME,
-      renderVisibilityRole: OUTSIDE,
     });
     spawnTransportBelt(world, {
       x: beltCenterX,

@@ -8,11 +8,12 @@ import type { SystemFactoryTuple } from "@engine/core/system";
  * @example
  * ```ts
  * const MenuScene = createScene("menu")({
- *   setup(world) {
- *     const menuRoot = world.create();
- *     world.add(menuRoot, UIComponent, { type: "menu" });
+ *   setup() {
+ *     const registry = fromContext(ActiveRegistry);
+ *     const menuRoot = registry.create();
+ *     registry.add(menuRoot, UIComponent, { type: "menu" });
  *   },
- *   teardown(world) {
+ *   teardown() {
  *     // Optional custom cleanup
  *   }
  * });
@@ -29,10 +30,6 @@ export const createScene = <TName extends string>(name: TName) => {
     const defaultTeardown = () => {
       /* no-op */
     };
-    const defaultSceneHook = () => {
-      /* no-op */
-    };
-
     const definition: SceneDefinition<TName, TSystems> = {
       name,
       // TypeScript cannot prove that the fallback `[]` matches the inferred
@@ -41,9 +38,7 @@ export const createScene = <TName extends string>(name: TName) => {
       systems: (config.systems ?? []) as TSystems,
       loading: config.loading ?? null,
       setup: config.setup,
-      sceneSetup: config.sceneSetup ?? defaultSceneHook,
       teardown: config.teardown ?? defaultTeardown,
-      sceneTeardown: config.sceneTeardown ?? defaultSceneHook,
       [SCENE_BRAND]: true as const,
     };
 

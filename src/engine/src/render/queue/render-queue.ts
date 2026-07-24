@@ -1,5 +1,5 @@
 import type { EntityId } from "@engine/ecs/entity";
-import type { UserWorld } from "@engine/ecs/world";
+import type { Registry } from "@engine/ecs/registry";
 import type { ShapeRenderInput } from "@engine/render/types/low-level";
 
 /**
@@ -61,7 +61,7 @@ const RENDER_BUCKET_KIND_PRIORITY: Record<RenderCommandBucketKind, number> = {
  */
 export type RenderCommand = {
   type: RenderCommandType;
-  world: UserWorld | null;
+  registry: Registry | null;
   entityId: EntityId | null;
   shape: ShapeRenderInput | null;
   retainedSpriteBucketId?: number;

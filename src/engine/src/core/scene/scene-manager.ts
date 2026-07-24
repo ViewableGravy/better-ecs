@@ -4,15 +4,15 @@ import type { EngineClass } from "@engine/core/engine";
 import { SystemsManager } from "@engine/core/engine/systems";
 import { SceneContext } from "@engine/core/scene/scene-context";
 import type { SceneDefinition, SceneDefinitionTuple, SceneName } from "@engine/core/scene/scene.types";
-import { UserWorld, World } from "@engine/ecs/world";
+import type { Registry } from "@engine/ecs/registry";
 
 /**
- * Manages scene lifecycle, transitions, and world isolation.
+ * Manages scene lifecycle and transitions.
  *
  * Access via `engine.scene` to interact with scenes:
  * - `engine.scene.set("game")` - Transition to a scene
  * - `engine.scene.current` - Get the active scene name
- * - `engine.scene.world` - Get the active scene's default world
+ * - `engine.scene.registry` - Get the active scene's ECS registry
  */
 export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
   static readonly DEFAULT_SCENE_NAME = "__default__" as const;
@@ -21,13 +21,6 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
 
   #activeScene: SceneDefinition<string> | null = null;
   #activeSceneContext: SceneContext;
-
-  // Always points at the *active* world for the active scene (or the fallback world).
-  // The active world is typically the scene default, but can be changed (e.g. spatial contexts).
-  #activeWorld: World;
-  #activeWorldId: string;
-  // Stable wrapper whose internal world pointer is swapped during transitions
-  #userWorld: UserWorld;
 
   #isTransitioning = false;
   #transitionListeners = new Set<(isTransitioning: boolean) => void>();
@@ -39,10 +32,7 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
 
   constructor(scenes: SceneDefinitionTuple = [], systemsManager?: SystemsManager) {
     this.#systemsManager = systemsManager ?? new SystemsManager({});
-    this.#activeWorld = new World("__default__");
-    this.#userWorld = new UserWorld(this.#activeWorld);
-    this.#activeSceneContext = new SceneContext(SceneManager.DEFAULT_SCENE_NAME, this.#activeWorld);
-    this.#activeWorldId = this.#activeSceneContext.defaultWorldId;
+    this.#activeSceneContext = new SceneContext(SceneManager.DEFAULT_SCENE_NAME);
 
     // Register all scenes and instantiate their scene-level systems (per engine instance)
     for (const scene of scenes) {
@@ -61,41 +51,9 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
     return this;
   }
 
-  /** Get the currently active scene's active world (defaults to the scene default world). */
-  get world(): UserWorld {
-    return this.#userWorld;
-  }
-
-  /** Get the id of the currently active world for the active scene context. */
-  get activeWorldId(): string {
-    return this.#activeWorldId;
-  }
-
-  /**
-   * Get the internal default `World` for the active scene (or fallback).
-   * @internal
-   */
-  get internalWorld(): World {
-    return this.#activeWorld;
-  }
-
-  /**
-   * Set the currently active world (affects what `engine.world` / `useWorld()` returns).
-   *
-   * This does not unload/load worlds; it only switches which already-loaded world is treated
-   * as the active world for system execution.
-   */
-  setActiveWorld(id: string): void {
-    const internal = this.#activeSceneContext.getInternalWorld(id);
-    if (!internal) {
-      throw new Error(
-        `Cannot set active world to "${id}": world is not loaded in the active scene`,
-      );
-    }
-
-    this.#activeWorldId = id;
-    this.#activeWorld = internal;
-    this.#userWorld.setWorld(internal);
+  /** Get the currently active scene's ECS registry. */
+  get registry(): Registry {
+    return this.#activeSceneContext.registry;
   }
 
   /** Get the name of the currently active scene context. */
@@ -234,8 +192,6 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
 
     existing.setup = fresh.setup;
     existing.teardown = fresh.teardown;
-    existing.sceneSetup = fresh.sceneSetup;
-    existing.sceneTeardown = fresh.sceneTeardown;
     existing.loading = fresh.loading;
 
     const isActiveDefinition = this.#activeScene?.name === fresh.name;
@@ -249,38 +205,24 @@ export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
 
     if (!prevScene) return;
 
-    const prevDefault = prevContext.getInternalWorld(prevContext.defaultWorldId);
-    if (prevDefault) {
-      this.#activeWorldId = prevContext.defaultWorldId;
-      this.#activeWorld = prevDefault;
-      this.#userWorld.setWorld(prevDefault);
-    }
-
     await executeWithContext({ engine: this.#engineRef, scene: prevContext }, async () => {
       // Cleanup scene-level systems before teardown
       this.#systemsManager.cleanupSceneSystems(prevScene.name);
-
-      await prevScene.sceneTeardown(prevContext);
-      await prevScene.teardown(this.#userWorld);
+      await prevScene.teardown();
     });
 
-    prevContext.clearAllWorlds();
+    prevContext.clear();
     this.#activeScene = null;
   }
 
   async #setupScene(scene: SceneDefinition<string>): Promise<void> {
-    const newWorld = new World(scene.name);
-    const newContext = new SceneContext(scene.name, newWorld);
+    const newContext = new SceneContext(scene.name);
 
     this.#activeScene = scene;
     this.#activeSceneContext = newContext;
-    this.#activeWorldId = newContext.defaultWorldId;
-    this.#activeWorld = newWorld;
-    this.#userWorld.setWorld(newWorld);
 
     await executeWithContext({ engine: this.#engineRef, scene: newContext }, async () => {
-      await scene.sceneSetup(newContext);
-      await scene.setup(this.#userWorld);
+      await scene.setup();
       await this.#systemsManager.initializeSceneSystems(scene.name);
 
       if (this.#engineRef) {

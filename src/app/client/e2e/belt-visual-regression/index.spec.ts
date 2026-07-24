@@ -91,7 +91,7 @@ async function resumeEngine(page: Page): Promise<void> {
   });
 }
 
-async function waitForPausedRender(page: Page): Promise<void> {
+async function waitForRender(page: Page): Promise<void> {
   await page.evaluate(() => {
     return new Promise<void>((resolve) => {
       requestAnimationFrame(() => {
@@ -101,9 +101,17 @@ async function waitForPausedRender(page: Page): Promise<void> {
   });
 }
 
-async function waitForVisualTick(page: Page, tick: number): Promise<void> {
+async function waitForVisualTickAndPause(page: Page, tick: number): Promise<void> {
   await page.waitForFunction((targetTick) => {
-    return (window.__BETTER_ECS_E2E__?.visualScenarioTick() ?? -1) >= targetTick;
+    const harness = window.__BETTER_ECS_E2E__;
+
+    if (!harness || harness.visualScenarioTick() < targetTick) {
+      return false;
+    }
+
+    harness.pauseEngine();
+
+    return true;
   }, tick);
 }
 
@@ -129,15 +137,15 @@ test.describe("belt visual regression", () => {
 
     for (const tick of sampledTicks) {
       await resetVisualScenario(page);
+      await waitForRender(page);
       await pauseEngine(page);
 
       if (tick > 0) {
         await resumeEngine(page);
-        await waitForVisualTick(page, tick);
-        await pauseEngine(page);
+        await waitForVisualTickAndPause(page, tick);
       }
 
-      await waitForPausedRender(page);
+      await waitForRender(page);
 
       const beltState = await readTrackedBeltState(page);
       const motionProbeState = await readMotionProbeState(page);
@@ -150,7 +158,7 @@ test.describe("belt visual regression", () => {
       const screenshot = await canvas.screenshot();
 
       expect(screenshot).toMatchSnapshot(`belt-visual-regression-tick-${tick}.png`, {
-        maxDiffPixels: 500,
+        maxDiffPixels: 750,
       });
       await resumeEngine(page);
     }

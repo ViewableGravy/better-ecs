@@ -1,4 +1,4 @@
-import type { MousePoint, UserWorld } from "@engine";
+import type { MousePoint, Registry } from "@engine";
 
 import type { BuildItemType } from "@client/systems/world/build-mode/build-items";
 import {
@@ -25,16 +25,16 @@ import {
  **********************************************************************************************************/
 
 export class Placement {
-  public static deleteAt(world: UserWorld, worldPointer: MousePoint): void {
+  public static deleteAt(world: Registry, worldPointer: MousePoint): void {
     PlacementQueries.deleteAt(world, worldPointer);
   }
 
-  public static deleteAtGrid(world: UserWorld, gridCoordinates: GridCoordinates): void {
+  public static deleteAtGrid(world: Registry, gridCoordinates: GridCoordinates): void {
     PlacementQueries.deleteAtGrid(world, gridCoordinates);
   }
 
   public static canPlaceItem(
-    world: UserWorld,
+    world: Registry,
     gridCoordinates: GridCoordinates,
     selectedItem: BuildItemType,
     buildModeState: BuildModeState = {
@@ -91,7 +91,7 @@ export class Placement {
   }
 
   private static createSingleWorldContext(
-    world: UserWorld,
+    world: Registry,
     gridCoordinates: GridCoordinates,
     buildModeState: BuildModeState,
   ): PlacementContext {
@@ -99,10 +99,7 @@ export class Placement {
       inputWorld: world,
       focusedWorld: world,
       previewWorld: world,
-      previewContextId: undefined,
-      commitContextId: undefined,
       commitWorld: world,
-      relationship: undefined,
     }, gridCoordinates, buildModeState);
   }
 
@@ -112,9 +109,6 @@ export class Placement {
       | "inputWorld"
       | "focusedWorld"
       | "previewWorld"
-      | "previewContextId"
-      | "commitContextId"
-      | "relationship"
       | "commitWorld"
     >,
     gridCoordinates: GridCoordinates,
@@ -129,9 +123,6 @@ export class Placement {
       focusedWorld: target.focusedWorld,
       previewWorld: target.previewWorld,
       commitWorld,
-      previewContextId: target.previewContextId,
-      commitContextId: target.commitContextId,
-      relationship: target.relationship,
       gridCoordinates,
       snappedX,
       snappedY,

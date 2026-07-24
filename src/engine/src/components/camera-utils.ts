@@ -1,7 +1,7 @@
 import { Camera } from "@engine/components/camera";
 import { Transform2D } from "@engine/components/transform";
 import { Engine, fromContext } from "@engine/context";
-import type { EngineInputHost, EntityId, UserWorld } from "@engine/index";
+import type { EngineInputHost, EntityId, Registry } from "@engine/index";
 import type { CameraView } from "@engine/internal/utils";
 import { resolveActiveCameraViewFromEngine as resolveActiveCameraViewFromEngineInternal } from "@engine/internal/utils";
 import type { Renderer } from "@engine/render";
@@ -20,7 +20,7 @@ const cameraViewBuffer: CameraView = {
 };
 
 export function resolveCameraSelection(
-  world: UserWorld,
+  world: Registry,
   cameraEntityId?: EntityId,
 ): CameraSelection | undefined {
   if (cameraEntityId !== undefined) {
@@ -55,7 +55,7 @@ export function resolveCameraSelection(
 }
 
 export function resolveCameraView(
-  world: UserWorld,
+  world: Registry,
   cameraEntityId?: EntityId,
 ): CameraView {
   const selection = resolveCameraSelection(world, cameraEntityId);
@@ -80,14 +80,14 @@ export function resolveCameraView(
 
 export function resolveActiveCameraViewFromEngine(
   engine: EngineInputHost,
-  world: UserWorld,
+  world: Registry,
   cameraEntityId?: EntityId,
 ): CameraView {
   return resolveActiveCameraViewFromEngineInternal(engine, world, cameraEntityId);
 }
 
 export function applyActiveCameraToRenderer(
-  world: UserWorld,
+  world: Registry,
   renderer: Renderer,
   alpha: number,
   cameraEntityId?: EntityId,

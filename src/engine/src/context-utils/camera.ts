@@ -1,11 +1,11 @@
 import type { EngineContextOptions } from "@engine/context";
 import type { Point2D } from "@engine/core/input";
-import type { EntityId, UserWorld } from "@engine/index";
+import type { EntityId, Registry } from "@engine/index";
 import type { CameraView } from "@engine/internal/utils";
 import { pointToWorldFromEngine, resolveActiveCameraViewFromEngine } from "@engine/internal/utils";
 
 export function ActiveCameraView(
-  world: UserWorld,
+  world: Registry,
   cameraEntityId?: EntityId,
 ): EngineContextOptions<CameraView> {
   return {
@@ -15,7 +15,7 @@ export function ActiveCameraView(
 
 export function PointToWorld(
   point: Point2D,
-  world: UserWorld,
+  world: Registry,
   cameraEntityId?: EntityId,
 ): EngineContextOptions<Point2D> {
   return {

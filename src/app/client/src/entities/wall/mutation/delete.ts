@@ -1,5 +1,5 @@
-import type { EntityId, UserWorld } from "@engine";
+import type { EntityId, Registry } from "@engine";
 
-export function destroyPlaceableWall(world: UserWorld, wallEntityId: EntityId): void {
+export function destroyPlaceableWall(world: Registry, wallEntityId: EntityId): void {
 	world.destroy(wallEntityId);
 }

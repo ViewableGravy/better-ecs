@@ -1,4 +1,4 @@
-import { EntityId, UserWorld, World } from "@engine";
+import { EntityId, Registry } from "@engine";
 import { expectTypeOf } from "vitest";
 
 class ComponentA {
@@ -13,7 +13,7 @@ class ComponentC {
   value = "c";
 }
 
-const world = new UserWorld(new World());
+const world = new Registry();
 const entityId = world.create();
 
 world.add(entityId, new ComponentA());

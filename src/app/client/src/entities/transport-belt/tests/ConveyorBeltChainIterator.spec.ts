@@ -1,11 +1,11 @@
 import { ConveyorBeltComponent } from "@client/components/conveyor-belt";
 import { ConveyorBeltChainIterator } from "@client/entities/transport-belt/topology/ConveyorBeltChainIterator";
-import { UserWorld, World } from "@engine";
+import { Registry } from "@engine";
 import { describe, expect, it } from "vitest";
 
 describe("ConveyorBeltChainIterator", () => {
   it("iterates an open chain from the leaf back toward the head and can be reset", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const headBeltId = world.create();
     const middleBeltId = world.create();
     const leafBeltId = world.create();
@@ -31,7 +31,7 @@ describe("ConveyorBeltChainIterator", () => {
   });
 
   it("keeps the designated downstream belt for closed loops and stops after one full traversal", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const anchorBeltId = world.create();
     const secondBeltId = world.create();
     const thirdBeltId = world.create();

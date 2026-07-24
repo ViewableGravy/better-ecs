@@ -12,34 +12,34 @@ import {
     type CardinalSide,
 } from "@client/systems/world/build-mode/grid-neighbor-query";
 import type { GridCoordinates } from "@client/systems/world/build-mode/grid-singleton";
-import type { EntityId, UserWorld } from "@engine";
+import type { EntityId, Registry } from "@engine";
 
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
 
 export class PlaceableWallAutoShapeManager {
-	public static refreshAffectedWalls(world: UserWorld, placedWallEntityId: EntityId): void {
+	public static refreshAffectedWalls(world: Registry, placedWallEntityId: EntityId): void {
 		const placedCoordinates = GridNeighborQuery.resolveEntityCoordinates(world, placedWallEntityId);
 		const affectedWallEntityIds = this.deriveWallEntityIdsAroundCoordinates(world, placedCoordinates, placedWallEntityId);
 
 		this.refreshWallEntityIds(world, affectedWallEntityIds);
 	}
 
-	public static refreshWallsNearCoordinates(world: UserWorld, coordinates: GridCoordinates): void {
+	public static refreshWallsNearCoordinates(world: Registry, coordinates: GridCoordinates): void {
 		const affectedWallEntityIds = this.deriveWallEntityIdsAroundCoordinates(world, coordinates);
 
 		this.refreshWallEntityIds(world, affectedWallEntityIds);
 	}
 
-	public static deriveVariant(world: UserWorld, wallEntityId: EntityId): PlaceableWallVisualVariant {
+	public static deriveVariant(world: Registry, wallEntityId: EntityId): PlaceableWallVisualVariant {
 		const coordinates = GridNeighborQuery.resolveEntityCoordinates(world, wallEntityId);
 
 		return this.deriveVariantAtCoordinates(world, coordinates, wallEntityId);
 	}
 
 	public static deriveVariantAtCoordinates(
-		world: UserWorld,
+		world: Registry,
 		coordinates: GridCoordinates,
 		wallEntityId?: EntityId,
 	): PlaceableWallVisualVariant {
@@ -62,14 +62,14 @@ export class PlaceableWallAutoShapeManager {
 		return derivePlaceableWallSingleVariant(variantSeed);
 	}
 
-	private static refreshWallEntityIds(world: UserWorld, wallEntityIds: EntityId[]): void {
+	private static refreshWallEntityIds(world: Registry, wallEntityIds: EntityId[]): void {
 		for (const wallEntityId of wallEntityIds) {
 			updatePlaceableWallVisual(world, wallEntityId, this.deriveVariant(world, wallEntityId));
 		}
 	}
 
 	private static deriveWallEntityIdsAroundCoordinates(
-		world: UserWorld,
+		world: Registry,
 		coordinates: GridCoordinates,
 		centerWallEntityId?: EntityId,
 	): EntityId[] {
@@ -99,7 +99,7 @@ export class PlaceableWallAutoShapeManager {
 	}
 
 	private static hasWallNeighbor(
-		world: UserWorld,
+		world: Registry,
 		coordinates: GridCoordinates,
 		side: CardinalSide,
 		wallEntityId?: EntityId,
@@ -108,7 +108,7 @@ export class PlaceableWallAutoShapeManager {
 	}
 
 	private static findWallEntityAtCoordinates(
-		world: UserWorld,
+		world: Registry,
 		coordinates: GridCoordinates,
 		excludeEntityId?: EntityId,
 	): EntityId | null {
@@ -124,7 +124,7 @@ export class PlaceableWallAutoShapeManager {
 	}
 
 	private static deriveNeighborWallEntityId(
-		world: UserWorld,
+		world: Registry,
 		coordinates: GridCoordinates,
 		side: CardinalSide,
 		excludeEntityId?: EntityId,

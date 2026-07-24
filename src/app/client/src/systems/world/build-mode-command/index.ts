@@ -6,10 +6,9 @@ import {
 import { emitBuildModeCommands } from "@client/systems/world/build-mode/commands/utilities";
 import { resolveBuildModePlacementTarget } from "@client/systems/world/build-mode/utils";
 import { createSystem } from "@engine";
-import { System as ContextSystem, Engine, fromContext, Mouse } from "@engine/context";
+import { ActiveRegistry, System as ContextSystem, Engine, fromContext, Mouse } from "@engine/context";
 import { ActiveCameraView } from "@engine/context-utils";
 import type { BuildModeCommand } from "@libs/commands/build-mode";
-import { SpatialContexts } from "@libs/spatial-contexts";
 
 export const System = createSystem("main:build-mode-command")({
   state: buildModeCommandStateDefault as BuildModeCommandState,
@@ -19,9 +18,8 @@ export const System = createSystem("main:build-mode-command")({
     const engine = fromContext(Engine);
     const mouse = fromContext(Mouse);
 
-    const manager = SpatialContexts.requireManager(engine.scene.context);
-    const focusedWorld = manager.focusedWorld;
-    const camera = fromContext(ActiveCameraView(focusedWorld));
+    const registry = fromContext(ActiveRegistry);
+    const camera = fromContext(ActiveCameraView(registry));
     const worldPointer = mouse.world(camera);
     const { gridCoordinates, placementTarget } = resolveBuildModePlacementTarget(engine, worldPointer);
     const commands = CommandAllocator.scratch<BuildModeCommand>("main:build-mode-commands");

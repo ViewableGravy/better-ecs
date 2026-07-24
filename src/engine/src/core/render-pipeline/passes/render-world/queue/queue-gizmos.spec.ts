@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { Gizmo, Transform2D } from "@engine/components";
-import { UserWorld, World } from "@engine/ecs/world";
+import { Registry } from "@engine/ecs/registry";
 import {
     engineFrameAllocatorRegistry,
     InternalFrameAllocator,
@@ -27,7 +27,7 @@ function collectStrokeAlphas(queue: RenderQueue): number[] {
 
 describe("queueGizmos", () => {
   it("renders non-active handles at 20% opacity while dragging", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const entity = world.create();
 
     const gizmo = new Gizmo();
@@ -51,7 +51,7 @@ describe("queueGizmos", () => {
   });
 
   it("does not dim handles when there is no active handle", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const entity = world.create();
 
     const gizmo = new Gizmo();
@@ -73,7 +73,7 @@ describe("queueGizmos", () => {
   });
 
   it("rotates the plane handle with gizmo rotation", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const entity = world.create();
 
     const gizmo = new Gizmo();
@@ -107,7 +107,7 @@ describe("queueGizmos", () => {
   });
 
   it("renders scale preview donut fill at 30% opacity", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const entity = world.create();
 
     const gizmo = new Gizmo();

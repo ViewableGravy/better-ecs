@@ -9,7 +9,7 @@ import { TransportBeltRotationVariantManager } from "@client/entities/transport-
 import { TransportBeltTerminalDecorationManager } from "@client/entities/transport-belt/placement/TransportBeltTerminalDecorationManager";
 import type { TransportBeltEntityId } from "@client/entities/transport-belt/types";
 import type { GridCoordinates } from "@client/systems/world/build-mode/grid-singleton";
-import type { UserWorld } from "@engine";
+import type { Registry } from "@engine";
 
 /**********************************************************************************************************
  *   COMPONENT START
@@ -18,20 +18,20 @@ import type { UserWorld } from "@engine";
 const MAX_REFRESH_PASSES = 4;
 
 export class TransportBeltAutoShapeManager {
-  public static refreshAffectedBelts(world: UserWorld, placedBeltEntityId: TransportBeltEntityId): void {
+  public static refreshAffectedBelts(world: Registry, placedBeltEntityId: TransportBeltEntityId): void {
     const affectedBeltEntityIds = this.resolveAffectedBeltEntityIds(world, placedBeltEntityId);
 
     this.refreshBeltEntityIds(world, affectedBeltEntityIds);
   }
 
-  public static refreshBeltsNearCoordinates(world: UserWorld, coordinates: GridCoordinates): void {
+  public static refreshBeltsNearCoordinates(world: Registry, coordinates: GridCoordinates): void {
     const affectedBeltEntityIds = this.resolveBeltEntityIdsAroundCoordinates(world, coordinates);
 
     this.refreshBeltEntityIds(world, affectedBeltEntityIds);
   }
 
   private static refreshBeltEntityIds(
-    world: UserWorld,
+    world: Registry,
     affectedBeltEntityIds: TransportBeltEntityId[],
   ): void {
     if (affectedBeltEntityIds.length === 0) {
@@ -83,7 +83,7 @@ export class TransportBeltAutoShapeManager {
   }
 
   private static resolveAffectedBeltEntityIds(
-    world: UserWorld,
+    world: Registry,
     placedBeltEntityId: TransportBeltEntityId,
   ): TransportBeltEntityId[] {
     const placedCoordinates = TransportBeltGridQuery.resolveBeltCoordinates(world, placedBeltEntityId);
@@ -115,7 +115,7 @@ export class TransportBeltAutoShapeManager {
   }
 
   private static resolveBeltEntityIdsAroundCoordinates(
-    world: UserWorld,
+    world: Registry,
     coordinates: GridCoordinates,
     centerBeltEntityId?: TransportBeltEntityId,
   ): TransportBeltEntityId[] {

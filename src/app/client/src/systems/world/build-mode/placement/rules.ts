@@ -10,7 +10,7 @@ import type {
     PlacementCanPlace,
     PlacementContext,
 } from "@client/systems/world/build-mode/placement/types";
-import type { UserWorld } from "@engine";
+import type { Registry } from "@engine";
 import {
     COLLISION_LAYERS,
     inLayer,
@@ -37,7 +37,7 @@ type PlacementOccupancyResolver<TPayload> = (
 ) => boolean;
 
 type PlacementOccupantCompatibilityGroupResolver = (
-  world: UserWorld,
+  world: Registry,
   occupant: PhysicsBody,
 ) => string | null;
 
@@ -216,7 +216,7 @@ function resolvePlacementQueries<TPayload>(
 
 function queryPlacementOccupantsAtCoordinates<TPayload>(
   strategy: ResolvedPlacementStrategy<TPayload>,
-  world: UserWorld,
+  world: Registry,
   gridCoordinates: GridCoordinates,
 ): PhysicsBody[] {
   const [firstQuery] = strategy.queries;
@@ -240,7 +240,7 @@ function queryPlacementOccupantsAtCoordinates<TPayload>(
 
 function queryPlacementOccupantsByQuery(
   query: PlacementOccupancyQuery,
-  world: UserWorld,
+  world: Registry,
   gridCoordinates: GridCoordinates,
   layers: bigint,
 ): PhysicsBody[] {
@@ -312,7 +312,7 @@ function buildReplacementTargets<TPayload>(
 }
 
 function belongsToCompatibilityGroup(
-  world: UserWorld,
+  world: Registry,
   occupant: PhysicsBody,
   compatibilityGroup: string,
   resolveOccupantCompatibilityGroup?: PlacementOccupantCompatibilityGroupResolver,

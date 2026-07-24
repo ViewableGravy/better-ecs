@@ -13,7 +13,7 @@ import {
 import { TransportBeltTerminalDecorationManager } from "@client/entities/transport-belt/placement/TransportBeltTerminalDecorationManager";
 import type { TransportBeltEntityId } from "@client/entities/transport-belt/types";
 import type { GridCoordinates } from "@client/systems/world/build-mode/grid-singleton";
-import type { EntityId, UserWorld } from "@engine";
+import type { EntityId, Registry } from "@engine";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -39,7 +39,7 @@ export class TransportBeltConnectionUtils {
    * The belt stores `previousEntityId` and `nextEntityId`, and the tail belt in
    * each chain receives a `TransportBeltLeaf` marker used by motion systems.
    */
-  public static connectSpawnedBelt(world: UserWorld, beltEntityId: TransportBeltEntityId): void {
+  public static connectSpawnedBelt(world: Registry, beltEntityId: TransportBeltEntityId): void {
     const belt = world.get(beltEntityId, ConveyorBeltComponent);
 
     if (!belt || !this.isConnectableBelt(belt)) {
@@ -100,7 +100,7 @@ export class TransportBeltConnectionUtils {
    * physical gap remains reflected in topology. Child entities parented to the
    * belt are also destroyed by the world hierarchy cleanup.
    */
-  public static destroyBelt(world: UserWorld, beltEntityId: EntityId): void {
+  public static destroyBelt(world: Registry, beltEntityId: EntityId): void {
     const belt = world.get(beltEntityId, ConveyorBeltComponent);
 
     if (!belt) {
@@ -141,7 +141,7 @@ export class TransportBeltConnectionUtils {
     this.syncTerminalDecorationsNearCoordinates(world, coordinates);
   }
 
-  public static reconnectBelt(world: UserWorld, beltEntityId: TransportBeltEntityId): void {
+  public static reconnectBelt(world: Registry, beltEntityId: TransportBeltEntityId): void {
     const belt = world.get(beltEntityId, ConveyorBeltComponent);
 
     if (!belt || !this.isConnectableBelt(belt)) {
@@ -226,7 +226,7 @@ export class TransportBeltConnectionUtils {
   }
 
   private static findAdjacentBeltEntityId(
-    world: UserWorld,
+    world: Registry,
     beltEntityId: EntityId,
     belt: ConveyorBeltComponent,
     coordinates: GridCoordinates,
@@ -256,7 +256,7 @@ export class TransportBeltConnectionUtils {
   }
 
   private static isFacingCurrentCoordinates(
-    world: UserWorld,
+    world: Registry,
     candidateEntityId: EntityId,
     candidateBelt: ConveyorBeltComponent,
     currentCoordinates: GridCoordinates,
@@ -274,7 +274,7 @@ export class TransportBeltConnectionUtils {
   }
 
   private static syncLeafMarker(
-    world: UserWorld,
+    world: Registry,
     beltEntityId: EntityId,
     belt: ConveyorBeltComponent,
     shouldBeLeaf: boolean = this.isConnectableBelt(belt) && belt.nextEntityId === null,
@@ -299,7 +299,7 @@ export class TransportBeltConnectionUtils {
   }
 
   private static blockTailTransfers(
-    world: UserWorld,
+    world: Registry,
     conveyorEntityId: EntityId,
     conveyor: ConveyorBeltComponent,
   ): void {
@@ -315,7 +315,7 @@ export class TransportBeltConnectionUtils {
   }
 
   private static refreshLeafAnchors(
-    world: UserWorld,
+    world: Registry,
     seedEntityIds: readonly (EntityId | null)[],
   ): void {
     const visitedEntityIds = new Set<EntityId>();
@@ -340,7 +340,7 @@ export class TransportBeltConnectionUtils {
   }
 
   private static collectConnectedComponentEntityIds(
-    world: UserWorld,
+    world: Registry,
     startEntityId: EntityId,
     visitedEntityIds: Set<EntityId>,
   ): EntityId[] {
@@ -376,7 +376,7 @@ export class TransportBeltConnectionUtils {
   }
 
   private static assignLeafAnchorForComponent(
-    world: UserWorld,
+    world: Registry,
     componentEntityIds: readonly EntityId[],
   ): void {
     const openTailEntityId = this.resolveOpenTailEntityId(world, componentEntityIds);
@@ -400,7 +400,7 @@ export class TransportBeltConnectionUtils {
   }
 
   private static resolveOpenTailEntityId(
-    world: UserWorld,
+    world: Registry,
     componentEntityIds: readonly EntityId[],
   ): EntityId | null {
     for (const entityId of componentEntityIds) {
@@ -418,7 +418,7 @@ export class TransportBeltConnectionUtils {
     return null;
   }
 
-  private static resolveExistingLoopAnchorEntityId(world: UserWorld, componentEntityIds: readonly EntityId[]): EntityId | null {
+  private static resolveExistingLoopAnchorEntityId(world: Registry, componentEntityIds: readonly EntityId[]): EntityId | null {
     for (const entityId of componentEntityIds) {
       const belt = world.get(entityId, ConveyorBeltComponent);
 
@@ -435,7 +435,7 @@ export class TransportBeltConnectionUtils {
   }
 
   private static syncTerminalDecorationsNearCoordinates(
-    world: UserWorld,
+    world: Registry,
     coordinates: GridCoordinates,
   ): void {
     const nearbyBeltEntityIds: EntityId[] = [];

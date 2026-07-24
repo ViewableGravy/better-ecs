@@ -1,7 +1,6 @@
 import { GridBounds } from "@client/components/grid-bounds";
-import { OUTSIDE, RenderVisibility, type RenderVisibilityRole } from "@client/components/render-visibility";
 import { RENDER_LAYERS } from "@client/consts";
-import type { UserWorld } from "@engine";
+import type { Registry } from "@engine";
 import { Debug, FillColor, Rgba, Shape, StrokeColor, Transform2D } from "@engine/components";
 
 type SpawnBackgroundOptions = {
@@ -10,12 +9,10 @@ type SpawnBackgroundOptions = {
   color: Rgba;
   stroke?: Rgba;
   strokeWidth?: number;
-  role?: RenderVisibilityRole;
-  baseAlpha?: number;
   gridBounds?: boolean;
 };
 
-export function spawnBackground(world: UserWorld, opts: SpawnBackgroundOptions): number {
+export function spawnBackground(world: Registry, opts: SpawnBackgroundOptions): number {
   const entity = world.create();
   const shape = new Shape(
     "rectangle",
@@ -32,7 +29,6 @@ export function spawnBackground(world: UserWorld, opts: SpawnBackgroundOptions):
   if (opts.stroke) {
     world.add(entity, new StrokeColor(opts.stroke));
   }
-  world.add(entity, new RenderVisibility(opts.role ?? OUTSIDE, opts.baseAlpha ?? 1));
   world.add(entity, new Debug("background"));
 
   if (opts.gridBounds) {

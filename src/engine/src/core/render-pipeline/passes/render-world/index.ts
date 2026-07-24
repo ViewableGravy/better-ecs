@@ -10,7 +10,6 @@ import { queueSprites } from "@engine/core/render-pipeline/passes/render-world/q
 import { renderCommands } from "@engine/core/render-pipeline/passes/render-world/render/render-commands";
 
 export const RenderWorldPass = createRenderPass("world-render")({
-  scope: "world",
   execute() {
     queueSprites();
     queueShaderQuads();

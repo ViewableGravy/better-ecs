@@ -16,7 +16,7 @@ export class Parent extends Component {
     this.#entityId = entityId;
   }
 
-  /** @internal Parent topology is mutated exclusively by World.setParent. */
+  /** @internal Parent topology is mutated exclusively by Registry.setParent. */
   public __setEntityId(entityId: EntityId): void {
     this.#entityId = entityId;
   }

@@ -4,13 +4,13 @@ import { FillColor, Opacity, OpacityTrack, Rgba, Shape, StrokeColor, Transform2D
 import type { ShapeEntityRenderCommand } from "@engine/core/render-pipeline/passes/render-world/render/culling/utils";
 import { handleShapeEntityCommand } from "@engine/core/render-pipeline/passes/render-world/render/handlers/shape-entity";
 import type { EntityId } from "@engine/ecs/entity";
-import { UserWorld, World } from "@engine/ecs/world";
+import { Registry } from "@engine/ecs/registry";
 import { engineFrameAllocatorRegistry, InternalFrameAllocator } from "@engine/render";
 import type { DenseShapeRenderData } from "@engine/render/types/low-level";
 
 describe("handleShapeEntityCommand", () => {
   it("submits fill alpha multiplied by entity opacity components", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const entityId = world.create();
 
     world.add(entityId, new Shape("rectangle", 10, 12, 0, 0));
@@ -44,7 +44,7 @@ describe("handleShapeEntityCommand", () => {
   });
 
   it("submits stroke alpha multiplied by entity opacity components", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
     const entityId = world.create();
 
     world.add(entityId, new Shape("rectangle", 10, 12, 2, 0));
@@ -79,10 +79,10 @@ describe("handleShapeEntityCommand", () => {
   });
 });
 
-function createShapeEntityCommand(world: UserWorld, entityId: EntityId): ShapeEntityRenderCommand {
+function createShapeEntityCommand(world: Registry, entityId: EntityId): ShapeEntityRenderCommand {
   return {
     type: "shape-entity",
-    world,
+    registry: world,
     entityId,
     shape: null,
     scope: "gameplay",

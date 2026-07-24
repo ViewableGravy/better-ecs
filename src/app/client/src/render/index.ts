@@ -1,6 +1,5 @@
 import { FPSPass } from "@client/plugins/fps";
 import { DrawGridPass } from "@client/render/passes/DrawGridPass";
-import { ActiveWorldProvider } from "@client/render/world-provider";
 import { createRenderPipeline, type CreateRenderPipelineContext } from "@engine";
 import { fromContext, FromEngine } from "@engine/context";
 import {
@@ -28,7 +27,6 @@ export const Render = createRenderPipeline({
 
     return {
       renderer,
-      worldProvider: new ActiveWorldProvider(),
       frameAllocator: new FrameAllocator(),
     };
   },

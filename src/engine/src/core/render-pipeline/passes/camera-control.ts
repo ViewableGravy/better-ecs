@@ -3,12 +3,11 @@ import { FromRender, fromContext } from "@engine/context";
 import { createRenderPass } from "@engine/core/render-pipeline/pass";
 
 export const CameraControlPass = createRenderPass("camera-control")({
-  scope: "world",
   execute() {
-    const world = fromContext(FromRender.World);
+    const registry = fromContext(FromRender.Registry);
     const renderer = fromContext(FromRender.Renderer);
     const interpolationAlpha = fromContext(FromRender.InterpolationAlpha);
 
-    applyActiveCameraToRenderer(world, renderer, interpolationAlpha);
+    applyActiveCameraToRenderer(registry, renderer, interpolationAlpha);
   },
 });

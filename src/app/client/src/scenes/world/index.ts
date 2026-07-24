@@ -2,9 +2,10 @@ import { createDomLoadingOverlay } from "@client/overlays/create-dom-loading-ove
 import { FPSSystem } from "@client/plugins/fps";
 import { PhysicsDebugSystem } from "@client/plugins/physics";
 import { sceneConfig } from "@client/scenes/world/const";
-import { defineDungeonContext } from "@client/scenes/world/contexts/define-dungeon-context";
-import { defineHouseContext } from "@client/scenes/world/contexts/define-house-context";
-import { defineOverworldContext } from "@client/scenes/world/contexts/define-overworld-context";
+import { setupDungeon } from "@client/scenes/world/contexts/define-dungeon-context";
+import { setupHouse } from "@client/scenes/world/contexts/define-house-context";
+import { setupOverworld } from "@client/scenes/world/contexts/define-overworld-context";
+import { setupSceneArea } from "@client/scenes/world/contexts/shared";
 import { System as CameraFollow } from "@client/systems/core/camera-follow";
 import { System as CameraZoom } from "@client/systems/core/camera-zoom";
 import { System as CommandAllocatorReset } from "@client/systems/core/command-allocator-reset";
@@ -18,18 +19,13 @@ import { System as BuildModeCommandSystem } from "@client/systems/world/build-mo
 import { System as BuildModePresentationSystem } from "@client/systems/world/build-mode-presentation";
 import { System as ConveyorEntityMotion } from "@client/systems/world/conveyor-entity-motion";
 import { System as ConveyorMovement } from "@client/systems/world/conveyor-movement";
-import { DebugOverlaySystem } from "@client/systems/world/debug-overlay";
-import { System as ContextFocusAuthority } from "@client/systems/world/house-transition";
-import { System as HouseVisualsSystem } from "@client/systems/world/house-visuals";
 import { PlayerOrbitSystem } from "@client/systems/world/player-orbit";
 import { System as PortalSystem } from "@client/systems/world/portal";
 import { System as Collision } from "@client/systems/world/scene-collision";
-import { fromContext, FromEngine } from "@engine/context";
-import {
-    createContextScene
-} from "@libs/spatial-contexts";
+import { createScene } from "@engine";
+import { ActiveRegistry, fromContext, FromEngine } from "@engine/context";
 
-export const Scene = createContextScene("MainScene")({
+export const Scene = createScene("MainScene")({
   loading: createDomLoadingOverlay({
     id: "scene-loading-overlay-main",
     message: "Loading Main Scene...",
@@ -54,9 +50,8 @@ export const Scene = createContextScene("MainScene")({
     MovementAuthority,
     ConveyorEntityMotion,
     ConveyorMovement,
-    Collision,
     PortalSystem,
-    ContextFocusAuthority,
+    Collision,
     BuildModeAuthoritySystem,
 
     // Local Presentation Systems
@@ -64,34 +59,48 @@ export const Scene = createContextScene("MainScene")({
     CameraZoom,
     PhysicsDebugSystem,
     PlayerOrbitSystem,
-    HouseVisualsSystem,
     BuildModePresentationSystem,
-    DebugOverlaySystem,
   ],
-  contexts: [
-    defineOverworldContext({
-      overworldId: sceneConfig.contextIds.overworld,
-      houseId: sceneConfig.contextIds.house,
-      dungeonId: sceneConfig.contextIds.dungeon,
-      houseHalfWidth: sceneConfig.house.halfWidth,
-      houseHalfHeight: sceneConfig.house.halfHeight,
-    }),
-    defineHouseContext({
-      overworldId: sceneConfig.contextIds.overworld,
-      houseId: sceneConfig.contextIds.house,
-      dungeonId: sceneConfig.contextIds.dungeon,
-      houseHalfWidth: sceneConfig.house.halfWidth,
-      houseHalfHeight: sceneConfig.house.halfHeight,
-    }),
-    defineDungeonContext({
-      overworldId: sceneConfig.contextIds.overworld,
-      dungeonId: sceneConfig.contextIds.dungeon,
-    }),
-  ],
-  async setup(_world, manager) {
-    manager.ensureWorldLoaded(sceneConfig.contextIds.house);
-    manager.ensureWorldLoaded(sceneConfig.contextIds.dungeon);
-    manager.setFocusedContextId(sceneConfig.contextIds.overworld);
+  async setup() {
+    const registry = fromContext(ActiveRegistry);
+    const { areaOrigins, house } = sceneConfig;
+
+    setupSceneArea(registry, areaOrigins.overworld, (areaRegistry) => {
+      setupOverworld(areaRegistry, {
+        houseHalfWidth: house.halfWidth,
+        houseHalfHeight: house.halfHeight,
+        houseDestination: {
+          x: areaOrigins.house.x,
+          y: areaOrigins.house.y + house.halfHeight - 30,
+        },
+        dungeonDestination: {
+          x: areaOrigins.dungeon.x,
+          y: areaOrigins.dungeon.y + 160,
+        },
+      });
+    });
+    setupSceneArea(registry, areaOrigins.house, (areaRegistry) => {
+      setupHouse(areaRegistry, {
+        houseHalfWidth: house.halfWidth,
+        houseHalfHeight: house.halfHeight,
+        overworldDestination: {
+          x: areaOrigins.overworld.x,
+          y: areaOrigins.overworld.y + house.halfHeight + 35,
+        },
+        dungeonDestination: {
+          x: areaOrigins.dungeon.x,
+          y: areaOrigins.dungeon.y + 160,
+        },
+      });
+    });
+    setupSceneArea(registry, areaOrigins.dungeon, (areaRegistry) => {
+      setupDungeon(areaRegistry, {
+        overworldDestination: {
+          x: areaOrigins.overworld.x,
+          y: areaOrigins.overworld.y + 40,
+        },
+      });
+    });
 
     const assets = fromContext(FromEngine.Assets);
 

@@ -3,11 +3,11 @@ import type { TransformState2D } from "@engine/components/transform";
 import type { EntityId } from "@engine/ecs/entity";
 import type {
   ComponentMutationKind,
-  UserWorld,
-  WorldMutationObserver,
-} from "@engine/ecs/world";
+  Registry,
+  RegistryMutationObserver,
+} from "@engine/ecs/registry";
 
-export type Transform2DWorldState = {
+export type Transform2DRegistryState = {
   readonly dirtyEntityIds: EntityId[];
   readonly localNeedsSnapshot: Transform2D[];
   readonly worldNeedsSnapshot: WorldTransform2D[];
@@ -18,36 +18,36 @@ export type Transform2DWorldState = {
  * Converts explicit ECS component publications into batched transform work.
  * Field writes are intentionally invisible until their owning component is patched.
  */
-export class Transform2DTracker implements WorldMutationObserver {
-  readonly #states = new WeakMap<UserWorld, Transform2DWorldState>();
+export class Transform2DTracker implements RegistryMutationObserver {
+  readonly #states = new WeakMap<Registry, Transform2DRegistryState>();
 
-  getState(world: UserWorld): Transform2DWorldState {
-    const existing = this.#states.get(world);
+  getState(registry: Registry): Transform2DRegistryState {
+    const existing = this.#states.get(registry);
     if (existing) {
-      this.#initialize(world, existing);
+      this.#initialize(registry, existing);
       return existing;
     }
 
-    const created: Transform2DWorldState = {
+    const created: Transform2DRegistryState = {
       dirtyEntityIds: [],
       localNeedsSnapshot: [],
       worldNeedsSnapshot: [],
       initialized: false,
     };
-    this.#states.set(world, created);
-    world.observeMutations(this);
-    this.#initialize(world, created);
+    this.#states.set(registry, created);
+    registry.observeMutations(this);
+    this.#initialize(registry, created);
     return created;
   }
 
   componentChanged(
-    world: UserWorld,
+    registry: Registry,
     entityId: EntityId,
     componentType: Function,
     kind: ComponentMutationKind,
     component: unknown,
   ): void {
-    const state = this.#states.get(world);
+    const state = this.#states.get(registry);
     if (!state) {
       return;
     }
@@ -65,8 +65,8 @@ export class Transform2DTracker implements WorldMutationObserver {
     }
   }
 
-  worldReset(world: UserWorld): void {
-    const state = this.#states.get(world);
+  registryReset(registry: Registry): void {
+    const state = this.#states.get(registry);
     if (!state) {
       return;
     }
@@ -77,8 +77,8 @@ export class Transform2DTracker implements WorldMutationObserver {
     state.initialized = false;
   }
 
-  snapshot(world: UserWorld): void {
-    const state = this.getState(world);
+  snapshot(registry: Registry): void {
+    const state = this.getState(registry);
 
     for (const transform of state.localNeedsSnapshot) {
       transform.prev.copyFrom(transform.curr);
@@ -94,23 +94,23 @@ export class Transform2DTracker implements WorldMutationObserver {
       const entityId = transform.attachedEntityId;
       // A queued derived transform can be detached before the next snapshot when its entity is removed.
       if (entityId !== null && entityId !== undefined) {
-        world.notifyEntityChanged(entityId);
+        registry.notifyEntityChanged(entityId);
       }
     }
     state.worldNeedsSnapshot.length = 0;
   }
 
-  markWorldNeedsSnapshot(world: UserWorld, transform: WorldTransform2D): void {
-    this.getState(world).worldNeedsSnapshot.push(transform);
+  markWorldNeedsSnapshot(registry: Registry, transform: WorldTransform2D): void {
+    this.getState(registry).worldNeedsSnapshot.push(transform);
   }
 
-  #initialize(world: UserWorld, state: Transform2DWorldState): void {
+  #initialize(registry: Registry, state: Transform2DRegistryState): void {
     if (state.initialized) {
       return;
     }
 
-    world.forEach(Transform2D, (entityId) => state.dirtyEntityIds.push(entityId));
-    world.forEach(WorldTransform2D, (entityId, transform) => {
+    registry.forEach(Transform2D, (entityId) => state.dirtyEntityIds.push(entityId));
+    registry.forEach(WorldTransform2D, (entityId, transform) => {
       state.dirtyEntityIds.push(entityId);
       if (!transformStatesMatch(transform.prev, transform.curr)) {
         state.worldNeedsSnapshot.push(transform);

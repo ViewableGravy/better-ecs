@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { Parent } from "@engine/components";
-import { UserWorld, World } from "@engine/ecs/world";
+import { Registry } from "@engine/ecs/registry";
 
 class Marker {
   constructor(public value: string) {}
@@ -9,7 +9,7 @@ class Marker {
 
 describe("World destroy hierarchy", () => {
   it("should destroy all descendants when destroying a parent entity", () => {
-    const world = new UserWorld(new World("scene"));
+    const world = new Registry();
 
     const root = world.create();
     const child = world.create();

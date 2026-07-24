@@ -30,7 +30,7 @@ export function handleShaderEntityCommand(
   assets: LooseAssetManager = fromContext(FromEngine.Assets),
   interpolationAlpha: number = fromContext(FromRender.InterpolationAlpha),
 ): void {
-  const world = command.world;
+  const world = command.registry;
   const entityId = command.entityId;
 
   const shaderQuad = world.get(entityId, ShaderQuad);

@@ -1,6 +1,5 @@
-import { HOUSE_INTERIOR, RenderVisibility, type RenderVisibilityRole } from "@client/components/render-visibility";
 import { CollisionProfiles } from "@client/scenes/world/physics/collision-profiles";
-import { Vec2, type UserWorld } from "@engine";
+import { Vec2, type Registry } from "@engine";
 import { Debug, FillColor, Rgba, Shape, StrokeColor, Transform2D } from "@engine/components";
 import { RectangleCollider } from "@libs/physics";
 
@@ -19,15 +18,13 @@ type SpawnWallOptions = {
 	strokeWidth?: number;
 	zIndex?: number;
 	renderOrder?: number;
-	role?: RenderVisibilityRole;
-	baseAlpha?: number;
 };
 
 /**********************************************************************************************************
  *   COMPONENT START
  **********************************************************************************************************/
 
-export function spawnWall(world: UserWorld, options: SpawnWallOptions): number {
+export function spawnWall(world: Registry, options: SpawnWallOptions): number {
 	const entity = world.create();
 
 	world.add(entity, new Transform2D(options.x, options.y));
@@ -48,7 +45,6 @@ export function spawnWall(world: UserWorld, options: SpawnWallOptions): number {
 		);
 		world.add(entity, new FillColor(options.fill ?? new Rgba(0.28, 0.18, 0.12, 1)));
 		world.add(entity, new StrokeColor(options.stroke ?? new Rgba(0.15, 0.08, 0.05, 1)));
-		world.add(entity, new RenderVisibility(options.role ?? HOUSE_INTERIOR, options.baseAlpha ?? 1));
 	}
 
 	const halfWidth = options.width * 0.5;
