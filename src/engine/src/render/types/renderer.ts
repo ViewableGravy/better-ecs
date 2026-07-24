@@ -21,6 +21,12 @@ export type {
 export type Renderable = Sprite | Shape;
 export type Settable = Camera;
 
+export type SpriteAnimationRenderState = {
+  frameAssetIds: readonly string[];
+  playbackRate: number;
+  startTick: number;
+};
+
 export type SpriteRenderState = {
   assetId: string;
   width: number;
@@ -32,6 +38,7 @@ export type SpriteRenderState = {
   layer: number;
   zOrder: number;
   tint: Rgba;
+  animation?: SpriteAnimationRenderState;
 };
 
 export interface ShaderQuadOptions {
@@ -97,7 +104,7 @@ export interface Renderer {
     transform: Transform2D,
   ): boolean;
   removeRetainedSprite(bucketId: number, instanceId: number): void;
-  drawRetainedSpriteBucket(bucketId: number, interpolationAlpha: number): void;
+  drawRetainedSpriteBucket(bucketId: number, interpolationAlpha: number, updateTick: number): void;
   releaseRetainedSpriteBucket(bucketId: number): void;
   set(value: Settable, transform: Transform2D, alpha: number): void;
 

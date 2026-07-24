@@ -1,4 +1,4 @@
-import type { MousePoint, RegisteredEngine, Registry } from "@engine";
+import type { RegisteredEngine, Registry } from "@engine";
 
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
@@ -16,7 +16,6 @@ export type PlacementTargetResolution = {
  **********************************************************************************************************/
 export function resolvePlacementWorld(
   engine: RegisteredEngine,
-  worldPointer: MousePoint,
 ): PlacementTargetResolution {
   const registry = engine.scene.registry;
 

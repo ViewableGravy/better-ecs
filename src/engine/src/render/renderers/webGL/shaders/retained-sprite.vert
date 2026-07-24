@@ -15,6 +15,7 @@ uniform vec2 uViewport;
 uniform vec2 uCameraPosition;
 uniform float uCameraZoom;
 uniform float uInterpolationAlpha;
+uniform vec4 uAnimationUvRect;
 
 out vec2 vUv;
 out vec4 vTint;
@@ -39,8 +40,9 @@ void main() {
     -(rotated.y / uViewport.y) * 2.0
   );
 
-  vec2 uvMin = aUvRect.xy;
-  vec2 uvMax = aUvRect.zw;
+  vec4 sampledUvRect = uAnimationUvRect.x < 0.0 ? aUvRect : uAnimationUvRect;
+  vec2 uvMin = sampledUvRect.xy;
+  vec2 uvMax = sampledUvRect.zw;
   vUv = vec2(
     mix(uvMin.x, uvMax.x, aCorner.x),
     mix(uvMin.y, uvMax.y, aCorner.y)

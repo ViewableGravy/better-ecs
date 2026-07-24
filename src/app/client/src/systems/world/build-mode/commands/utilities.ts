@@ -3,7 +3,6 @@ import { supportsDragPlacement } from "@client/systems/world/build-mode/build-it
 import type { BuildModeState } from "@client/systems/world/build-mode/const";
 import { BuildModeDragPlacement } from "@client/systems/world/build-mode/drag-placement";
 import type { GridCoordinates } from "@client/systems/world/build-mode/grid-singleton";
-import type { PlacementTargetResolution } from "@client/systems/world/build-mode/placement-target";
 import type { BuildModeCommand } from "@libs/commands/build-mode";
 
 /**********************************************************************************************************
@@ -14,7 +13,6 @@ export function emitBuildModeCommands(
   commands: BuildModeCommand[],
   data: BuildModeState,
   gridCoordinates: GridCoordinates,
-  placementTarget: PlacementTargetResolution,
 ): void {
   if (data.pendingDelete) {
     commands.push(CommandAllocator.acquire(

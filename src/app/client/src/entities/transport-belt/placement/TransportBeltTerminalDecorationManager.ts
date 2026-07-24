@@ -84,7 +84,6 @@ export class TransportBeltTerminalDecorationManager {
     const [offsetX, offsetY] = getTransportBeltDirectionVector(direction);
     const localX = offsetX * GRID_CELL_SIZE;
     const localY = offsetY * GRID_CELL_SIZE;
-    const absoluteWorldY = ownerTransform.curr.pos.y + localY;
     const ownerSprite = world.get(beltEntityId, AnimatedSprite);
     const variant = this.resolveTerminalVariant(role, direction);
 
@@ -96,7 +95,7 @@ export class TransportBeltTerminalDecorationManager {
       world.add(decorationEntityId, new Transform2D(localX, localY));
       world.add(
         decorationEntityId,
-        createTransportBeltSprite(variant, absoluteWorldY, ownerSprite ?? undefined),
+        createTransportBeltSprite(variant, ownerSprite ?? undefined),
       );
       world.add(decorationEntityId, new Debug(`transport-belt-${role}`));
       return;
@@ -115,7 +114,7 @@ export class TransportBeltTerminalDecorationManager {
 
     world.add(
       existingDecorationEntityId,
-      createTransportBeltSprite(variant, absoluteWorldY, ownerSprite ?? undefined),
+      createTransportBeltSprite(variant, ownerSprite ?? undefined),
     );
   }
 

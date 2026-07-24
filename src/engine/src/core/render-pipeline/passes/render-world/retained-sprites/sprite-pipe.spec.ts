@@ -98,6 +98,66 @@ describe("SpritePipe", () => {
     expect(renderer.upsertRetainedSprite.mock.calls[0]?.[2].assetId).toBe("frame-b");
   });
 
+  it("retains shader-selected animation while its sampled frame advances", () => {
+    world.remove(entityId, Sprite);
+    world.add(entityId, new AnimatedSprite({
+      assets: ["frame-a", "frame-b"],
+      playbackMode: "tick",
+      playbackRate: 1,
+      startTick: 0,
+      frameSelectionMode: "shader",
+    }));
+
+    registry.syncAndQueue(world, new RenderQueue(), 0, 0);
+    expect(renderer.upsertRetainedSprite).toHaveBeenCalledOnce();
+    expect(renderer.upsertRetainedSprite.mock.calls[0]?.[2]).toMatchObject({
+      assetId: "frame-a",
+      animation: {
+        frameAssetIds: ["frame-a", "frame-b"],
+        playbackRate: 1,
+        startTick: 0,
+      },
+    });
+    renderer.upsertRetainedSprite.mockClear();
+    renderer.removeRetainedSprite.mockClear();
+    renderer.releaseRetainedSpriteBucket.mockClear();
+
+    const queue = new RenderQueue();
+    registry.syncAndQueue(world, queue, 32, 1);
+
+    expect(renderer.upsertRetainedSprite).not.toHaveBeenCalled();
+    expect(renderer.removeRetainedSprite).not.toHaveBeenCalled();
+    expect(renderer.releaseRetainedSpriteBucket).not.toHaveBeenCalled();
+    expect(queue.commands[0]?.retainedSpriteBucketId).toBe(1);
+  });
+
+  it("reprojects shader-selected animation after its timing component is patched", () => {
+    world.remove(entityId, Sprite);
+    world.add(entityId, new AnimatedSprite({
+      assets: ["frame-a", "frame-b"],
+      playbackMode: "tick",
+      frameSelectionMode: "shader",
+    }));
+    registry.syncAndQueue(world, new RenderQueue(), 0, 0);
+    renderer.upsertRetainedSprite.mockClear();
+
+    world.patch(entityId, AnimatedSprite, (animatedSprite) => {
+      animatedSprite.playbackRate = 0.5;
+    });
+    registry.syncAndQueue(world, new RenderQueue(), 16, 1);
+
+    expect(renderer.removeRetainedSprite).toHaveBeenCalledWith(1, entityId);
+    expect(renderer.releaseRetainedSpriteBucket).toHaveBeenCalledWith(1);
+    expect(renderer.upsertRetainedSprite).toHaveBeenCalledWith(
+      2,
+      entityId,
+      expect.objectContaining({
+        animation: expect.objectContaining({ playbackRate: 0.5 }),
+      }),
+      worldTransform,
+    );
+  });
+
   it("upserts once after a Sprite patch", () => {
     registry.syncAndQueue(world, new RenderQueue(), 0, 0);
     renderer.upsertRetainedSprite.mockClear();

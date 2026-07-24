@@ -2,8 +2,15 @@ import type { Rgba } from "@engine/components/sprite/sprite";
 
 export const RETAINED_SPRITE_INSTANCE_FLOATS = 19;
 
+export type RetainedSpriteAnimationData = {
+  readonly frameUvRects: Float32Array;
+  readonly playbackRate: number;
+  readonly startTick: number;
+};
+
 export type RetainedSpriteRenderData = {
   image: HTMLImageElement | ImageBitmap | HTMLCanvasElement;
+  animation?: RetainedSpriteAnimationData;
   previousX: number;
   previousY: number;
   currentX: number;

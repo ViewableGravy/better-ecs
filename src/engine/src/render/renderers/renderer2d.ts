@@ -6,7 +6,10 @@ import { Rgba, Sprite } from "@engine/components/sprite/sprite";
 import { Texture, type TextureSourceData } from "@engine/components/texture";
 import type { ShaderTransform2D, Transform2D } from "@engine/components/transform";
 import { RenderCommand } from "@engine/render/render-command";
-import { TextureCache } from "@engine/render/textureCache/texture-cache";
+import {
+  TextureCache,
+  type TextureInfo,
+} from "@engine/render/textureCache/texture-cache";
 import type {
     DenseShapeRenderData,
     Renderable,
@@ -15,14 +18,19 @@ import type {
     Settable,
     ShaderQuadOptions,
     ShapeRenderInput,
+    SpriteAnimationRenderState,
     SpriteRenderState,
     SpriteRenderData,
     TexturedQuadDrawData,
     TexturedQuadRenderData,
 } from "@engine/render/types/renderer";
 import type { RendererAPI } from "@engine/render/types/renderer-api";
-import type { RetainedSpriteRenderData } from "@engine/render/renderers/webGL/retained-sprite-store";
+import type {
+  RetainedSpriteAnimationData,
+  RetainedSpriteRenderData,
+} from "@engine/render/renderers/webGL/retained-sprite-store";
 import type { WebGLRetainedSpriteBatcher } from "@engine/render/renderers/webGL/retained-sprite-batcher";
+import invariant from "tiny-invariant";
 
 const FALLBACK_PENDING_COLOR = new Rgba(1, 0, 1, 0.4);
 const FALLBACK_ERROR_COLOR = new Rgba(1, 0, 0, 0.6);
@@ -77,6 +85,7 @@ export class Renderer2D implements Renderer {
   #sharedSpriteData: SpriteRenderData | undefined;
   #sharedRetainedSpriteData: RetainedSpriteRenderData | undefined;
   #sharedTexturedQuadData: TexturedQuadRenderData | undefined;
+  readonly #retainedAnimations = new Map<string, RetainedSpriteAnimationData>();
 
   public readonly config: RendererConfig;
   public readonly cache: TextureCache;
@@ -206,6 +215,13 @@ export class Renderer2D implements Renderer {
     });
 
     data.image = image;
+    const animation = sprite.animation
+      ? this.#resolveRetainedAnimation(sprite.animation, textureInfo.handle, image)
+      : undefined;
+    if (animation === null) {
+      return false;
+    }
+    data.animation = animation;
     data.previousX = transform.prev.pos.x;
     data.previousY = transform.prev.pos.y;
     data.currentX = transform.curr.pos.x;
@@ -231,7 +247,7 @@ export class Renderer2D implements Renderer {
     this.#retainedSpriteBatcher.remove(bucketId, instanceId);
   }
 
-  drawRetainedSpriteBucket(bucketId: number, interpolationAlpha: number): void {
+  drawRetainedSpriteBucket(bucketId: number, interpolationAlpha: number, updateTick: number): void {
     this.#retainedSpriteBatcher.draw(bucketId, {
       interpolationAlpha,
       cameraX: this.getCameraX(),
@@ -239,11 +255,48 @@ export class Renderer2D implements Renderer {
       cameraZoom: this.getCameraZoom(),
       viewportWidth: this.getWidth(),
       viewportHeight: this.getHeight(),
+      updateTick,
     });
   }
 
   releaseRetainedSpriteBucket(bucketId: number): void {
     this.#retainedSpriteBatcher.release(bucketId);
+  }
+
+  #resolveRetainedAnimation(
+    animation: SpriteAnimationRenderState,
+    expectedTextureHandle: number,
+    image: HTMLImageElement | ImageBitmap | HTMLCanvasElement,
+  ): RetainedSpriteAnimationData | null {
+    const key =
+      `${animation.frameAssetIds.join(",")}:${animation.playbackRate}:${animation.startTick}`;
+    const existing = this.#retainedAnimations.get(key);
+    if (existing) {
+      return existing;
+    }
+
+    const frameUvRects = new Float32Array(animation.frameAssetIds.length * 4);
+    for (let frameIndex = 0; frameIndex < animation.frameAssetIds.length; frameIndex += 1) {
+      const assetId = animation.frameAssetIds[frameIndex];
+      const textureInfo = this.cache.get(assetId);
+      if (!textureInfo) {
+        return null;
+      }
+
+      invariant(
+        textureInfo.handle === expectedTextureHandle,
+        "Shader-selected sprite animation frames must share one texture source",
+      );
+      writeFrameUvRect(frameUvRects, frameIndex * 4, image, textureInfo);
+    }
+
+    const created: RetainedSpriteAnimationData = {
+      frameUvRects,
+      playbackRate: animation.playbackRate,
+      startTick: animation.startTick,
+    };
+    this.#retainedAnimations.set(key, created);
+    return created;
   }
 
   set(value: Settable, transform: Transform2D, alpha: number): void {
@@ -490,6 +543,25 @@ export class Renderer2D implements Renderer {
     const handle = this.cache.load(texture);
     return this.cache.getImage(handle);
   }
+}
+
+function writeFrameUvRect(
+  target: Float32Array,
+  offset: number,
+  image: HTMLImageElement | ImageBitmap | HTMLCanvasElement,
+  textureInfo: TextureInfo,
+): void {
+  const imageWidth = image.width > 0 ? image.width : 1;
+  const imageHeight = image.height > 0 ? image.height : 1;
+  const frameWidth = textureInfo.frameWidth > 0 ? textureInfo.frameWidth : imageWidth;
+  const frameHeight = textureInfo.frameHeight > 0 ? textureInfo.frameHeight : imageHeight;
+  const insetX = frameWidth > 1 ? 0.5 : 0;
+  const insetY = frameHeight > 1 ? 0.5 : 0;
+
+  target[offset] = (textureInfo.frameX + insetX) / imageWidth;
+  target[offset + 1] = (textureInfo.frameY + insetY) / imageHeight;
+  target[offset + 2] = (textureInfo.frameX + frameWidth - insetX) / imageWidth;
+  target[offset + 3] = (textureInfo.frameY + frameHeight - insetY) / imageHeight;
 }
 
 function lerp(prev: number, current: number, alpha: number): number {

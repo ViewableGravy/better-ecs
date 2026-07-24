@@ -21,12 +21,12 @@ export const System = createSystem("main:build-mode-command")({
     const registry = fromContext(ActiveRegistry);
     const camera = fromContext(ActiveCameraView(registry));
     const worldPointer = mouse.world(camera);
-    const { gridCoordinates, placementTarget } = resolveBuildModePlacementTarget(engine, worldPointer);
+    const { gridCoordinates } = resolveBuildModePlacementTarget(engine, worldPointer);
     const commands = CommandAllocator.scratch<BuildModeCommand>("main:build-mode-commands");
 
     commandData.commands = commands;
 
-    emitBuildModeCommands(commands, intentData, gridCoordinates, placementTarget);
+    emitBuildModeCommands(commands, intentData, gridCoordinates);
 
     intentData.pendingDelete = false;
     intentData.pendingPlace = false;

@@ -29,7 +29,11 @@ export function renderCommands(): void {
     for (const command of bucket.commands) {
       if (command.type === "retained-sprite-bucket") {
         if (command.retainedSpriteBucketId !== undefined) {
-          renderer.drawRetainedSpriteBucket(command.retainedSpriteBucketId, interpolationAlpha);
+          renderer.drawRetainedSpriteBucket(
+            command.retainedSpriteBucketId,
+            interpolationAlpha,
+            engine.meta.updateTick,
+          );
         }
         continue;
       }

@@ -10,6 +10,7 @@ export interface RetainedSpriteProgram {
   cameraPositionLocation: WebGLUniformLocation | null;
   cameraZoomLocation: WebGLUniformLocation | null;
   interpolationAlphaLocation: WebGLUniformLocation | null;
+  animationUvRectLocation: WebGLUniformLocation | null;
   samplerLocation: WebGLUniformLocation | null;
 }
 
@@ -40,6 +41,7 @@ export const createRetainedSpriteProgram = createProgram<RetainedSpriteProgram>(
     cameraPositionLocation: gl.getUniformLocation(program, "uCameraPosition"),
     cameraZoomLocation: gl.getUniformLocation(program, "uCameraZoom"),
     interpolationAlphaLocation: gl.getUniformLocation(program, "uInterpolationAlpha"),
+    animationUvRectLocation: gl.getUniformLocation(program, "uAnimationUvRect"),
     samplerLocation: gl.getUniformLocation(program, "uTexture"),
   };
 });

@@ -3,6 +3,7 @@ import { registry } from "@engine/render/renderers/webGL/registry";
 import {
   RETAINED_SPRITE_INSTANCE_FLOATS,
   RetainedSpriteStore,
+  type RetainedSpriteAnimationData,
   type RetainedSpriteRenderData,
 } from "@engine/render/renderers/webGL/retained-sprite-store";
 import invariant from "tiny-invariant";
@@ -12,6 +13,7 @@ type RetainedSpriteBucket = {
   readonly texture: WebGLTexture;
   readonly buffer: WebGLBuffer;
   readonly vertexArray: WebGLVertexArrayObject;
+  readonly animation: RetainedSpriteAnimationData | undefined;
   allocatedCapacity: number;
 };
 
@@ -22,6 +24,7 @@ export type RetainedSpriteDrawContext = {
   readonly cameraZoom: number;
   readonly viewportWidth: number;
   readonly viewportHeight: number;
+  readonly updateTick: number;
 };
 
 /**
@@ -46,7 +49,7 @@ export class WebGLRetainedSpriteBatcher {
   }
 
   upsert(bucketId: number, instanceId: number, data: RetainedSpriteRenderData): void {
-    this.#resolveBucket(bucketId, data.image).store.upsert(instanceId, data);
+    this.#resolveBucket(bucketId, data.image, data.animation).store.upsert(instanceId, data);
   }
 
   remove(bucketId: number, instanceId: number): void {
@@ -85,6 +88,9 @@ export class WebGLRetainedSpriteBatcher {
     }
     if (spriteProgram.interpolationAlphaLocation) {
       gl.uniform1f(spriteProgram.interpolationAlphaLocation, context.interpolationAlpha);
+    }
+    if (spriteProgram.animationUvRectLocation) {
+      applyAnimationUvRect(gl, spriteProgram.animationUvRectLocation, bucket.animation, context.updateTick);
     }
 
     gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, bucket.store.count);
@@ -141,6 +147,7 @@ export class WebGLRetainedSpriteBatcher {
   #resolveBucket(
     bucketId: number,
     image: HTMLImageElement | ImageBitmap | HTMLCanvasElement,
+    animation: RetainedSpriteAnimationData | undefined,
   ): RetainedSpriteBucket {
     const existing = this.#buckets.get(bucketId);
     if (existing) {
@@ -182,11 +189,37 @@ export class WebGLRetainedSpriteBatcher {
       texture,
       buffer,
       vertexArray,
+      animation,
       allocatedCapacity: 0,
     };
     this.#buckets.set(bucketId, created);
     return created;
   }
+}
+
+function applyAnimationUvRect(
+  gl: WebGL2RenderingContext,
+  location: WebGLUniformLocation,
+  animation: RetainedSpriteAnimationData | undefined,
+  updateTick: number,
+): void {
+  if (!animation) {
+    gl.uniform4f(location, -1, 0, 0, 0);
+    return;
+  }
+
+  const frameCount = animation.frameUvRects.length / 4;
+  invariant(frameCount > 0, "Retained sprite animation requires at least one frame");
+  const sampledFrame = Math.floor((updateTick - animation.startTick) * animation.playbackRate);
+  const frameIndex = ((sampledFrame % frameCount) + frameCount) % frameCount;
+  const offset = frameIndex * 4;
+  gl.uniform4f(
+    location,
+    animation.frameUvRects[offset] ?? 0,
+    animation.frameUvRects[offset + 1] ?? 0,
+    animation.frameUvRects[offset + 2] ?? 1,
+    animation.frameUvRects[offset + 3] ?? 1,
+  );
 }
 
 function configureAttribute(

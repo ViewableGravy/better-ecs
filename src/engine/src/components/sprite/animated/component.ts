@@ -4,6 +4,7 @@ import type { RegisteredAssets } from "@engine/core";
 type SpriteAssetId = Exclude<keyof RegisteredAssets, number | symbol>;
 
 export type AnimatedSpritePlaybackMode = "time" | "tick";
+export type AnimatedSpriteFrameSelectionMode = "cpu" | "shader";
 
 type AnimatedSpriteConfig = {
   assets: readonly SpriteAssetId[];
@@ -21,6 +22,7 @@ type AnimatedSpriteConfig = {
   startTime?: number;
   startTick?: number;
   useGlobalOffset?: boolean;
+  frameSelectionMode?: AnimatedSpriteFrameSelectionMode;
 };
 
 function isAnimatedSpriteConfig(
@@ -35,6 +37,12 @@ export class AnimatedSprite extends Sprite {
   declare public startTime: number;
   declare public startTick: number;
   declare public useGlobalOffset: boolean;
+  /**
+   * Selects whether frame changes are projected through ECS or selected once per retained draw bucket.
+   *
+   * Shader selection currently requires tick playback and every frame to share one texture source.
+   */
+  declare public frameSelectionMode: AnimatedSpriteFrameSelectionMode;
 
   constructor(frames: readonly SpriteAssetId[]);
   constructor(config: AnimatedSpriteConfig);
@@ -72,6 +80,7 @@ export class AnimatedSprite extends Sprite {
     this.startTime = performance.now();
     this.startTick = 0;
     this.useGlobalOffset = false;
+    this.frameSelectionMode = "cpu";
 
     if (config?.playbackRate !== undefined) {
       this.playbackRate = config.playbackRate;
@@ -91,6 +100,10 @@ export class AnimatedSprite extends Sprite {
 
     if (config?.useGlobalOffset !== undefined) {
       this.useGlobalOffset = config.useGlobalOffset;
+    }
+
+    if (config?.frameSelectionMode !== undefined) {
+      this.frameSelectionMode = config.frameSelectionMode;
     }
   }
 }

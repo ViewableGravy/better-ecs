@@ -16,6 +16,7 @@ import type {
 } from "@engine/ecs/registry";
 import type { RenderCommand, RenderQueue } from "@engine/render/queue/render-queue";
 import type { SpriteRenderState } from "@engine/render/types/renderer";
+import invariant from "tiny-invariant";
 
 export interface SpritePipeRenderer {
   upsertRetainedSprite(
@@ -42,7 +43,7 @@ type RetainedSpriteBucket = {
 
 type RetainedSpriteRegistryState = {
   readonly dirtyEntityIds: Set<EntityId>;
-  readonly animatedEntityIds: Set<EntityId>;
+  readonly cpuAnimatedEntityIds: Set<EntityId>;
   readonly retryEntityIds: EntityId[];
   readonly entries: Map<EntityId, RetainedSpriteEntry>;
   readonly bucketsByKey: Map<string, RetainedSpriteBucket>;
@@ -52,6 +53,11 @@ type RetainedSpriteRegistryState = {
 
 const SHARED_TINT = new Rgba();
 const HOVER_TINT = new Rgba(1, 1, 0, 1);
+const SHARED_ANIMATION_STATE = {
+  frameAssetIds: [] as readonly string[],
+  playbackRate: 0,
+  startTick: 0,
+};
 const SHARED_SPRITE_STATE: SpriteRenderState = {
   assetId: "",
   width: 0,
@@ -63,13 +69,15 @@ const SHARED_SPRITE_STATE: SpriteRenderState = {
   layer: 0,
   zOrder: 0,
   tint: SHARED_TINT,
+  animation: undefined,
 };
 
 /**
  * Engine-owned retained projection of ECS sprites.
  *
  * Registries are scanned once when first rendered. Subsequent work is driven by
- * entity dirtiness notifications plus animated frame sampling.
+ * entity dirtiness notifications plus CPU-selected animated frame sampling.
+ * Shader-selected animations remain retained and advance through one uniform per draw bucket.
  */
 export class SpritePipe implements RegistryMutationObserver {
   readonly #states = new WeakMap<Registry, RetainedSpriteRegistryState>();
@@ -89,7 +97,7 @@ export class SpritePipe implements RegistryMutationObserver {
     this.#initializeRegistry(registry, state);
 
     // Sample animated sprites and mark any that have changed as dirty
-    for (const entityId of state.animatedEntityIds) {
+    for (const entityId of state.cpuAnimatedEntityIds) {
       const entry = state.entries.get(entityId);
       const animatedSprite = registry.get(entityId, AnimatedSprite);
       if (!entry || !animatedSprite) {
@@ -165,7 +173,7 @@ export class SpritePipe implements RegistryMutationObserver {
 
     const created: RetainedSpriteRegistryState = {
       dirtyEntityIds: new Set(),
-      animatedEntityIds: new Set(),
+      cpuAnimatedEntityIds: new Set(),
       retryEntityIds: [],
       entries: new Map(),
       bucketsByKey: new Map(),
@@ -203,8 +211,15 @@ export class SpritePipe implements RegistryMutationObserver {
       return true;
     }
 
-    const assetId = animatedSprite
-      ? getFrameAssetIdAtTime(animatedSprite, sampledTimeMs, sampledUpdateTick)
+    const usesShaderAnimation = animatedSprite?.frameSelectionMode === "shader";
+    if (usesShaderAnimation) {
+      invariant(animatedSprite.playbackMode === "tick", "Shader-selected sprite animation requires tick playback");
+    }
+
+    const assetId = usesShaderAnimation
+      ? animatedSprite.frames[0]
+      : animatedSprite
+        ? getFrameAssetIdAtTime(animatedSprite, sampledTimeMs, sampledUpdateTick)
       : projectedSprite.assetId;
     const tint = resolveEntityTint(registry, entityId, SHARED_TINT);
     const hover = registry.get(entityId, EditorHoverHighlight);
@@ -222,11 +237,11 @@ export class SpritePipe implements RegistryMutationObserver {
       };
       state.entries.set(entityId, entry);
     }
-    entry.animatedAssetId = animatedSprite ? assetId : null;
-    if (animatedSprite) {
-      state.animatedEntityIds.add(entityId);
+    entry.animatedAssetId = animatedSprite && !usesShaderAnimation ? assetId : null;
+    if (animatedSprite && !usesShaderAnimation) {
+      state.cpuAnimatedEntityIds.add(entityId);
     } else {
-      state.animatedEntityIds.delete(entityId);
+      state.cpuAnimatedEntityIds.delete(entityId);
     }
 
     SHARED_SPRITE_STATE.assetId = assetId;
@@ -238,7 +253,20 @@ export class SpritePipe implements RegistryMutationObserver {
     SHARED_SPRITE_STATE.flipY = projectedSprite.flipY;
     SHARED_SPRITE_STATE.layer = projectedSprite.layer;
     SHARED_SPRITE_STATE.zOrder = projectedSprite.zOrder;
-    const bucketKey = `${projectedSprite.layer}:${projectedSprite.zOrder}:${assetId}:${projectedSprite.isDynamic}`;
+    if (usesShaderAnimation) {
+      SHARED_ANIMATION_STATE.frameAssetIds = animatedSprite.frames;
+      SHARED_ANIMATION_STATE.playbackRate = animatedSprite.playbackRate;
+      SHARED_ANIMATION_STATE.startTick = animatedSprite.useGlobalOffset ? 0 : animatedSprite.startTick;
+      SHARED_SPRITE_STATE.animation = SHARED_ANIMATION_STATE;
+    } else {
+      SHARED_SPRITE_STATE.animation = undefined;
+    }
+
+    const visualKey = usesShaderAnimation
+      ? `animation:${animatedSprite.frames.join(",")}:${animatedSprite.playbackRate}:${SHARED_ANIMATION_STATE.startTick}`
+      : `asset:${assetId}`;
+    const bucketKey =
+      `${projectedSprite.layer}:${projectedSprite.zOrder}:${visualKey}:${projectedSprite.isDynamic}`;
     const bucket = this.#resolveBucket(state, bucketKey, projectedSprite.layer, projectedSprite.zOrder, assetId);
 
     if (entry.bucketId !== bucket.id) {
@@ -303,7 +331,7 @@ export class SpritePipe implements RegistryMutationObserver {
       this.#removeEntryFromBucket(state, entry.bucketId, entityId);
     }
     state.entries.delete(entityId);
-    state.animatedEntityIds.delete(entityId);
+    state.cpuAnimatedEntityIds.delete(entityId);
   }
 
   #removeEntryFromBucket(
@@ -332,7 +360,7 @@ export class SpritePipe implements RegistryMutationObserver {
       this.renderer.releaseRetainedSpriteBucket(bucket.id);
     }
     state.dirtyEntityIds.clear();
-    state.animatedEntityIds.clear();
+    state.cpuAnimatedEntityIds.clear();
     state.retryEntityIds.length = 0;
     state.entries.clear();
     state.bucketsByKey.clear();

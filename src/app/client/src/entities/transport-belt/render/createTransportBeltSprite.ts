@@ -10,29 +10,40 @@ const TRANSPORT_BELT_FRAMES = [
 
 const TRANSPORT_BELT_QUAD_SIZE = 40;
 const TRANSPORT_BELT_FRAME_SIZE = 128;
-const TRANSPORT_BELT_Z_BASE = 0.2;
-const TRANSPORT_BELT_Z_PER_WORLD_Y = 0.000001;
+const TRANSPORT_BELT_ASSETS_BY_VARIANT = new Map<TransportBeltVariant, readonly string[]>();
 
 export function createTransportBeltSprite(
   variant: TransportBeltVariant,
-  worldY: number,
   previousSprite?: AnimatedSprite,
 ): AnimatedSprite {
   const scale = TRANSPORT_BELT_QUAD_SIZE / TRANSPORT_BELT_FRAME_SIZE;
   const sprite = new AnimatedSprite({
-    assets: TRANSPORT_BELT_FRAMES.map((frame) => `transport-belt:${variant}_${frame}` as const),
+    assets: getTransportBeltFrameAssetIds(variant),
     width: TRANSPORT_BELT_FRAME_SIZE * scale,
     height: TRANSPORT_BELT_FRAME_SIZE * scale,
     playbackMode: "tick",
     useGlobalOffset: true,
+    frameSelectionMode: "shader",
   });
 
   sprite.playbackRate = previousSprite?.playbackRate ?? CONVEYOR_ANIMATION_PLAYBACK_RATE;
   sprite.playbackMode = previousSprite?.playbackMode ?? "tick";
   sprite.startTime = previousSprite?.startTime ?? sprite.startTime;
   sprite.startTick = previousSprite?.startTick ?? sprite.startTick;
-  sprite.layer = previousSprite?.layer ?? RENDER_LAYERS.world;
-  sprite.zOrder = TRANSPORT_BELT_Z_BASE + worldY * TRANSPORT_BELT_Z_PER_WORLD_Y;
+  sprite.useGlobalOffset = previousSprite?.useGlobalOffset ?? sprite.useGlobalOffset;
+  sprite.layer = RENDER_LAYERS.belts;
+  sprite.isDynamic = false;
 
   return sprite;
+}
+
+function getTransportBeltFrameAssetIds(variant: TransportBeltVariant): readonly string[] {
+  const existing = TRANSPORT_BELT_ASSETS_BY_VARIANT.get(variant);
+  if (existing) {
+    return existing;
+  }
+
+  const created = TRANSPORT_BELT_FRAMES.map((frame) => `transport-belt:${variant}_${frame}`);
+  TRANSPORT_BELT_ASSETS_BY_VARIANT.set(variant, created);
+  return created;
 }

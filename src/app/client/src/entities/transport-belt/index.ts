@@ -33,7 +33,7 @@ export function spawnTransportBelt(world: Registry, options: SpawnTransportBeltO
   const profile = options.profile ?? "placed";
 
   const belt = asTransportBeltEntityId(world.create());
-  const sprite = createTransportBeltSprite(variant, options.y);
+  const sprite = createTransportBeltSprite(variant);
 
   world.add(belt, new Transform2D(options.x, options.y, 0));
   world.add(belt, sprite);
@@ -77,8 +77,6 @@ export function updateTransportBeltVariant(
     return;
   }
 
-  const transform = world.require(beltEntityId, Transform2D);
-
   const currentSprite = world.get(beltEntityId, AnimatedSprite);
 
   if (belt) {
@@ -95,7 +93,7 @@ export function updateTransportBeltVariant(
 
   world.add(
     beltEntityId,
-    createTransportBeltSprite(variant, transform.curr.pos.y, currentSprite),
+    createTransportBeltSprite(variant, currentSprite),
   );
 }
 
@@ -150,4 +148,3 @@ export type { ConveyorSideLoadTransfer } from "@client/entities/transport-belt/m
 export { ConveyorBeltChainIterator } from "@client/entities/transport-belt/topology/ConveyorBeltChainIterator";
 export { TransportBeltConnectionUtils } from "@client/entities/transport-belt/topology/TransportBeltConnectionUtils";
 export type { TransportBeltEntityId } from "@client/entities/transport-belt/types";
-

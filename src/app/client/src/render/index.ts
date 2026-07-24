@@ -1,5 +1,7 @@
 import { FPSPass } from "@client/plugins/fps";
+import { DrawBeltStressPass } from "@client/render/passes/DrawBeltStressPass";
 import { DrawGridPass } from "@client/render/passes/DrawGridPass";
+import { beltStressPresentation } from "@client/scenes/belt-stress/presentation";
 import { createRenderPipeline, type CreateRenderPipelineContext } from "@engine";
 import { fromContext, FromEngine } from "@engine/context";
 import {
@@ -24,6 +26,7 @@ export const Render = createRenderPipeline({
 
     // initialize the renderer to compile shaders and warm up pipelines before the first frame
     await renderer.initialize(canvas, assets);
+    beltStressPresentation.initialize(canvas);
 
     return {
       renderer,
@@ -32,6 +35,7 @@ export const Render = createRenderPipeline({
   },
   passes: [
     DrawGridPass,
+    DrawBeltStressPass,
   ],
   afterWorldPasses: [
     FPSPass,

@@ -22,6 +22,8 @@ This directory should stay focused on active implementation plans and durable ar
 - [11-FEATURE-ENGINE-PLACEMENT-UI.md](/workspaces/better-ecs/docs/architecture/11-FEATURE-ENGINE-PLACEMENT-UI.md)
 - [12-ROADMAP-ENGINE-GAME-PLACEMENT-AND-WORLD-IO.md](/workspaces/better-ecs/docs/architecture/12-ROADMAP-ENGINE-GAME-PLACEMENT-AND-WORLD-IO.md)
 - [13-EDITOR-ENGINE-FIRST-MIGRATION.md](/workspaces/better-ecs/docs/architecture/13-EDITOR-ENGINE-FIRST-MIGRATION.md)
+- [19-WORKER-BELT-RENDERING-STRESS-DEMO.md](/workspaces/better-ecs/docs/architecture/19-WORKER-BELT-RENDERING-STRESS-DEMO.md)
+  - Testing plan for a headless worker belt simulation with packed main-thread WebGL rendering.
 
 ## Deferred multiplayer research
 

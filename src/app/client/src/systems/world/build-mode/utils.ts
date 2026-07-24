@@ -36,7 +36,7 @@ export function resolveBuildModePlacementTarget(
 ): BuildModePlacementTarget {
   return {
     gridCoordinates: GridSingleton.worldToGridCoordinates(worldPointer.x, worldPointer.y),
-    placementTarget: resolvePlacementWorld(engine, worldPointer),
+    placementTarget: resolvePlacementWorld(engine),
   };
 }
 

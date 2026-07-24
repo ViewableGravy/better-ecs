@@ -16,7 +16,6 @@ describe("QueryBenchmark", () => {
       const entityId = world.create();
       world.add(entityId, new Transform2D(index, 0));
 
-      // @ts-expect-error: Sprite is not a required component for the benchmark, but it is used to ensure that the query has a non-zero number of components to match against.
       world.add(entityId, new Sprite("test", 1, 1));
     }
 
