@@ -1,6 +1,7 @@
 import type { LooseAssetManager } from "@engine/asset/AssetManager";
 import type { Rgba } from "@engine/components/sprite/sprite";
 import type { TextureSourceData } from "@engine/components/texture";
+import type { InstancedBucket, InstancedBucketDescriptor, InstancedDrawCamera } from "@engine/render/renderers/webGL/instanced-bucket";
 import type { ShapeRenderInput, SpriteRenderData, TexturedQuadRenderData } from "@engine/render/types/low-level";
 import type { RendererAPI } from "@engine/render/types/renderer-api";
 
@@ -61,6 +62,18 @@ export class RenderCommand {
 
   drawShape(data: ShapeRenderInput): void {
     this.#rendererApi.drawShape(data);
+  }
+
+  createInstancedBucket(descriptor: InstancedBucketDescriptor): InstancedBucket {
+    return this.#rendererApi.createInstancedBucket(descriptor);
+  }
+
+  drawInstancedBucket(
+    bucket: InstancedBucket,
+    camera: InstancedDrawCamera,
+    extra?: Record<string, number | Iterable<number>>,
+  ): void {
+    this.#rendererApi.drawInstancedBucket(bucket, camera, extra);
   }
 
   getWidth(): number {

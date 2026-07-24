@@ -6,6 +6,11 @@ import type { TextureSourceData } from "@engine/components/texture";
 import { ShaderCompiler } from "@engine/render/renderers/webGL/compiler";
 import { shapeDrawers, type ShapeDrawerContext, type Vec2 } from "@engine/render/renderers/webGL/drawers";
 import { GPUTextureManager } from "@engine/render/renderers/webGL/gpu-texture-manager";
+import {
+    InstancedBucket,
+    type InstancedBucketDescriptor,
+    type InstancedDrawCamera,
+} from "@engine/render/renderers/webGL/instanced-bucket";
 import { registry } from "@engine/render/renderers/webGL/registry";
 import { WebGLRetainedSpriteBatcher } from "@engine/render/renderers/webGL/retained-sprite-batcher";
 import type { ShapeRenderInput, SpriteRenderData, TexturedQuadRenderData } from "@engine/render/types/low-level";
@@ -443,6 +448,26 @@ export class WebGLRenderAPI implements RendererAPI {
 
     const context = this.#createShapeDrawerContext(gl, canvas, center);
     shapeDrawers.draw(context, data);
+  }
+
+  createInstancedBucket(descriptor: InstancedBucketDescriptor): InstancedBucket {
+    this.#flushSpriteBatch();
+
+    const gl = this.#gl;
+    const gpuTextureManager = this.#gpuTextureManager;
+    invariant(gl, "WebGL context is not initialized");
+    invariant(gpuTextureManager, "GPU texture manager is not initialized");
+
+    return new InstancedBucket(gl, descriptor, gpuTextureManager);
+  }
+
+  drawInstancedBucket(
+    bucket: InstancedBucket,
+    camera: InstancedDrawCamera,
+    extra?: Record<string, number | Iterable<number>>,
+  ): void {
+    this.#flushSpriteBatch();
+    bucket.draw(camera, extra);
   }
 
   getWidth(): number {

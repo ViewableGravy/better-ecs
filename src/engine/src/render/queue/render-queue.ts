@@ -1,5 +1,6 @@
 import type { EntityId } from "@engine/ecs/entity";
 import type { Registry } from "@engine/ecs/registry";
+import type { InstancedBucket } from "@engine/render/renderers/webGL/instanced-bucket";
 import type { ShapeRenderInput } from "@engine/render/types/low-level";
 
 /**
@@ -9,7 +10,8 @@ export type RenderCommandType =
   | "retained-sprite-bucket"
   | "shader-entity"
   | "shape-entity"
-  | "shape-draw";
+  | "shape-draw"
+  | "instanced-bucket";
 
 export type RenderCommandScope = "gameplay" | "overlay";
 
@@ -65,6 +67,8 @@ export type RenderCommand = {
   entityId: EntityId | null;
   shape: ShapeRenderInput | null;
   retainedSpriteBucketId?: number;
+  instancedBucket?: InstancedBucket;
+  instancedBucketExtra?: Record<string, number | Iterable<number>>;
   scope: RenderCommandScope;
   bucketKind: RenderCommandBucketKind;
   bucketKey: string;

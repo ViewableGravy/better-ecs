@@ -1,8 +1,9 @@
 import type { LooseAssetManager } from "@engine/asset/AssetManager";
 import type { Rgba } from "@engine/components/sprite/sprite";
 import type { TextureSourceData } from "@engine/components/texture";
-import type { ShapeRenderInput, SpriteRenderData, TexturedQuadRenderData } from "@engine/render/types/low-level";
+import type { InstancedBucket, InstancedBucketDescriptor, InstancedDrawCamera } from "@engine/render/renderers/webGL/instanced-bucket";
 import type { WebGLRetainedSpriteBatcher } from "@engine/render/renderers/webGL/retained-sprite-batcher";
+import type { ShapeRenderInput, SpriteRenderData, TexturedQuadRenderData } from "@engine/render/types/low-level";
 
 export interface RendererAPI {
   readonly retainedSpriteBatcher: WebGLRetainedSpriteBatcher;
@@ -23,6 +24,9 @@ export interface RendererAPI {
   drawSprite(data: SpriteRenderData): void;
   drawTexturedQuad(data: TexturedQuadRenderData): void;
   drawShape(data: ShapeRenderInput): void;
+
+  createInstancedBucket(descriptor: InstancedBucketDescriptor): InstancedBucket;
+  drawInstancedBucket(bucket: InstancedBucket, camera: InstancedDrawCamera, extra?: Record<string, number | Iterable<number>>): void;
 
   getWidth(): number;
   getHeight(): number;

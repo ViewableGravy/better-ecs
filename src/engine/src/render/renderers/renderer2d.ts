@@ -6,9 +6,15 @@ import { Rgba, Sprite } from "@engine/components/sprite/sprite";
 import { Texture, type TextureSourceData } from "@engine/components/texture";
 import type { ShaderTransform2D, Transform2D } from "@engine/components/transform";
 import { RenderCommand } from "@engine/render/render-command";
+import type { InstancedBucket, InstancedBucketDescriptor, InstancedDrawCamera } from "@engine/render/renderers/webGL/instanced-bucket";
+import type { WebGLRetainedSpriteBatcher } from "@engine/render/renderers/webGL/retained-sprite-batcher";
+import type {
+    RetainedSpriteAnimationData,
+    RetainedSpriteRenderData,
+} from "@engine/render/renderers/webGL/retained-sprite-store";
 import {
-  TextureCache,
-  type TextureInfo,
+    TextureCache,
+    type TextureInfo,
 } from "@engine/render/textureCache/texture-cache";
 import type {
     DenseShapeRenderData,
@@ -19,17 +25,12 @@ import type {
     ShaderQuadOptions,
     ShapeRenderInput,
     SpriteAnimationRenderState,
-    SpriteRenderState,
     SpriteRenderData,
+    SpriteRenderState,
     TexturedQuadDrawData,
     TexturedQuadRenderData,
 } from "@engine/render/types/renderer";
 import type { RendererAPI } from "@engine/render/types/renderer-api";
-import type {
-  RetainedSpriteAnimationData,
-  RetainedSpriteRenderData,
-} from "@engine/render/renderers/webGL/retained-sprite-store";
-import type { WebGLRetainedSpriteBatcher } from "@engine/render/renderers/webGL/retained-sprite-batcher";
 import invariant from "tiny-invariant";
 
 const FALLBACK_PENDING_COLOR = new Rgba(1, 0, 1, 0.4);
@@ -385,6 +386,18 @@ export class Renderer2D implements Renderer {
       tint: options.tint ?? DEFAULT_SHADER_QUAD_TINT,
       time: options.time ?? 0,
     });
+  }
+
+  createInstancedBucket(descriptor: InstancedBucketDescriptor): InstancedBucket {
+    return this.#command.createInstancedBucket(descriptor);
+  }
+
+  drawInstancedBucket(
+    bucket: InstancedBucket,
+    camera: InstancedDrawCamera,
+    extra?: Record<string, number | Iterable<number>>,
+  ): void {
+    this.#command.drawInstancedBucket(bucket, camera, extra);
   }
 
   setCamera(x: number, y: number, zoom: number): void {

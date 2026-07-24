@@ -2,11 +2,11 @@ import { Transform2D } from "@engine/components/transform";
 import { fromContext, FromEngine, FromRender } from "@engine/context";
 import { drawCullingBoundsOverlay } from "@engine/core/render-pipeline/passes/render-world/render/culling/overlay";
 import {
-  CullingBounds,
-  isCommandWithinCullingBounds,
-  isEntityRenderCommand,
-  isShapeDrawRenderCommand,
-  type EntityRenderCommand,
+    CullingBounds,
+    isCommandWithinCullingBounds,
+    isEntityRenderCommand,
+    isShapeDrawRenderCommand,
+    type EntityRenderCommand,
 } from "@engine/core/render-pipeline/passes/render-world/render/culling/utils";
 import { handleShaderEntityCommand } from "@engine/core/render-pipeline/passes/render-world/render/handlers/shader-entity";
 import { handleShapeDrawCommand } from "@engine/core/render-pipeline/passes/render-world/render/handlers/shape-draw";
@@ -34,6 +34,19 @@ export function renderCommands(): void {
             interpolationAlpha,
             engine.meta.updateTick,
           );
+        }
+        continue;
+      }
+
+      if (command.type === "instanced-bucket") {
+        if (command.instancedBucket) {
+          renderer.drawInstancedBucket(command.instancedBucket, {
+            x: renderer.getCameraX(),
+            y: renderer.getCameraY(),
+            zoom: renderer.getCameraZoom(),
+            viewportWidth: renderer.getWidth(),
+            viewportHeight: renderer.getHeight(),
+          }, command.instancedBucketExtra);
         }
         continue;
       }

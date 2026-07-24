@@ -5,6 +5,7 @@ import type { Shape } from "@engine/components/shape";
 import type { Rgba, Sprite } from "@engine/components/sprite/sprite";
 import type { Texture } from "@engine/components/texture";
 import type { ShaderTransform2D, Transform2D } from "@engine/components/transform";
+import type { InstancedBucket, InstancedBucketDescriptor, InstancedDrawCamera } from "@engine/render/renderers/webGL/instanced-bucket";
 import type { TextureCache, TextureCacheConfig } from "@engine/render/textureCache/texture-cache";
 import type { ShapeRenderInput } from "@engine/render/types/low-level";
 
@@ -111,6 +112,9 @@ export interface Renderer {
   drawShape(data: ShapeRenderInput): void;
   drawTexturedQuad(data: TexturedQuadDrawData): void;
   drawShaderQuad(shader: ShaderSourceAsset, transform: ShaderTransform2D, options?: ShaderQuadOptions): void;
+
+  createInstancedBucket(descriptor: InstancedBucketDescriptor): InstancedBucket;
+  drawInstancedBucket(bucket: InstancedBucket, camera: InstancedDrawCamera, extra?: Record<string, number | Iterable<number>>): void;
 
   setCamera(x: number, y: number, zoom: number): void;
   setMeshOverlayEnabled(enabled: boolean): void;

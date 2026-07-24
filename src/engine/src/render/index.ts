@@ -16,6 +16,14 @@ export { DEFAULT_RENDERER_CONFIG } from "@engine/render/types/renderer";
 export type { Renderer } from "@engine/render/types/renderer";
 export type { RendererAPI } from "@engine/render/types/renderer-api";
 
+// ── Instanced bucket (custom instanced rendering) ────────────────
+export {
+    InstancedBucket,
+    type InstancedAttributeDescriptor,
+    type InstancedBucketDescriptor,
+    type InstancedDrawCamera
+} from "@engine/render/renderers/webGL/instanced-bucket";
+
 // ── Render layers ───────────────────────────────────────────────
 export { RenderCommand } from "@engine/render/render-command";
 export { Renderer2D } from "@engine/render/renderers/renderer2d";
