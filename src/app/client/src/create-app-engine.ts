@@ -6,6 +6,7 @@ import { Scene as BenchmarkScene } from "@client/scenes/benchmark";
 import { Scene as ConveyorWorkerScene } from "@client/scenes/conveyor-worker/scene";
 import { Scene as E2eScene } from "@client/scenes/e2e";
 import { Scene as MainScene } from "@client/scenes/world";
+import { Scene as RetainedStressScene } from "@client/scenes/retained-stress";
 import { System as Initialize } from "@client/systems/core/initialisation";
 import { invariantById } from "@client/utilities/selectors";
 import * as Engine from "@engine";
@@ -26,6 +27,7 @@ export const createAppEngine = () => {
       BenchmarkScene,
       BeltStressScene,
       ConveyorWorkerScene,
+      RetainedStressScene,
     ],
     initialScene: resolveInitialScene(),
     config: {
@@ -41,7 +43,7 @@ export const createAppEngine = () => {
   });
 };
 
-function resolveInitialScene(): "MainScene" | "BenchmarkScene" | "BeltStressScene" | "ConveyorWorkerScene" {
+function resolveInitialScene(): "MainScene" | "BenchmarkScene" | "BeltStressScene" | "ConveyorWorkerScene" | "RetainedStressScene" {
   const benchmark = new URLSearchParams(window.location.search).get("benchmark");
   if (benchmark === "belts") {
     return "BeltStressScene";
@@ -53,6 +55,10 @@ function resolveInitialScene(): "MainScene" | "BenchmarkScene" | "BeltStressScen
 
   if (benchmark === "stress") {
     return "BenchmarkScene";
+  }
+
+  if (benchmark === "retained") {
+    return "RetainedStressScene";
   }
 
   return "MainScene";
