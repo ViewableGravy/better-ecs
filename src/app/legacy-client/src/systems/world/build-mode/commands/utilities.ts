@@ -1,0 +1,54 @@
+import { CommandAllocator } from "@legacy/singletons/commandAllocator";
+import { supportsDragPlacement } from "@legacy/systems/world/build-mode/build-items";
+import type { BuildModeState } from "@legacy/systems/world/build-mode/const";
+import { BuildModeDragPlacement } from "@legacy/systems/world/build-mode/drag-placement";
+import type { GridCoordinates } from "@legacy/systems/world/build-mode/grid-singleton";
+import type { BuildModeCommand } from "@libs/commands/build-mode";
+
+/**********************************************************************************************************
+ *   COMPONENT START
+ **********************************************************************************************************/
+
+export function emitBuildModeCommands(
+  commands: BuildModeCommand[],
+  data: BuildModeState,
+  gridCoordinates: GridCoordinates,
+): void {
+  if (data.pendingDelete) {
+    commands.push(CommandAllocator.acquire(
+      "client:build-mode-delete-command",
+      gridCoordinates[0],
+      gridCoordinates[1],
+    ));
+  }
+
+  if (data.selectedItem === null) {
+    return;
+  }
+
+  if (!supportsDragPlacement(data.selectedItem)) {
+    if (!data.pendingPlace) {
+      return;
+    }
+
+    return void commands.push(CommandAllocator.acquire(
+      "client:build-mode-place-command",
+      data.selectedItem,
+      gridCoordinates[0],
+      gridCoordinates[1],
+      data.placementEndSide,
+    ));
+  }
+
+  const dragPlacementBatch = BuildModeDragPlacement.resolvePlacementBatch(data, gridCoordinates);
+
+  for (const candidate of dragPlacementBatch.candidates) {
+    commands.push(CommandAllocator.acquire(
+      "client:build-mode-place-command",
+      data.selectedItem,
+      candidate[0],
+      candidate[1],
+      data.placementEndSide,
+    ));
+  }
+}

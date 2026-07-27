@@ -1,0 +1,61 @@
+import { CollisionProfiles } from "@legacy/scenes/world/physics/collision-profiles";
+import { Vec2, type Registry } from "@engine";
+import { Debug, FillColor, Rgba, Shape, StrokeColor, Transform2D } from "@engine/components";
+import { RectangleCollider } from "@libs/physics";
+
+/**********************************************************************************************************
+ *   TYPE DEFINITIONS
+ **********************************************************************************************************/
+
+type SpawnWallOptions = {
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+	visible?: boolean;
+	fill?: Rgba;
+	stroke?: Rgba;
+	strokeWidth?: number;
+	zIndex?: number;
+	renderOrder?: number;
+};
+
+/**********************************************************************************************************
+ *   COMPONENT START
+ **********************************************************************************************************/
+
+export function spawnWall(world: Registry, options: SpawnWallOptions): number {
+	const entity = world.create();
+
+	world.add(entity, new Transform2D(options.x, options.y));
+
+	if (options.visible ?? true) {
+		const shape = new Shape(
+			"rectangle",
+			options.width,
+			options.height,
+			options.strokeWidth ?? 2,
+			options.zIndex ?? 4,
+			options.renderOrder ?? 0,
+		);
+
+		world.add(
+			entity,
+			shape,
+		);
+		world.add(entity, new FillColor(options.fill ?? new Rgba(0.28, 0.18, 0.12, 1)));
+		world.add(entity, new StrokeColor(options.stroke ?? new Rgba(0.15, 0.08, 0.05, 1)));
+	}
+
+	const halfWidth = options.width * 0.5;
+	const halfHeight = options.height * 0.5;
+
+	world.add(
+		entity,
+		new RectangleCollider(new Vec2(-halfWidth, -halfHeight), new Vec2(options.width, options.height)),
+	);
+	world.add(entity, CollisionProfiles.solid());
+	world.add(entity, new Debug("wall"));
+
+	return entity;
+}

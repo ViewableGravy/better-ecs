@@ -7,19 +7,13 @@ declare module "@engine" {
   }
 }
 
-async function main() {
+async function main(): Promise<void> {
   const engine = createAppEngine();
 
-  // Start application
-  for await (const [update, frame] of engine.startEngine({ fps: 120, ups: 60 })) {
-    if (update.shouldUpdate) {
-      // Update phase - run update logic
-    }
-
-    if (frame.shouldUpdate) {
-      // Render phase - run render logic
-    }
+  for await (const _tick of engine.startEngine({ fps: 120, ups: 60 })) {
+    // Engine systems and render passes own the update and frame work.
+    void _tick;
   }
 }
 
-main();
+void main();

@@ -10,6 +10,12 @@
       "@client/*": [
         "./src/app/client/src/*"
       ],
+      "@legacy": [
+        "./src/app/legacy-client/src/index.ts"
+      ],
+      "@legacy/*": [
+        "./src/app/legacy-client/src/*"
+      ],
       "@libs/commands": [
         "./src/libs/commands/src/index.ts"
       ],
@@ -69,6 +75,9 @@
     },
     {
       "path": "./src/app/client"
+    },
+    {
+      "path": "./src/app/legacy-client"
     }
   ],
   "exclude": [

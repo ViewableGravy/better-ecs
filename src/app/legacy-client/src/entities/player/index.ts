@@ -1,0 +1,60 @@
+import { OrbitMotion } from "@legacy/components/orbit-motion";
+import { PlayerComponent } from "@legacy/components/player";
+import { createPlayerSprite } from "@legacy/entities/player/render/createPlayerSprite";
+import { CollisionProfiles } from "@legacy/scenes/world/physics/collision-profiles";
+import { type EntityId, type Registry } from "@engine";
+import {
+    AnimatedSprite,
+    Debug,
+    FillColor,
+    Rgba,
+    Shape,
+    StrokeColor,
+    Transform2D,
+} from "@engine/components";
+import { CircleCollider } from "@libs/physics";
+
+export const PLAYER_GROUNDED_HITBOX_RADIUS = 3;
+
+export function ensurePlayer(world: Registry) {
+  let [player] = world.query(PlayerComponent);
+
+  if (!player) {
+    player = spawnPlayer(world);
+  }
+
+  return player;
+}
+
+export function spawnPlayer(world: Registry): EntityId<PlayerComponent> {
+  const player = world.create();
+  const sprite = createPlayerSprite("idle", "s");
+
+  // Create player
+  world.add(player, AnimatedSprite, sprite);
+  world.add(player, new Transform2D(0, 0));
+  world.add(player, new PlayerComponent("NewPlayer"));
+  world.add(player, new CircleCollider(PLAYER_GROUNDED_HITBOX_RADIUS));
+  world.add(player, CollisionProfiles.actor());
+  world.add(player, new Debug("player"));
+
+  // create an anchor for orbiting objects
+  const orbitAnchor = world.create();
+  world.setParent(orbitAnchor, player);
+  world.add(orbitAnchor, new Transform2D(0, 0));
+  world.add(orbitAnchor, new Debug("player-orbit-anchor"));
+
+  // create an orbiting circle for visual flair
+  const orbitingCircle = world.create();
+  const orbitingCircleShape = new Shape("circle", 10, 10, 1, 5, 1);
+  world.setParent(orbitingCircle, orbitAnchor);
+  world.add(orbitingCircle, new Transform2D(36, 0));
+  world.add(orbitingCircle, new OrbitMotion(36, Math.PI));
+  world.add(orbitingCircle, new Debug("player-orbit-circle"));
+  world.add(orbitingCircle, orbitingCircleShape);
+  world.add(orbitingCircle, new FillColor(new Rgba(0.95, 0.85, 0.3, 1)));
+  world.add(orbitingCircle, new StrokeColor(new Rgba(1, 1, 1, 0.8)));
+
+  // Player tagging is compile-time only; runtime entity ids remain plain numbers.
+  return player as EntityId<PlayerComponent>;
+}

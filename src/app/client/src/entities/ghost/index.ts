@@ -1,6 +1,0 @@
-export { GhostPreviewComponent } from "@client/entities/ghost/component";
-export type { GhostKind } from "@client/entities/ghost/component";
-export { GhostPreviewManager } from "@client/entities/ghost/GhostPreviewManager";
-export { createGhostPreset } from "@client/entities/ghost/spawner";
-export type { GhostPreset } from "@client/entities/ghost/spawner";
-export { GhostUtils } from "@client/entities/ghost/utils";

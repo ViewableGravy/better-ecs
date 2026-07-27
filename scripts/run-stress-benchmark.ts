@@ -8,11 +8,11 @@ import {
   DEFAULT_BENCHMARK_TIMEOUT_MS,
   DEFAULT_BENCHMARK_WARMUP_FRAMES,
   type BenchmarkEntityCount,
-} from "@client/scenes/benchmark/config";
+} from "@legacy/scenes/benchmark/config";
 import type {
   BenchmarkRunResult,
   BenchmarkStatus,
-} from "@client/scenes/benchmark/types";
+} from "@legacy/scenes/benchmark/types";
 
 const OUTPUT_DIRECTORY = "benchmark-results";
 const EXTERNAL_BENCHMARK_URL = process.env.BENCHMARK_URL;
@@ -411,9 +411,9 @@ async function resolveBenchmarkUrl(): Promise<string> {
   }
 
   console.info("[stress] building production client");
-  await build({ configFile: "vite.config.ts" });
+  await build({ configFile: "vite.legacy.config.ts" });
   previewServer = await preview({
-    configFile: "vite.config.ts",
+    configFile: "vite.legacy.config.ts",
     preview: {
       host: "127.0.0.1",
       port: 4173,

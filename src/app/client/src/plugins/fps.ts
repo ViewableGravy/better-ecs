@@ -7,10 +7,7 @@ const fps = createFPS({
   rate: 1000,
   modeToggleKey: {
     code: "KeyF",
-    modifiers: {
-      ctrl: true,
-      shift: true,
-    },
+    modifiers: { ctrl: true, shift: true },
   },
 });
 

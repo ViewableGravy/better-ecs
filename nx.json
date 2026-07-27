@@ -40,7 +40,7 @@
     },
     {
       "plugin": "@nx/vite/plugin",
-      "include": ["src/app/client/**"],
+      "include": ["src/app/client/**", "src/app/legacy-client/**"],
       "options": {
         "buildTargetName": "vite:build",
         "testTargetName": "vite:test",

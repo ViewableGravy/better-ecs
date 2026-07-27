@@ -49,13 +49,14 @@ You are a very smart model, and very capable, but you have a limited context win
 ## Import and alias conventions
 
 - Always use top-level workspace aliases for imports. Relative imports are prohibited for both cross-project and same-project source code.
-- Prefer these aliases over `./` or `../`: `@client/*`, `@engine/*`, `@utils/*`, `@libs/*`, `@hmr/*`, and
+- Prefer these aliases over `./` or `../`: `@client/*`, `@legacy/*`, `@engine/*`, `@utils/*`, `@libs/*`, `@hmr/*`, and
   engine-local `@ui/*`.
 - If a needed alias does not exist yet, add it to the top-level TypeScript path configuration before writing the import.
 
 ### Workspace aliases (`tsconfig.base.json`)
 
 - `@client` / `@client/*` → `src/app/client/src`
+- `@legacy` / `@legacy/*` → `src/app/legacy-client/src`
 - `@engine` / `@engine/*` → `src/engine/src`
 - `@utils` / `@utils/*` → `src/utils/src`
 - `@libs/commands` / `@libs/commands/*` → `src/libs/commands/src`

@@ -12,22 +12,11 @@
     "strict": true
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.d.ts"],
-  "exclude": ["e2e/**/*"],
   "references": [
-    {
-      "path": "../../utils/tsconfig.lib.json"
-    },
-    {
-      "path": "../../libs/physics/tsconfig.lib.json"
-    },
-    {
-      "path": "../../../vite/engine-hmr/tsconfig.lib.json"
-    },
-    {
-      "path": "../../libs/fps/tsconfig.lib.json"
-    },
-    {
-      "path": "../../engine/tsconfig.lib.json"
-    }
+    { "path": "../../utils/tsconfig.lib.json" },
+    { "path": "../../libs/physics/tsconfig.lib.json" },
+    { "path": "../../../vite/engine-hmr/tsconfig.lib.json" },
+    { "path": "../../libs/fps/tsconfig.lib.json" },
+    { "path": "../../engine/tsconfig.lib.json" }
   ]
 }

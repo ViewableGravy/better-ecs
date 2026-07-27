@@ -1,0 +1,141 @@
+import { ConveyorBeltComponent } from "@legacy/components/conveyor-belt";
+import {
+    getTransportBeltGridSide,
+    type TransportBeltDirection,
+    type TransportBeltVariant,
+} from "@legacy/entities/transport-belt/consts";
+import {
+    GridNeighborQuery,
+    type CardinalSide,
+} from "@legacy/systems/world/build-mode/grid-neighbor-query";
+import { type GridCoordinates } from "@legacy/systems/world/build-mode/grid-singleton";
+import type { EntityId, Registry } from "@engine";
+
+/**********************************************************************************************************
+ *   TYPE DEFINITIONS
+ **********************************************************************************************************/
+
+export type TransportBeltNeighborCell = TransportBeltVariant | null;
+export type TransportBeltNeighborRow = readonly [TransportBeltNeighborCell, TransportBeltNeighborCell, TransportBeltNeighborCell];
+export type TransportBeltNeighborMatrix = readonly [
+  TransportBeltNeighborRow,
+  TransportBeltNeighborRow,
+  TransportBeltNeighborRow,
+];
+
+type FindBeltEntityAtCoordinatesOptions = {
+  excludeEntityId?: EntityId;
+  includeGhosts?: boolean;
+  predicate?: (beltEntityId: EntityId, belt: ConveyorBeltComponent) => boolean;
+};
+
+/**********************************************************************************************************
+ *   COMPONENT START
+ **********************************************************************************************************/
+
+export class TransportBeltGridQuery {
+  public static resolveBeltCoordinates(
+    world: Registry,
+    beltEntityId: EntityId,
+  ): GridCoordinates {
+    return GridNeighborQuery.resolveEntityCoordinates(world, beltEntityId);
+  }
+
+  public static offsetCoordinates(
+    coordinates: GridCoordinates,
+    offset: readonly [x: number, y: number],
+  ): GridCoordinates {
+    return GridNeighborQuery.offsetCoordinates(coordinates, offset);
+  }
+
+  public static resolveNeighborCoordinates(
+    coordinates: GridCoordinates,
+    side: CardinalSide,
+  ): GridCoordinates {
+    return GridNeighborQuery.resolveNeighborCoordinates(coordinates, side);
+  }
+
+  public static resolveNeighborCoordinatesInDirection(
+    coordinates: GridCoordinates,
+    direction: TransportBeltDirection,
+  ): GridCoordinates {
+    return this.resolveNeighborCoordinates(coordinates, getTransportBeltGridSide(direction));
+  }
+
+  public static findBeltEntityAtCoordinates(
+    world: Registry,
+    coordinates: GridCoordinates,
+    options: FindBeltEntityAtCoordinatesOptions = {},
+  ): EntityId | null {
+    return GridNeighborQuery.findEntityAtCoordinates(
+      world,
+      world.query(ConveyorBeltComponent),
+      (beltEntityId) => world.require(beltEntityId, ConveyorBeltComponent),
+      coordinates,
+      options,
+    );
+  }
+
+  public static resolveNeighborEntityId(
+    world: Registry,
+    coordinates: GridCoordinates,
+    side: CardinalSide,
+    options: FindBeltEntityAtCoordinatesOptions = {},
+  ): EntityId | null {
+    return GridNeighborQuery.resolveNeighborEntityId(
+      world,
+      world.query(ConveyorBeltComponent),
+      (beltEntityId) => world.require(beltEntityId, ConveyorBeltComponent),
+      coordinates,
+      side,
+      options,
+    );
+  }
+
+  public static resolveNeighborEntityIdInDirection(
+    world: Registry,
+    coordinates: GridCoordinates,
+    direction: TransportBeltDirection,
+    options: FindBeltEntityAtCoordinatesOptions = {},
+  ): EntityId | null {
+    return this.resolveNeighborEntityId(world, coordinates, getTransportBeltGridSide(direction), options);
+  }
+
+  public static buildNeighborMatrix(
+    world: Registry,
+    coordinates: GridCoordinates,
+  ): TransportBeltNeighborMatrix {
+    const variantsByOffset = new Map<string, TransportBeltVariant>();
+
+    for (const beltEntityId of world.query(ConveyorBeltComponent)) {
+      const belt = world.get(beltEntityId, ConveyorBeltComponent);
+      const beltCoordinates = GridNeighborQuery.resolveEntityCoordinates(world, beltEntityId);
+      const offsetX = Number(beltCoordinates[0]) - Number(coordinates[0]);
+      const offsetY = Number(beltCoordinates[1]) - Number(coordinates[1]);
+
+      if (Math.abs(offsetX) > 1 || Math.abs(offsetY) > 1) {
+        continue;
+      }
+
+      variantsByOffset.set(`${offsetX},${offsetY}`, belt.variant as TransportBeltVariant);
+    }
+
+    return [
+      [
+        variantsByOffset.get("-1,-1") ?? null,
+        variantsByOffset.get("0,-1") ?? null,
+        variantsByOffset.get("1,-1") ?? null,
+      ],
+      [
+        variantsByOffset.get("-1,0") ?? null,
+        variantsByOffset.get("0,0") ?? null,
+        variantsByOffset.get("1,0") ?? null,
+      ],
+      [
+        variantsByOffset.get("-1,1") ?? null,
+        variantsByOffset.get("0,1") ?? null,
+        variantsByOffset.get("1,1") ?? null,
+      ],
+    ];
+  }
+}

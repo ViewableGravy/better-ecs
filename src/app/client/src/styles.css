@@ -1,2 +1,15 @@
 /* stylelint-disable-next-line */
 @import "tailwindcss" source("../../../../src");
+
+html,
+body,
+#game {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+#game {
+  display: block;
+}
