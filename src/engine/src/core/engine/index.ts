@@ -161,7 +161,6 @@ export class EngineClass<
 
 	public async *startEngine(opts?: StartEngineOpts): StartEngineGenerator {
 		await this.waitForCanvasReady();
-
 		await this.initialize();
 
 		this.meta.setTargetRates(opts?.fps || 60, opts?.ups || 60);
@@ -194,10 +193,10 @@ export class EngineClass<
 			const updateTime = 1000 / this.meta.ups;
 
 			if (snapshot.updateShouldRun || snapshot.frameShouldRun) {
-				(updateState as any).delta = snapshot.updateDelta;
-				(updateState as any).shouldUpdate = snapshot.updateShouldRun;
-				(frameState as any).delta = snapshot.frameDelta;
-				(frameState as any).shouldUpdate = snapshot.frameShouldRun;
+				updateState.delta = snapshot.updateDelta;
+				updateState.shouldUpdate = snapshot.updateShouldRun;
+				frameState.delta = snapshot.frameDelta;
+				frameState.shouldUpdate = snapshot.frameShouldRun;
 
 				this.meta.setDeltas(snapshot.updateDelta, snapshot.frameDelta, updateTime);
 
@@ -206,13 +205,13 @@ export class EngineClass<
 						if (this.editor.runningState.paused) {
 							this.#delta.markUpdated(now);
 							this.meta.markUpdated(now);
-							(updateState as any).shouldUpdate = false;
+							updateState.shouldUpdate = false;
 						} else {
 							this.meta.incrementUpdateTick();
 							this.runUpdateSystems(updateState.shouldUpdate);
 							this.#delta.markUpdated(now);
 							this.meta.markUpdated(now);
-							(updateState as any).shouldUpdate = false;
+							updateState.shouldUpdate = false;
 						}
 					}
 

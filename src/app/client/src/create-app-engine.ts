@@ -3,6 +3,7 @@ import { createAppEngineLoadingOverlay } from "@client/overlays/create-app-engin
 import { Render } from "@client/render";
 import { Scene as BeltStressScene } from "@client/scenes/belt-stress";
 import { Scene as BenchmarkScene } from "@client/scenes/benchmark";
+import { Scene as ConveyorWorkerScene } from "@client/scenes/conveyor-worker/scene";
 import { Scene as E2eScene } from "@client/scenes/e2e";
 import { Scene as MainScene } from "@client/scenes/world";
 import { System as Initialize } from "@client/systems/core/initialisation";
@@ -24,6 +25,7 @@ export const createAppEngine = () => {
       E2eScene,
       BenchmarkScene,
       BeltStressScene,
+      ConveyorWorkerScene,
     ],
     initialScene: resolveInitialScene(),
     config: {
@@ -39,10 +41,14 @@ export const createAppEngine = () => {
   });
 };
 
-function resolveInitialScene(): "MainScene" | "BenchmarkScene" | "BeltStressScene" {
+function resolveInitialScene(): "MainScene" | "BenchmarkScene" | "BeltStressScene" | "ConveyorWorkerScene" {
   const benchmark = new URLSearchParams(window.location.search).get("benchmark");
   if (benchmark === "belts") {
     return "BeltStressScene";
+  }
+
+  if (benchmark === "conveyor-worker") {
+    return "ConveyorWorkerScene";
   }
 
   if (benchmark === "stress") {

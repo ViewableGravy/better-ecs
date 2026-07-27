@@ -1,5 +1,6 @@
 import { FPSPass } from "@client/plugins/fps";
 import { DrawBeltStressPass } from "@client/render/passes/DrawBeltStressPass";
+import { DrawConveyorItemsPass } from "@client/render/passes/DrawConveyorItemsPass";
 import { DrawGridPass } from "@client/render/passes/DrawGridPass";
 import { createRenderPipeline, type CreateRenderPipelineContext } from "@engine";
 import { fromContext, FromEngine } from "@engine/context";
@@ -34,6 +35,7 @@ export const Render = createRenderPipeline({
   passes: [
     DrawGridPass,
     DrawBeltStressPass,
+    DrawConveyorItemsPass,
   ],
   afterWorldPasses: [
     FPSPass,
