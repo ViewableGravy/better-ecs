@@ -1,13 +1,9 @@
 # Docs Index
 
-This folder should stay focused on active work and durable reference material.
+This folder is reserved for documentation that applies to the whole repository.
 
-## Global references
+The current project philosophy is documented in [PHILOSOPHY.md](../PHILOSOPHY.md).
 
-- [architecture/README.md](architecture/README.md)
-  - Engine and cross-cutting architecture references.
-- [PHILOSOPHY.md](../PHILOSOPHY.md)
-  - Project purpose and guiding principles.
-
-Application-specific design notes, handoffs, performance investigations, and historical
-implementation plans live with the legacy application under `src/app/legacy-client/docs/`.
+Application-specific design notes, architecture references, handoffs, performance
+investigations, and historical implementation plans live with the legacy application under
+`src/app/legacy-client/docs/`.
