@@ -32,6 +32,7 @@ export const Scene = createScene("MainScene")({
   ],
   async setup() {
     const assets = fromContext(FromEngine.Assets);
+
     await Promise.all([
       assets.loadSheet("player-idle"),
       assets.loadSheet("player-moving"),

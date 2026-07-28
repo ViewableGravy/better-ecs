@@ -13,7 +13,8 @@ type CreateEngineTestHarnessOptions<
   TScenes extends SceneDefinitionTuple,
   TAssets extends Record<string, unknown>,
   TAssetTypes extends Record<string, unknown>,
-> = CreateEngineOptions<TSystems, TScenes, TAssets, TAssetTypes> & {
+  TSheetMap extends Record<string, unknown>,
+> = CreateEngineOptions<TSystems, TScenes, TAssets, TAssetTypes, TSheetMap> & {
   defaultUpdateDelta?: number;
   canvas?: HTMLCanvasElement;
 };
@@ -27,13 +28,14 @@ export class EngineTestHarness<
   TScenes extends SceneDefinitionTuple = [],
   TAssets extends Record<string, unknown> = Record<string, unknown>,
   TAssetTypes extends Record<string, unknown> = Record<string, unknown>,
+  TSheetMap extends Record<string, unknown> = Record<string, unknown>,
 > {
-  public readonly engine: EngineClass<TSystems, TScenes, TAssets, TAssetTypes>;
+  public readonly engine: EngineClass<TSystems, TScenes, TAssets, TAssetTypes, TSheetMap>;
 
   readonly #defaultUpdateDelta: number;
 
   private constructor(
-    engine: EngineClass<TSystems, TScenes, TAssets, TAssetTypes>,
+    engine: EngineClass<TSystems, TScenes, TAssets, TAssetTypes, TSheetMap>,
     defaultUpdateDelta: number,
   ) {
     this.engine = engine;
@@ -45,9 +47,10 @@ export class EngineTestHarness<
     TScenes extends SceneDefinitionTuple = [],
     TAssets extends Record<string, unknown> = Record<string, unknown>,
     TAssetTypes extends Record<string, unknown> = Record<string, unknown>,
+    TSheetMap extends Record<string, unknown> = Record<string, unknown>,
   >(
-    options: CreateEngineTestHarnessOptions<TSystems, TScenes, TAssets, TAssetTypes>,
-  ): Promise<EngineTestHarness<TSystems, TScenes, TAssets, TAssetTypes>> {
+    options: CreateEngineTestHarnessOptions<TSystems, TScenes, TAssets, TAssetTypes, TSheetMap>,
+  ): Promise<EngineTestHarness<TSystems, TScenes, TAssets, TAssetTypes, TSheetMap>> {
     const engine = createEngine({
       ...options,
       manualRegisterEngine: true,

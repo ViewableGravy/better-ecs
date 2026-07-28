@@ -75,6 +75,7 @@ export type UserlandSystems<TEngine extends AnyEngine = RegisteredEngine> =
     infer TSystems extends SystemFactoryTuple,
     infer TScenes extends SceneDefinitionTuple,
     Record<string, unknown>,
+    Record<string, unknown>,
     Record<string, unknown>
   >
     ? TSystems[number] | SceneSystemFactories<TScenes>

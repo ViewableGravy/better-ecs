@@ -50,6 +50,9 @@ expectTypeOf(engine.assets.type("shader").load("editor:demo-quad-shader")).toEqu
 expectTypeOf(assets.getFromSheet("icons", "plus")).toEqualTypeOf<Texture | undefined>();
 expectTypeOf(assets.getFromSheetStrict("icons", "minus")).toEqualTypeOf<Texture>();
 expectTypeOf(assets.loadSheet("icons")).toEqualTypeOf<Promise<void>>();
+expectTypeOf(engine.assets.getFromSheet("icons", "plus")).toEqualTypeOf<Texture | undefined>();
+expectTypeOf(engine.assets.getFromSheetStrict("icons", "minus")).toEqualTypeOf<Texture>();
+expectTypeOf(engine.assets.loadSheet("icons")).toEqualTypeOf<Promise<void>>();
 
 expectTypeOf(engine.assets.type("shader").getLoaded()).toEqualTypeOf<
   ReadonlyArray<{ key: "editor:demo-quad-shader"; asset: ShaderSourceAsset }>
@@ -67,5 +70,10 @@ assets.getFromSheet("icons", "unknown");
 // @ts-expect-error sheet key is validated
 assets.loadSheet("unknown-sheet");
 
-export { };
+// @ts-expect-error engine assets preserve the loader's sheet keys
+engine.assets.loadSheet("unknown-sheet");
 
+// @ts-expect-error engine assets preserve each sheet's sprite keys
+engine.assets.getFromSheet("icons", "unknown");
+
+export { };

@@ -21,7 +21,10 @@ export function createEngine<
 	TScenes extends SceneDefinitionTuple = [],
 	TAssets extends Record<string, unknown> = Record<string, unknown>,
 	TAssetTypes extends Record<string, unknown> = Record<string, unknown>,
->(opts: CreateEngineOptions<TSystems, TScenes, TAssets, TAssetTypes>): EngineClass<TSystems, TScenes, TAssets, TAssetTypes> {
+	TSheetMap extends Record<string, unknown> = Record<string, unknown>,
+>(
+	opts: CreateEngineOptions<TSystems, TScenes, TAssets, TAssetTypes, TSheetMap>,
+): EngineClass<TSystems, TScenes, TAssets, TAssetTypes, TSheetMap> {
 	const systemsRecord: Record<string, EngineSystem<any>> = {};
 	const systems = opts.systems ?? ([] as unknown as TSystems);
 
@@ -37,11 +40,11 @@ export function createEngine<
 	}
 
 	const scenes = opts.scenes ?? ([] as unknown as TScenes);
-	const assets = opts.assetLoader ?? new AssetManager<TAssets, TAssetTypes>();
+	const assets = opts.assetLoader ?? new AssetManager<TAssets, TAssetTypes, TSheetMap>();
 	const rootElement = opts.rootElement ?? null;
 	const shouldBootstrapCanvasFromRoot = rootElement !== null;
 
-	const engine = new EngineClass<TSystems, TScenes, TAssets, TAssetTypes>(
+	const engine = new EngineClass<TSystems, TScenes, TAssets, TAssetTypes, TSheetMap>(
 		systemsRecord,
 		scenes,
 		assets,

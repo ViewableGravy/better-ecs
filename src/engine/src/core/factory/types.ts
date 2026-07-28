@@ -27,13 +27,14 @@ export type CreateEngineOptions<
 	TScenes extends SceneDefinitionTuple,
 	TAssets extends Record<string, unknown>,
 	TAssetTypes extends Record<string, unknown> = Record<string, unknown>,
+	TSheetMap extends Record<string, unknown> = Record<string, unknown>,
 > = {
 	rootElement?: HTMLElement | null;
 	systems?: TSystems;
 	scenes?: TScenes;
 	initialScene?: SceneName<TScenes[number]>;
 	initialization?: EngineInitializationSystem;
-	assetLoader?: AssetManager<TAssets, TAssetTypes>;
+	assetLoader?: AssetManager<TAssets, TAssetTypes, TSheetMap>;
 	render?: RenderPipeline;
 	loading?: EngineOverlay;
 	manualRegisterEngine?: boolean;

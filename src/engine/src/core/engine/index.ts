@@ -33,6 +33,7 @@ export class EngineClass<
 	TScenes extends SceneDefinitionTuple = [],
 	TAssets extends Record<string, unknown> = Record<string, unknown>,
 	TAssetTypes extends Record<string, unknown> = Record<string, unknown>,
+	TSheetMap extends Record<string, unknown> = Record<string, unknown>,
 > {
 	#systemsManager: SystemsManager;
 	#systemsView: Record<string, EngineSystem<any>>;
@@ -55,7 +56,7 @@ export class EngineClass<
 	public constructor(
 		systems: Record<string, EngineSystem<any>>,
 		scenes: SceneDefinitionTuple = [],
-		public readonly assets: AssetManager<TAssets, TAssetTypes>,
+		public readonly assets: AssetManager<TAssets, TAssetTypes, TSheetMap>,
 		public readonly render: RenderPipeline | null,
 		loadingOverlay: EngineOverlay | undefined,
 		renderCulling: EngineRenderCullingOptions | undefined,
