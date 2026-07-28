@@ -39,8 +39,8 @@ export function createPlayerSprite(
 ): AnimatedSprite {
   const sprite = new AnimatedSprite({
     assets: getPlayerAnimationFrames(animationState, direction),
-    width: 35,
-    height: 35,
+    width: 52.5,
+    height: 52.5,
     anchorY: 0.8,
   });
 
