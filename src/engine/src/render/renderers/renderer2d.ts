@@ -1,0 +1,582 @@
+import type { ShaderSourceAsset } from "@engine/asset";
+import type { LooseAssetManager } from "@engine/asset/AssetManager";
+import { Camera } from "@engine/components/camera";
+import { Shape } from "@engine/components/shape";
+import { Rgba, Sprite } from "@engine/components/sprite/sprite";
+import { Texture, type TextureSourceData } from "@engine/components/texture";
+import type { ShaderTransform2D, Transform2D } from "@engine/components/transform";
+import { RenderCommand } from "@engine/render/render-command";
+import type { InstancedBucket, InstancedBucketDescriptor, InstancedDrawCamera } from "@engine/render/renderers/webGL/instanced-bucket";
+import type { WebGLRetainedSpriteBatcher } from "@engine/render/renderers/webGL/retained-sprite-batcher";
+import type {
+    RetainedSpriteAnimationData,
+    RetainedSpriteRenderData,
+} from "@engine/render/renderers/webGL/retained-sprite-store";
+import {
+    TextureCache,
+    type TextureInfo,
+} from "@engine/render/textureCache/texture-cache";
+import type {
+    DenseShapeRenderData,
+    Renderable,
+    Renderer,
+    RendererConfig,
+    Settable,
+    ShaderQuadOptions,
+    ShapeRenderInput,
+    SpriteAnimationRenderState,
+    SpriteRenderData,
+    SpriteRenderState,
+    TexturedQuadDrawData,
+    TexturedQuadRenderData,
+} from "@engine/render/types/renderer";
+import type { RendererAPI } from "@engine/render/types/renderer-api";
+import invariant from "tiny-invariant";
+
+const FALLBACK_PENDING_COLOR = new Rgba(1, 0, 1, 0.4);
+const FALLBACK_ERROR_COLOR = new Rgba(1, 0, 0, 0.6);
+const DEFAULT_SPRITE_TINT = new Rgba(1, 1, 1, 1);
+const DEFAULT_SHADER_QUAD_TINT = new Rgba(1, 1, 1, 1);
+const DEFAULT_SHAPE_FILL = new Rgba(1, 1, 1, 1);
+
+const SHARED_SHAPE_DATA: DenseShapeRenderData = {
+  type: "rectangle",
+  x: 0,
+  y: 0,
+  width: 0,
+  height: 0,
+  rotation: 0,
+  scaleX: 1,
+  scaleY: 1,
+  fill: new Rgba(),
+  stroke: null,
+  strokeWidth: 0,
+  fillEnabled: true,
+  arcEnabled: false,
+  arcStart: 0,
+  arcEnd: Math.PI * 2,
+  cornerRadius: 0,
+};
+
+const SHARED_FALLBACK_SHAPE_DATA: DenseShapeRenderData = {
+  type: "rectangle",
+  x: 0,
+  y: 0,
+  width: 0,
+  height: 0,
+  rotation: 0,
+  scaleX: 1,
+  scaleY: 1,
+  fill: new Rgba(),
+  stroke: new Rgba(),
+  strokeWidth: 2,
+  fillEnabled: true,
+  arcEnabled: false,
+  arcStart: 0,
+  arcEnd: Math.PI * 2,
+  cornerRadius: 0,
+};
+
+export class Renderer2D implements Renderer {
+  readonly #command: RenderCommand;
+  readonly #retainedSpriteBatcher: WebGLRetainedSpriteBatcher;
+  readonly #showFallback: boolean;
+  #assets: LooseAssetManager | null = null;
+
+  #sharedSpriteData: SpriteRenderData | undefined;
+  #sharedRetainedSpriteData: RetainedSpriteRenderData | undefined;
+  #sharedTexturedQuadData: TexturedQuadRenderData | undefined;
+  readonly #retainedAnimations = new Map<string, RetainedSpriteAnimationData>();
+
+  public readonly config: RendererConfig;
+  public readonly cache: TextureCache;
+
+  constructor(rendererApi: RendererAPI, config: RendererConfig) {
+    this.#command = new RenderCommand(rendererApi);
+    this.#retainedSpriteBatcher = rendererApi.retainedSpriteBatcher;
+    this.#showFallback = config.showFallback;
+    this.config = config;
+
+    this.cache = new TextureCache({
+      textureUploadBudget: this.config.textureUploadBudget,
+      warnOnLazyLoad: this.config.warnOnLazyLoad,
+    });
+  }
+
+  async initialize(canvas: HTMLCanvasElement, assets: LooseAssetManager): Promise<void> {
+    await this.#command.initialize(canvas, assets);
+    this.cache.initialize(assets);
+    this.#assets = assets;
+  }
+
+  async warmupLoadedTextures(): Promise<void> {
+    const assets = this.#assets;
+
+    if (!assets) {
+      return;
+    }
+
+    const loadedTextureAssets = assets.getLoadedByType("texture");
+    if (loadedTextureAssets.length === 0) {
+      return;
+    }
+
+    const assetIds: string[] = [];
+    const gpuSources: TextureSourceData[] = [];
+    const seenSources = new Set<object>();
+
+    for (const loaded of loadedTextureAssets) {
+      if (!(loaded.asset instanceof Texture)) {
+        continue;
+      }
+
+      assetIds.push(loaded.key);
+
+      const source = loaded.asset.source.resource;
+      const cacheKey = source as unknown as object;
+      if (seenSources.has(cacheKey)) {
+        continue;
+      }
+
+      seenSources.add(cacheKey);
+      gpuSources.push(source);
+    }
+
+    if (assetIds.length === 0) {
+      return;
+    }
+
+    await this.cache.preload(assetIds);
+    this.#command.preloadTextures(gpuSources);
+  }
+
+  begin(): void {
+    this.cache.resetFrameBudget();
+    this.#command.beginFrame();
+  }
+
+  end(): void {
+    this.#command.endFrame();
+  }
+
+  clear(color: Rgba): void {
+    this.#command.clear(color);
+  }
+
+  render(renderable: Renderable, transform: Transform2D, alpha: number): void {
+    if (renderable instanceof Sprite) {
+      this.#renderSpriteWithTint(renderable, DEFAULT_SPRITE_TINT, transform, alpha);
+      return;
+    }
+
+    if (renderable instanceof Shape) {
+      this.#renderShape(renderable, transform, alpha);
+      return;
+    }
+  }
+
+  renderSprite(sprite: SpriteRenderState, transform: Transform2D, alpha: number): void {
+    this.#renderSpriteWithTint(sprite, sprite.tint, transform, alpha);
+  }
+
+  upsertRetainedSprite(
+    bucketId: number,
+    instanceId: number,
+    sprite: SpriteRenderState,
+    transform: Transform2D,
+  ): boolean {
+    const textureInfo = this.cache.get(sprite.assetId);
+    if (!textureInfo) {
+      return false;
+    }
+
+    const image = this.cache.getImage(textureInfo.handle);
+    if (!image) {
+      return false;
+    }
+
+    const data = this.#sharedRetainedSpriteData ?? (this.#sharedRetainedSpriteData = {
+      image,
+      previousX: 0,
+      previousY: 0,
+      currentX: 0,
+      currentY: 0,
+      width: 0,
+      height: 0,
+      rotation: 0,
+      anchorX: 0.5,
+      anchorY: 0.5,
+      flipScaleX: 1,
+      flipScaleY: 1,
+      sourceX: 0,
+      sourceY: 0,
+      sourceWidth: 0,
+      sourceHeight: 0,
+      tint: new Rgba(),
+    });
+
+    data.image = image;
+    const animation = sprite.animation
+      ? this.#resolveRetainedAnimation(sprite.animation, textureInfo.handle, image)
+      : undefined;
+    if (animation === null) {
+      return false;
+    }
+    data.animation = animation;
+    data.previousX = transform.prev.pos.x;
+    data.previousY = transform.prev.pos.y;
+    data.currentX = transform.curr.pos.x;
+    data.currentY = transform.curr.pos.y;
+    data.width = (sprite.width || textureInfo.width) * Math.abs(transform.curr.scale.x);
+    data.height = (sprite.height || textureInfo.height) * Math.abs(transform.curr.scale.y);
+    data.rotation = transform.curr.rotation;
+    data.anchorX = sprite.anchorX;
+    data.anchorY = sprite.anchorY;
+    data.flipScaleX = (sprite.flipX ? -1 : 1) * (transform.curr.scale.x < 0 ? -1 : 1);
+    data.flipScaleY = (sprite.flipY ? -1 : 1) * (transform.curr.scale.y < 0 ? -1 : 1);
+    data.sourceX = textureInfo.frameX;
+    data.sourceY = textureInfo.frameY;
+    data.sourceWidth = textureInfo.frameWidth;
+    data.sourceHeight = textureInfo.frameHeight;
+    data.tint = sprite.tint;
+
+    this.#retainedSpriteBatcher.upsert(bucketId, instanceId, data);
+    return true;
+  }
+
+  removeRetainedSprite(bucketId: number, instanceId: number): void {
+    this.#retainedSpriteBatcher.remove(bucketId, instanceId);
+  }
+
+  drawRetainedSpriteBucket(bucketId: number, interpolationAlpha: number, updateTick: number): void {
+    this.#retainedSpriteBatcher.draw(bucketId, {
+      interpolationAlpha,
+      cameraX: this.getCameraX(),
+      cameraY: this.getCameraY(),
+      cameraZoom: this.getCameraZoom(),
+      viewportWidth: this.getWidth(),
+      viewportHeight: this.getHeight(),
+      updateTick,
+    });
+  }
+
+  releaseRetainedSpriteBucket(bucketId: number): void {
+    this.#retainedSpriteBatcher.release(bucketId);
+  }
+
+  #resolveRetainedAnimation(
+    animation: SpriteAnimationRenderState,
+    expectedTextureHandle: number,
+    image: HTMLImageElement | ImageBitmap | HTMLCanvasElement,
+  ): RetainedSpriteAnimationData | null {
+    const key =
+      `${animation.frameAssetIds.join(",")}:${animation.playbackRate}:${animation.startTick}`;
+    const existing = this.#retainedAnimations.get(key);
+    if (existing) {
+      return existing;
+    }
+
+    const frameUvRects = new Float32Array(animation.frameAssetIds.length * 4);
+    for (let frameIndex = 0; frameIndex < animation.frameAssetIds.length; frameIndex += 1) {
+      const assetId = animation.frameAssetIds[frameIndex];
+      const textureInfo = this.cache.get(assetId);
+      if (!textureInfo) {
+        return null;
+      }
+
+      invariant(
+        textureInfo.handle === expectedTextureHandle,
+        "Shader-selected sprite animation frames must share one texture source",
+      );
+      writeFrameUvRect(frameUvRects, frameIndex * 4, image, textureInfo);
+    }
+
+    const created: RetainedSpriteAnimationData = {
+      frameUvRects,
+      playbackRate: animation.playbackRate,
+      startTick: animation.startTick,
+    };
+    this.#retainedAnimations.set(key, created);
+    return created;
+  }
+
+  set(value: Settable, transform: Transform2D, alpha: number): void {
+    if (!(value instanceof Camera)) {
+      return;
+    }
+
+    const x = lerp(transform.prev.pos.x, transform.curr.pos.x, alpha);
+    const y = lerp(transform.prev.pos.y, transform.curr.pos.y, alpha);
+    const zoom = this.getHeight() / (value.orthoSize * 2);
+    this.setCamera(x, y, zoom);
+  }
+
+  drawShape(data: ShapeRenderInput): void {
+    this.#command.drawShape(data);
+  }
+
+  drawTexturedQuad(data: TexturedQuadDrawData): void {
+    const image = data.texture ? this.#resolveTextureImage(data.texture) : null;
+    if (data.texture && !image) {
+      return;
+    }
+
+    const renderData = this.#sharedTexturedQuadData ?? (this.#sharedTexturedQuadData = {
+      shader: data.shader,
+      image,
+      x: 0,
+      y: 0,
+      width: 0,
+      height: 0,
+      rotation: 0,
+      scaleX: 1,
+      scaleY: 1,
+      anchorX: 0.5,
+      anchorY: 0.5,
+      sourceX: 0,
+      sourceY: 0,
+      sourceWidth: 0,
+      sourceHeight: 0,
+      flipX: false,
+      flipY: false,
+      tint: new Rgba(),
+      time: 0,
+    });
+
+    renderData.shader = data.shader;
+    renderData.image = image;
+    renderData.x = data.x;
+    renderData.y = data.y;
+    renderData.width = data.width;
+    renderData.height = data.height;
+    renderData.rotation = data.rotation;
+    renderData.scaleX = data.scaleX;
+    renderData.scaleY = data.scaleY;
+    renderData.anchorX = data.anchorX;
+    renderData.anchorY = data.anchorY;
+    renderData.sourceX = data.texture?.frameX ?? 0;
+    renderData.sourceY = data.texture?.frameY ?? 0;
+    renderData.sourceWidth = data.texture?.frameWidth ?? 0;
+    renderData.sourceHeight = data.texture?.frameHeight ?? 0;
+    renderData.flipX = false;
+    renderData.flipY = false;
+    renderData.tint = data.tint ?? DEFAULT_SHADER_QUAD_TINT;
+    renderData.time = data.time;
+
+    this.#command.drawTexturedQuad(renderData);
+  }
+
+  drawShaderQuad(
+    shader: ShaderSourceAsset,
+    transform: ShaderTransform2D,
+    options: ShaderQuadOptions = {},
+  ): void {
+    this.drawTexturedQuad({
+      shader,
+      texture: options.texture,
+      x: transform.curr.pos.x,
+      y: transform.curr.pos.y,
+      width: transform.width,
+      height: transform.height,
+      rotation: transform.curr.rotation,
+      scaleX: transform.curr.scale.x,
+      scaleY: transform.curr.scale.y,
+      anchorX: transform.anchorX,
+      anchorY: transform.anchorY,
+      tint: options.tint ?? DEFAULT_SHADER_QUAD_TINT,
+      time: options.time ?? 0,
+    });
+  }
+
+  createInstancedBucket(descriptor: InstancedBucketDescriptor): InstancedBucket {
+    return this.#command.createInstancedBucket(descriptor);
+  }
+
+  drawInstancedBucket(
+    bucket: InstancedBucket,
+    camera: InstancedDrawCamera,
+    extra?: Record<string, number | Iterable<number>>,
+  ): void {
+    this.#command.drawInstancedBucket(bucket, camera, extra);
+  }
+
+  setCamera(x: number, y: number, zoom: number): void {
+    this.#command.setCamera(x, y, zoom);
+  }
+
+  setMeshOverlayEnabled(enabled: boolean): void {
+    this.#command.setMeshOverlayEnabled(enabled);
+  }
+
+  getCameraX(): number {
+    return this.#command.getCameraX();
+  }
+
+  getCameraY(): number {
+    return this.#command.getCameraY();
+  }
+
+  getCameraZoom(): number {
+    return this.#command.getCameraZoom();
+  }
+
+  getWidth(): number {
+    return this.#command.getWidth();
+  }
+
+  getHeight(): number {
+    return this.#command.getHeight();
+  }
+
+  #renderSpriteWithTint(
+    sprite: Pick<SpriteRenderState, "assetId" | "width" | "height" | "anchorX" | "anchorY" | "flipX" | "flipY">,
+    tint: Rgba,
+    transform: Transform2D,
+    alpha: number,
+  ): void {
+    const textureInfo = this.cache.get(sprite.assetId);
+
+    if (!textureInfo) {
+      if (this.#showFallback) {
+        const status = this.cache.getStatus(sprite.assetId);
+        this.#drawFallback(sprite, transform, alpha, status.state);
+      }
+      return;
+    }
+
+    const image = this.cache.getImage(textureInfo.handle);
+    if (!image) {
+      return;
+    }
+
+    if (!this.#sharedSpriteData) {
+      this.#sharedSpriteData = {
+        image,
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0,
+        rotation: 0,
+        scaleX: 1,
+        scaleY: 1,
+        anchorX: 0.5,
+        anchorY: 0.5,
+        sourceX: 0,
+        sourceY: 0,
+        sourceWidth: 0,
+        sourceHeight: 0,
+        flipX: false,
+        flipY: false,
+        tint: new Rgba(),
+      };
+    }
+
+    const spriteData = this.#sharedSpriteData;
+    spriteData.image = image;
+    spriteData.x = lerp(transform.prev.pos.x, transform.curr.pos.x, alpha);
+    spriteData.y = lerp(transform.prev.pos.y, transform.curr.pos.y, alpha);
+    spriteData.width = sprite.width || textureInfo.width;
+    spriteData.height = sprite.height || textureInfo.height;
+    spriteData.rotation = transform.curr.rotation;
+    spriteData.scaleX = transform.curr.scale.x;
+    spriteData.scaleY = transform.curr.scale.y;
+    spriteData.anchorX = sprite.anchorX;
+    spriteData.anchorY = sprite.anchorY;
+    spriteData.sourceX = textureInfo.frameX;
+    spriteData.sourceY = textureInfo.frameY;
+    spriteData.sourceWidth = textureInfo.frameWidth;
+    spriteData.sourceHeight = textureInfo.frameHeight;
+    spriteData.flipX = sprite.flipX;
+    spriteData.flipY = sprite.flipY;
+    spriteData.tint = tint;
+
+    this.#command.drawSprite(spriteData);
+  }
+
+  #renderShape(shape: Shape, transform: Transform2D, alpha: number): void {
+    SHARED_SHAPE_DATA.type = shape.type;
+    SHARED_SHAPE_DATA.x = lerp(transform.prev.pos.x, transform.curr.pos.x, alpha);
+    SHARED_SHAPE_DATA.y = lerp(transform.prev.pos.y, transform.curr.pos.y, alpha);
+    SHARED_SHAPE_DATA.width = shape.width;
+    SHARED_SHAPE_DATA.height = shape.height;
+    SHARED_SHAPE_DATA.rotation = transform.curr.rotation;
+    SHARED_SHAPE_DATA.scaleX = transform.curr.scale.x;
+    SHARED_SHAPE_DATA.scaleY = transform.curr.scale.y;
+    SHARED_SHAPE_DATA.fill = DEFAULT_SHAPE_FILL;
+    SHARED_SHAPE_DATA.stroke = null;
+    SHARED_SHAPE_DATA.strokeWidth = shape.strokeWidth;
+    SHARED_SHAPE_DATA.fillEnabled = true;
+    SHARED_SHAPE_DATA.arcEnabled = false;
+    SHARED_SHAPE_DATA.arcStart = 0;
+    SHARED_SHAPE_DATA.arcEnd = Math.PI * 2;
+    SHARED_SHAPE_DATA.cornerRadius = 0;
+
+    this.#command.drawShape(SHARED_SHAPE_DATA);
+  }
+
+  #drawFallback(
+    sprite: Pick<SpriteRenderState, "assetId" | "width" | "height" | "anchorX" | "anchorY" | "flipX" | "flipY">,
+    transform: Transform2D,
+    alpha: number,
+    state: "pending" | "ready" | "error",
+  ): void {
+    SHARED_FALLBACK_SHAPE_DATA.type = "rectangle";
+    SHARED_FALLBACK_SHAPE_DATA.x = lerp(transform.prev.pos.x, transform.curr.pos.x, alpha);
+    SHARED_FALLBACK_SHAPE_DATA.y = lerp(transform.prev.pos.y, transform.curr.pos.y, alpha);
+    SHARED_FALLBACK_SHAPE_DATA.width = sprite.width || 32;
+    SHARED_FALLBACK_SHAPE_DATA.height = sprite.height || 32;
+    SHARED_FALLBACK_SHAPE_DATA.rotation = transform.curr.rotation;
+    SHARED_FALLBACK_SHAPE_DATA.scaleX = transform.curr.scale.x;
+    SHARED_FALLBACK_SHAPE_DATA.scaleY = transform.curr.scale.y;
+
+    const color = state === "error" ? FALLBACK_ERROR_COLOR : FALLBACK_PENDING_COLOR;
+    SHARED_FALLBACK_SHAPE_DATA.fill.r = state === "error" ? color.r : color.r;
+    SHARED_FALLBACK_SHAPE_DATA.fill.g = state === "error" ? color.g : color.g;
+    SHARED_FALLBACK_SHAPE_DATA.fill.b = state === "error" ? color.b : color.b;
+    SHARED_FALLBACK_SHAPE_DATA.fill.a = state === "error" ? color.a : 0.15;
+
+    if (SHARED_FALLBACK_SHAPE_DATA.stroke) {
+      SHARED_FALLBACK_SHAPE_DATA.stroke.r = color.r;
+      SHARED_FALLBACK_SHAPE_DATA.stroke.g = color.g;
+      SHARED_FALLBACK_SHAPE_DATA.stroke.b = color.b;
+      SHARED_FALLBACK_SHAPE_DATA.stroke.a = color.a;
+    }
+
+    SHARED_FALLBACK_SHAPE_DATA.strokeWidth = 2;
+    SHARED_FALLBACK_SHAPE_DATA.fillEnabled = true;
+    SHARED_FALLBACK_SHAPE_DATA.arcEnabled = false;
+    SHARED_FALLBACK_SHAPE_DATA.arcStart = 0;
+    SHARED_FALLBACK_SHAPE_DATA.arcEnd = Math.PI * 2;
+    SHARED_FALLBACK_SHAPE_DATA.cornerRadius = 0;
+
+    this.#command.drawShape(SHARED_FALLBACK_SHAPE_DATA);
+  }
+
+  #resolveTextureImage(texture: Texture): HTMLImageElement | ImageBitmap | HTMLCanvasElement | null {
+    const handle = this.cache.load(texture);
+    return this.cache.getImage(handle);
+  }
+}
+
+function writeFrameUvRect(
+  target: Float32Array,
+  offset: number,
+  image: HTMLImageElement | ImageBitmap | HTMLCanvasElement,
+  textureInfo: TextureInfo,
+): void {
+  const imageWidth = image.width > 0 ? image.width : 1;
+  const imageHeight = image.height > 0 ? image.height : 1;
+  const frameWidth = textureInfo.frameWidth > 0 ? textureInfo.frameWidth : imageWidth;
+  const frameHeight = textureInfo.frameHeight > 0 ? textureInfo.frameHeight : imageHeight;
+  const insetX = frameWidth > 1 ? 0.5 : 0;
+  const insetY = frameHeight > 1 ? 0.5 : 0;
+
+  target[offset] = (textureInfo.frameX + insetX) / imageWidth;
+  target[offset + 1] = (textureInfo.frameY + insetY) / imageHeight;
+  target[offset + 2] = (textureInfo.frameX + frameWidth - insetX) / imageWidth;
+  target[offset + 3] = (textureInfo.frameY + frameHeight - insetY) / imageHeight;
+}
+
+function lerp(prev: number, current: number, alpha: number): number {
+  return prev + (current - prev) * alpha;
+}

@@ -1,0 +1,39 @@
+{
+  "name": "client",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "src/app/client/src",
+  "projectType": "application",
+  "tags": ["type:client"],
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": { "command": "bun x vite --config vite.config.ts", "cwd": "." }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": { "command": "bun x vite build --config vite.config.ts", "cwd": "." },
+      "inputs": ["default", "^default"],
+      "outputs": ["{workspaceRoot}/src/app/client/dist"]
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": { "command": "rm -rf dist", "cwd": "src/app/client" }
+    },
+    "preview": {
+      "executor": "nx:run-commands",
+      "options": { "command": "bun x vite preview --config vite.config.ts", "cwd": "." }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": { "command": "bun x eslint .", "cwd": "src/app/client" }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": { "command": "npx tsc -p tsconfig.json --noEmit", "cwd": "src/app/client" }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": { "command": "bun x vitest run", "cwd": "src/app/client" }
+    }
+  }
+}

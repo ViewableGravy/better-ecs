@@ -1,0 +1,150 @@
+import { ConveyorBeltComponent } from "@legacy/components/conveyor-belt";
+import {
+    getTransportBeltFlow,
+    type TransportBeltVariant,
+} from "@legacy/entities/transport-belt/consts";
+import { createTransportBeltSprite } from "@legacy/entities/transport-belt/render/createTransportBeltSprite";
+import { TransportBeltConnectionUtils } from "@legacy/entities/transport-belt/topology/TransportBeltConnectionUtils";
+import {
+    asTransportBeltEntityId,
+    type TransportBeltEntityId,
+} from "@legacy/entities/transport-belt/types";
+import { CollisionProfiles } from "@legacy/scenes/world/physics/collision-profiles";
+import { TRANSPORT_BELT_COLLIDER_SIZE } from "@legacy/systems/world/build-mode/metrics";
+import { Vec2, type EntityId, type Registry } from "@engine";
+import { AnimatedSprite, Debug, Transform2D } from "@engine/components";
+import { RectangleCollider } from "@libs/physics";
+import invariant from "tiny-invariant";
+const HALF_TRANSPORT_BELT_COLLIDER_SIZE = TRANSPORT_BELT_COLLIDER_SIZE * 0.5;
+
+type TransportBeltSpawnProfile = "placed" | "preview";
+
+type SpawnTransportBeltOptions = {
+  x: number;
+  y: number;
+  variant?: TransportBeltVariant;
+  speed?: number;
+  connectToNeighbors?: boolean;
+  profile?: TransportBeltSpawnProfile;
+};
+
+export function spawnTransportBelt(world: Registry, options: SpawnTransportBeltOptions): TransportBeltEntityId {
+  const variant = options.variant ?? "horizontal-right";
+  const profile = options.profile ?? "placed";
+
+  const belt = asTransportBeltEntityId(world.create());
+  const sprite = createTransportBeltSprite(variant);
+
+  world.add(belt, new Transform2D(options.x, options.y, 0));
+  world.add(belt, sprite);
+
+  if (profile === "preview") {
+    world.add(belt, new Debug("transport-belt-ghost"));
+
+    return belt;
+  }
+
+  world.add(
+    belt,
+    new RectangleCollider(
+      new Vec2(-HALF_TRANSPORT_BELT_COLLIDER_SIZE, -HALF_TRANSPORT_BELT_COLLIDER_SIZE),
+      new Vec2(TRANSPORT_BELT_COLLIDER_SIZE, TRANSPORT_BELT_COLLIDER_SIZE),
+    ),
+  );
+  world.add(belt, CollisionProfiles.conveyor());
+  world.add(belt, new ConveyorBeltComponent(variant, options.speed));
+  world.add(belt, new Debug("transport-belt"));
+
+  if (options.connectToNeighbors ?? true) {
+    TransportBeltConnectionUtils.connectSpawnedBelt(world, belt);
+  }
+
+  return belt;
+}
+
+export function destroyTransportBelt(world: Registry, beltEntityId: EntityId): void {
+  TransportBeltConnectionUtils.destroyBelt(world, beltEntityId);
+}
+
+export function updateTransportBeltVariant(
+  world: Registry,
+  beltEntityId: EntityId,
+  variant: TransportBeltVariant,
+): void {
+  const belt = world.get(beltEntityId, ConveyorBeltComponent);
+
+  if (belt && belt.variant === variant) {
+    return;
+  }
+
+  const currentSprite = world.get(beltEntityId, AnimatedSprite);
+
+  if (belt) {
+    const flow = getTransportBeltFlow(variant);
+
+    invariant(flow, `No transport belt flow found for variant ${variant}`);
+
+    const [tailDirection, headDirection] = flow;
+
+    belt.variant = variant;
+    belt.tailDirection = tailDirection;
+    belt.headDirection = headDirection;
+  }
+
+  world.add(
+    beltEntityId,
+    createTransportBeltSprite(variant, currentSprite),
+  );
+}
+
+export {
+    getTransportBeltDirectionFromPlacementSide,
+    TRANSPORT_BELT_DIRECTIONS,
+    TRANSPORT_BELT_VARIANTS
+} from "@legacy/entities/transport-belt/consts";
+export type {
+    TransportBeltDirection,
+    TransportBeltVariant
+} from "@legacy/entities/transport-belt/consts";
+export { ConveyorUtils } from "@legacy/entities/transport-belt/ConveyorUtils";
+export {
+    getConveyorLaneProgress,
+    getConveyorLaneSlots,
+    getOppositeTransportBeltDirection,
+    getTransportBeltDirectionVector,
+    getTransportBeltFlowVector,
+    getTransportBeltInwardNormal,
+    getTransportBeltOutwardNormal,
+    getTransportBeltVariantDescriptor,
+    isConveyorLaneTailBlocked,
+    isHorizontalTransportBeltFlow,
+    isStraightTransportBeltFlow,
+    isVerticalTransportBeltFlow,
+    resolveConveyorSlotLocalPosition,
+    setConveyorLaneTailBlocked,
+    TransportBeltGridQuery
+} from "@legacy/entities/transport-belt/core";
+export { BeltItemRailsUtility } from "@legacy/entities/transport-belt/motion/BeltItemRailsUtility";
+export {
+    CONVEYOR_ANIMATION_FRAMES_PER_SLOT,
+    CONVEYOR_ANIMATION_PLAYBACK_RATE,
+    CONVEYOR_ANIMATION_TICKS_PER_FRAME,
+    CONVEYOR_SIDES,
+    CONVEYOR_SLOT_COUNT_PER_LANE,
+    CONVEYOR_SLOT_INDICES_ASC,
+    CONVEYOR_SLOT_INDICES_DESC,
+    getCurveLaneSides,
+    getSlotAdvanceTicks,
+    INSIDE_CURVE_SLOT_ADVANCE_TICKS,
+    INSIDE_CURVE_SPEED_MULTIPLIER,
+    SHARED_SLOT_POSITION,
+    SLOT_ADVANCE_TICKS
+} from "@legacy/entities/transport-belt/motion/constants";
+export { ConveyorEntityMotionUtils } from "@legacy/entities/transport-belt/motion/ConveyorEntityMotionUtils";
+export { ConveyorGeometryUtils } from "@legacy/entities/transport-belt/motion/ConveyorGeometryUtils";
+export { ConveyorMovementUtils } from "@legacy/entities/transport-belt/motion/ConveyorMovementUtils";
+export { ConveyorSideLoadUtils } from "@legacy/entities/transport-belt/motion/ConveyorSideLoadUtils";
+export type { ConveyorSideLoadTransfer } from "@legacy/entities/transport-belt/motion/types";
+export { ConveyorBeltChainIterator } from "@legacy/entities/transport-belt/topology/ConveyorBeltChainIterator";
+export { TransportBeltConnectionUtils } from "@legacy/entities/transport-belt/topology/TransportBeltConnectionUtils";
+export type { TransportBeltEntityId } from "@legacy/entities/transport-belt/types";

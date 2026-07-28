@@ -1,0 +1,34 @@
+export {
+    TRANSPORT_BELT_DIRECTION_VECTORS,
+    TRANSPORT_BELT_OPPOSITE_DIRECTION,
+    getOppositeTransportBeltDirection,
+    getTransportBeltDirectionVector,
+    getTransportBeltFlowVector,
+    getTransportBeltInwardNormal,
+    getTransportBeltOutwardNormal,
+    isHorizontalTransportBeltFlow,
+    isStraightTransportBeltFlow,
+    isVerticalTransportBeltFlow, type SideVector
+} from "@legacy/entities/transport-belt/core/flow";
+export {
+    getConveyorLaneProgress,
+    getConveyorLaneSlots,
+    isConveyorLaneTailBlocked,
+    setConveyorLaneSlot,
+    setConveyorLaneStoredProgress,
+    setConveyorLaneTailBlocked
+} from "@legacy/entities/transport-belt/core/lane-access";
+export {
+    CONVEYOR_SLOT_POSITIONS, resolveConveyorSlotLocalPosition, type ConveyorSlotPosition
+} from "@legacy/entities/transport-belt/core/slots";
+export {
+    TransportBeltGridQuery,
+    type TransportBeltNeighborCell,
+    type TransportBeltNeighborMatrix,
+    type TransportBeltNeighborRow
+} from "@legacy/entities/transport-belt/core/TransportBeltGridQuery";
+export {
+    getTransportBeltVariantDescriptor,
+    type TransportBeltVariantDescriptor
+} from "@legacy/entities/transport-belt/core/variant-descriptor";
+

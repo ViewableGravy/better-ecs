@@ -1,191 +1,266 @@
-# AGENTS.md
+# AGENT.md
 
-## Project overview
+## Purpose
 
-Better ECS is a type safe ecs game engine with built in features for handling game loops and rendering. this monorepo contains two main directories
+This is the single source of truth for agent behavior and coding conventions in this workspace.
 
-- **apps**: "userland" applications that consume the engine
-- **packages**: code for shared engine related code such as the core, plugins, adapters, etc.
+## Workspace map (high-level)
 
-## Setup commands
+```
+src/
+  app/
+    client/           → Frontend client application
+  engine/             → Core engine utilised by frontend and backend
+  libs/
+    fps/              → Package Displays FPS information to the user
+    physics/          → Provides physics + collisions for applications
+  utils/              → Shared utilities available to all packages
+.github/              → Skills available to agent
+docs/                 → All documentation for the project
+vite/                 → Custom Vite plugins (i.e. HMR)
+```
 
-- Install deps: `bun install`
-- Build packages: `bun run build` (affected) or `bun build:all` (force all)
-- Start dev server: `bun dev`
-- Run tests: `bun test`
+## Working Process
+You are a very smart model, and very capable, but you have a limited context window, therefore the goal is to only receive information that is vital to your work and not fill up with in-between context. To Achieve this, you rely heavily on the sub-agents tool for any action that is not coding. You are a great coder, and therefore the writing of code should not be delegated, but the following tasks should almost always be delegated
 
-## Code style
+- Investigation / Searching
+- Simple Tool use
+  Note: Context7, NX, etc. are for gather information, and therefore a sub-agent is capable of this
+- Terminal execution
 
-- TypeScript strict mode with extensive type safety
-- Framework-agnostic core logic separated from bindings and plugins
-- Use workspace protocol for internal dependencies (`workspace:*`)
-- do not write to /tmp or similar root level directories, ensure all files that are created are created inside the repository unless otherwise stated or confirmed.
+## Discovering package relationships
 
-## No Legacy Code Policy
+- List all projects: `bun x nx show projects`.
+- Inspect a project: `bun x nx show project <projectName>`.
+- Visualize dependencies: `bun x nx graph`.
+- Print graph JSON for scripting/inspection: `bun x nx graph --print`.
+- Understand TS project-level linkage: read root `tsconfig.json` `references` (managed by `nx sync`).
 
-**Critical**: This project does not maintain legacy code or deprecated APIs.
+## Finding code quickly
 
-- **Remove, don't deprecate**: When refactoring, completely remove old implementations rather than marking them as deprecated.
-- **No backward compatibility layers**: Do not add compatibility shims for old APIs.
-- **Clean codebase**: Actively remove unused code, dead imports, and obsolete patterns.
-- **Modern only**: Use the latest patterns and APIs. This is a personal project building foundational architecture.
-- **Refactors are full replacements**: When implementing new architecture, update all consuming code to use it immediately.
+- Prefer targeted search over broad config edits.
+- Use symbol/text search first, then follow usages.
+- Before creating any new helper/function, always search for an existing implementation and reuse/extend it when viable.
+- Good first patterns:
+  - API names (`ActiveRegistry`, `invariantQuery`, `resolveWorldTransform2D`)
+  - System definitions (`createSystem("...")`)
+  - Class suffixes (`Manager`, `Mutator`)
 
-This ensures the codebase stays clean, maintainable, and doesn't accumulate technical debt.
+## Import and alias conventions
 
-## Dev environment tips
+- Always use top-level workspace aliases for imports. Relative imports are prohibited for both cross-project and same-project source code.
+- Prefer these aliases over `./` or `../`: `@client/*`, `@legacy/*`, `@engine/*`, `@utils/*`, `@libs/*`, `@hmr/*`, and
+  engine-local `@ui/*`.
+- If a needed alias does not exist yet, add it to the top-level TypeScript path configuration before writing the import.
 
-- This is a bun workspace monorepo with packages organized by functionality.
-- Nx provides caching, affected testing, targeting, and parallel execution for efficiency.
-- Use `npx nx show projects` to list all available packages (engine, plugins, client, server).
-- Target specific packages: `npx nx run engine:test` or `bun run test --projects=engine`.
-- Run affected tests only: `npx nx affected --target=test`.
-- **Granular Vitest testing within packages:**
-  - Navigate first: `cd packages/engine`
-  - Specific files: `bun x vitest run src/ecs/world.spec.ts`
-  - Test patterns: `bun x vitest run src/ecs/world.spec.ts -t "query"`
-  - List tests: `bun x vitest list`
-- **Available targets per package:** `build`, `test`, `lint`, `typecheck`, `dev` (apps).
-- **Testing strategy:** Package level (nx) → File level (vitest) → Test level (-t flag).
+### Workspace aliases (`tsconfig.base.json`)
 
-## Testing instructions
+- `@client` / `@client/*` → `src/app/client/src`
+- `@legacy` / `@legacy/*` → `src/app/legacy-client/src`
+- `@engine` / `@engine/*` → `src/engine/src`
+- `@utils` / `@utils/*` → `src/utils/src`
+- `@libs/commands` / `@libs/commands/*` → `src/libs/commands/src`
+- `@libs/fps` / `@libs/fps/*` → `src/libs/fps/src`
+- `@libs/physics` / `@libs/physics/*` → `src/libs/physics/src`
+- `@hmr` / `@hmr/*` → `vite/engine-hmr`
 
-- **Critical**: Always run tests and typechecks during development - do not proceed if they fail.
-- **Test targets:** `bun run test`, `bun run lint`, `nx run-many --target=typecheck`.
-- **Full CI suite:** `bun run build && bun run test`.
-- **Efficient targeted testing workflow:**
-  1. **Affected only:** `npx nx affected --target=test`
-  2. **Specific packages:** `npx nx run engine:test`
-  3. **Specific files:** `cd packages/engine && bun x vitest run src/ecs/world.spec.ts`
-- **Pro tips:**
-  - Use `-t "pattern"` to focus on specific functionality during development.
-  - Combine nx package targeting with vitest file targeting for maximum precision.
-  - Use `nx run-many --target=test --projects=engine,plugins` to test core changes.
+### App/package-local aliases
 
-## PR instructions
+- Engine package aliases:
+  - `@ui` / `@ui/*` → `src/engine/src/ui`
 
-- Always run `bun run lint` and `bun test` before committing.
-- Test changes in relevant apps: `bun dev` to start everything or `nx run client:dev`.
-- Update corresponding documentation in `docs/` directory when adding features.
-- Add or update tests for any core engine changes in `packages/engine`.
-- Use internal workspace protocol for dependencies (`@repo/engine`).
+## Core coding standards
 
-## Package structure
+- Always prefer guard clauses over nested/else statements.
+- Prefer returning the final expression directly instead of ending a block with a standalone `return` when no additional work follows.
+  - Prefer `return myFunc()` over `myFunc(); return;`
+  - If the function result should be discarded, prefer `return void myFunc()`
+- Prefer lines around 115 characters when readability stays good; do not wrap shorter lines just to satisfy a narrower limit.
+- Always ensure strict type safety.
+  - Never use `any`, `as` casts, or non-null assertions (`!`) unless there is no viable alternative.
+  - If unavoidable, include a short comment explaining why in code.
+- Always prefer assertions over unnecessary checks
+  - If a condition can be assumed given the context, use an assertion abstraction such as invariantQuery or invariant.
+  - Avoid "handling" a case that cannot happen. 
+  - If an edge case must be checked (i.e. x === undefined) then ensure there is a comment explaining why this case can happen and cannot be assumed to be handled earlier
+  - Do not convert an impossible state into nullable plumbing just to satisfy type flow. Assert the invariant at the boundary that establishes ownership, and keep the downstream path non-nullable.
 
-**Apps:**
+### Failure handling philosophy
 
-- `apps/client/` - Frontend application using Vite and the game engine.
-- `apps/server/` - Node.js server for multiplayer/persistence (if applicable).
+- Do not add speculative recovery for states that the architecture or types should make impossible.
+- If a type permits an invalid state that cannot occur in practice, strengthen the type or assert the invariant at the ownership boundary.
+- Prefer an immediate assertion, thrown error, or visible natural failure over silently normalising invalid state.
+- Retain defensive handling only for legitimate operational failures, such as external input, loading, persistence, or explicitly supported first-render states.
+- Do not pay a permanent per-frame branching cost for a lifecycle condition that can be established once during initialization.
+- Trial by fire is acceptable for currently unimportant edge cases: let the first real failure be visible and diagnosable, then add only the handling justified by that evidence.
+- Always use `src` as the source directory for apps/packages (never `lib` or `dist`).
+- When implementing an interface with a single unused argument, omit the argument entirely.
+  - If there are multiple args and some are unused, use `_`, `__`, etc.
+- Keep public APIs minimal and composable.
+- Remove files when all exports are removed (no empty placeholders).
+- Do not create unused helpers/functions.
+- Keep one class/component per file.
+  - If related classes/components must live together conceptually, create a folder named after the feature and split into focused files (for example `input/index.ts` + `input/mouse.ts`).
+- Prefer concrete named types over indirect `typeof`/`ReturnType<typeof ...>` extraction when a stable, importable type already exists.
+  - Example: prefer `Engine` over `ReturnType<typeof makeEngine>[0]`.
+  - Use `typeof`/`ReturnType` only when a concrete type is not reasonably importable (for example complex inferred unions/intersections).
 
-**Core Packages:**
+## Comment preservation
 
-- `packages/engine/` - Core ECS engine logic (World, Entity, Storage, Systems).
-- `packages/foundation/` - Foundational runtime packages (e.g., physics, spatial-contexts).
-- `packages/features/` - Optional gameplay/dev feature packages (e.g., fps).
-- `packages/tooling/` - Tooling packages (e.g., hmr).
+- Do not remove existing code comments unless they are explicitly wrong or stale.
+- If a comment seems unnecessary but is not clearly wrong, ask before removing it.
+- Add comments for public-facing functions and where clarification would help someone with less context understand the code.
 
-**Dependencies**: Uses workspace protocol (`workspace:*`) - engine/foundation/features/tooling → apps.
+## Architecture principles
 
-## Common development tasks
+- Prefer **colocation over hoisting** by default.
+  - Keep behavior next to the feature/factory that owns it (if scene behavior in scenes, asset behavior in asset loaders, runtime behavior in systems/plugins).
+  - Hoist to engine-level/global scope only when truly cross-cutting and shared across most scenes/features.
+- Entity-owned queries, mutations, and actions should live with the entity or feature that owns that behavior.
+  - Prefer paths like `entities/<feature>/queries`, `entities/<feature>/mutations`, or `entities/<feature>/actions` over extracting small helpers into unrelated systems just to satisfy a test.
+  - If a utility only exists to support one concise system, keep the logic inline unless multiple real call sites justify extraction.
+- For React/userland adapters, prefer moving state and orchestration downward toward the smallest owning component/module that can safely manage it.
+- When introducing new lifecycle hooks/options, start at the lowest meaningful layer and only promote upward if repeated usage demonstrates global ownership.
 
-**Creating a System:**
+## Performance guidance
 
-- Use `createSystem("name")({ ... })` from `@repo/engine/core`.
-- Define a schema for system state using Zod or Standard Schema.
-- Implement the `system` function for per-tick logic and `initialize` for setup.
+- Avoid unnecessary allocations in hot paths (main loop / per-frame / inner loops).
+- Prefer pooling, mutation, and reference reuse where appropriate.
+- Favor stable frame pacing over convenience allocations.
 
-**Working with the World:**
+## Tooling and execution rules
 
-- Use `useWorld()` inside a system to get the `UserWorld` instance.
-- Create entities: `const id = world.create()`.
-- Add components: `world.add(id, ComponentClass, { ... })`.
-- Query entities: `const entities = world.query(ComponentA, ComponentB)`.
+- Assume dev server is already running on port `3000`; only start it if needed.
+- Always verify with tools (types/lint/tests), never assume correctness.
+- Never consider a change complete without a full workspace typecheck.
+  - Minimum bar: `bun x nx run-many -t typecheck --all --outputStyle=static --nxBail`
+  - This applies even when the touched code appears isolated, and it includes test/spec TypeScript projects.
+- Use `bun` for installs, scripts, and tests (unless package-local vitest workflow is required).
+- Use `nx` for task orchestration and package bootstrapping.
+- Do not write files outside this repository.
+- Always prefer to ask the user any clarifying questions before blatantly doing what is asked. 
+  - Use the AskQuestions MCP tool for asking questions
+  - If edge cases are found, bring these up and ask clarifying questions
+  - Do not "assume" implicit requirements if they are not at least 80% guaranteed
+  - If one requirement conflicts with another, or an answer conflicts with an existing requirement, seek confirmation
+- Always verify correctness of task with user
+  - Once the task feels like it is done, and you would claim finished, ask the user using the AskQuestions tool to verify that everything looks as intended or if further iteration towards the goal is required.
 
-**Engine initialization:**
+## No legacy code policy
 
-- Define an initialization system to set up the starting world state.
-- Use `createEngine({ initialization, systems })` to construct the engine instance.
-- Entry point: `const engine = createEngine({ ... })`.
-
-**Running the game loop:**
-
-- Use the async generator `engine.startEngine({ fps, ups })`.
-- Handle `update.shouldUpdate` for game logic and `frame.shouldUpdate` for rendering.
-
-**Documentation updates:**
-
-- Update relevant docs in `docs/` directory.
-- Maintain `conveyor-system-design.md` for major architectural changes.
-
-## Framework-specific notes
-
-**Client:**
-
-- Main entry point: `apps/client/src/main.ts`.
-- Uses Vite for development and bundling.
-- Implements render systems (e.g., `systems/render/index.ts`).
-- Uses grouped packages like `@repo/fps`, `@repo/physics`, and `@repo/spatial-contexts`.
-
-**Server:**
-
-- Node.js application in `apps/server/src/main.ts`.
-- Headless execution using the same `@repo/engine` core.
-- (Planned) Authoritative state management and persistence.
-
-## Environment requirements
-
-- **Bun** - Recommended runtime and package manager.
-- **Node.js** - Supported for server-side execution.
-- **Nx** - Workspace management and task runner.
-
-## Key architecture patterns
-
-- **Type Safety**: Global `Register` interface for engine-wide type inference.
-- **ECS**: Entity-Component-System pattern with dense storage and efficient queries.
-- **System Isolation**: Systems communicate through state schemas and `useSystem`.
-- **Phase Separation**: Explicit "update" (logic) and "render" (interpolation) phases.
-
-## Monorepo tooling conventions
-
-- **Vite source references**: Package imports resolved via Vite should point to `src/` (not `dist/`) to enable hot reloading during development. Path aliases in `tsconfig.json` map `@repo/<pkg>` to the source entry points.
-- **TypeScript project references**: TypeScript `references` in `tsconfig.json` files are managed by Nx's sync generator (`nx sync`). Do not manually add or remove `references` entries.
-- **Module declaration for type registration**: Apps use `declare module "@repo/engine"` to augment the `Register` interface with the concrete engine type (e.g., `Engine: Awaited<ReturnType<typeof main>>`). This is similar to how TanStack Router uses module declaration for route-level type safety. This pattern is intentional and should be preserved.
-  - Prefer inference-based registration. Do not annotate `main` (or equivalent app bootstrap function) as `AnyEngine`, as that widens system typing and breaks `useSystem` inference.
-  - If a direct `ReturnType<typeof main>` causes non-portable inferred type errors, register via an inferred engine factory return type (e.g., `Engine: ReturnType<typeof createAppEngine>`), still without widening to `AnyEngine`.
+- Remove old implementations instead of deprecating.
+- Do not add backward compatibility shims.
+- Remove dead code, dead imports, and obsolete patterns promptly.
 
 ## Development workflow
 
-1. **Setup**: `bun install`.
-2. **Build**: `bun run build`.
-3. **Explore**: `npx nx show projects`.
-4. **Develop**: `bun dev` to start individual packages or the whole workspace.
-5. **Test**: `bun test` and `nx run-many --target=typecheck`.
+1. Install: `bun install`
+2. Explore: `bun x nx show projects`
+3. Build: `bun run build` (or targeted `bun x nx run <project>:build`)
+4. Verify: `bun run lint`, `bun test`, `bun x nx run-many --target=typecheck`, and before handoff run `bun x nx run-many -t typecheck --all --outputStyle=static --nxBail`
 
-## References
+## Naming conventions (initial)
 
-- **Core Engine**: `packages/engine/`
-- **Design Docs**: `docs/conveyor-system-design.md`
+This section is intentionally explicit to reduce drift.
 
-<!-- nx configuration start-->
-<!-- Leave the start & end comments to automatically receive updates. -->
+### Retrieval and invariants
 
-# General Guidelines for working with Nx
+- `get*` means nullable/optional retrieval.
+  - Example: `world.get(entityId, Component)` returns `T | undefined`.
+- Use `get*` when reading an already-owned value with no meaningful derivation.
+  - Example: retrieving active scene context from `engine.scene` should use `getSceneContext`, not `resolveSceneContext`.
+- `find*` means search for an existing value by traversing/querying/iterating until the match is identified.
+  - Use `find*` when the primary behavior is a search algorithm over existing state.
+  - Good fit: walking a belt chain to find its leaf, scanning neighbors to find a matching entity, searching collections/maps/graphs for a specific existing node.
+  - `find*` should generally describe “locate something that already exists,” not “derive a transformed result.”
+- `require*` means must exist (non-nullable) and throws on absence.
+  - Example: `world.require(entityId, Component)`.
+- Use `invariant*` when operation semantics need explicit assertion context and `require` is ambiguous.
+  - Existing examples: `invariantQuery(...)`, `useInvariantContext(...)`.
+  - Preferred when multiple base verbs could apply: `invariantGet`, `invariantQuery`.
+- Prefer asserting invariants at API boundaries instead of spreading redundant nullable checks upward.
+  - If ids are expected to be valid by contract, assert once (`invariant(...)` or `require*`) and continue with non-nullable flow.
+  - Exception: destructive/idempotent methods (for example `destroy`) may return booleans instead of throwing when absence is expected.
 
-- For navigating/exploring the workspace, invoke the `nx-workspace` skill first - it has patterns for querying projects, targets, and dependencies
-- When running tasks (for example build, lint, test, e2e, etc.), always prefer running the task through `nx` (i.e. `nx run`, `nx run-many`, `nx affected`) instead of using the underlying tooling directly
-- Prefix nx commands with the workspace's package manager (e.g., `pnpm nx build`, `npm exec nx test`) - avoids using globally installed CLI
-- You have access to the Nx MCP server and its tools, use them to help the user
-- For Nx plugin best practices, check `node_modules/@nx/<plugin>/PLUGIN.md`. Not all plugins have this file - proceed without it if unavailable.
-- NEVER guess CLI flags - always check nx_docs or `--help` first when unsure
+### `derive` vs out-parameter naming
 
-## Scaffolding & Generators
+- Use `derive*` for deriving a value or decision from current state.
+  - For future APIs, prefer `derivePlacementWorld`, `deriveCameraView`, and other `derive*` names over introducing new `resolve*` names.
+- Do not use `derive*` when the primary behavior is searching for an already-existing object/node/value.
+  - If the function mostly iterates/traverses/queries to locate something, prefer `find*`.
+  - Example: a function that walks a belt chain to locate its leaf should prefer `findLeafBelt`, not `deriveLeafBelt`.
+- Use `compute*` for derivation that is primarily computation based
+  - Good fit today: `computeBeltRailPosition`
+- Do not use `derive*` for simple owner reads/getters.
+  - If no derivation occurs, use `get*` (or `require*` for non-nullable access).
+- Do not use `compute*` for search/traversal either.
+  - `compute*` should be reserved for calculated/derived outputs, not for locating existing state.
+- Avoid plain `derive*` for APIs whose primary contract is “write into provided object”.
 
-- For scaffolding tasks (creating apps, libs, project structure, setup), ALWAYS invoke the `nx-generate` skill FIRST before exploring or calling MCP tools
+### Practical verb split
 
-## When to use nx_docs
+- `get*` → direct retrieval through a known path
+  - Example: `getSceneContext()`
+- `find*` → search existing state to locate something
+  - Example: `findLeafBeltEntityId()`
+- `derive*` → derive/select/decide a value from current state
+  - Example: `derivePlacementWorld()`
+- `compute*` → calculate a value from inputs/state
+  - Example: `computeBeltRailPosition()`
 
-- USE for: advanced config options, unfamiliar flags, migration guides, plugin configuration, edge cases
-- DON'T USE for: basic generator syntax (`nx g @nx/react:app`), standard commands, things you already know
-- The `nx-generate` skill handles generator discovery internally - don't call nx_docs just to look up generator syntax
+Rule of thumb:
 
-<!-- nx configuration end-->
+- If you would describe the implementation as “look through / walk / scan / search until found,” use `find*`.
+- If you would describe it as “figure out / decide / map current state into the right output,” use `derive*`.
+- If you would describe it as “calculate,” use `compute*`.
+- If you would describe it as “read,” use `get*`.
+
+### Utility layering (context vs engine vs bound)
+
+- Prefer a 3-layer utility shape for reusable runtime helpers:
+  1. **Context utils** (`@repo/engine/context-utils`) for userland/system calls that read engine from `fromContext(...)`.
+  2. **Internal engine-arg utils** (`@repo/engine/internal/utils`) that accept `engine` explicitly and do not read context.
+  3. **Bound engine utilities** (`engine.utils`) as thin instance adapters over internal engine-arg utils.
+- When adding new helper behavior, implement internal engine-arg utility first, then expose context/bound adapters as needed.
+- Context selector factories should use **PascalCase** naming and be consumed via `fromContext(...)`.
+  - Example: `fromContext(Engine)` and `fromContext(ActiveCameraView(world, cameraEntityId))`.
+
+For APIs with output destination arguments, standardize on the naming:
+
+- `derive*Into`
+  - For future APIs, prefer names like `deriveWorldTransform2DInto(world, entityId, out)`.
+
+Parameter naming for destination values:
+
+- Use `out` for pooled scratch objects/single structured outputs.
+- For reusable pooled fields, prefer explicit `SHARED_` naming to signal reuse and mutation.
+  - Example: `#SHARED_TRANSFORM2D`.
+- Use `target` for mutating an existing collection or external receiver.
+- Keep destination parameter last.
+
+### Class and API shape naming
+
+- `*Manager` for lifecycle/state coordinators (e.g., `SceneManager`, `RenderManager`, `SpatialContextManager`).
+- `*Mutator` for focused state transition logic on existing entities/components.
+- Hooks use `use*` prefix (`useContextWorld`, `useInvariantContext`).
+- System factories use `createSystem("namespace:name")` with explicit namespace prefixes (`engine:`, `main:`, `plugin:`, `temp:`).
+
+### Migration guidance for current inconsistencies
+
+- Keep existing `require` semantics as-is.
+- Keep `invariantQuery` and `useInvariantContext` naming model.
+- For future out-parameter APIs, prefer `write*` + trailing `out`.
+- Candidate rename to align semantics in the future:
+  - `resolveWorldTransform2D(...)` → `deriveWorldTransform2DInto(...)`.
+
+## Documentation / skill capture
+
+If solving a problem required investigation, trial/error, or non-obvious steps, consider adding an agent skill.
+
+- Use the `skills-authoring` skill when authoring skills.
+- Skill CLI helpers go in `scripts/` under the skill.
+- Link scripts with relative markdown links.
+- Add `template.md` when response shape matters.
+- Prefer multiple small scripts for broad workflows.
+
+Agressively use the memory tool during development in this project. Memory is the core way that we keep information across sessions and is therefore extremely important. I would like you to put a priority on skill authoring as well. Memory is good for short term, relevant information (and other information) but I would heavily request that you create skills even when it seems trivial. Skills are extremely useful for the developer and for the agent as they give you awesome context around functions, and patterns in the code base.

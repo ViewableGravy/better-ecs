@@ -1,0 +1,37 @@
+// --- Engine Lifecycle Types ---
+export type EngineUpdate = {
+  readonly delta: number;
+  readonly shouldUpdate: boolean;
+}
+
+export type EngineFrame = {
+  readonly delta: number;
+  readonly shouldUpdate: boolean;
+}
+
+// --- Engine Meta Type ---
+export type MetaStats = {
+  /** Delta time since last update in milliseconds */
+  updateDelta: number;
+  /** Delta time since last frame in milliseconds */
+  frameDelta: number;
+  /** Fixed update interval in milliseconds for the current UPS target */
+  updateTime: number;
+  /** Monotonic simulation tick incremented once per executed update step */
+  updateTick: number;
+  /** Checks which phase we are currently in */
+  phase: (phase: "update" | "render") => boolean;
+  /** Target frames per second */
+  fps: number;
+  /** Target updates per second */
+  ups: number;
+  /** Initial target frames per second (set by startEngine) */
+  initialFPS: number;
+  /** Initial target updates per second (set by startEngine) */
+  initialUPS: number;
+  /** Progress through current update interval (0.0 to 1.0) */
+  updateProgress: number;
+  /** Timestamp of the last update in milliseconds */
+  lastUpdateTime: number;
+}
+

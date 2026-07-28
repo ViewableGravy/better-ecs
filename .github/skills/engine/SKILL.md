@@ -27,6 +27,15 @@ You should use this skill when:
 
 ## Instructions
 
+### 0. Engine Import Policy
+
+- Inside `packages/engine/src`, always use aliased imports (for example `@core/...`, `@render/...`, `@components/...`, `@ui/...`, `@/...`).
+- Do not add relative imports like `./` or `../` in engine source files.
+- Keep this consistent so `tsc` + `tsc-alias` can rewrite internal aliases to relative paths in `packages/engine/dist` during build.
+- For editor resolution of engine spec files, treat `src/engine/tsconfig.json` as the solution-style source of truth for project references.
+  - If an engine spec file is missing alias resolution in the editor, add the relevant test-project reference there, for example `./src/tests/tsconfig.json`.
+  - This is durable across `bun install` / postinstall: `scripts/ts-extend-paths/extend-tsconfigs.mjs` only rewrites `compilerOptions.paths` for configured tsconfig files and does not remove `references` entries.
+
 ### 1. Ensure Type Safety
 
 Userland applications **must** augment the global `Register` interface to inject their specific engine configuration. This enables type inference for `useSystem`, `useWorld`, and other hooks throughout the application.
@@ -99,6 +108,23 @@ The engine exports several hooks to access context within a system's `Entrypoint
 - **Querying**: `world.query(ComponentA, ComponentB)` returns an array of Entity IDs that have all specified components.
 - **Component Access**: `world.get(entityId, ComponentClass)` returns the component instance.
 - **Component Utilities**: Components often expose `curr` (current state) and `prev` (previous state) for interpolation usage in render systems.
+
+When iterating over `world.query(...)`, use `world.require(...)` for any component included in the query list.
+
+```typescript
+for (const entityId of world.query(ShaderQuad)) {
+  const shaderQuad = world.require(entityId, ShaderQuad);
+  // ...
+}
+```
+
+Use `world.get(...)` only for optional components that are not guaranteed by the query.
+
+### 4.1 Spawner Ownership
+
+- Entity spawn functions should attach the runtime components they own at creation time.
+- Do not add follow-up `ensure*` helpers whose job is to patch required components that the spawner itself should have created.
+- Use `ensure*` for entity existence only: it may delegate to a spawn function if the entity is missing, but it should not re-specify the spawned component shape on every call.
 
 ### 5. Leverage Core Systems
 

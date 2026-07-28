@@ -1,0 +1,55 @@
+import type { ActivePlacementDragMode } from "@legacy/systems/world/build-mode/placement/types";
+import { boxPlacementDefinition } from "@legacy/systems/world/build-mode/specs/box";
+import { landClaimPlacementDefinition } from "@legacy/systems/world/build-mode/specs/land-claim";
+import { transportBeltPlacementDefinition } from "@legacy/systems/world/build-mode/specs/transport-belt";
+import { wallPlacementDefinition } from "@legacy/systems/world/build-mode/specs/wall";
+import type { BuildModeItemType } from "@libs/commands/build-mode";
+
+/**********************************************************************************************************
+ *   TYPE DEFINITIONS
+ **********************************************************************************************************/
+
+export type BuildItemType = BuildModeItemType;
+export type BuildItemDefinition = (typeof buildItemDefinitions)[BuildItemType];
+
+/**********************************************************************************************************
+ *   COMPONENT START
+ **********************************************************************************************************/
+
+const buildItemDefinitions = {
+  box: boxPlacementDefinition,
+  "land-claim": landClaimPlacementDefinition,
+  "transport-belt": transportBeltPlacementDefinition,
+  wall: wallPlacementDefinition,
+} as const satisfies Record<BuildItemType, unknown>;
+
+
+
+// `Object.keys(...)` widens to `string[]`, so this cast preserves the concrete registry keys as the runtime id list.
+export const BUILD_ITEM_TYPES = Object.keys(buildItemDefinitions) as BuildItemType[];
+
+export function getBuildItemDefinition<TItemType extends BuildItemType>(itemType: TItemType) {
+  return buildItemDefinitions[itemType];
+}
+
+export function getDragPlacementMode(itemType: BuildItemType | null): ActivePlacementDragMode | null {
+  if (itemType === null) {
+    return null;
+  }
+
+  const dragPlacementMode = getBuildItemDefinition(itemType).dragPlacementMode;
+
+  return dragPlacementMode === "single" ? null : dragPlacementMode;
+}
+
+export function supportsDragPlacement(itemType: BuildItemType | null): boolean {
+  return getDragPlacementMode(itemType) !== null;
+}
+
+export function usesPlacementEndSideRotation(itemType: BuildItemType | null): boolean {
+  if (itemType === null) {
+    return false;
+  }
+
+  return getBuildItemDefinition(itemType).rotationMode === "placement-end-side";
+}

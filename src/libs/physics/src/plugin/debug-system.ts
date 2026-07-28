@@ -1,0 +1,248 @@
+import type { EntityId, Registry } from "@engine";
+import { createSystem, resolveWorldTransform2D } from "@engine";
+import { FillColor, Rgba, Shape, Sprite, StrokeColor, Transform2D } from "@engine/components";
+import { Engine, fromContext, System } from "@engine/context";
+import { CircleCollider } from "@libs/physics/colliders/circle";
+import { CompoundCollider } from "@libs/physics/colliders/compound";
+import { PointCollider } from "@libs/physics/colliders/point";
+import { RectangleCollider } from "@libs/physics/colliders/rectangle";
+import { COLLISION_LAYERS, CollisionParticipation } from "@libs/physics/entity/collision-participation";
+import { getEntityCollider } from "@libs/physics/entity/get";
+import { ColliderDebugProxy } from "@libs/physics/plugin/components/collider-debug-proxy";
+import { type DebugState, type PhysicsDebugOpts } from "@libs/physics/plugin/types";
+
+const COLLIDER_DEBUG_STYLE = {
+  fill: new Rgba(1, 1, 1, 0.08),
+  stroke: new Rgba(1, 1, 1, 1),
+  strokeWidth: 1,
+};
+
+const DEBUG_OVERLAY_LAYER = 10_000;
+const DEBUG_OVERLAY_Z = 10_000;
+const POINT_DEBUG_SIZE = 4;
+const SHARED_WORLD_TRANSFORM = new Transform2D();
+
+export function createDebugSystem(opts: PhysicsDebugOpts) {
+  return createSystem("plugin:physics:debug")({
+    state: { visible: false } as DebugState,
+    system() {
+      const { data } = fromContext(System("plugin:physics:debug"));
+      const engine = fromContext(Engine);
+      const input = fromContext(System("engine:input"));
+
+      const toggledByConfiguredKeybind = input.matchKeybind(opts.keybind);
+      const toggledByAltH = input.matchKeybind({ code: "KeyH", modifiers: { alt: true } });
+      const toggledByCtrlH = input.matchKeybind({ code: "KeyH", modifiers: { ctrl: true } });
+
+      if (toggledByConfiguredKeybind || toggledByAltH || toggledByCtrlH) {
+        data.visible = !data.visible;
+      }
+
+      const registry = engine.scene.registry;
+      if (!data.visible) {
+        registry.destroy(ColliderDebugProxy);
+      } else {
+        syncColliderDebugWorld(registry);
+      }
+    },
+  });
+}
+
+function syncColliderDebugWorld(world: Registry): void {
+  const debugByTarget = new Map<EntityId, EntityId>();
+
+  for (const debugEntityId of world.query(ColliderDebugProxy)) {
+    const proxy = world.get(debugEntityId, ColliderDebugProxy);
+    if (!proxy) {
+      continue;
+    }
+
+    debugByTarget.set(proxy.targetId, debugEntityId);
+  }
+
+  for (const [targetId, debugEntityId] of debugByTarget) {
+    if (!world.has(targetId, Transform2D)) {
+      world.destroy(debugEntityId);
+      debugByTarget.delete(targetId);
+      continue;
+    }
+
+    const targetCollider = getEntityCollider(world, targetId);
+
+    if (!targetCollider || !world.has(debugEntityId, Transform2D) || !world.has(debugEntityId, Shape)) {
+      world.destroy(debugEntityId);
+      debugByTarget.delete(targetId);
+      continue;
+    }
+
+    syncDebugShapeFromTarget(
+      world,
+      targetId,
+      debugEntityId,
+      targetCollider,
+    );
+  }
+
+  for (const targetId of world.query(Transform2D)) {
+    if (world.has(targetId, ColliderDebugProxy)) {
+      continue;
+    }
+
+    const targetTransform = world.get(targetId, Transform2D);
+    const targetCollider = getEntityCollider(world, targetId);
+
+    if (!targetTransform || !targetCollider) {
+      continue;
+    }
+
+    const existingDebugEntity = debugByTarget.get(targetId);
+    if (existingDebugEntity !== undefined) {
+      continue;
+    }
+
+    const debugEntityId = world.create();
+    const debugShape = new Shape("rectangle", 1, 1, COLLIDER_DEBUG_STYLE.strokeWidth, 0, 0);
+
+    const { layer, zOrder } = getTargetRenderOrder(world, targetId);
+    debugShape.layer = layer;
+    debugShape.zOrder = zOrder;
+
+    const debugTransform = new Transform2D();
+
+    world.add(debugEntityId, debugTransform);
+    world.add(debugEntityId, debugShape);
+    world.add(debugEntityId, new FillColor(new Rgba(1, 1, 1, 0.08)));
+    world.add(debugEntityId, new StrokeColor(new Rgba(1, 1, 1, 1)));
+    world.add(debugEntityId, new ColliderDebugProxy(targetId));
+
+    syncDebugShapeFromTarget(world, targetId, debugEntityId, targetCollider);
+    debugByTarget.set(targetId, debugEntityId);
+  }
+}
+
+function syncDebugShapeFromTarget(
+  world: Registry,
+  targetId: EntityId,
+  debugEntityId: EntityId,
+  targetCollider: ReturnType<typeof getEntityCollider>,
+): void {
+  const primitive = targetCollider instanceof CompoundCollider ? targetCollider.collider : targetCollider;
+  if (!primitive) {
+    return;
+  }
+
+  const { layer, zOrder } = getTargetRenderOrder(world, targetId);
+  world.patch(debugEntityId, Shape, (debugShape) => {
+    debugShape.layer = layer;
+    debugShape.zOrder = zOrder;
+
+    if (primitive instanceof CircleCollider) {
+      debugShape.type = "circle";
+      debugShape.width = primitive.radius * 2;
+      debugShape.height = primitive.radius * 2;
+      return;
+    }
+
+    if (primitive instanceof PointCollider) {
+      debugShape.type = "circle";
+      debugShape.width = POINT_DEBUG_SIZE;
+      debugShape.height = POINT_DEBUG_SIZE;
+      return;
+    }
+
+    if (primitive instanceof RectangleCollider) {
+      debugShape.type = "rectangle";
+      debugShape.width = primitive.bounds.size.x;
+      debugShape.height = primitive.bounds.size.y;
+    }
+  });
+
+  applyLayerDebugStyle(world, targetId, debugEntityId);
+
+  if (!resolveWorldTransform2D(world, targetId, SHARED_WORLD_TRANSFORM)) {
+    return;
+  }
+
+  if (primitive instanceof CircleCollider || primitive instanceof PointCollider) {
+    world.patch(debugEntityId, Transform2D, (debugTransform) => {
+      debugTransform.curr.pos.set(SHARED_WORLD_TRANSFORM.curr.pos);
+      debugTransform.prev.pos.set(SHARED_WORLD_TRANSFORM.prev.pos);
+    });
+    return;
+  }
+
+  if (!(primitive instanceof RectangleCollider)) {
+    return;
+  }
+
+  const offsetX = primitive.bounds.left + primitive.bounds.size.x / 2;
+  const offsetY = primitive.bounds.top + primitive.bounds.size.y / 2;
+
+  world.patch(debugEntityId, Transform2D, (debugTransform) => {
+    debugTransform.curr.pos.set(
+      SHARED_WORLD_TRANSFORM.curr.pos.x + offsetX,
+      SHARED_WORLD_TRANSFORM.curr.pos.y + offsetY,
+    );
+    debugTransform.prev.pos.set(
+      SHARED_WORLD_TRANSFORM.prev.pos.x + offsetX,
+      SHARED_WORLD_TRANSFORM.prev.pos.y + offsetY,
+    );
+  });
+}
+
+function applyLayerDebugStyle(world: Registry, targetId: EntityId, debugEntityId: EntityId): void {
+  const participation = world.get(targetId, CollisionParticipation);
+  const layers = participation?.layers ?? 0n;
+
+  if ((layers & COLLISION_LAYERS.CONVEYOR) !== 0n) {
+    return setDebugColors(world, debugEntityId, 0.1, 0.95, 0.95);
+  }
+
+  if ((layers & COLLISION_LAYERS.ACTOR) !== 0n) {
+    return setDebugColors(world, debugEntityId, 0.2, 1, 0.25);
+  }
+
+  if ((layers & COLLISION_LAYERS.SOLID) !== 0n) {
+    return setDebugColors(world, debugEntityId, 1, 0.35, 0.25);
+  }
+
+  if ((layers & COLLISION_LAYERS.GHOST) !== 0n) {
+    return setDebugColors(world, debugEntityId, 1, 1, 0.25);
+  }
+
+  setDebugColors(
+    world,
+    debugEntityId,
+    COLLIDER_DEBUG_STYLE.stroke.r,
+    COLLIDER_DEBUG_STYLE.stroke.g,
+    COLLIDER_DEBUG_STYLE.stroke.b,
+  );
+}
+
+function setDebugColors(world: Registry, entityId: EntityId, r: number, g: number, b: number): void {
+  world.patch(entityId, StrokeColor, (strokeColor) => strokeColor.value.set(r, g, b, 1));
+  world.patch(entityId, FillColor, (fillColor) => fillColor.value.set(r, g, b, 0.08));
+}
+
+function getTargetRenderOrder(world: Registry, targetId: EntityId): { layer: number; zOrder: number } {
+  const targetShape = world.get(targetId, Shape);
+  if (targetShape) {
+    return {
+      layer: Math.max(targetShape.layer + 1, DEBUG_OVERLAY_LAYER),
+      zOrder: Math.max(targetShape.zOrder + 0.1, DEBUG_OVERLAY_Z),
+    };
+  }
+
+  const targetSprite = world.get(targetId, Sprite);
+  if (targetSprite) {
+    return {
+      layer: Math.max(targetSprite.layer + 1, DEBUG_OVERLAY_LAYER),
+      zOrder: Math.max(targetSprite.zOrder + 0.1, DEBUG_OVERLAY_Z),
+    };
+  }
+
+  return {
+    layer: DEBUG_OVERLAY_LAYER,
+    zOrder: DEBUG_OVERLAY_Z,
+  };
+}

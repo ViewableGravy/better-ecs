@@ -1,0 +1,32 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist/types",
+    "declarationDir": "./dist/types",
+    "tsBuildInfoFile": "./dist/tsconfig.lib.tsbuildinfo",
+    "rootDir": "./src",
+    "lib": ["DOM", "ES2022"],
+    "jsx": "react-jsx",
+    "skipLibCheck": true,
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "emitDeclarationOnly": true,
+    "noEmit": false,
+    "typeRoots": ["../../node_modules/@types"]
+  },
+  "include": ["src/**/*"],
+  "exclude": [
+    "dist",
+    "node_modules",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "ui/layout/sidebar/panels/hierarchy/worldViewer/**/*"
+  ],
+  "references": [
+    {
+      "path": "../utils/tsconfig.lib.json"
+    }
+  ]
+}

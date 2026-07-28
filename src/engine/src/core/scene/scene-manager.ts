@@ -1,0 +1,233 @@
+// packages/engine/src/core/scene/scene-manager.ts
+import { executeWithContext } from "@engine/core/context";
+import type { EngineClass } from "@engine/core/engine";
+import { SystemsManager } from "@engine/core/engine/systems";
+import { SceneContext } from "@engine/core/scene/scene-context";
+import type { SceneDefinition, SceneDefinitionTuple, SceneName } from "@engine/core/scene/scene.types";
+import type { Registry } from "@engine/ecs/registry";
+
+/**
+ * Manages scene lifecycle and transitions.
+ *
+ * Access via `engine.scene` to interact with scenes:
+ * - `engine.scene.set("game")` - Transition to a scene
+ * - `engine.scene.current` - Get the active scene name
+ * - `engine.scene.registry` - Get the active scene's ECS registry
+ */
+export class SceneManager<TScenes extends SceneDefinitionTuple = []> {
+  static readonly DEFAULT_SCENE_NAME = "__default__" as const;
+
+  #scenes: Map<string, SceneDefinition<string>> = new Map();
+
+  #activeScene: SceneDefinition<string> | null = null;
+  #activeSceneContext: SceneContext;
+
+  #isTransitioning = false;
+  #transitionListeners = new Set<(isTransitioning: boolean) => void>();
+
+  // Reference to engine for context execution
+  #engineRef: EngineClass<any, any, any, any> | null = null;
+
+  #systemsManager: SystemsManager;
+
+  constructor(scenes: SceneDefinitionTuple = [], systemsManager?: SystemsManager) {
+    this.#systemsManager = systemsManager ?? new SystemsManager({});
+    this.#activeSceneContext = new SceneContext(SceneManager.DEFAULT_SCENE_NAME);
+
+    // Register all scenes and instantiate their scene-level systems (per engine instance)
+    for (const scene of scenes) {
+      this.#scenes.set(scene.name, scene);
+    }
+
+    this.#systemsManager.registerSceneSystems(scenes);
+  }
+
+  /**
+   * Set the engine reference for context execution.
+   * @internal
+   */
+  setEngineRef(engine: EngineClass<any, any, any, any>): this {
+    this.#engineRef = engine;
+    return this;
+  }
+
+  /** Get the currently active scene's ECS registry. */
+  get registry(): Registry {
+    return this.#activeSceneContext.registry;
+  }
+
+  /** Get the name of the currently active scene context. */
+  get current(): string {
+    return this.#activeScene?.name ?? this.#activeSceneContext.name;
+  }
+
+  /** Get the currently active scene name, or null if no scene is active. */
+  get activeSceneName(): string | null {
+    return this.#activeScene?.name ?? null;
+  }
+
+  /** Get the currently active scene definition, or null if no scene is active. */
+  get definition(): SceneDefinition<string> | null {
+    return this.#activeScene;
+  }
+
+  /** Get the currently active scene context. */
+  get context(): SceneContext {
+    return this.#activeSceneContext;
+  }
+
+  /** Check if a scene transition is currently in progress. */
+  get isTransitioning(): boolean {
+    return this.#isTransitioning;
+  }
+
+  onTransitionStateChange(listener: (isTransitioning: boolean) => void): () => void {
+    this.#transitionListeners.add(listener);
+
+    return () => {
+      this.#transitionListeners.delete(listener);
+    };
+  }
+
+  #emitTransitionState(isTransitioning: boolean): void {
+    for (const listener of this.#transitionListeners) {
+      listener(isTransitioning);
+    }
+  }
+
+  /** Get all registered scene definitions as a record. */
+  get all(): { [Scene in TScenes[number] as SceneName<Scene>]: Scene } {
+    return Object.fromEntries(this.#scenes) as any;
+  }
+
+  /** Check if a scene is registered. */
+  has(sceneName: string): boolean {
+    return this.#scenes.has(sceneName);
+  }
+
+  /**
+   * Transition to a new scene by name.
+   */
+  async set<TName extends SceneName<TScenes[number]>>(sceneName: TName): Promise<void> {
+    const newScene = this.#scenes.get(sceneName as string);
+    if (!newScene) {
+      throw new Error(
+        `Scene "${sceneName}" not found. Available scenes: ${[...this.#scenes.keys()].join(", ")}`,
+      );
+    }
+
+    if (this.#activeScene?.name === sceneName) return;
+
+    if (this.#isTransitioning) {
+      throw new Error(
+        `Cannot transition to "${sceneName}" while another transition is in progress`,
+      );
+    }
+
+    this.#isTransitioning = true;
+    this.#emitTransitionState(true);
+
+    const transitionLoadingOverlay = newScene.loading;
+    if (transitionLoadingOverlay) {
+      await transitionLoadingOverlay.begin();
+    }
+
+    try {
+      if (this.#activeScene) {
+        await this.#teardownActiveScene();
+      }
+
+      await this.#setupScene(newScene);
+    } finally {
+      this.#isTransitioning = false;
+      this.#emitTransitionState(false);
+
+      if (transitionLoadingOverlay) {
+        await transitionLoadingOverlay.end();
+        await transitionLoadingOverlay.dispose();
+      }
+    }
+  }
+
+  /**
+   * Reload the currently active scene by tearing it down and setting it up again.
+   * Used by HMR when a scene definition is updated.
+   * @internal
+   */
+  async reload(): Promise<void> {
+    if (!this.#activeScene) return;
+    if (this.#isTransitioning) return;
+
+    this.#isTransitioning = true;
+    this.#emitTransitionState(true);
+
+    const transitionLoadingOverlay = this.#activeScene.loading;
+    if (transitionLoadingOverlay) {
+      await transitionLoadingOverlay.begin();
+    }
+
+    try {
+      const sceneToReload = this.#activeScene;
+      await this.#teardownActiveScene();
+      await this.#setupScene(sceneToReload);
+    } finally {
+      this.#isTransitioning = false;
+      this.#emitTransitionState(false);
+
+      if (transitionLoadingOverlay) {
+        await transitionLoadingOverlay.end();
+        await transitionLoadingOverlay.dispose();
+      }
+    }
+  }
+
+  /**
+   * Update a registered scene definition in-place (for HMR).
+   * Returns true if the updated scene is the currently active scene.
+   * @internal
+   */
+  updateDefinition(fresh: SceneDefinition<string>): boolean {
+    const existing = this.#scenes.get(fresh.name);
+    if (!existing) return false;
+
+    existing.setup = fresh.setup;
+    existing.teardown = fresh.teardown;
+    existing.loading = fresh.loading;
+
+    const isActiveDefinition = this.#activeScene?.name === fresh.name;
+
+    return isActiveDefinition;
+  }
+
+  async #teardownActiveScene(): Promise<void> {
+    const prevScene = this.#activeScene;
+    const prevContext = this.#activeSceneContext;
+
+    if (!prevScene) return;
+
+    await executeWithContext({ engine: this.#engineRef, scene: prevContext }, async () => {
+      // Cleanup scene-level systems before teardown
+      this.#systemsManager.cleanupSceneSystems(prevScene.name);
+      await prevScene.teardown();
+    });
+
+    prevContext.clear();
+    this.#activeScene = null;
+  }
+
+  async #setupScene(scene: SceneDefinition<string>): Promise<void> {
+    const newContext = new SceneContext(scene.name);
+
+    this.#activeScene = scene;
+    this.#activeSceneContext = newContext;
+
+    await executeWithContext({ engine: this.#engineRef, scene: newContext }, async () => {
+      await scene.setup();
+      await this.#systemsManager.initializeSceneSystems(scene.name);
+
+      if (this.#engineRef) {
+        await this.#engineRef.warmupLoadedTextures();
+      }
+    });
+  }
+}

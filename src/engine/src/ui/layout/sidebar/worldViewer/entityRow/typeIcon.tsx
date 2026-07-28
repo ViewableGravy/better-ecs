@@ -1,0 +1,36 @@
+import { JigsawIcon } from "@engine/ui/components/icons/jigsawIcon";
+import styles from "@engine/ui/layout/sidebar/styles.module.css";
+
+/**********************************************************************************************************
+ *   TYPE DEFINITIONS
+ **********************************************************************************************************/
+type IconProps = {
+  className?: string;
+};
+
+/**********************************************************************************************************
+ *   COMPONENT START
+ **********************************************************************************************************/
+const Entity: React.FC<IconProps> = ({ className }) => {
+  return (
+    <svg
+      aria-hidden="true"
+      className={className ?? styles.worldsEntitiesEntityTypeIcon}
+      viewBox="0 0 256 256"
+    >
+      <path
+        d="M223.68,66.15,135.68,18h0a15.88,15.88,0,0,0-15.36,0l-88,48.17a16,16,0,0,0-8.32,14v95.64a16,16,0,0,0,8.32,14l88,48.17a15.88,15.88,0,0,0,15.36,0l88-48.17a16,16,0,0,0,8.32-14V80.18A16,16,0,0,0,223.68,66.15ZM128,32h0l80.34,44L128,120,47.66,76ZM40,90l80,43.78v85.79L40,175.82Zm96,129.57V133.82L216,90v85.78Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+};
+
+const Component: React.FC<IconProps> = ({ className }) => {
+  return <JigsawIcon className={className ?? styles.worldsEntitiesEntityTypeIcon} />;
+};
+
+export const Icon = {
+  Entity,
+  Component,
+};

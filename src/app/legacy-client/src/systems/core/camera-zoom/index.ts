@@ -1,0 +1,72 @@
+import { clamp, createSystem } from "@engine";
+import { Camera } from "@engine/components";
+import { ActiveRegistry, System as ContextSystem, Engine, fromContext } from "@engine/context";
+
+const MIN_ORTHO_SIZE = 120;
+const MAX_ORTHO_SIZE = 2400;
+const ZOOM_SENSITIVITY = 0.0015;
+
+type CameraZoomState = {
+  pendingWheelDelta: number;
+  wheelHandler: ((event: WheelEvent) => void) | null;
+};
+
+export const System = createSystem("camera-zoom")({
+  state: {
+    pendingWheelDelta: 0,
+    wheelHandler: null,
+  } as CameraZoomState,
+  initialize() {
+    const { canvas } = fromContext(Engine)
+    const { data } = fromContext(ContextSystem("camera-zoom"));
+
+    data.wheelHandler = (event: WheelEvent) => {
+      data.pendingWheelDelta += normalizeWheelDelta(event);
+      event.preventDefault();
+    };
+
+    canvas.addEventListener("wheel", data.wheelHandler, { passive: false });
+
+    return () => {
+      if (!data.wheelHandler) {
+        return;
+      }
+
+      canvas.removeEventListener("wheel", data.wheelHandler);
+      data.wheelHandler = null;
+    };
+  },
+  system() {
+    const { data } = fromContext(ContextSystem("camera-zoom"));
+
+    if (data.pendingWheelDelta === 0) {
+      return;
+    }
+
+    const wheelDelta = data.pendingWheelDelta;
+    data.pendingWheelDelta = 0;
+
+    const zoomFactor = Math.exp(wheelDelta * ZOOM_SENSITIVITY);
+    const registry = fromContext(ActiveRegistry);
+
+    for (const cameraId of registry.query(Camera)) {
+      const camera = registry.require(cameraId, Camera);
+      const nextOrthoSize = camera.orthoSize * zoomFactor;
+      registry.patch(cameraId, Camera, (patchedCamera) => {
+        patchedCamera.orthoSize = clamp(nextOrthoSize, MIN_ORTHO_SIZE, MAX_ORTHO_SIZE);
+      });
+    }
+  },
+});
+
+function normalizeWheelDelta(event: WheelEvent): number {
+  if (event.deltaMode === WheelEvent.DOM_DELTA_LINE) {
+    return event.deltaY * 16;
+  }
+
+  if (event.deltaMode === WheelEvent.DOM_DELTA_PAGE) {
+    return event.deltaY * window.innerHeight;
+  }
+
+  return event.deltaY;
+}

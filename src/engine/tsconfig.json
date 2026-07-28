@@ -1,0 +1,79 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ES2022"
+    ],
+    "noEmit": true,
+    "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
+    "jsx": "react-jsx",
+    "skipLibCheck": true,
+    "typeRoots": [
+      "../../node_modules/@types"
+    ],
+    "paths": {
+      "@client": [
+        "../app/client/src/index.ts"
+      ],
+      "@client/*": [
+        "../app/client/src/*"
+      ],
+      "@libs/commands": [
+        "../libs/commands/src/index.ts"
+      ],
+      "@libs/commands/*": [
+        "../libs/commands/src/*"
+      ],
+      "@libs/fps": [
+        "../libs/fps/src/index.ts"
+      ],
+      "@libs/fps/*": [
+        "../libs/fps/src/*"
+      ],
+      "@libs/physics": [
+        "../libs/physics/src/index.ts"
+      ],
+      "@libs/physics/*": [
+        "../libs/physics/src/*"
+      ],
+      "@utils": [
+        "../utils/src/index.ts"
+      ],
+      "@utils/*": [
+        "../utils/src/*"
+      ],
+      "@engine": [
+        "./src/index.ts"
+      ],
+      "@engine/*": [
+        "./src/*"
+      ],
+      "@hmr": [
+        "../../vite/engine-hmr/index.ts"
+      ],
+      "@hmr/*": [
+        "../../vite/engine-hmr/*"
+      ],
+      "@ui": [
+        "./src/ui/index.tsx"
+      ],
+      "@ui/*": [
+        "./src/ui/*"
+      ]
+    }
+  },
+  "files": [],
+  "exclude": [
+    "dist",
+    "node_modules"
+  ],
+  "references": [
+    {
+      "path": "./tsconfig.lib.json"
+    },
+    {
+      "path": "./src/tests/tsconfig.json"
+    }
+  ]
+}

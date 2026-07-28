@@ -1,0 +1,55 @@
+// packages/engine/src/core/scene/scene.ts
+import { SCENE_BRAND, type SceneConfig, type SceneDefinition } from "@engine/core/scene/scene.types";
+import type { SystemFactoryTuple } from "@engine/core/system";
+
+/**
+ * Creates a scene definition with the given name and configuration.
+ *
+ * @example
+ * ```ts
+ * const MenuScene = createScene("menu")({
+ *   setup() {
+ *     const registry = fromContext(ActiveRegistry);
+ *     const menuRoot = registry.create();
+ *     registry.add(menuRoot, UIComponent, { type: "menu" });
+ *   },
+ *   teardown() {
+ *     // Optional custom cleanup
+ *   }
+ * });
+ * ```
+ *
+ * @param name - The unique name for the scene
+ * @returns A function that takes scene config and returns a SceneDefinition
+ */
+export const createScene = <TName extends string>(name: TName) => {
+  return <const TSystems extends SystemFactoryTuple = []>(
+    config: SceneConfig<TSystems>,
+  ): SceneDefinition<TName, TSystems> => {
+    // Default teardown is a no-op function
+    const defaultTeardown = () => {
+      /* no-op */
+    };
+    const definition: SceneDefinition<TName, TSystems> = {
+      name,
+      // TypeScript cannot prove that the fallback `[]` matches the inferred
+      // `TSystems` (especially when `systems` is omitted and `TSystems` defaults).
+      // This cast is the minimal, contained workaround.
+      systems: (config.systems ?? []) as TSystems,
+      loading: config.loading ?? null,
+      setup: config.setup,
+      teardown: config.teardown ?? defaultTeardown,
+      [SCENE_BRAND]: true as const,
+    };
+
+    // Notify HMR runtime so scene definitions can be hot-swapped without a full reload.
+    // The cast through `unknown` is required because SceneDefinition includes a symbol key
+    // ([SCENE_BRAND]) that doesn't satisfy Record<string, unknown>.
+    const hmr = globalThis.__ENGINE_HMR__;
+    if (hmr?.onSceneCreated) {
+      hmr.onSceneCreated(definition as unknown as Record<string, unknown>);
+    }
+
+    return definition;
+  };
+};

@@ -2,32 +2,87 @@
   "extends": "./tsconfig.base.json",
   "files": [],
   "include": [],
+  "compilerOptions": {
+    "paths": {
+      "@client": [
+        "./src/app/client/src/index.ts"
+      ],
+      "@client/*": [
+        "./src/app/client/src/*"
+      ],
+      "@legacy": [
+        "./src/app/legacy-client/src/index.ts"
+      ],
+      "@legacy/*": [
+        "./src/app/legacy-client/src/*"
+      ],
+      "@libs/commands": [
+        "./src/libs/commands/src/index.ts"
+      ],
+      "@libs/commands/*": [
+        "./src/libs/commands/src/*"
+      ],
+      "@libs/fps": [
+        "./src/libs/fps/src/index.ts"
+      ],
+      "@libs/fps/*": [
+        "./src/libs/fps/src/*"
+      ],
+      "@libs/physics": [
+        "./src/libs/physics/src/index.ts"
+      ],
+      "@libs/physics/*": [
+        "./src/libs/physics/src/*"
+      ],
+      "@utils": [
+        "./src/utils/src/index.ts"
+      ],
+      "@utils/*": [
+        "./src/utils/src/*"
+      ],
+      "@engine": [
+        "./src/engine/src/index.ts"
+      ],
+      "@engine/*": [
+        "./src/engine/src/*"
+      ],
+      "@hmr": [
+        "./vite/engine-hmr/index.ts"
+      ],
+      "@hmr/*": [
+        "./vite/engine-hmr/*"
+      ]
+    }
+  },
   "references": [
-    // UPDATED BY NX SYNC
     {
-      "path": "./packages/utils"
+      "path": "./src/utils"
     },
     {
-      "path": "./packages/engine"
+      "path": "./src/engine"
     },
     {
-      "path": "./packages/foundation/physics"
+      "path": "./src/libs/commands"
     },
     {
-      "path": "./packages/foundation/spatial-contexts"
+      "path": "./src/libs/physics"
     },
     {
-      "path": "./packages/features/fps"
+      "path": "./src/libs/fps"
     },
     {
-      "path": "./packages/tooling/hmr"
+      "path": "./vite/engine-hmr"
     },
     {
-      "path": "./apps/client"
+      "path": "./src/app/client"
     },
     {
-      "path": "./apps/server"
+      "path": "./src/app/legacy-client"
     }
   ],
-  "exclude": ["**/dist", "**/apps/**/dist", "**/packages/**/dist", "**/node_modules/*"]
+  "exclude": [
+    "**/dist",
+    "**/src/**/dist",
+    "**/node_modules/*"
+  ]
 }

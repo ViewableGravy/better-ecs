@@ -1,0 +1,80 @@
+import { ConveyorBeltComponent } from "@legacy/components/conveyor-belt";
+import { spawnTransportBelt } from "@legacy/entities/transport-belt";
+import { TransportBeltRotationVariantManager } from "@legacy/entities/transport-belt/placement/TransportBeltRotationVariantManager";
+import { GridSingleton } from "@legacy/systems/world/build-mode/grid-singleton";
+import { Registry } from "@engine";
+import { describe, expect, it } from "vitest";
+
+describe("TransportBeltRotationVariantManager", () => {
+  it("derives the default straight preview variant when no neighbors contribute", () => {
+    const world = new Registry();
+
+    expect(
+      TransportBeltRotationVariantManager.deriveBeltVariant(world, {
+        coordinates: GridSingleton.worldToGridCoordinates(0, 0),
+        headDirection: "east",
+      }),
+    ).toBe("horizontal-right");
+  });
+
+  it("bends the preview tail when exactly one side neighbor feeds the tile", () => {
+    const world = new Registry();
+
+    spawnTransportBelt(world, { x: -20, y: 0, variant: "horizontal-right" });
+
+    expect(
+      TransportBeltRotationVariantManager.deriveBeltVariant(world, {
+        coordinates: GridSingleton.worldToGridCoordinates(0, 0),
+        headDirection: "north",
+      }),
+    ).toBe("angled-left-up");
+  });
+
+  it("prefers the back connection over a competing side feeder for preview orientation", () => {
+    const world = new Registry();
+
+    spawnTransportBelt(world, { x: -20, y: 0, variant: "horizontal-right" });
+    spawnTransportBelt(world, { x: 0, y: 20, variant: "vertical-up" });
+
+    expect(
+      TransportBeltRotationVariantManager.deriveBeltVariant(world, {
+        coordinates: GridSingleton.worldToGridCoordinates(0, 0),
+        headDirection: "east",
+      }),
+    ).toBe("horizontal-right");
+  });
+
+  it("preserves a placed belt's valid incoming side before re-bending it", () => {
+    const world = new Registry();
+
+    spawnTransportBelt(world, { x: 0, y: 20, variant: "vertical-up" });
+    const beltEntityId = spawnTransportBelt(world, { x: 0, y: 0, variant: "angled-bottom-right" });
+
+    expect(TransportBeltRotationVariantManager.deriveBeltVariant(world, { beltEntityId })).toBe("angled-bottom-right");
+  });
+
+  it("keeps a placed belt straight when its back feeds a head-side consumer", () => {
+    const world = new Registry();
+
+    spawnTransportBelt(world, { x: -20, y: 0, variant: "horizontal-right" });
+    const beltEntityId = spawnTransportBelt(world, { x: 0, y: 0, variant: "angled-bottom-right" });
+    spawnTransportBelt(world, { x: 20, y: 0, variant: "horizontal-right" });
+
+    expect(world.require(beltEntityId, ConveyorBeltComponent).variant).toBe("angled-bottom-right");
+    expect(TransportBeltRotationVariantManager.deriveBeltVariant(world, { beltEntityId })).toBe("horizontal-right");
+  });
+
+  it("switches a bottom-right belt back to straight once both straight neighbors exist", () => {
+    const world = new Registry();
+
+    spawnTransportBelt(world, { x: 10, y: 50, variant: "vertical-up" });
+    const beltEntityId = spawnTransportBelt(world, { x: 10, y: 30, variant: "angled-bottom-right" });
+    spawnTransportBelt(world, { x: 30, y: 30, variant: "horizontal-right" });
+
+    expect(TransportBeltRotationVariantManager.deriveBeltVariant(world, { beltEntityId })).toBe("angled-bottom-right");
+
+    spawnTransportBelt(world, { x: -10, y: 30, variant: "horizontal-right" });
+
+    expect(TransportBeltRotationVariantManager.deriveBeltVariant(world, { beltEntityId })).toBe("horizontal-right");
+  });
+});

@@ -6,6 +6,7 @@ export default [
   ...nx.configs["flat/javascript"],
   {
     ignores: [
+      "**/.types/**",
       "**/dist",
       "**/out-tsc",
       "**/vite.config.*.timestamp*",
@@ -19,7 +20,7 @@ export default [
         "error",
         {
           enforceBuildableLibDependency: true,
-          allow: ["^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$"],
+          allow: ["^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$", "^@ui/.*$"],
           depConstraints: [
             {
               sourceTag: "type:utils",
@@ -64,6 +65,7 @@ export default [
               ],
             },
           ],
+          allowCircularSelfDependency: true,
         },
       ],
     },

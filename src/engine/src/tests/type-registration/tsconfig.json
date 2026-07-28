@@ -1,0 +1,19 @@
+{
+  "extends": "../../../../../tsconfig.base.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "tsBuildInfoFile": "../../../../dist/tests/type-registration/tsconfig.tsbuildinfo",
+    "ignoreDeprecations": "5.0",
+    "rootDir": "../../../../../",
+    "lib": ["ESNext", "DOM"],
+    "jsx": "react-jsx"
+  },
+  "include": [
+    "./**/*.ts",
+    "./**/*.test-d.ts",
+    "../../../**/*.ts",
+    "../../../**/*.tsx",
+    "../../../../../src/utils/src/**/*.ts"
+  ]
+}
