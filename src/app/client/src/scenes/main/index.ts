@@ -1,4 +1,5 @@
 import { spawnCamera } from "@client/entities/camera";
+import { spawnChest } from "@client/entities/chest";
 import { spawnPlayer } from "@client/entities/player";
 import { spawnTree } from "@client/entities/tree";
 import { createDomLoadingOverlay } from "@client/overlays/create-dom-loading-overlay";
@@ -34,6 +35,7 @@ export const Scene = createScene("MainScene")({
     const assets = fromContext(FromEngine.Assets);
 
     await Promise.all([
+      assets.loadSheet("wooden-chest"),
       assets.loadSheet("player-idle"),
       assets.loadSheet("player-moving"),
       assets.loadSheet("transport-belt"),
@@ -43,5 +45,6 @@ export const Scene = createScene("MainScene")({
     spawnPlayer(world);
     spawnCamera(world);
     spawnTree(world, 100, 40);
+    spawnChest(world, 100, -20);
   },
 });
