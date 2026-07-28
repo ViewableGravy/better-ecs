@@ -655,7 +655,7 @@ These are useful foundations, but they do not replace the roadmap phases above.
 
 ### Existing measured baseline from prior roadmap work
 
-Existing benchmark notes in [docs/RENDERING_50K_120FPS_ROADMAP.md](docs/RENDERING_50K_120FPS_ROADMAP.md) show the following steady-state results after prior sprite-path work:
+Existing benchmark notes in [RENDERING_50K_120FPS_ROADMAP.md](RENDERING_50K_120FPS_ROADMAP.md) show the following steady-state results after prior sprite-path work:
 
 | Entities | FPS Avg | Frame Avg (ms) | P95 (ms) | P99 (ms) | Min (ms) | Max (ms) |
 |---:|---:|---:|---:|---:|---:|---:|

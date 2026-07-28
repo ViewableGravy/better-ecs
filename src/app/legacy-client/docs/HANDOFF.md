@@ -284,8 +284,8 @@ tuple iterator measured 49.42 ns/match dense and 65.36 ns/match selective.
 
 ## Reference material
 
-- [Docs index](README.md)
+- [Legacy docs index](README.md)
 - [Rendering 1M entity audit](RENDERING_1M_ENTITY_AUDIT.md)
 - [Rendering performance roadmap](RENDERING_50K_120FPS_ROADMAP.md)
 - [Performance research](performance-research/)
-- [Deferred architecture research](architecture/)
+- [Global architecture research](../../../../docs/architecture/)
