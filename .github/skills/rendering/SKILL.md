@@ -39,17 +39,20 @@ render/
     world.background/
       utilities/
         index.ts
-      shaders/
-        background.vert
-        background.frag
       index.ts
     debug.overlay/
       utilities/
         index.ts
       index.ts
+
+assets/
+  debug-grid/
+    grid.vert
+    grid.frag
+    types.ts
 ```
 
-There is no separate `stages/` layer for pass-owned behavior. The pass folder owns its declaration, utilities, and shaders. Use `utilities/index.ts` for draw preparation and feature functionality, while `index.ts` contains the pass declaration and pipeline-facing orchestration. Keep the pass file small, but keep the feature together.
+There is no separate `stages/` layer for pass-owned behavior. The pass folder owns its declaration and utilities; shader source and shader-specific types belong in the corresponding asset folder. Use `utilities/index.ts` for draw preparation and feature functionality, while `index.ts` contains the pass declaration and pipeline-facing orchestration. Keep the pass file small, but keep the feature together.
 
 A typical pass is intentionally small:
 
@@ -145,36 +148,59 @@ For a debug visualization, gate the pass at the owning debug setting before doin
 
 ## Shader-backed rendering
 
-A custom shader belongs to the rendering layer. Keep shader source next to the render feature and pass camera and feature values as uniforms. Use the renderer's existing custom-shader or instanced-bucket API instead of reaching into WebGL from a pass when a renderer abstraction already supports the operation.
+A custom shader is an asset consumed by the rendering layer. Keep its vertex source, fragment source, and uniform type definition together in an asset folder, then register the imported values through `createAssetLoader`. Use the renderer's shader API instead of reaching into WebGL from a pass.
 
 A shader-backed pass generally follows this flow:
 
 ```ts
-const bucketByRenderer = new WeakMap<Renderer, InstancedBucket>();
-
 const ShaderPass = createRenderPass("debug:field")({
   execute({ renderer }) {
     if (!debugSettings.field) {
       return;
     }
 
-    const bucket = getOrCreateBucket(renderer);
-    updateViewportInstance(bucket, renderer);
-    renderer.drawInstancedBucket(bucket, getCamera(renderer), {
-      uRadius: field.radius,
-      uColor: [1, 0.2, 0.7, 0.7],
+    renderer.drawShader({
+      name: "debug:field",
+      uniforms: {
+        uRadius: field.radius,
+        uColor: [1, 0.2, 0.7, 0.7],
+      },
     });
   },
 });
 ```
 
-The shader should receive only the values needed to derive the visual result. The pass owns ordering and gating; a stage or renderer helper may own buffer preparation and draw details.
+Register shader sources through the asset loader and declare their uniform shape with `createUniforms<T>()`. The asset key then determines the accepted `name` and uniform type at each draw call:
+
+```ts
+createAssetLoader({
+  "debug:field": createLoadShaderSource(
+    fieldVertexSource,
+    fieldFragmentSource,
+    fieldUniforms,
+  ),
+});
+```
+
+The corresponding asset folder owns the source and type declaration:
+
+```text
+assets/debug-field/
+  field.vert
+  field.frag
+  types.ts
+```
+
+`types.ts` calls `createUniforms<T>()`; the asset loader should only compose the imported shader sources and uniform definition.
+
+The renderer retains the compiled program and fullscreen quad. It supplies camera uniforms automatically and uploads only the feature values passed by the render pass. The pass owns ordering and gating; the renderer owns GPU resource preparation and draw details. Use `InstancedBucket` directly for actual instanced geometry, not for a single procedural fullscreen effect.
 
 ## Review checklist
 
 Before finishing a rendering change, verify:
 
 - The pass lives under `render/passes/*` and has a stable namespaced name.
+- Shader source and shader-specific uniform types live together under the asset folder, not under the render pass.
 - The `execute` callback relies on inferred arguments rather than manually annotating its context.
 - The pass is registered in the correct pipeline collection and draw order.
 - Rendering reads authoritative state but does not mutate ECS state.

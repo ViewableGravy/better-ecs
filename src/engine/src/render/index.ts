@@ -2,7 +2,9 @@
 export type {
     DenseShapeRenderData,
     Renderable,
-    RendererConfig, Settable, ShaderQuadOptions, ShapeRenderData,
+    RendererConfig, Settable,
+    ShaderDrawData,
+    ShaderQuadOptions, ShapeRenderData,
     ShapeRenderInput,
     SpriteRenderData, SpriteRenderState, TextureCacheConfig,
     TextureHandle,

@@ -1,10 +1,11 @@
-import type { ShaderSourceAsset } from "@engine/asset";
+import type { ShaderSourceAsset, ShaderUniforms } from "@engine/asset";
 import type { LooseAssetManager } from "@engine/asset/AssetManager";
 import type { Camera } from "@engine/components/camera";
 import type { Shape } from "@engine/components/shape";
 import type { Rgba, Sprite } from "@engine/components/sprite/sprite";
 import type { Texture } from "@engine/components/texture";
 import type { ShaderTransform2D, Transform2D } from "@engine/components/transform";
+import type { RegisteredAssets } from "@engine/core";
 import type { InstancedBucket, InstancedBucketDescriptor, InstancedDrawCamera } from "@engine/render/renderers/webGL/instanced-bucket";
 import type { TextureCache, TextureCacheConfig } from "@engine/render/textureCache/texture-cache";
 import type { ShapeRenderInput } from "@engine/render/types/low-level";
@@ -47,6 +48,24 @@ export interface ShaderQuadOptions {
   tint?: Rgba;
   time?: number;
 }
+
+type ShaderAssetKey<TAssets extends Record<string, unknown>> = {
+  [TKey in keyof TAssets]: TAssets[TKey] extends ShaderSourceAsset ? TKey : never;
+}[keyof TAssets] & string;
+
+type ShaderDrawDataForKey<
+  TAssets extends Record<string, unknown>,
+  TKey extends ShaderAssetKey<TAssets>,
+> = TAssets[TKey] extends ShaderSourceAsset<infer TUniforms extends ShaderUniforms>
+  ? { name: TKey; uniforms: TUniforms }
+  : never;
+
+export type ShaderDrawData<TAssets extends Record<string, unknown> = RegisteredAssets> =
+  [ShaderAssetKey<TAssets>] extends [never]
+    ? { name: string; uniforms: ShaderUniforms }
+    : {
+        [TKey in ShaderAssetKey<TAssets>]: ShaderDrawDataForKey<TAssets, TKey>;
+      }[ShaderAssetKey<TAssets>];
 
 export interface TexturedQuadDrawData {
   shader: ShaderSourceAsset;
@@ -112,6 +131,7 @@ export interface Renderer {
   drawShape(data: ShapeRenderInput): void;
   drawTexturedQuad(data: TexturedQuadDrawData): void;
   drawShaderQuad(shader: ShaderSourceAsset, transform: ShaderTransform2D, options?: ShaderQuadOptions): void;
+  drawShader(data: ShaderDrawData): void;
 
   createInstancedBucket(descriptor: InstancedBucketDescriptor): InstancedBucket;
   drawInstancedBucket(bucket: InstancedBucket, camera: InstancedDrawCamera, extra?: Record<string, number | Iterable<number>>): void;

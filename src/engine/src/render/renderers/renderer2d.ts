@@ -22,6 +22,7 @@ import type {
     Renderer,
     RendererConfig,
     Settable,
+    ShaderDrawData,
     ShaderQuadOptions,
     ShapeRenderInput,
     SpriteAnimationRenderState,
@@ -386,6 +387,10 @@ export class Renderer2D implements Renderer {
       tint: options.tint ?? DEFAULT_SHADER_QUAD_TINT,
       time: options.time ?? 0,
     });
+  }
+
+  drawShader(data: ShaderDrawData): void {
+    this.#command.drawShader(data);
   }
 
   createInstancedBucket(descriptor: InstancedBucketDescriptor): InstancedBucket {

@@ -1,13 +1,12 @@
 import type { AssetType } from "@engine/asset/asset";
 import { AssetAdapter } from "@engine/asset/asset";
 import { AssetManager } from "@engine/asset/AssetManager";
+import type {
+    ShaderSourceAsset,
+    ShaderUniformDefinition,
+    ShaderUniforms,
+} from "@engine/asset/shader/types";
 import { Texture, TextureSource } from "@engine/components/texture";
-
-export type ShaderSourceAsset = {
-  type: "shader";
-  vertex: string;
-  fragment: string;
-};
 
 export type SheetSprite = {
   x: number;
@@ -222,26 +221,16 @@ export function createLoadText(path: string): AssetAdapter<string, "text"> {
   };
 }
 
-/**
- * Create an adapter that loads a shader source pair (vertex + fragment) from URLs.
- */
-export function createLoadShaderSource(
-  vertexPath: string,
-  fragmentPath: string,
-): AssetAdapter<ShaderSourceAsset, "shader"> {
+/** Create an adapter for an imported shader source pair (vertex + fragment). */
+export function createLoadShaderSource<TUniforms extends ShaderUniforms = Record<never, never>>(
+  vertex: string,
+  fragment: string,
+  uniforms?: ShaderUniformDefinition<TUniforms>,
+): AssetAdapter<ShaderSourceAsset<TUniforms>, "shader"> {
+  void uniforms;
+
   return {
     type: "shader",
-    load: async () => {
-      const [vertex, fragment] = await Promise.all([
-        createLoadText(vertexPath).load(vertexPath),
-        createLoadText(fragmentPath).load(fragmentPath),
-      ]);
-
-      return {
-        type: "shader",
-        vertex,
-        fragment,
-      };
-    },
+    load: async () => ({ type: "shader", vertex, fragment }),
   };
 }

@@ -4,6 +4,7 @@ import type { TextureSourceData } from "@engine/components/texture";
 import type { InstancedBucket, InstancedBucketDescriptor, InstancedDrawCamera } from "@engine/render/renderers/webGL/instanced-bucket";
 import type { WebGLRetainedSpriteBatcher } from "@engine/render/renderers/webGL/retained-sprite-batcher";
 import type { ShapeRenderInput, SpriteRenderData, TexturedQuadRenderData } from "@engine/render/types/low-level";
+import type { ShaderDrawData } from "@engine/render/types/renderer";
 
 export interface RendererAPI {
   readonly retainedSpriteBatcher: WebGLRetainedSpriteBatcher;
@@ -24,6 +25,7 @@ export interface RendererAPI {
   drawSprite(data: SpriteRenderData): void;
   drawTexturedQuad(data: TexturedQuadRenderData): void;
   drawShape(data: ShapeRenderInput): void;
+  drawShader(data: ShaderDrawData): void;
 
   createInstancedBucket(descriptor: InstancedBucketDescriptor): InstancedBucket;
   drawInstancedBucket(bucket: InstancedBucket, camera: InstancedDrawCamera, extra?: Record<string, number | Iterable<number>>): void;
