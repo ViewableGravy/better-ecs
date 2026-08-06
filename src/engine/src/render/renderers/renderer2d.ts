@@ -397,11 +397,23 @@ export class Renderer2D implements Renderer {
     return this.#command.createInstancedBucket(descriptor);
   }
 
+  drawInstancedBucket(bucket: InstancedBucket): void;
   drawInstancedBucket(
     bucket: InstancedBucket,
-    camera: InstancedDrawCamera,
+    camera?: InstancedDrawCamera,
     extra?: Record<string, number | Iterable<number>>,
   ): void {
+    if (!camera) {
+      this.#command.drawInstancedBucket(bucket, {
+        x: this.getCameraX(),
+        y: this.getCameraY(),
+        zoom: this.getCameraZoom(),
+        viewportWidth: this.getWidth(),
+        viewportHeight: this.getHeight(),
+      });
+      return;
+    }
+
     this.#command.drawInstancedBucket(bucket, camera, extra);
   }
 

@@ -134,6 +134,7 @@ export interface Renderer {
   drawShader(data: ShaderDrawData): void;
 
   createInstancedBucket(descriptor: InstancedBucketDescriptor): InstancedBucket;
+  drawInstancedBucket(bucket: InstancedBucket): void;
   drawInstancedBucket(bucket: InstancedBucket, camera: InstancedDrawCamera, extra?: Record<string, number | Iterable<number>>): void;
 
   setCamera(x: number, y: number, zoom: number): void;

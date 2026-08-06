@@ -5,6 +5,7 @@ import type { Tagged } from "type-fest";
  **********************************************************************************************************/
 type GridCoordinate = Tagged<number, "GridCoordinate">;
 type GridCoordinates = [GridCoordinate, GridCoordinate];
+type WorldCoordinates = readonly [number, number];
 
 /**********************************************************************************************************
  *   CONSTS
@@ -57,6 +58,13 @@ export class Grid {
     return [
       q as GridCoordinate,
       r as GridCoordinate,
+    ];
+  }
+
+  public static getWorldCoordinates(gridX: number, gridY: number): WorldCoordinates {
+    return [
+      this.#radius * 1.5 * gridX,
+      this.#radius * SQRT_3 * (gridX * 0.5 + gridY),
     ];
   }
 

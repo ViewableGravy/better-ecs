@@ -1,7 +1,7 @@
 import { FPSPass } from "@client/plugins/fps";
 import { DrawGridPass } from "@client/render/passes/debug.draw-grid";
 import { TerrainPass, type TerrainRenderState } from "@client/render/passes/world.terrain";
-import { TerrainRenderCache } from "@client/render/passes/world.terrain/utilities";
+import { TerrainRenderCache } from "@client/render/passes/world.terrain/terrain-render-cache";
 import type { CreateRenderPipelineContext } from "@engine";
 import { createRenderPipeline } from "@engine";
 import { FromEngine, fromContext } from "@engine/context";
