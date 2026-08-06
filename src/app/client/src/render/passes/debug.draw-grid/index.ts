@@ -30,6 +30,7 @@ export const DrawGridPass = createRenderPass("debug:draw-grid")({
       name: "debug:grid",
       uniforms: {
         uRadius: Grid.radius,
+        uChunkScale: 6,
         uLineColor: [1, 0.15, 0.65, 0.75],
         uHoveredTile: hoveredTile,
         uHasHoveredTile: hasHoveredTile ? 1 : 0,
