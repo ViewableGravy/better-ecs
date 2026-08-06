@@ -1,7 +1,7 @@
-import { Grid } from "@client/utilities/grid";
-import type { InstancedBucket, InstancedBucketDescriptor, Renderer } from "@engine/render";
 import gridFragmentSource from "@client/render/passes/debug.draw-grid/shaders/grid.frag";
 import gridVertexSource from "@client/render/passes/debug.draw-grid/shaders/grid.vert";
+import { Grid } from "@client/utilities/grid";
+import type { InstancedBucket, InstancedBucketDescriptor, Renderer } from "@engine/render";
 
 const GRID_INSTANCE_DATA = new Float32Array(4);
 const GRID_BUCKETS = new WeakMap<Renderer, InstancedBucket>();
