@@ -10,10 +10,10 @@ import { RenderWorldPass } from "@engine/core/render-pipeline/passes/render-worl
 import type { RenderPipeline } from "@engine/core/render-pipeline/types";
 import type { Renderer } from "@engine/render";
 import {
-	FrameAllocator,
-	type EngineFrameAllocatorRegistry,
-	type FrameAllocatorRegistry,
-	type InternalFrameAllocator,
+    FrameAllocator,
+    type EngineFrameAllocatorRegistry,
+    type FrameAllocatorRegistry,
+    type InternalFrameAllocator,
 } from "@engine/render";
 
 type CorePassOverrides<
@@ -32,7 +32,7 @@ export type CreateRenderPipelineContext<TState extends object = Record<string, n
 	state?: TState;
 };
 
-type InitializeRenderContextOptions = {
+export type InitializeRenderContextOptions = {
 	canvas: HTMLCanvasElement;
 	assets: LooseAssetManager;
 };
@@ -53,7 +53,7 @@ type CreateRenderPipelineOptions<
 export function createRenderPipeline<
 	TRegistry extends FrameAllocatorRegistry = EngineFrameAllocatorRegistry,
 	TState extends object = Record<string, never>,
->(options: CreateRenderPipelineOptions<TRegistry, TState>): RenderPipeline {
+>(options: CreateRenderPipelineOptions<TRegistry, TState>) {
 	let context: RenderPipelineContext<TRegistry, TState> | null = null;
 	let contextPromise: Promise<RenderPipelineContext<TRegistry, TState>> | null = null;
 
@@ -172,5 +172,5 @@ export function createRenderPipeline<
 				passContext.frameAllocator.endFrame();
 			}
 		},
-	};
+	} as RenderPipeline;
 }

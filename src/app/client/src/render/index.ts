@@ -1,11 +1,20 @@
 import { FPSPass } from "@client/plugins/fps";
 import { DrawGridPass } from "@client/render/passes/debug.draw-grid";
-import { createRenderPipeline, type CreateRenderPipelineContext } from "@engine";
+import { TerrainPass, type TerrainRenderState } from "@client/render/passes/world.terrain";
+import { TerrainRenderCache } from "@client/render/passes/world.terrain/utilities";
+import type { CreateRenderPipelineContext } from "@engine";
+import { createRenderPipeline } from "@engine";
 import { FromEngine, fromContext } from "@engine/context";
-import { DEFAULT_RENDERER_CONFIG, FrameAllocator, Renderer2D, WebGLRenderAPI } from "@engine/render";
+import {
+    DEFAULT_RENDERER_CONFIG,
+    FrameAllocator,
+    Renderer2D,
+    WebGLRenderAPI,
+    type EngineFrameAllocatorRegistry,
+} from "@engine/render";
 
-export const Render = createRenderPipeline({
-  async initializeContext(): Promise<CreateRenderPipelineContext> {
+export const Render = createRenderPipeline<EngineFrameAllocatorRegistry, TerrainRenderState>({
+  async initializeContext(): Promise<CreateRenderPipelineContext<TerrainRenderState>> {
     const assets = fromContext(FromEngine.Assets);
     const { canvas } = fromContext(FromEngine.Engine);
     const renderer = new Renderer2D(new WebGLRenderAPI(assets), DEFAULT_RENDERER_CONFIG);
@@ -14,8 +23,11 @@ export const Render = createRenderPipeline({
     return {
       renderer,
       frameAllocator: new FrameAllocator(),
+      state: {
+        terrain: new TerrainRenderCache(),
+      },
     };
   },
-  passes: [DrawGridPass],
+  beforeWorldPasses: [TerrainPass, DrawGridPass],
   afterWorldPasses: [FPSPass],
 });

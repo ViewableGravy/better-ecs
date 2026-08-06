@@ -1,6 +1,6 @@
+import { SpritePipe } from "@engine/core/render-pipeline/passes/render-world/retained-sprites/sprite-pipe";
 import type { Registry } from "@engine/ecs/registry";
 import type { Renderer } from "@engine/render";
-import { SpritePipe } from "@engine/core/render-pipeline/passes/render-world/retained-sprites/sprite-pipe";
 import {
     RenderQueue,
     type EngineFrameAllocatorRegistry,
@@ -10,7 +10,7 @@ import {
 
 export class RenderPipelineContext<
 	TRegistry extends FrameAllocatorRegistry = EngineFrameAllocatorRegistry,
-	TState extends object = Record<string, never>,
+	TState extends object = object,
 > {
 	readonly renderer: Renderer;
 	readonly queue = new RenderQueue();
@@ -37,7 +37,7 @@ export class RenderPipelineContext<
 
 export type RenderPassContext<
 	TRegistry extends FrameAllocatorRegistry = EngineFrameAllocatorRegistry,
-	TState extends object = Record<string, never>,
+	TState extends object = object,
 > = RenderPipelineContext<TRegistry, TState>;
 
 export type AnyRenderPipelineContext = RenderPipelineContext<

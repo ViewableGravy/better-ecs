@@ -1,0 +1,2 @@
+export const TERRAIN_CHUNK_SIZE = 8;
+export const TERRAIN_GENERATION_RADIUS = 40;

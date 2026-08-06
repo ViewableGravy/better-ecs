@@ -38,6 +38,13 @@ You should use this skill when:
 
 ### 1. Ensure Type Safety
 
+#### Render pipeline inference
+
+- Pass the render registry and custom render state explicitly to `createRenderPipeline<TRegistry, TState>` when the pipeline owns application state.
+- Keep `createRenderPipeline`'s public return inferred and preserve the explicit initializer context return annotation when it prevents a circular type dependency.
+- Render pipeline state must remain strongly typed through `RenderPipelineContext` and `RenderPassContext`.
+- Keep `createRenderPass` curried so its inner factory can infer the pass type from its render callback. A separately exported stateful pass may use a local `RenderPassContext` state annotation; the pipeline then checks that pass against its explicit state.
+
 Userland applications **must** augment the global `Register` interface to inject their specific engine configuration. This enables type inference for `useSystem`, `useWorld`, and other hooks throughout the application.
 
 ```typescript

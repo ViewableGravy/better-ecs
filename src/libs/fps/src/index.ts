@@ -56,7 +56,7 @@ export type FPSPlugin = {
   pass: RenderPass;
 };
 
-export function createFPS(opts: Opts): FPSPlugin {
+export function createFPS(opts: Opts) {
   return {
     system: System(opts),
     pass: createRenderPass("plugin:fps-counter:ui")({

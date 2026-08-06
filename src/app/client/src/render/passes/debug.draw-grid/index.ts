@@ -31,10 +31,10 @@ export const DrawGridPass = createRenderPass("debug:draw-grid")({
       uniforms: {
         uRadius: Grid.radius,
         uChunkScale: 6,
-        uLineColor: [1, 0.15, 0.65, 0.75],
+        uLineColor: [1, 0.15, 0.65, 0.5],
         uHoveredTile: hoveredTile,
         uHasHoveredTile: hasHoveredTile ? 1 : 0,
-        uHighlightColor: [0.15, 1, 0.35, 0.9],
+        uHighlightColor: [0.15, 1, 0.35, 0.5],
       },
     });
   },

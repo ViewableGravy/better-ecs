@@ -72,7 +72,7 @@ void main() {
     && rounded.x == uHoveredTile.x
     && rounded.z == uHoveredTile.y;
   vec4 lineColor = isHovered ? uHighlightColor : uLineColor;
-  vec4 chunkColor = vec4(1.0, 1.0, 0.0, 1.0);
+  vec4 chunkColor = vec4(1.0, 1.0, 0.0, 0.5);
   vec3 visibleColor = mix(lineColor.rgb, chunkColor.rgb, chunkLine);
   float visibleAlpha = max(line * lineColor.a, chunkLine * chunkColor.a);
   outColor = vec4(visibleColor, visibleAlpha);

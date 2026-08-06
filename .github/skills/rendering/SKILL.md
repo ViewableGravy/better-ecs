@@ -107,7 +107,7 @@ The available context is provided by the pipeline and includes:
 - `interpolationAlpha`: the render interpolation amount between simulation updates.
 - `spritePipe`: the engine's sprite rendering helper when sprite-specific preparation is needed.
 
-The context is generic internally, but the pass author normally does not need to provide those generic arguments. The callback is the inference boundary: once the pass is created and registered in a pipeline, the router supplies the compatible allocator, state, registry, and renderer types. Adding an explicit object annotation to `execute` throws away this benefit and can make a pass incompatible with the pipeline's inferred state.
+The context is generic internally, and the curried pass factory is the inference boundary for the created pass. A separately declared pass that reads custom pipeline state needs one local `RenderPassContext` state boundary because TypeScript cannot infer that state backward from a later pipeline registration; keep that annotation local and strongly typed rather than using `any`.
 
 Prefer the narrowest destructuring needed:
 
