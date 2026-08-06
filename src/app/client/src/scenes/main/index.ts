@@ -11,6 +11,7 @@ import { PhysicsWorldSync } from "@client/systems/physics-world-sync";
 import { PlayerCollision } from "@client/systems/player-collision";
 import { PlayerMovement } from "@client/systems/player-movement";
 import { PlayerMovementIntent } from "@client/systems/player-movement/intent";
+import { Grid } from "@client/utilities/grid";
 import { createScene } from "@engine";
 import { ActiveRegistry, FromEngine, fromContext } from "@engine/context";
 
@@ -33,6 +34,7 @@ export const Scene = createScene("MainScene")({
   ],
   async setup() {
     const assets = fromContext(FromEngine.Assets);
+    const world = fromContext(ActiveRegistry);
 
     await Promise.all([
       assets.loadSheet("wooden-chest"),
@@ -41,7 +43,12 @@ export const Scene = createScene("MainScene")({
       assets.loadSheet("transport-belt"),
     ]);
 
-    const world = fromContext(ActiveRegistry);
+    // Load Terrain
+    Grid.initialize()
+      .setRadius(20)
+      .setOutlineDebugging(true);
+
+    // Spawn Entities
     spawnPlayer(world);
     spawnCamera(world);
     spawnTree(world, 100, 40);

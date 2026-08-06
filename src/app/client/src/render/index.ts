@@ -1,5 +1,5 @@
 import { FPSPass } from "@client/plugins/fps";
-import { DrawGridPass } from "@client/render/passes/draw-grid-pass";
+import { DrawGridPass } from "@client/render/passes/debug.draw-grid";
 import { createRenderPipeline, type CreateRenderPipelineContext } from "@engine";
 import { FromEngine, fromContext } from "@engine/context";
 import { DEFAULT_RENDERER_CONFIG, FrameAllocator, Renderer2D, WebGLRenderAPI } from "@engine/render";
