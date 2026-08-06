@@ -3,6 +3,9 @@ precision highp float;
 
 uniform float uRadius;
 uniform vec4 uLineColor;
+uniform vec2 uHoveredTile;
+uniform float uHasHoveredTile;
+uniform vec4 uHighlightColor;
 
 in vec2 vWorldPosition;
 out vec4 outColor;
@@ -42,5 +45,9 @@ void main() {
     abs(edgeDistance)
   );
 
-  outColor = vec4(uLineColor.rgb, uLineColor.a * line);
+  bool isHovered = uHasHoveredTile > 0.5
+    && rounded.x == uHoveredTile.x
+    && rounded.z == uHoveredTile.y;
+  vec4 lineColor = isHovered ? uHighlightColor : uLineColor;
+  outColor = vec4(lineColor.rgb, lineColor.a * line);
 }
