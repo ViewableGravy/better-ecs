@@ -14,6 +14,7 @@ import {
 import { registry } from "@engine/render/renderers/webGL/registry";
 import { WebGLRetainedSpriteBatcher } from "@engine/render/renderers/webGL/retained-sprite-batcher";
 import type { ShapeRenderInput, SpriteRenderData, TexturedQuadRenderData } from "@engine/render/types/low-level";
+import type { ShaderDrawData } from "@engine/render/types/renderer";
 import type { RendererAPI } from "@engine/render/types/renderer-api";
 import invariant from "tiny-invariant";
 
@@ -27,8 +28,16 @@ interface TexturedShaderProgram {
   timeLocation?: WebGLUniformLocation | null;
 }
 
+interface ProceduralShaderProgram {
+  program: WebGLProgram;
+  positionBuffer: WebGLBuffer;
+  vertexArray: WebGLVertexArrayObject;
+  uniforms: Map<string, WebGLUniformLocation | null>;
+}
+
 const SPRITE_INSTANCE_FLOATS = 17;
 const INITIAL_SPRITE_BATCH_CAPACITY = 1024;
+const FULLSCREEN_QUAD = new Float32Array([-1, 1, 1, 1, -1, -1, 1, -1]);
 
 export class WebGLRenderAPI implements RendererAPI {
   #canvas: HTMLCanvasElement | null = null;
@@ -41,6 +50,7 @@ export class WebGLRenderAPI implements RendererAPI {
   #gpuTextureManager: GPUTextureManager | null = null;
   #shaderCompiler: ShaderCompiler | null = null;
   #customTexturedShaders = new WeakMap<ShaderSourceAsset, TexturedShaderProgram>();
+  #proceduralShaders = new WeakMap<ShaderSourceAsset, ProceduralShaderProgram>();
   #assets: LooseAssetManager | null;
   #meshOverlayEnabled = false;
   #spriteBatchData = new Float32Array(INITIAL_SPRITE_BATCH_CAPACITY * SPRITE_INSTANCE_FLOATS);
@@ -164,6 +174,36 @@ export class WebGLRenderAPI implements RendererAPI {
     invariant(customProgram, "Custom shader program not found for provided shader asset");
 
     this.#drawTexturedQuadWithProgram(gl, data, customProgram);
+  }
+
+  drawShader(data: ShaderDrawData): void {
+    this.#flushSpriteBatch();
+
+    const gl = this.#gl;
+    const canvas = this.#canvas;
+    const assets = this.#assets;
+    if (!gl || !canvas || !assets) {
+      return;
+    }
+
+    const shader = assets.getLoose(data.name);
+    if (!isShaderSourceAsset(shader)) {
+      return;
+    }
+
+    const program = this.#getProceduralShaderProgram(gl, shader, data.name);
+    gl.useProgram(program.program);
+    gl.bindVertexArray(program.vertexArray);
+    this.#setUniform(program, "uViewport", [canvas.width, canvas.height]);
+    this.#setUniform(program, "uCameraPosition", [this.#cameraX, this.#cameraY]);
+    this.#setUniform(program, "uCameraZoom", this.#cameraZoom);
+
+    for (const [name, value] of Object.entries(data.uniforms)) {
+      this.#setUniform(program, name, value);
+    }
+
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    gl.bindVertexArray(null);
   }
 
   #queueSprite(data: SpriteRenderData): void {
@@ -448,6 +488,79 @@ export class WebGLRenderAPI implements RendererAPI {
 
     const context = this.#createShapeDrawerContext(gl, canvas, center);
     shapeDrawers.draw(context, data);
+  }
+
+  #getProceduralShaderProgram(
+    gl: WebGL2RenderingContext,
+    shader: ShaderSourceAsset,
+    name: string,
+  ): ProceduralShaderProgram {
+    const existing = this.#proceduralShaders.get(shader);
+    if (existing) {
+      return existing;
+    }
+
+    const compiler = this.#shaderCompiler;
+    invariant(compiler, "Shader compiler is not initialized");
+    const program = compiler.createProgram(
+      compiler.compile(gl.VERTEX_SHADER, shader.vertex, `${name}.vert`),
+      compiler.compile(gl.FRAGMENT_SHADER, shader.fragment, `${name}.frag`),
+    );
+    const positionBuffer = gl.createBuffer();
+    const vertexArray = gl.createVertexArray();
+    invariant(positionBuffer, "Failed to create procedural shader position buffer");
+    invariant(vertexArray, "Failed to create procedural shader vertex array");
+
+    gl.bindVertexArray(vertexArray);
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, FULLSCREEN_QUAD, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+    gl.bindVertexArray(null);
+
+    const created = { program, positionBuffer, vertexArray, uniforms: new Map() };
+    this.#proceduralShaders.set(shader, created);
+    return created;
+  }
+
+  #setUniform(
+    shader: ProceduralShaderProgram,
+    name: string,
+    value: number | readonly number[],
+  ): void {
+    const gl = this.#gl;
+    invariant(gl, "WebGL context is not initialized");
+    let location = shader.uniforms.get(name);
+    if (location === undefined) {
+      location = gl.getUniformLocation(shader.program, name);
+      shader.uniforms.set(name, location);
+    }
+
+    if (!location) {
+      return;
+    }
+
+    if (typeof value === "number") {
+      gl.uniform1f(location, value);
+      return;
+    }
+
+    if (value.length === 1) {
+      gl.uniform1f(location, value[0]);
+      return;
+    }
+
+    if (value.length === 2) {
+      gl.uniform2f(location, value[0], value[1]);
+      return;
+    }
+
+    if (value.length === 3) {
+      gl.uniform3f(location, value[0], value[1], value[2]);
+      return;
+    }
+
+    gl.uniform4f(location, value[0], value[1], value[2], value[3]);
   }
 
   createInstancedBucket(descriptor: InstancedBucketDescriptor): InstancedBucket {

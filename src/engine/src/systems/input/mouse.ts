@@ -46,6 +46,11 @@ const canvasViewport = {
   height: 0,
 };
 
+const canvasBounds = {
+  width: 0,
+  height: 0,
+};
+
 let lastScreenUpdateTime = -1;
 let lastCanvasUpdateTime = -1;
 let lastScreenClientX = Number.NaN;
@@ -146,8 +151,10 @@ export const mouseApi: Mouse = {
       return worldPointer;
     }
 
-    worldPointer.x = (canvasPointer.x - canvasViewport.width / 2) / cameraZoom + cameraX;
-    worldPointer.y = (canvasPointer.y - canvasViewport.height / 2) / cameraZoom + cameraY;
+    const backingX = (canvasPointer.x / canvasBounds.width) * canvasViewport.width;
+    const backingY = (canvasPointer.y / canvasBounds.height) * canvasViewport.height;
+    worldPointer.x = (backingX - canvasViewport.width / 2) / cameraZoom + cameraX;
+    worldPointer.y = (backingY - canvasViewport.height / 2) / cameraZoom + cameraY;
 
     return worldPointer;
   },
@@ -164,6 +171,8 @@ function updateCanvasPointer(
   const rect = canvas.getBoundingClientRect();
   canvasPointer.x = mouseClientX - rect.left;
   canvasPointer.y = mouseClientY - rect.top;
-  canvasViewport.width = rect.width;
-  canvasViewport.height = rect.height;
+  canvasBounds.width = rect.width;
+  canvasBounds.height = rect.height;
+  canvasViewport.width = canvas.width;
+  canvasViewport.height = canvas.height;
 }

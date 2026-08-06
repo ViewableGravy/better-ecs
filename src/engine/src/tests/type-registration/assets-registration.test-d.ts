@@ -1,4 +1,11 @@
-import { createAssetLoader, createLoadSheet, type AssetAdapter, type ShaderSourceAsset } from "@engine/asset";
+import {
+    createAssetLoader,
+    createLoadShaderSource,
+    createLoadSheet,
+    createUniforms,
+    type AssetAdapter,
+    type ShaderSourceAsset,
+} from "@engine/asset";
 import { Texture } from "@engine/components/texture";
 import { createEngine } from "@engine/core";
 import { expectTypeOf } from "vitest";
@@ -28,6 +35,21 @@ const assets = createAssetLoader({
   }),
 });
 
+const typedShaderAssets = createAssetLoader({
+  "typed:shader": createLoadShaderSource(
+    "/shader.vert",
+    "/shader.frag",
+    createUniforms<{
+      uRadius: number;
+      uLineColor: readonly [number, number, number, number];
+    }>(),
+  ),
+});
+
+const typedShaderEngine = createEngine({
+  assetLoader: typedShaderAssets,
+});
+
 const engine = createEngine({
   assetLoader: assets,
 });
@@ -36,6 +58,12 @@ expectTypeOf(engine.assets.get("editor:demo-quad-shader")).toEqualTypeOf<
   ShaderSourceAsset | undefined
 >();
 expectTypeOf(engine.assets.getStrict("editor:demo-quad-shader")).toEqualTypeOf<ShaderSourceAsset>();
+expectTypeOf(typedShaderEngine.assets.getStrict("typed:shader")).toEqualTypeOf<
+  ShaderSourceAsset<{
+    uRadius: number;
+    uLineColor: readonly [number, number, number, number];
+  }>
+>();
 
 expectTypeOf(engine.assets.type("shader").get("editor:demo-quad-shader")).toEqualTypeOf<
   ShaderSourceAsset | undefined

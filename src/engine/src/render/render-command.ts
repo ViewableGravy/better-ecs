@@ -3,6 +3,7 @@ import type { Rgba } from "@engine/components/sprite/sprite";
 import type { TextureSourceData } from "@engine/components/texture";
 import type { InstancedBucket, InstancedBucketDescriptor, InstancedDrawCamera } from "@engine/render/renderers/webGL/instanced-bucket";
 import type { ShapeRenderInput, SpriteRenderData, TexturedQuadRenderData } from "@engine/render/types/low-level";
+import type { ShaderDrawData } from "@engine/render/types/renderer";
 import type { RendererAPI } from "@engine/render/types/renderer-api";
 
 export class RenderCommand {
@@ -62,6 +63,10 @@ export class RenderCommand {
 
   drawShape(data: ShapeRenderInput): void {
     this.#rendererApi.drawShape(data);
+  }
+
+  drawShader(data: ShaderDrawData): void {
+    this.#rendererApi.drawShader(data);
   }
 
   createInstancedBucket(descriptor: InstancedBucketDescriptor): InstancedBucket {
