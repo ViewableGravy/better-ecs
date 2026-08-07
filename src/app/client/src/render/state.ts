@@ -1,5 +1,5 @@
-import type { TerrainRenderCache } from "@client/render/passes/world.terrain/terrain-render-cache";
+import type { TerrainRenderCache } from "@client/render/passes/world.terrain/renderCache";
 
 export type RenderState = {
-  readonly terrain: TerrainRenderCache;
+  readonly terrainRenderCache: TerrainRenderCache;
 };

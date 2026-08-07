@@ -11,7 +11,7 @@ import { PhysicsWorldSync } from "@client/systems/physics-world-sync";
 import { PlayerCollision } from "@client/systems/player-collision";
 import { PlayerMovement } from "@client/systems/player-movement";
 import { PlayerMovementIntent } from "@client/systems/player-movement/intent";
-import { TerrainSystem } from "@client/systems/terrain";
+import { TerrainDataStore } from "@client/systems/terrain";
 import { Grid } from "@client/utilities/grid";
 import { createScene } from "@engine";
 import { ActiveRegistry, FromEngine, fromContext } from "@engine/context";
@@ -27,7 +27,7 @@ export const Scene = createScene("MainScene")({
     PhysicsWorldSync,
     FPSSystem,
     PlayerMovementIntent,
-    TerrainSystem,
+    TerrainDataStore,
     PlayerMovement,
     PlayerCollision,
     CameraFollow,

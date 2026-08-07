@@ -1,12 +1,15 @@
-import { ChunkDataTransformer, type ChunkRenderData } from "@client/render/passes/world.terrain/chunk-data-transformer";
+import {
+    TerrainDataTransformer,
+    type TerrainRenderData,
+} from "@client/render/passes/world.terrain/dataTransformer";
 import type { TerrainChunk } from "@client/systems/terrain/types";
 
 /**********************************************************************************************************
  *   CLASS START
  **********************************************************************************************************/
-export class ChunkDataCache {
-  #chunkData = new Map<string, ChunkRenderData>();
-  readonly #transformer = new ChunkDataTransformer();
+export class TerrainDataBuffer {
+  #chunkData = new Map<string, TerrainRenderData>();
+  readonly #transformer = new TerrainDataTransformer();
   #dirty = true;
 
   public setChunk(chunk: TerrainChunk): void {

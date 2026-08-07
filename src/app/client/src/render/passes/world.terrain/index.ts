@@ -16,6 +16,6 @@ type TerrainRenderContext = RenderPassContext & {
 export const TerrainPass = createRenderPass("world:terrain")({
   execute({ renderer, state }: TerrainRenderContext) {
     const terrain = fromContext(System("world:terrain"));
-    state.terrain.draw(renderer, terrain);
+    state.terrainRenderCache.draw(renderer, terrain);
   },
 });

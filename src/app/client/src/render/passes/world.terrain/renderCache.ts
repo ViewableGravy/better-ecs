@@ -1,19 +1,19 @@
 import baseFragmentSource from "@client/assets/terrain/base.frag";
 import terrainVertexSource from "@client/assets/terrain/terrain.vert";
-import { ChunkDataCache } from "@client/render/passes/world.terrain/chunk-data-cache";
 import { BASE_STRIDE } from "@client/render/passes/world.terrain/consts";
-import type { TerrainSystemRuntime } from "@client/systems/terrain";
+import { TerrainDataBuffer } from "@client/render/passes/world.terrain/dataBuffer";
+import type { TerrainDataStoreRuntime } from "@client/systems/terrain";
 import type { InstancedBucket, Renderer } from "@engine/render";
 
 /**********************************************************************************************************
  *   CLASS START
  **********************************************************************************************************/
 export class TerrainRenderCache {
-  readonly #chunkData = new ChunkDataCache();
+  readonly #dataBuffer = new TerrainDataBuffer();
   #baseBucket: InstancedBucket | undefined;
   #baseData = new Float32Array();
 
-  public draw(renderer: Renderer, terrain: TerrainSystemRuntime): void {
+  public draw(renderer: Renderer, terrain: TerrainDataStoreRuntime): void {
     // Set the bucket during first render, future renders will reuse the bucket.
     this.#baseBucket ??= renderer.createInstancedBucket({
       vertexSource: terrainVertexSource,
@@ -30,18 +30,18 @@ export class TerrainRenderCache {
     // Collect dirty chunks and refresh their render data.
     if (terrain.dirtyChunks.length) {
       for (const chunk of terrain.dirtyChunks) {
-        this.#chunkData.setChunk(chunk);
+        this.#dataBuffer.setChunk(chunk);
       }
 
       terrain.clearDirtyChunks();
     }
 
     // Update buffers if dirty, otherwise reuse existing buffer.
-    if (this.#chunkData.isDirty()) {
-      this.#baseData = this.#chunkData.concatBuffers();
+    if (this.#dataBuffer.isDirty()) {
+      this.#baseData = this.#dataBuffer.concatBuffers();
 
       this.#baseBucket.setData(this.#baseData, this.#baseData.length / BASE_STRIDE);
-      this.#chunkData.clearDirty();
+      this.#dataBuffer.clearDirty();
     }
 
     renderer.drawInstancedBucket(this.#baseBucket);

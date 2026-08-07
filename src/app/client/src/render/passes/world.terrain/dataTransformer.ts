@@ -6,15 +6,15 @@ import { Grid } from "@client/utilities/grid";
 /**********************************************************************************************************
  *   TYPE DEFINITIONS
  **********************************************************************************************************/
-export type ChunkRenderData = {
+export type TerrainRenderData = {
   readonly base: Float32Array;
 };
 
 /**********************************************************************************************************
  *   CLASS START
  **********************************************************************************************************/
-export class ChunkDataTransformer {
-  public transform(chunk: TerrainChunk): ChunkRenderData {
+export class TerrainDataTransformer {
+  public transform(chunk: TerrainChunk): TerrainRenderData {
     const base: number[] = [];
 
     for (let localY = 0; localY < TERRAIN_CHUNK_SIZE; localY += 1) {
@@ -26,8 +26,15 @@ export class ChunkDataTransformer {
           chunk.x * TERRAIN_CHUNK_SIZE + localX,
           chunk.y * TERRAIN_CHUNK_SIZE + localY,
         );
+        
         const color = TERRAIN_COLORS[cell.kind];
-        base.push(worldX, worldY, Grid.radius * 2.12, Grid.radius * SQRT_3 * 1.06, ...color);
+        base.push(
+          /* worldX */ worldX,
+          /* worldY */ worldY,
+          /* width  */ Grid.radius * 2,
+          /* height */ Grid.radius * SQRT_3,
+          /* color  */ ...color
+        );
       }
     }
 
