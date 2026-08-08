@@ -3,12 +3,13 @@ import type { LooseAssetManager } from "@engine/asset/AssetManager";
 import type { Camera } from "@engine/components/camera";
 import type { Shape } from "@engine/components/shape";
 import type { Rgba, Sprite } from "@engine/components/sprite/sprite";
+import type { Text } from "@engine/components/text";
 import type { Texture } from "@engine/components/texture";
 import type { ShaderTransform2D, Transform2D } from "@engine/components/transform";
 import type { RegisteredAssets } from "@engine/core";
 import type { InstancedBucket, InstancedBucketDescriptor, InstancedDrawCamera } from "@engine/render/renderers/webGL/instanced-bucket";
 import type { TextureCache, TextureCacheConfig } from "@engine/render/textureCache/texture-cache";
-import type { ShapeRenderInput } from "@engine/render/types/low-level";
+import type { ShapeRenderInput, TextRenderData } from "@engine/render/types/low-level";
 
 export { type TextureCacheConfig } from "@engine/render/textureCache/texture-cache";
 export type { TextureHandle, TextureInfo, TextureState, TextureStatus } from "@engine/render/textureCache/texture-cache";
@@ -16,11 +17,11 @@ export type {
     DenseShapeRenderData,
     ShapeRenderData,
     ShapeRenderInput,
-    SpriteRenderData,
+    SpriteRenderData, TextRenderData,
     TexturedQuadRenderData
 } from "@engine/render/types/low-level";
 
-export type Renderable = Sprite | Shape;
+export type Renderable = Sprite | Shape | Text;
 export type Settable = Camera;
 
 export type SpriteAnimationRenderState = {
@@ -129,6 +130,7 @@ export interface Renderer {
   set(value: Settable, transform: Transform2D, alpha: number): void;
 
   drawShape(data: ShapeRenderInput): void;
+  drawText(data: TextRenderData): void;
   drawTexturedQuad(data: TexturedQuadDrawData): void;
   drawShaderQuad(shader: ShaderSourceAsset, transform: ShaderTransform2D, options?: ShaderQuadOptions): void;
   drawShader(data: ShaderDrawData): void;

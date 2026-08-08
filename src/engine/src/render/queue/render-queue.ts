@@ -9,13 +9,14 @@ import type { ShapeRenderInput } from "@engine/render/types/low-level";
 export type RenderCommandType =
   | "retained-sprite-bucket"
   | "shader-entity"
+  | "text-entity"
   | "shape-entity"
   | "shape-draw"
   | "instanced-bucket";
 
 export type RenderCommandScope = "gameplay" | "overlay";
 
-export type RenderCommandBucketKind = "sprite" | "shader" | "shape" | "overlay-shape";
+export type RenderCommandBucketKind = "sprite" | "shader" | "text" | "shape" | "overlay-shape";
 
 type RenderCommandBucket = {
   readonly key: string;
@@ -54,8 +55,9 @@ const RENDER_SCOPE_PRIORITY: Record<RenderCommandScope, number> = {
 const RENDER_BUCKET_KIND_PRIORITY: Record<RenderCommandBucketKind, number> = {
   sprite: 0,
   shader: 1,
-  shape: 2,
-  "overlay-shape": 3,
+  text: 2,
+  shape: 3,
+  "overlay-shape": 4,
 };
 
 /**
@@ -204,6 +206,7 @@ function createRenderSubLayerBucket(): RenderSubLayerBucket {
     groups: {
       sprite: createRenderBucketGroup(),
       shader: createRenderBucketGroup(),
+      text: createRenderBucketGroup(),
       shape: createRenderBucketGroup(),
       "overlay-shape": createRenderBucketGroup(),
     },

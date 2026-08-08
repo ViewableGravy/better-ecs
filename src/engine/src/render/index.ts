@@ -6,7 +6,7 @@ export type {
     ShaderDrawData,
     ShaderQuadOptions, ShapeRenderData,
     ShapeRenderInput,
-    SpriteRenderData, SpriteRenderState, TextureCacheConfig,
+    SpriteRenderData, SpriteRenderState, TextRenderData, TextureCacheConfig,
     TextureHandle,
     TextureInfo,
     TextureState,

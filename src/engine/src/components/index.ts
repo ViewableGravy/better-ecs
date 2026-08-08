@@ -7,6 +7,7 @@ export * from "@engine/components/hierarchy";
 export * from "@engine/components/shader-quad";
 export * from "@engine/components/shape";
 export * from "@engine/components/sprite/index";
+export * from "@engine/components/text";
 export * from "@engine/components/texture";
 export * from "@engine/components/transform";
 export * from "@engine/components/visual";

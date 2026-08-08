@@ -25,6 +25,24 @@ export interface SpriteRenderData {
 }
 
 /**
+ * Data required to draw a single-line text sprite.
+ */
+export interface TextRenderData {
+  text: string;
+  fontSize: number;
+  fontFamily: string;
+  fontWeight: string;
+  x: number;
+  y: number;
+  rotation: number;
+  scaleX: number;
+  scaleY: number;
+  anchorX: number;
+  anchorY: number;
+  tint: Rgba;
+}
+
+/**
  * Data required to draw a textured quad with a custom shader.
  */
 export interface TexturedQuadRenderData {

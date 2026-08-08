@@ -31,6 +31,18 @@ export class GPUTextureManager {
     return texture;
   }
 
+  updateTexture(source: HTMLImageElement | ImageBitmap | HTMLCanvasElement): void {
+    const cacheKey = source as unknown as object;
+    const existing = this.#textureCache.get(cacheKey);
+    if (!existing) {
+      this.getOrCreateTexture(source);
+      return;
+    }
+
+    this.#gl.bindTexture(this.#gl.TEXTURE_2D, existing);
+    this.#gl.texImage2D(this.#gl.TEXTURE_2D, 0, this.#gl.RGBA, this.#gl.RGBA, this.#gl.UNSIGNED_BYTE, source);
+  }
+
   getWhiteTexture(): WebGLTexture {
     if (this.#whiteTexture) {
       return this.#whiteTexture;

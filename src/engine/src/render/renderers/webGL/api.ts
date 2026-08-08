@@ -13,7 +13,12 @@ import {
 } from "@engine/render/renderers/webGL/instanced-bucket";
 import { registry } from "@engine/render/renderers/webGL/registry";
 import { WebGLRetainedSpriteBatcher } from "@engine/render/renderers/webGL/retained-sprite-batcher";
-import type { ShapeRenderInput, SpriteRenderData, TexturedQuadRenderData } from "@engine/render/types/low-level";
+import type {
+    ShapeRenderInput,
+    SpriteRenderData,
+    TextRenderData,
+    TexturedQuadRenderData,
+} from "@engine/render/types/low-level";
 import type { ShaderDrawData } from "@engine/render/types/renderer";
 import type { RendererAPI } from "@engine/render/types/renderer-api";
 import invariant from "tiny-invariant";
@@ -37,6 +42,7 @@ interface ProceduralShaderProgram {
 
 const SPRITE_INSTANCE_FLOATS = 17;
 const INITIAL_SPRITE_BATCH_CAPACITY = 1024;
+const TEXT_RASTER_SCALE = 4;
 const FULLSCREEN_QUAD = new Float32Array([-1, 1, 1, 1, -1, -1, 1, -1]);
 
 export class WebGLRenderAPI implements RendererAPI {
@@ -56,6 +62,7 @@ export class WebGLRenderAPI implements RendererAPI {
   #spriteBatchData = new Float32Array(INITIAL_SPRITE_BATCH_CAPACITY * SPRITE_INSTANCE_FLOATS);
   #spriteBatchCount = 0;
   #spriteBatchTexture: WebGLTexture | null = null;
+  #textCanvas: HTMLCanvasElement | null = null;
   readonly retainedSpriteBatcher: WebGLRetainedSpriteBatcher;
 
   static readonly #MESH_OVERLAY_COLOR = new Rgba(1, 1, 1, 0.5);
@@ -160,6 +167,40 @@ export class WebGLRenderAPI implements RendererAPI {
 
   drawSprite(data: SpriteRenderData): void {
     this.#queueSprite(data);
+  }
+
+  drawText(data: TextRenderData): void {
+    if (data.text.length === 0) {
+      return;
+    }
+
+    this.#flushSpriteBatch();
+
+    const gpuTextureManager = this.#gpuTextureManager;
+    invariant(gpuTextureManager, "GPU texture manager is not initialized");
+
+    const canvas = this.#resolveTextCanvas(data);
+    gpuTextureManager.updateTexture(canvas);
+    this.#queueSprite({
+      image: canvas,
+      x: data.x,
+      y: data.y,
+      width: canvas.width / TEXT_RASTER_SCALE,
+      height: canvas.height / TEXT_RASTER_SCALE,
+      rotation: data.rotation,
+      scaleX: data.scaleX,
+      scaleY: data.scaleY,
+      anchorX: data.anchorX,
+      anchorY: data.anchorY,
+      sourceX: 0,
+      sourceY: 0,
+      sourceWidth: canvas.width,
+      sourceHeight: canvas.height,
+      flipX: false,
+      flipY: false,
+      tint: data.tint,
+    });
+    this.#flushSpriteBatch();
   }
 
   drawTexturedQuad(data: TexturedQuadRenderData): void {
@@ -488,6 +529,30 @@ export class WebGLRenderAPI implements RendererAPI {
 
     const context = this.#createShapeDrawerContext(gl, canvas, center);
     shapeDrawers.draw(context, data);
+  }
+
+  #resolveTextCanvas(data: TextRenderData): HTMLCanvasElement {
+    const canvas = this.#textCanvas ?? (this.#textCanvas = document.createElement("canvas"));
+    const context = canvas.getContext("2d");
+    invariant(context, "Failed to get text rendering context");
+
+    const fontSize = Math.max(1, data.fontSize);
+    const rasterFontSize = fontSize * TEXT_RASTER_SCALE;
+    const font = `${data.fontWeight} ${rasterFontSize}px ${data.fontFamily}`;
+    context.font = font;
+    const metrics = context.measureText(data.text);
+    const ascent = metrics.actualBoundingBoxAscent || rasterFontSize;
+    const descent = metrics.actualBoundingBoxDescent || rasterFontSize * 0.2;
+
+    canvas.width = Math.max(1, Math.ceil(metrics.width));
+    canvas.height = Math.max(1, Math.ceil(ascent + descent));
+
+    context.font = font;
+    context.fillStyle = "white";
+    context.textAlign = "left";
+    context.textBaseline = "alphabetic";
+    context.fillText(data.text, 0, ascent);
+    return canvas;
   }
 
   #getProceduralShaderProgram(

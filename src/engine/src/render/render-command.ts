@@ -2,7 +2,12 @@ import type { LooseAssetManager } from "@engine/asset/AssetManager";
 import type { Rgba } from "@engine/components/sprite/sprite";
 import type { TextureSourceData } from "@engine/components/texture";
 import type { InstancedBucket, InstancedBucketDescriptor, InstancedDrawCamera } from "@engine/render/renderers/webGL/instanced-bucket";
-import type { ShapeRenderInput, SpriteRenderData, TexturedQuadRenderData } from "@engine/render/types/low-level";
+import type {
+    ShapeRenderInput,
+    SpriteRenderData,
+    TextRenderData,
+    TexturedQuadRenderData,
+} from "@engine/render/types/low-level";
 import type { ShaderDrawData } from "@engine/render/types/renderer";
 import type { RendererAPI } from "@engine/render/types/renderer-api";
 
@@ -55,6 +60,10 @@ export class RenderCommand {
 
   drawSprite(data: SpriteRenderData): void {
     this.#rendererApi.drawSprite(data);
+  }
+
+  drawText(data: TextRenderData): void {
+    this.#rendererApi.drawText(data);
   }
 
   drawTexturedQuad(data: TexturedQuadRenderData): void {

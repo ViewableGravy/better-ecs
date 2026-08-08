@@ -3,6 +3,7 @@ import type { LooseAssetManager } from "@engine/asset/AssetManager";
 import { Camera } from "@engine/components/camera";
 import { Shape } from "@engine/components/shape";
 import { Rgba, Sprite } from "@engine/components/sprite/sprite";
+import { Text } from "@engine/components/text";
 import { Texture, type TextureSourceData } from "@engine/components/texture";
 import type { ShaderTransform2D, Transform2D } from "@engine/components/transform";
 import { RenderCommand } from "@engine/render/render-command";
@@ -28,6 +29,7 @@ import type {
     SpriteAnimationRenderState,
     SpriteRenderData,
     SpriteRenderState,
+    TextRenderData,
     TexturedQuadDrawData,
     TexturedQuadRenderData,
 } from "@engine/render/types/renderer";
@@ -85,6 +87,7 @@ export class Renderer2D implements Renderer {
   #assets: LooseAssetManager | null = null;
 
   #sharedSpriteData: SpriteRenderData | undefined;
+  #sharedTextData: TextRenderData | undefined;
   #sharedRetainedSpriteData: RetainedSpriteRenderData | undefined;
   #sharedTexturedQuadData: TexturedQuadRenderData | undefined;
   readonly #retainedAnimations = new Map<string, RetainedSpriteAnimationData>();
@@ -167,6 +170,11 @@ export class Renderer2D implements Renderer {
   render(renderable: Renderable, transform: Transform2D, alpha: number): void {
     if (renderable instanceof Sprite) {
       this.#renderSpriteWithTint(renderable, DEFAULT_SPRITE_TINT, transform, alpha);
+      return;
+    }
+
+    if (renderable instanceof Text) {
+      this.#renderText(renderable, transform, alpha);
       return;
     }
 
@@ -314,6 +322,10 @@ export class Renderer2D implements Renderer {
 
   drawShape(data: ShapeRenderInput): void {
     this.#command.drawShape(data);
+  }
+
+  drawText(data: TextRenderData): void {
+    this.#command.drawText(data);
   }
 
   drawTexturedQuad(data: TexturedQuadDrawData): void {
@@ -508,6 +520,38 @@ export class Renderer2D implements Renderer {
     spriteData.tint = tint;
 
     this.#command.drawSprite(spriteData);
+  }
+
+  #renderText(text: Text, transform: Transform2D, alpha: number): void {
+    const textData = this.#sharedTextData ?? (this.#sharedTextData = {
+      text: "",
+      fontSize: 16,
+      fontFamily: "sans-serif",
+      fontWeight: "400",
+      x: 0,
+      y: 0,
+      rotation: 0,
+      scaleX: 1,
+      scaleY: 1,
+      anchorX: 0.5,
+      anchorY: 0.5,
+      tint: DEFAULT_SPRITE_TINT,
+    });
+
+    textData.text = text.value;
+    textData.fontSize = text.fontSize;
+    textData.fontFamily = text.fontFamily;
+    textData.fontWeight = text.fontWeight;
+    textData.x = lerp(transform.prev.pos.x, transform.curr.pos.x, alpha);
+    textData.y = lerp(transform.prev.pos.y, transform.curr.pos.y, alpha);
+    textData.rotation = transform.curr.rotation;
+    textData.scaleX = transform.curr.scale.x;
+    textData.scaleY = transform.curr.scale.y;
+    textData.anchorX = text.anchorX;
+    textData.anchorY = text.anchorY;
+    textData.tint = DEFAULT_SPRITE_TINT;
+
+    this.#command.drawText(textData);
   }
 
   #renderShape(shape: Shape, transform: Transform2D, alpha: number): void {

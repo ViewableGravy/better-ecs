@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { LooseAssetManager } from "@engine/asset/AssetManager";
 import { Sprite } from "@engine/components/sprite/sprite";
+import { Text } from "@engine/components/text";
 import { Texture } from "@engine/components/texture";
 import { Transform2D } from "@engine/components/transform";
 import { Renderer2D } from "@engine/render/renderers/renderer2d";
@@ -59,6 +60,37 @@ describe("Renderer2D", () => {
       },
     });
   });
+
+  it("renders Text as a sprite-compatible primitive", async () => {
+    const drawText = vi.fn<RendererAPI["drawText"]>();
+    const rendererApi = createRendererApi(() => undefined, drawText);
+    const renderer = new Renderer2D(rendererApi, {
+      ...DEFAULT_RENDERER_CONFIG,
+      showFallback: false,
+      textureUploadBudget: 0,
+      warnOnLazyLoad: false,
+    });
+
+    await renderer.initialize({} as HTMLCanvasElement, createAssets(new Texture({ width: 1, height: 1 } as HTMLImageElement)));
+
+    const text = new Text("0, 0", 18, "monospace", "700");
+    const transform = new Transform2D(30, 60);
+    transform.prev.pos.set(10, 20);
+
+    renderer.render(text, transform, 0.25);
+
+    expect(drawText).toHaveBeenCalledOnce();
+    expect(drawText.mock.calls[0]?.[0]).toMatchObject({
+      text: "0, 0",
+      fontSize: 18,
+      fontFamily: "monospace",
+      fontWeight: "700",
+      x: 15,
+      y: 30,
+      anchorX: 0.5,
+      anchorY: 0.5,
+    });
+  });
 });
 
 function createAssets(texture: Texture): LooseAssetManager {
@@ -69,7 +101,10 @@ function createAssets(texture: Texture): LooseAssetManager {
   };
 }
 
-function createRendererApi(drawSprite: RendererAPI["drawSprite"]): RendererAPI {
+function createRendererApi(
+  drawSprite: RendererAPI["drawSprite"],
+  drawText: RendererAPI["drawText"] = () => undefined,
+): RendererAPI {
   return {
     retainedSpriteBatcher: new WebGLRetainedSpriteBatcher(() => undefined),
     initialize: () => undefined,
@@ -83,6 +118,7 @@ function createRendererApi(drawSprite: RendererAPI["drawSprite"]): RendererAPI {
     getCameraY: () => 0,
     getCameraZoom: () => 1,
     drawSprite,
+    drawText,
     drawTexturedQuad: () => undefined,
     drawShape: () => undefined,
     getWidth: () => 1280,

@@ -364,6 +364,7 @@ function createTestRenderer() {
     releaseRetainedSpriteBucket: vi.fn(),
     set: () => undefined,
     drawShape: () => undefined,
+    drawText: () => undefined,
     drawTexturedQuad: () => undefined,
     drawShaderQuad: () => undefined,
     setCamera: () => undefined,

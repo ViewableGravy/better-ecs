@@ -11,6 +11,7 @@ import {
 import { handleShaderEntityCommand } from "@engine/core/render-pipeline/passes/render-world/render/handlers/shader-entity";
 import { handleShapeDrawCommand } from "@engine/core/render-pipeline/passes/render-world/render/handlers/shape-draw";
 import { handleShapeEntityCommand } from "@engine/core/render-pipeline/passes/render-world/render/handlers/shape-entity";
+import { handleTextEntityCommand } from "@engine/core/render-pipeline/passes/render-world/render/handlers/text-entity";
 import { getWorldTransform2D, resolveWorldTransform2D } from "@engine/ecs/hierarchy";
 
 const SHARED_RENDER_TRANSFORM = new Transform2D();
@@ -66,6 +67,11 @@ export function renderCommands(): void {
 
       if (command.type === "shader-entity") {
         handleShaderEntityCommand(command, SHARED_RENDER_TRANSFORM);
+        continue;
+      }
+
+      if (command.type === "text-entity") {
+        handleTextEntityCommand(command, SHARED_RENDER_TRANSFORM);
         continue;
       }
 

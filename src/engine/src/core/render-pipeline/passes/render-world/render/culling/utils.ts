@@ -36,9 +36,16 @@ export type ShapeEntityRenderCommand = RenderCommand & {
   entityId: NonNullable<RenderCommand["entityId"]>;
 };
 
+export type TextEntityRenderCommand = RenderCommand & {
+  type: "text-entity";
+  registry: NonNullable<RenderCommand["registry"]>;
+  entityId: NonNullable<RenderCommand["entityId"]>;
+};
+
 export type EntityRenderCommand =
   | ShaderEntityRenderCommand
-  | ShapeEntityRenderCommand;
+  | ShapeEntityRenderCommand
+  | TextEntityRenderCommand;
 export type ShapeDrawRenderCommand = RenderCommand & {
   type: "shape-draw";
   shape: ShapeRenderInput;
@@ -125,6 +132,8 @@ export function isCommandWithinCullingBounds(
       invariant(transform, "Culling shape-entity command requires a world transform");
       invariant(alpha !== undefined, "Culling shape-entity command requires alpha");
       return intersectsShapeEntity(command, bounds, transform, alpha);
+    case "text-entity":
+      return true;
     case "shape-draw":
       return intersectsShapeDraw(command, bounds);
     default:
