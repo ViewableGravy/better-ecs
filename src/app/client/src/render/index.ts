@@ -1,5 +1,7 @@
 import { FPSPass } from "@client/plugins/fps";
 import { DrawGridPass } from "@client/render/passes/debug.draw-grid";
+import { DrawGridIndicesPass } from "@client/render/passes/debug.draw-grid-indices";
+import { GridIndexRenderCache } from "@client/render/passes/debug.draw-grid-indices/grid-index-render-cache";
 import { TerrainPass, type TerrainRenderState } from "@client/render/passes/world.terrain";
 import { TerrainRenderCache } from "@client/render/passes/world.terrain/renderCache";
 import type { CreateRenderPipelineContext } from "@engine";
@@ -24,10 +26,11 @@ export const Render = createRenderPipeline<EngineFrameAllocatorRegistry, Terrain
       renderer,
       frameAllocator: new FrameAllocator(),
       state: {
+        gridIndexRenderCache: new GridIndexRenderCache(),
         terrainRenderCache: new TerrainRenderCache(),
       },
     };
   },
-  beforeWorldPasses: [TerrainPass, DrawGridPass],
+  beforeWorldPasses: [TerrainPass, DrawGridPass, DrawGridIndicesPass],
   afterWorldPasses: [FPSPass],
 });

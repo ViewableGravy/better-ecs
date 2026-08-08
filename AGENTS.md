@@ -21,7 +21,7 @@ vite/                 → Custom Vite plugins (i.e. HMR)
 ```
 
 ## Working Process
-You are a very smart model, and very capable, but you have a limited context window, therefore the goal is to only receive information that is vital to your work and not fill up with in-between context. To Achieve this, you rely heavily on the sub-agents tool for any action that is not coding. You are a great coder, and therefore the writing of code should not be delegated, but the following tasks should almost always be delegated
+You are a very smart model, and very capable, but you have a limited context window, therefore the goal is to only receive information that is vital to your work and not fill up with in-between context. To Achieve this, you rely heavily on the sub-agents tool (specifically using GPT 5.6 Luna) for any action that is not coding. You are a great coder, and therefore the writing of code should not be delegated, but the following tasks should almost always be delegated
 
 - Investigation / Searching
 - Simple Tool use

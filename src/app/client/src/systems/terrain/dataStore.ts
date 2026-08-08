@@ -15,12 +15,14 @@ type TerrainState = {
   readonly chunks: Map<string, TerrainChunk>;
   readonly dirtyChunks: TerrainChunk[];
   readonly dirtyChunkKeys: Set<string>;
+  revision: number;
 };
 
 const state: TerrainState = {
   chunks: new Map(),
   dirtyChunks: [],
   dirtyChunkKeys: new Set(),
+  revision: 0,
 };
 
 const createChunk = (x: number, y: number): TerrainChunk => ({
@@ -69,6 +71,7 @@ const setCell = (x: number, y: number, cell: TerrainCell): void => {
   const chunkY = deriveChunkCoordinate(y);
   const chunk = requireChunk(chunkX, chunkY);
   setChunkCell(chunk, deriveLocalCoordinate(x, chunkX), deriveLocalCoordinate(y, chunkY), cell);
+  state.revision += 1;
   markCellDirty(x, y);
 };
 
@@ -89,6 +92,10 @@ export const TerrainDataStore = createSystem("world:terrain")({
     setCell,
     get chunks(): ReadonlyMap<string, TerrainChunk> {
       return state.chunks;
+    },
+    /** Monotonic terrain mutation revision for retained render caches. */
+    get revision(): number {
+      return state.revision;
     },
     get dirtyChunks(): readonly TerrainChunk[] {
       return state.dirtyChunks;

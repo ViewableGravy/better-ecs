@@ -14,7 +14,6 @@ import { PlayerMovementIntent } from "@client/systems/player-movement/intent";
 import { TerrainDataStore } from "@client/systems/terrain";
 import { Grid } from "@client/utilities/grid";
 import { createScene } from "@engine";
-import { Rgba, Text, Tint, Transform2D } from "@engine/components";
 import { ActiveRegistry, FromEngine, fromContext } from "@engine/context";
 
 export const Scene = createScene("MainScene")({
@@ -55,10 +54,5 @@ export const Scene = createScene("MainScene")({
     spawnCamera(world);
     spawnTree(world, 100, 40);
     spawnChest(world, 100, -20);
-
-    const originLabel = world.create();
-    world.add(originLabel, new Transform2D(0, 0));
-    world.add(originLabel, new Text("(0, 0)", 14, "monospace", "700", 0.5, 1, -1));
-    world.add(originLabel, new Tint(new Rgba(1, 0.85, 0.2, 1)));
   },
 });
